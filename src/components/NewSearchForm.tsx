@@ -4,7 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import FileUploadField from "./FileUploadField";
+import { processJobRequirements, handleDocumentUpload } from "@/utils/jobRequirements";
 
 const NewSearchForm = () => {
   const [searchText, setSearchText] = useState("");
@@ -21,15 +22,7 @@ const NewSearchForm = () => {
         description: "Please wait while we analyze the requirements...",
       });
 
-      const { data, error } = await supabase.functions.invoke('process-job-requirements', {
-        body: { content: searchText }
-      });
-
-      if (error) throw error;
-
-      // Open new tab with Google search
-      const searchString = encodeURIComponent(data.searchString);
-      window.open(`https://www.google.com/search?q=${searchString}`, '_blank');
+      await processJobRequirements(searchText);
 
       toast({
         title: "Success",
@@ -38,7 +31,6 @@ const NewSearchForm = () => {
 
       setSearchText("");
     } catch (error) {
-      console.error('Error:', error);
       toast({
         title: "Error",
         description: "Failed to process job requirements. Please try again.",
@@ -49,7 +41,7 @@ const NewSearchForm = () => {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -60,22 +52,14 @@ const NewSearchForm = () => {
     });
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const { data, error } = await supabase.functions.invoke('parse-document', {
-        body: formData
-      });
-
-      if (error) throw error;
-
-      setSearchText(data.text);
+      const text = await handleDocumentUpload(file);
+      setSearchText(text);
+      
       toast({
         title: "Document processed",
         description: "Text has been extracted successfully.",
       });
     } catch (error) {
-      console.error('Error:', error);
       toast({
         title: "Error",
         description: "Failed to process the document. Please try again.",
@@ -100,18 +84,16 @@ const NewSearchForm = () => {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="fileUpload">Upload Document</Label>
-          <Input
-            id="fileUpload"
-            type="file"
-            accept=".pdf,.docx"
-            onChange={handleFileUpload}
-            disabled={isProcessing}
-          />
-        </div>
+        <FileUploadField 
+          isDisabled={isProcessing}
+          onFileUpload={onFileUpload}
+        />
 
-        <Button type="submit" className="w-full" disabled={isProcessing || !searchText}>
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isProcessing || !searchText}
+        >
           Process Requirements
         </Button>
       </form>

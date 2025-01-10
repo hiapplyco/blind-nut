@@ -4,25 +4,52 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const NewSearchForm = () => {
   const [searchText, setSearchText] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Search started",
-      description: "We're processing your search request.",
-    });
+    setIsProcessing(true);
+
+    try {
+      toast({
+        title: "Processing job requirements",
+        description: "Please wait while we analyze the requirements...",
+      });
+
+      const { data, error } = await supabase.functions.invoke('process-job-requirements', {
+        body: { content: searchText }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Job requirements have been processed and stored.",
+      });
+
+      setSearchText("");
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process job requirements. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
+    setIsProcessing(true);
     toast({
       title: "Processing document",
       description: "Please wait while we extract the text...",
@@ -42,7 +69,7 @@ const NewSearchForm = () => {
         variant: "destructive",
       });
     } finally {
-      setIsUploading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -53,8 +80,6 @@ const NewSearchForm = () => {
       reader.onload = async (e) => {
         try {
           const content = e.target?.result;
-          // Here you would implement the actual text extraction
-          // For now, we'll just return the text as is
           resolve(content as string);
         } catch (error) {
           reject(error);
@@ -86,12 +111,12 @@ const NewSearchForm = () => {
             type="file"
             accept=".pdf,.docx"
             onChange={handleFileUpload}
-            disabled={isUploading}
+            disabled={isProcessing}
           />
         </div>
 
-        <Button type="submit" className="w-full" disabled={isUploading || !searchText}>
-          Start Search
+        <Button type="submit" className="w-full" disabled={isProcessing || !searchText}>
+          Process Requirements
         </Button>
       </form>
     </Card>

@@ -6,9 +6,8 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const NewSearchForm = () => {
-  const [title, setTitle] = useState("");
-  const [skills, setSkills] = useState("");
-  const [location, setLocation] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -19,40 +18,79 @@ const NewSearchForm = () => {
     });
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    toast({
+      title: "Processing document",
+      description: "Please wait while we extract the text...",
+    });
+
+    try {
+      const text = await extractTextFromFile(file);
+      setSearchText(text);
+      toast({
+        title: "Document processed",
+        description: "Text has been extracted successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process the document. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const extractTextFromFile = async (file: File): Promise<string> => {
+    const reader = new FileReader();
+    
+    return new Promise((resolve, reject) => {
+      reader.onload = async (e) => {
+        try {
+          const content = e.target?.result;
+          // Here you would implement the actual text extraction
+          // For now, we'll just return the text as is
+          resolve(content as string);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsText(file);
+    });
+  };
+
   return (
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="title">Job Title</Label>
+          <Label htmlFor="searchText">Job Requirements</Label>
           <Input
-            id="title"
-            placeholder="e.g. Senior Software Engineer"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            id="searchText"
+            placeholder="Enter job requirements or upload a document"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="min-h-[100px]"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="skills">Required Skills</Label>
+          <Label htmlFor="fileUpload">Upload Document</Label>
           <Input
-            id="skills"
-            placeholder="e.g. React, Node.js, TypeScript"
-            value={skills}
-            onChange={(e) => setSkills(e.target.value)}
+            id="fileUpload"
+            type="file"
+            accept=".pdf,.docx"
+            onChange={handleFileUpload}
+            disabled={isUploading}
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <Input
-            id="location"
-            placeholder="e.g. San Francisco, CA"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          />
-        </div>
-
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={isUploading || !searchText}>
           Start Search
         </Button>
       </form>

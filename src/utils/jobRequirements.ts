@@ -1,9 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const processJobRequirements = async (content: string) => {
+export const processJobRequirements = async (content: string, searchType: "candidates" | "companies") => {
   try {
     const { data, error } = await supabase.functions.invoke('process-job-requirements', {
-      body: { content }
+      body: { content, searchType }
     });
 
     if (error) throw error;

@@ -14,10 +14,14 @@ serve(async (req) => {
   }
 
   try {
-    const { content } = await req.json();
-    console.log('Received job requirements:', content);
+    const { content, searchType } = await req.json();
+    console.log('Received job requirements:', content, 'Search type:', searchType);
 
     // Generate search string using OpenAI
+    const prompt = searchType === 'candidates' 
+      ? `You are an AI assistant that helps create LinkedIn boolean search strings. Create a boolean string for this job: ${content}. The string should start with site:linkedin.com/in followed by the location element, then the rest of the boolean string. Include the LinkedIn site operator and incorporate a location search. Add a concatenated string of similar job titles to the boolean string. Include as many relevant skills as appropriate and exclude any irrelevant skills. The output should be a single boolean search string, no other information.`
+      : `You are an AI assistant that helps create Google search strings to find companies. Analyze these job requirements: ${content}. Create a search string that will find companies similar to what would post such a job. Use site:linkedin.com/company/ as the base. Include industry terms, company size indicators, and technology stack mentions. Use boolean operators (OR, AND) and Google search operators. Focus on finding companies that match the technical level and industry focus implied by the job requirements. Output only the search string, no other information.`;
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -25,16 +29,10 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
-          {
-            role: 'system',
-            content: 'You are an AI assistant that helps create LinkedIn boolean search strings.'
-          },
-          {
-            role: 'user',
-            content: `You are sourcing for a person that holds this job title and has these skills: ${content}. Create a boolean string specifically for LinkedIn X-Ray searching. Include the LinkedIn site operator and incorporate a location search. Add a concatenated string of similar job titles to the boolean string. Include as many relevant skills as appropriate and exclude any irrelevant skills. The output should be a single boolean search string, no other information. The format should consistently start with site:linkedin.com/in followed by the rest of the boolean string, including the location element.`
-          }
+          { role: 'system', content: 'You are a helpful assistant that generates search strings.' },
+          { role: 'user', content: prompt }
         ],
       }),
     });
@@ -60,8 +58,8 @@ serve(async (req) => {
 
     if (jobError) throw jobError;
 
-    // Simulate search results (in a real implementation, you would parse actual LinkedIn results)
-    const mockResults = [
+    // Simulate search results
+    const mockResults = searchType === 'candidates' ? [
       {
         job_id: jobData.id,
         profile_name: "John Doe",
@@ -78,14 +76,16 @@ serve(async (req) => {
         profile_url: "https://linkedin.com/in/janesmith",
         relevance_score: 90
       }
-    ];
+    ] : [];
 
-    // Store mock results
-    const { error: resultsError } = await supabaseClient
-      .from('search_results')
-      .insert(mockResults);
+    // Store mock results only for candidate searches
+    if (searchType === 'candidates') {
+      const { error: resultsError } = await supabaseClient
+        .from('search_results')
+        .insert(mockResults);
 
-    if (resultsError) throw resultsError;
+      if (resultsError) throw resultsError;
+    }
 
     return new Response(
       JSON.stringify({

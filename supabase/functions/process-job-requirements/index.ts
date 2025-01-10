@@ -17,6 +17,7 @@ serve(async (req) => {
     const { content } = await req.json();
     console.log('Received job requirements:', content);
 
+    // Generate search string using OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -47,22 +48,50 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Store in Supabase
-    const { data, error } = await supabaseClient
+    // Store in Supabase jobs table
+    const { data: jobData, error: jobError } = await supabaseClient
       .from('jobs')
       .insert([{ 
         content: content,
         search_string: searchString
       }])
-      .select();
+      .select()
+      .single();
 
-    if (error) throw error;
+    if (jobError) throw jobError;
+
+    // Simulate search results (in a real implementation, you would parse actual LinkedIn results)
+    const mockResults = [
+      {
+        job_id: jobData.id,
+        profile_name: "John Doe",
+        profile_title: "Senior Software Engineer",
+        profile_location: "San Francisco, CA",
+        profile_url: "https://linkedin.com/in/johndoe",
+        relevance_score: 95
+      },
+      {
+        job_id: jobData.id,
+        profile_name: "Jane Smith",
+        profile_title: "Lead Developer",
+        profile_location: "New York, NY",
+        profile_url: "https://linkedin.com/in/janesmith",
+        relevance_score: 90
+      }
+    ];
+
+    // Store mock results
+    const { error: resultsError } = await supabaseClient
+      .from('search_results')
+      .insert(mockResults);
+
+    if (resultsError) throw resultsError;
 
     return new Response(
       JSON.stringify({
         message: 'Job requirements processed successfully',
         searchString: searchString,
-        data: data
+        jobId: jobData.id
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

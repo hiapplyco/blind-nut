@@ -5,11 +5,13 @@ import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import FileUploadField from "./FileUploadField";
+import SearchResults from "./SearchResults";
 import { processJobRequirements, handleDocumentUpload } from "@/utils/jobRequirements";
 
 const NewSearchForm = () => {
   const [searchText, setSearchText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,11 +24,12 @@ const NewSearchForm = () => {
         description: "Please wait while we analyze the requirements...",
       });
 
-      await processJobRequirements(searchText);
+      const result = await processJobRequirements(searchText);
+      setCurrentJobId(result.jobId);
 
       toast({
         title: "Success",
-        description: "Job requirements processed and search opened in new tab.",
+        description: "Job requirements processed and results available below.",
       });
 
       setSearchText("");
@@ -71,33 +74,37 @@ const NewSearchForm = () => {
   };
 
   return (
-    <Card className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="searchText">Job Requirements</Label>
-          <Input
-            id="searchText"
-            placeholder="Enter job requirements or upload a document"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="min-h-[100px]"
+    <div className="space-y-6">
+      <Card className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="searchText">Job Requirements</Label>
+            <Input
+              id="searchText"
+              placeholder="Enter job requirements or upload a document"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+
+          <FileUploadField 
+            isDisabled={isProcessing}
+            onFileUpload={onFileUpload}
           />
-        </div>
 
-        <FileUploadField 
-          isDisabled={isProcessing}
-          onFileUpload={onFileUpload}
-        />
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isProcessing || !searchText}
+          >
+            Process Requirements
+          </Button>
+        </form>
+      </Card>
 
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={isProcessing || !searchText}
-        >
-          Process Requirements
-        </Button>
-      </form>
-    </Card>
+      <SearchResults jobId={currentJobId} />
+    </div>
   );
 };
 

@@ -30,6 +30,47 @@ export type Database = {
         }
         Relationships: []
       }
+      search_results: {
+        Row: {
+          created_at: string | null
+          id: number
+          job_id: number | null
+          profile_location: string | null
+          profile_name: string | null
+          profile_title: string | null
+          profile_url: string | null
+          relevance_score: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          job_id?: number | null
+          profile_location?: string | null
+          profile_name?: string | null
+          profile_title?: string | null
+          profile_url?: string | null
+          relevance_score?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          job_id?: number | null
+          profile_location?: string | null
+          profile_name?: string | null
+          profile_title?: string | null
+          profile_url?: string | null
+          relevance_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_results_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

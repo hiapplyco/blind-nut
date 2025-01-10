@@ -56,13 +56,22 @@ const NewSearchForm = () => {
     });
 
     try {
-      const text = await extractTextFromFile(file);
-      setSearchText(text);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const { data, error } = await supabase.functions.invoke('parse-document', {
+        body: formData
+      });
+
+      if (error) throw error;
+
+      setSearchText(data.text);
       toast({
         title: "Document processed",
         description: "Text has been extracted successfully.",
       });
     } catch (error) {
+      console.error('Error:', error);
       toast({
         title: "Error",
         description: "Failed to process the document. Please try again.",
@@ -71,23 +80,6 @@ const NewSearchForm = () => {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const extractTextFromFile = async (file: File): Promise<string> => {
-    const reader = new FileReader();
-    
-    return new Promise((resolve, reject) => {
-      reader.onload = async (e) => {
-        try {
-          const content = e.target?.result;
-          resolve(content as string);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.onerror = () => reject(new Error("Failed to read file"));
-      reader.readAsText(file);
-    });
   };
 
   return (

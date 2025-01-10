@@ -34,42 +34,26 @@ serve(async (req) => {
       throw new Error('Unsupported file type. Only PDF and DOCX files are supported.');
     }
 
-    // Upload to temporary storage
-    const filePath = `${crypto.randomUUID()}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage
-      .from('temp_uploads')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      throw uploadError;
-    }
-
-    // Get the file URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('temp_uploads')
-      .getPublicUrl(filePath);
-
-    // Download and parse the file
-    const response = await fetch(publicUrl);
-    const buffer = await response.arrayBuffer();
-
     let extractedText = '';
 
+    // Convert file to ArrayBuffer directly
+    const arrayBuffer = await (file as File).arrayBuffer();
+
     if (fileExt === 'pdf') {
-      const pdfDoc = await PDFDocument.load(buffer);
-      const pages = pdfDoc.getPages();
-      extractedText = pages.map(page => page.getText()).join('\n');
+      try {
+        const pdfDoc = await PDFDocument.load(arrayBuffer);
+        const pages = pdfDoc.getPages();
+        extractedText = pages.map(page => page.getText()).join('\n');
+      } catch (pdfError) {
+        console.error('PDF parsing error:', pdfError);
+        throw new Error(`Failed to parse PDF document: ${pdfError.message}`);
+      }
     } else if (fileExt === 'docx') {
       // For DOCX files, we'll return the raw text content for now
       // In a production environment, you'd want to use a proper DOCX parser
       const decoder = new TextDecoder('utf-8');
-      extractedText = decoder.decode(buffer);
+      extractedText = decoder.decode(arrayBuffer);
     }
-
-    // Clean up: Delete the temporary file
-    await supabase.storage
-      .from('temp_uploads')
-      .remove([filePath]);
 
     return new Response(
       JSON.stringify({ text: extractedText }),

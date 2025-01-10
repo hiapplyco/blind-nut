@@ -42,7 +42,7 @@ serve(async (req) => {
     // Generate search string using OpenAI
     const prompt = searchType === 'candidates' 
       ? `You are an AI assistant that helps create LinkedIn boolean search strings. Create a boolean string for this job: ${content}. The string should start with "site:linkedin.com/in". DO NOT include any location terms as they will be added separately. Add a concatenated string of similar job titles to the boolean string. Include as many relevant skills as appropriate and exclude any irrelevant skills. The output should be a single boolean search string, no other information. Do not include backticks or quotes around the entire string.`
-      : `You are an AI assistant that helps create Google search strings to find companies. Analyze these job requirements: ${content}. Create a search string that will find companies similar to what would post such a job. Use site:linkedin.com/company/ as the base. Include industry terms, company size indicators, and technology stack mentions. Use boolean operators (OR, AND) and Google search operators. Focus on finding companies that match the technical level and industry focus implied by the job requirements. Output only the search string without any backticks or quotes around it, no other information.`;
+      : `You are an AI assistant that helps create Google search strings to find companies. Analyze these job requirements: ${content}. Create a search string that will find companies similar to what would post such a job. Use site:linkedin.com/company/ as the base. DO NOT include any location terms as they will be added separately. Include industry terms, company size indicators, and technology stack mentions. Use boolean operators (OR, AND) and Google search operators. Focus on finding companies that match the technical level and industry focus implied by the job requirements. Output only the search string without any backticks or quotes around it, no other information.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -63,9 +63,14 @@ serve(async (req) => {
     let searchString = openAiData.choices[0].message.content.trim();
     console.log('Generated base search string:', searchString);
 
-    // For candidates search, insert the location after the site operator
+    // Insert location for both search types
     if (searchType === 'candidates') {
       const siteOperator = "site:linkedin.com/in";
+      if (searchString.startsWith(siteOperator)) {
+        searchString = `${siteOperator} "${location}" ${searchString.slice(siteOperator.length).trim()}`;
+      }
+    } else {
+      const siteOperator = "site:linkedin.com/company/";
       if (searchString.startsWith(siteOperator)) {
         searchString = `${siteOperator} "${location}" ${searchString.slice(siteOperator.length).trim()}`;
       }

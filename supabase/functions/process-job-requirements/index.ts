@@ -17,9 +17,31 @@ serve(async (req) => {
     const { content, searchType } = await req.json();
     console.log('Received job requirements:', content, 'Search type:', searchType);
 
+    // First, let's try to extract the location using GPT
+    const locationPrompt = `Extract only the city name from this text. If no specific city is mentioned, respond with "United States". Return only the location, nothing else: ${content}`;
+    
+    const locationResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant that extracts location information.' },
+          { role: 'user', content: locationPrompt }
+        ],
+      }),
+    });
+
+    const locationData = await locationResponse.json();
+    const location = locationData.choices[0].message.content.trim();
+    console.log('Extracted location:', location);
+
     // Generate search string using OpenAI
     const prompt = searchType === 'candidates' 
-      ? `You are an AI assistant that helps create LinkedIn boolean search strings. Create a boolean string for this job: ${content}. The string should start with site:linkedin.com/in followed by the location element, then the rest of the boolean string. Include the LinkedIn site operator and incorporate a location search. Add a concatenated string of similar job titles to the boolean string. Include as many relevant skills as appropriate and exclude any irrelevant skills. The output should be a single boolean search string, no other information. Do not include backticks or quotes around the entire string.`
+      ? `You are an AI assistant that helps create LinkedIn boolean search strings. Create a boolean string for this job: ${content}. The string should start with "site:linkedin.com/in". DO NOT include any location terms as they will be added separately. Add a concatenated string of similar job titles to the boolean string. Include as many relevant skills as appropriate and exclude any irrelevant skills. The output should be a single boolean search string, no other information. Do not include backticks or quotes around the entire string.`
       : `You are an AI assistant that helps create Google search strings to find companies. Analyze these job requirements: ${content}. Create a search string that will find companies similar to what would post such a job. Use site:linkedin.com/company/ as the base. Include industry terms, company size indicators, and technology stack mentions. Use boolean operators (OR, AND) and Google search operators. Focus on finding companies that match the technical level and industry focus implied by the job requirements. Output only the search string without any backticks or quotes around it, no other information.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -38,8 +60,18 @@ serve(async (req) => {
     });
 
     const openAiData = await response.json();
-    const searchString = openAiData.choices[0].message.content.trim();
-    console.log('Generated search string:', searchString);
+    let searchString = openAiData.choices[0].message.content.trim();
+    console.log('Generated base search string:', searchString);
+
+    // For candidates search, insert the location after the site operator
+    if (searchType === 'candidates') {
+      const siteOperator = "site:linkedin.com/in";
+      if (searchString.startsWith(siteOperator)) {
+        searchString = `${siteOperator} "${location}" ${searchString.slice(siteOperator.length).trim()}`;
+      }
+    }
+    
+    console.log('Final search string:', searchString);
 
     // Initialize Supabase client
     const supabaseClient = createClient(

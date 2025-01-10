@@ -27,9 +27,13 @@ const NewSearchForm = () => {
 
       if (error) throw error;
 
+      // Open new tab with Google search
+      const searchString = encodeURIComponent(data.searchString);
+      window.open(`https://www.google.com/search?q=${searchString}`, '_blank');
+
       toast({
         title: "Success",
-        description: "Job requirements have been processed and stored.",
+        description: "Job requirements processed and search opened in new tab.",
       });
 
       setSearchText("");

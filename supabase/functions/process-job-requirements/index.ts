@@ -1,6 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,7 +15,6 @@ serve(async (req) => {
     const { content } = await req.json();
     console.log('Received job requirements:', content);
 
-    // Initialize OpenAI API call
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -29,40 +26,34 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an AI assistant that helps analyze job requirements and extract key information.'
+            content: 'You are an AI assistant that helps create LinkedIn boolean search strings.'
           },
           {
             role: 'user',
-            content: `Please analyze these job requirements and provide a structured analysis: ${content}`
+            content: `You are sourcing for a person that holds this job title and has these skills: ${content}. Create a boolean string specifically for LinkedIn X-Ray searching. Include the LinkedIn site operator and incorporate a location search. Add a concatenated string of similar job titles to the boolean string. Include as many relevant skills as appropriate and exclude any irrelevant skills. The output should be a single boolean search string, no other information. The format should consistently start with site:linkedin.com/in followed by the rest of the boolean string, including the location element.`
           }
         ],
       }),
     });
 
     const openAiData = await response.json();
-    console.log('OpenAI response:', openAiData);
+    const searchString = openAiData.choices[0].message.content.trim();
 
-    // Initialize Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Store in Supabase
-    const { data, error } = await supabaseClient
+    // Store in Supabase and return the search string
+    const { data, error } = await supabase
       .from('jobs')
-      .insert([
-        { 
-          content: openAiData.choices[0].message.content,
-        }
-      ])
+      .insert([{ 
+        content: content,
+        search_string: searchString
+      }])
       .select();
 
     if (error) throw error;
 
     return new Response(
       JSON.stringify({
-        message: 'Job requirements processed and stored successfully',
+        message: 'Job requirements processed successfully',
+        searchString: searchString,
         data: data
       }),
       {

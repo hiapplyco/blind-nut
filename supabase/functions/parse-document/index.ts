@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { PDFDocument } from 'https://cdn.skypack.dev/pdf-lib';
+import * as mammoth from 'https://esm.sh/mammoth@1.6.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -52,9 +52,21 @@ serve(async (req) => {
         throw new Error(`Failed to parse PDF document: ${pdfError.message}`);
       }
     } else if (fileExt === 'docx') {
-      // For DOCX files, we'll return the raw text content for now
-      const decoder = new TextDecoder('utf-8');
-      extractedText = decoder.decode(arrayBuffer);
+      try {
+        // Use mammoth to convert DOCX to text
+        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+        extractedText = result.value;
+        
+        // Log any warnings
+        if (result.messages.length > 0) {
+          console.log('Warnings during DOCX parsing:', result.messages);
+        }
+        
+        console.log('Successfully processed DOCX document');
+      } catch (docxError) {
+        console.error('DOCX parsing error:', docxError);
+        throw new Error(`Failed to parse DOCX document: ${docxError.message}`);
+      }
     }
 
     return new Response(

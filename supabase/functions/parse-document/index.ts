@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { PDFDocument } from 'https://cdn.skypack.dev/pdf-lib';
 import * as mammoth from 'https://esm.sh/mammoth@1.6.0';
+import * as pdfParse from 'https://esm.sh/pdf-parse';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,19 +35,15 @@ serve(async (req) => {
 
     if (fileExt === 'pdf') {
       try {
-        const pdfDoc = await PDFDocument.load(arrayBuffer);
-        const numPages = pdfDoc.getPageCount();
-        extractedText = '';
+        // Use pdf-parse to extract text from PDF
+        const data = await pdfParse(new Uint8Array(arrayBuffer));
+        extractedText = data.text;
         
-        // Iterate through pages and extract text content
-        for (let i = 0; i < numPages; i++) {
-          const page = pdfDoc.getPage(i);
-          // Since getText() is not available, we'll need to implement a different approach
-          // For now, we'll add a placeholder message
-          extractedText += `[PDF text extraction not supported yet for page ${i + 1}]\n`;
+        console.log('Successfully processed PDF with', data.numpages, 'pages');
+        console.log('PDF Version:', data.version);
+        if (data.info) {
+          console.log('PDF Info:', data.info);
         }
-        
-        console.log('Successfully processed PDF with', numPages, 'pages');
       } catch (pdfError) {
         console.error('PDF parsing error:', pdfError);
         throw new Error(`Failed to parse PDF document: ${pdfError.message}`);

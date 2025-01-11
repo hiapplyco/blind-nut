@@ -1,92 +1,63 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { PDFDocument } from 'https://cdn.skypack.dev/pdf-lib';
-import * as mammoth from 'https://esm.sh/mammoth@1.6.0';
-import * as pdfParse from 'https://esm.sh/pdf-parse';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const formData = await req.formData();
-    const file = formData.get('file');
+    const formData = await req.formData()
+    const file = formData.get('file')
 
     if (!file) {
-      throw new Error('No file uploaded');
+      throw new Error('No file uploaded')
     }
 
-    // Get file extension
-    const fileName = (file as File).name.toLowerCase();
-    const fileExt = fileName.split('.').pop();
+    // Get file extension and validate file type
+    const fileName = (file as File).name.toLowerCase()
+    const fileExt = fileName.split('.').pop()
 
-    if (!['pdf', 'docx'].includes(fileExt ?? '')) {
-      throw new Error('Unsupported file type. Only PDF and DOCX files are supported.');
+    if (fileExt !== 'pdf') {
+      throw new Error('Invalid file type. Only PDF files are supported.')
     }
 
-    let extractedText = '';
-    const arrayBuffer = await (file as File).arrayBuffer();
+    // Convert file to text using TextDecoder
+    const arrayBuffer = await (file as File).arrayBuffer()
+    const uint8Array = new Uint8Array(arrayBuffer)
+    const textDecoder = new TextDecoder('utf-8')
+    const text = textDecoder.decode(uint8Array)
 
-    if (fileExt === 'pdf') {
-      try {
-        // Use pdf-parse to extract text from PDF
-        const data = await pdfParse(new Uint8Array(arrayBuffer));
-        extractedText = data.text;
-        
-        console.log('Successfully processed PDF with', data.numpages, 'pages');
-        console.log('PDF Version:', data.version);
-        if (data.info) {
-          console.log('PDF Info:', data.info);
-        }
-      } catch (pdfError) {
-        console.error('PDF parsing error:', pdfError);
-        throw new Error(`Failed to parse PDF document: ${pdfError.message}`);
-      }
-    } else if (fileExt === 'docx') {
-      try {
-        // Use mammoth to convert DOCX to text
-        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-        extractedText = result.value;
-        
-        // Log any warnings
-        if (result.messages.length > 0) {
-          console.log('Warnings during DOCX parsing:', result.messages);
-        }
-        
-        console.log('Successfully processed DOCX document');
-      } catch (docxError) {
-        console.error('DOCX parsing error:', docxError);
-        throw new Error(`Failed to parse DOCX document: ${docxError.message}`);
-      }
-    }
+    console.log('Successfully processed file:', fileName)
+    console.log('Extracted text length:', text.length)
 
     return new Response(
-      JSON.stringify({ text: extractedText }),
+      JSON.stringify({ text }),
       { 
         headers: { 
           ...corsHeaders,
           'Content-Type': 'application/json'
         }
       }
-    );
+    )
 
   } catch (error) {
-    console.error('Error processing file:', error);
+    console.error('Error processing file:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 400,
         headers: { 
           ...corsHeaders,
           'Content-Type': 'application/json'
-        }
+        },
+        status: 400
       }
-    );
+    )
   }
-});
+})

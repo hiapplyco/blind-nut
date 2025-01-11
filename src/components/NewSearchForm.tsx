@@ -15,6 +15,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const handleSearchSubmit = (text: string, jobId: number) => {
     setSearchText(text);
     setCurrentJobId(jobId);
+    setIsProcessingComplete(false); // Reset processing state when new search starts
   };
 
   return (
@@ -32,7 +33,10 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         />
       )}
 
-      <ResultsGrid jobId={currentJobId} />
+      <ResultsGrid 
+        jobId={currentJobId} 
+        isProcessingComplete={isProcessingComplete} 
+      />
     </div>
   );
 };

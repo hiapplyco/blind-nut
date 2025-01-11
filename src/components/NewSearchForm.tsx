@@ -6,7 +6,8 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { processJobRequirements } from "@/utils/jobRequirements";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Users, Building2, Briefcase } from "lucide-react";
+import { Users, Building2, Briefcase, Upload } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 
@@ -20,6 +21,49 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
   const { toast } = useToast();
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.includes('pdf')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('parse-document', {
+        body: formData,
+      });
+
+      if (error) throw error;
+
+      if (data?.text) {
+        setSearchText(data.text);
+        toast({
+          title: "File processed",
+          description: "The content has been extracted and added to the input field.",
+        });
+      }
+    } catch (error) {
+      console.error('Error processing file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process the file. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +126,26 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
           </p>
 
           <div className="space-y-2">
-            <Label htmlFor="searchText">Content</Label>
+            <div className="flex justify-between items-center">
+              <Label htmlFor="searchText">Content</Label>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
+                  disabled={isProcessing}
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="inline-flex items-center px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 cursor-pointer"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Attach PDF
+                </label>
+              </div>
+            </div>
             <Input
               id="searchText"
               placeholder="Enter job requirements or paste resume content"

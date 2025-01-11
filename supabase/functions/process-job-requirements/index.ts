@@ -42,7 +42,29 @@ serve(async (req) => {
     // Generate search string using OpenAI
     const prompt = searchType === 'candidates' 
       ? `You are an AI assistant that helps create LinkedIn boolean search strings. Create a boolean string for this job: ${content}. The string should start with "site:linkedin.com/in". DO NOT include any location terms as they will be added separately. Add a concatenated string of similar job titles to the boolean string. Include as many relevant skills as appropriate and exclude any irrelevant skills. The output should be a single boolean search string, no other information. Do not include backticks or quotes around the entire string.`
-      : `Create a simple LinkedIn company search string starting with site:linkedin.com/company/. DO NOT include location terms. Extract 2-3 key industry terms from this job description and combine them with OR: ${content}. Output only the search string.`;
+      : `Based on this job description: ${content}, select the most relevant industry from this list ONLY:
+         Accommodation Services
+         Administrative and Support Services
+         Construction
+         Consumer Services
+         Education
+         Entertainment Providers
+         Farming, Ranching, Forestry
+         Financial Services
+         Government Administration
+         Holding Companies
+         Hospitals and Health Care
+         Manufacturing
+         Oil, Gas, and Mining
+         Professional Services
+         Real Estate and Equipment Rental Services
+         Retail
+         Technology, Information and Media
+         Transportation, Logistics, Supply Chain and Storage
+         Utilities
+         Wholesale
+         
+         Return ONLY site:linkedin.com/company/ followed by the selected industry. No other terms, operators, or information.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

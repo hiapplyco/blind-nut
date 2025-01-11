@@ -57,7 +57,7 @@ export const useAgentOutputs = (jobId: number | null) => {
         .eq("job_id", jobId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching agent outputs:", error);

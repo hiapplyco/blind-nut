@@ -57,11 +57,17 @@ serve(async (req) => {
     // Convert array buffer to Uint8Array for processing
     const uint8Array = new Uint8Array(arrayBuffer)
     
-    // Create a blob URL for Tesseract
-    const blob = new Blob([uint8Array], { type: fileType })
+    // Create base64 string for Tesseract
+    const base64 = Array.from(uint8Array)
+      .map(byte => String.fromCharCode(byte))
+      .join('')
+    const base64Data = btoa(base64)
     
-    // Perform OCR directly on the blob
-    const { data: { text } } = await worker.recognize(blob)
+    // Perform OCR using base64 data URL
+    const { data: { text } } = await worker.recognize(
+      `data:${fileType};base64,${base64Data}`
+    )
+    
     await worker.terminate()
 
     console.log('OCR processing completed, storing results...')

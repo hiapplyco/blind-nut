@@ -6,8 +6,15 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { processJobRequirements } from "@/utils/jobRequirements";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Users, Building2, Briefcase, Upload } from "lucide-react";
+import { Users, Building2, Briefcase, Upload, Video, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 
@@ -20,6 +27,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
+  const [showAccessDialog, setShowAccessDialog] = useState(false);
   const { toast } = useToast();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,6 +103,11 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     }
   };
 
+  const handleRequestAccess = () => {
+    window.location.href = "mailto:james@hiapply.co?subject=Request Access to Audio/Video Features";
+    setShowAccessDialog(false);
+  };
+
   return (
     <div className="space-y-6">
       <Card className="p-6">
@@ -128,22 +141,42 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <Label htmlFor="searchText">Content</Label>
-              <div className="relative">
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
-                  disabled={isProcessing}
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="inline-flex items-center px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 cursor-pointer"
+              <div className="flex gap-2">
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                    disabled={isProcessing}
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="inline-flex items-center px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 cursor-pointer"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Attach PDF
+                  </label>
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="opacity-50 cursor-not-allowed"
+                  onClick={() => setShowAccessDialog(true)}
                 >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Attach PDF
-                </label>
+                  <Video className="h-4 w-4 mr-2" />
+                  Record Video
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="opacity-50 cursor-not-allowed"
+                  onClick={() => setShowAccessDialog(true)}
+                >
+                  <Mic className="h-4 w-4 mr-2" />
+                  Record Audio
+                </Button>
               </div>
             </div>
             <Input
@@ -176,6 +209,25 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
           </Button>
         </form>
       </Card>
+
+      <Dialog open={showAccessDialog} onOpenChange={setShowAccessDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Feature Access Required</DialogTitle>
+            <DialogDescription>
+              Audio and video recording features are currently in beta. Please email james@hiapply.co to request access to these features.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-2">
+            <Button variant="secondary" onClick={() => setShowAccessDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleRequestAccess}>
+              Send Email
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { Tag, List, KeyRound } from "lucide-react";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { Terms } from "@/types/agent";
+import { AgentWindow } from "../agents/AgentWindow";
 
 interface KeyTermsWindowProps {
   jobId: number | null;

@@ -22,9 +22,12 @@ export const CompensationAnalysis = ({ jobId }: CompensationAnalysisProps) => {
           <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
         </div>
       ) : (
-        <div className="prose prose-sm">
-          {agentOutput?.compensation_analysis || "No compensation information found."}
-        </div>
+        <div 
+          className="prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ 
+            __html: agentOutput?.compensation_analysis?.replace(/\n/g, '<br/>') || "No compensation information found."
+          }} 
+        />
       )}
     </AgentWindow>
   );

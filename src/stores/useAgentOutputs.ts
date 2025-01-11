@@ -11,6 +11,20 @@ interface AgentOutput {
   job_summary: string | null;
 }
 
+// Type guard to validate the Terms structure
+function isTerms(value: unknown): value is Terms {
+  if (typeof value !== 'object' || value === null) return false;
+  const terms = value as Record<string, unknown>;
+  return (
+    Array.isArray(terms.skills) &&
+    Array.isArray(terms.titles) &&
+    Array.isArray(terms.keywords) &&
+    terms.skills.every(skill => typeof skill === 'string') &&
+    terms.titles.every(title => typeof title === 'string') &&
+    terms.keywords.every(keyword => typeof keyword === 'string')
+  );
+}
+
 export const useAgentOutputs = (jobId: number | null) => {
   return useQuery({
     queryKey: ["agent-outputs", jobId],
@@ -30,11 +44,22 @@ export const useAgentOutputs = (jobId: number | null) => {
         throw error;
       }
 
-      console.log("Received agent outputs:", data);
-      return data;
+      if (!data) return null;
+
+      // Transform and validate the data
+      const output: AgentOutput = {
+        id: data.id,
+        job_id: data.job_id,
+        terms: isTerms(data.terms) ? data.terms : null,
+        compensation_analysis: data.compensation_analysis,
+        enhanced_description: data.enhanced_description,
+        job_summary: data.job_summary
+      };
+
+      console.log("Processed agent outputs:", output);
+      return output;
     },
     enabled: !!jobId,
-    // Refresh data every 3 seconds while waiting for results
     refetchInterval: (data) => (!data ? 3000 : false),
   });
 };

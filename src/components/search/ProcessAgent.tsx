@@ -59,6 +59,8 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
           title: "Content processed",
           description: "All agents have completed their analysis.",
         });
+        
+        // Ensure we call onComplete after successful processing
         onComplete();
       } catch (error) {
         console.error('Error in agent processing:', error);

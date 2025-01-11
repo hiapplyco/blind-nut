@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import { createWorker } from 'https://esm.sh/tesseract.js@4.1.1'
-import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts"
 import { GoogleGenerativeAI } from "npm:@google/generative-ai"
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,36 +49,23 @@ serve(async (req) => {
       throw new Error(`Failed to upload file: ${uploadError.message}`)
     }
 
-    console.log('File uploaded, starting OCR processing...')
+    console.log('File uploaded, starting Gemini processing...')
 
-    // Initialize Tesseract worker
-    const worker = await createWorker()
-    await worker.loadLanguage('eng')
-    await worker.initialize('eng')
+    // Initialize Gemini
+    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // Convert array buffer to base64
+    // Convert array buffer to base64 for processing
     const uint8Array = new Uint8Array(arrayBuffer)
     const base64Data = base64Encode(uint8Array)
     
-    // Create data URL for Tesseract
-    const dataUrl = `data:${(file as File).type};base64,${base64Data}`
-
     try {
-      // Perform OCR
-      const { data: { text } } = await worker.recognize(dataUrl)
-      console.log('OCR completed successfully')
-      
-      await worker.terminate()
-
-      // Use Gemini to enhance and clean up the OCR text
-      const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-      const prompt = `Clean up and format this OCR-extracted text, maintaining all important information but removing any artifacts or formatting issues: ${text}`;
+      // Process with Gemini
+      const prompt = `Please extract and format all the text content from this document, maintaining proper structure and removing any artifacts. Focus on preserving all important information including skills, experience, job requirements, and other relevant details.`;
       
       const result = await model.generateContent(prompt);
-      const enhancedText = result.response.text();
-      console.log('Text enhanced with Gemini');
+      const extractedText = result.response.text();
+      console.log('Gemini processing completed successfully');
 
       // Store parsed document in database
       const { error: dbError } = await supabase
@@ -87,7 +73,7 @@ serve(async (req) => {
         .insert({
           user_id: userId,
           original_filename: (file as File).name,
-          parsed_text: enhancedText,
+          parsed_text: extractedText,
           file_path: filePath
         })
 
@@ -99,7 +85,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true,
-          text: enhancedText,
+          text: extractedText,
           filePath,
           message: 'Document processed successfully'
         }),
@@ -110,9 +96,9 @@ serve(async (req) => {
           }
         }
       )
-    } catch (ocrError) {
-      console.error('OCR error:', ocrError)
-      throw new Error(`OCR processing failed: ${ocrError.message}`)
+    } catch (processingError) {
+      console.error('Gemini processing error:', processingError)
+      throw new Error(`Document processing failed: ${processingError.message}`)
     }
 
   } catch (error) {

@@ -13,8 +13,10 @@ serve(async (req) => {
 
   try {
     const { content } = await req.json();
+    console.log('Received content:', content?.substring(0, 100) + '...');
 
     if (!content || content.trim().length === 0) {
+      console.log('Empty content received, returning empty arrays');
       return new Response(
         JSON.stringify({ 
           skills: [], 
@@ -33,37 +35,42 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Extract key terms from this text and categorize them. Return ONLY a JSON object with exactly this format, no other text:
-    {
-      "skills": ["skill1", "skill2", "skill3"],
-      "titles": ["title1", "title2", "title3"],
-      "keywords": ["keyword1", "keyword2", "keyword3"]
-    }
+    const prompt = `Analyze this text and extract key terms into specific categories. Format your response EXACTLY as a JSON object with these arrays:
 
-    Rules for extraction:
-    - skills: technical skills, tools, programming languages, platforms (3-7 items)
-    - titles: job positions, roles, seniority levels (2-5 items)
-    - keywords: other important terms specific to the industry or role (3-7 items)
-    - keep terms concise (1-3 words max)
-    - if a category has no relevant terms, use an empty array []
-    
-    Text to analyze: ${content}`;
+{
+  "skills": ["skill1", "skill2"],
+  "titles": ["title1", "title2"],
+  "keywords": ["keyword1", "keyword2"]
+}
+
+Guidelines:
+- skills: technical skills, tools, technologies (3-7 items)
+- titles: job titles and roles (2-5 items)
+- keywords: other important terms (3-7 items)
+- keep terms short (1-3 words)
+- use empty arrays [] if no terms found
+- ONLY return the JSON object, no other text
+
+Text to analyze: ${content}`;
 
     console.log('Sending prompt to Gemini...');
     const result = await model.generateContent(prompt);
     const response = result.response.text();
-    console.log('Received response from Gemini:', response);
+    console.log('Raw Gemini response:', response);
     
     try {
-      const parsedResponse = JSON.parse(response.trim());
+      // Clean the response string before parsing
+      const cleanedResponse = response.replace(/```json\n?|\n?```/g, '').trim();
+      const parsedResponse = JSON.parse(cleanedResponse);
       
-      // Validate the response structure
-      if (!parsedResponse.skills || !Array.isArray(parsedResponse.skills) ||
-          !parsedResponse.titles || !Array.isArray(parsedResponse.titles) ||
-          !parsedResponse.keywords || !Array.isArray(parsedResponse.keywords)) {
-        throw new Error('Response missing required arrays');
+      // Validate response structure
+      if (!Array.isArray(parsedResponse.skills) || 
+          !Array.isArray(parsedResponse.titles) || 
+          !Array.isArray(parsedResponse.keywords)) {
+        throw new Error('Invalid response structure');
       }
 
+      console.log('Successfully parsed response:', parsedResponse);
       return new Response(
         JSON.stringify(parsedResponse),
         { 
@@ -75,9 +82,9 @@ serve(async (req) => {
       );
     } catch (parseError) {
       console.error('Error parsing Gemini response:', parseError);
-      console.error('Raw response:', response);
+      console.error('Raw response that failed parsing:', response);
       
-      // Return a valid fallback response
+      // Return a fallback response instead of throwing
       return new Response(
         JSON.stringify({
           skills: [],
@@ -89,14 +96,13 @@ serve(async (req) => {
           headers: { 
             ...corsHeaders,
             'Content-Type': 'application/json'
-          },
-          status: 200 // Return 200 with empty arrays instead of 500
+          }
         }
       );
     }
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in extract-nlp-terms:', error);
     return new Response(
       JSON.stringify({
         skills: [],
@@ -108,8 +114,7 @@ serve(async (req) => {
         headers: { 
           ...corsHeaders,
           'Content-Type': 'application/json'
-        },
-        status: 200 // Return 200 with empty arrays instead of 500
+        }
       }
     );
   }

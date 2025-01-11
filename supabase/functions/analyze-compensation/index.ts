@@ -19,15 +19,17 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Analyze this job description or resume and extract compensation-related information. Include:
-    - Salary ranges mentioned
-    - Benefits mentioned
-    - Any other compensation details
-    - Market rate analysis for this role
+    const prompt = `Analyze the compensation details in this job description. Include:
+    - Base salary range
+    - Additional compensation (bonuses, equity, etc.)
+    - Benefits highlights
+    - Market comparison
+    - Any notable compensation policies
     
-    Format as a clear, concise summary. If no compensation information is found, provide market rate estimates based on the role and requirements.
+    If specific numbers aren't provided, estimate based on industry standards and job level.
+    Format as bullet points. Be concise but thorough.
     
-    Text to analyze: ${content}`;
+    Job description: ${content}`;
 
     const result = await model.generateContent(prompt);
     const analysis = result.response.text();

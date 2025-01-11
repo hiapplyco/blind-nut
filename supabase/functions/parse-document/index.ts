@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { createWorker } from 'https://esm.sh/tesseract.js@4.1.1'
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,6 +26,8 @@ serve(async (req) => {
     const fileName = (file as File).name
     const fileType = (file as File).type
     const arrayBuffer = await (file as File).arrayBuffer()
+
+    console.log('Processing file:', fileName, 'of type:', fileType)
 
     // Create Supabase client
     const supabase = createClient(
@@ -54,14 +57,9 @@ serve(async (req) => {
     await worker.loadLanguage('eng')
     await worker.initialize('eng')
 
-    // Convert array buffer to Uint8Array for processing
+    // Convert array buffer to Uint8Array and then to base64
     const uint8Array = new Uint8Array(arrayBuffer)
-    
-    // Create base64 string for Tesseract
-    const base64 = Array.from(uint8Array)
-      .map(byte => String.fromCharCode(byte))
-      .join('')
-    const base64Data = btoa(base64)
+    const base64Data = base64Encode(uint8Array)
     
     // Perform OCR using base64 data URL
     const { data: { text } } = await worker.recognize(

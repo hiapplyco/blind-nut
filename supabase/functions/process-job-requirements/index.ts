@@ -19,11 +19,11 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // First, extract location
-    const locationPrompt = `Extract only the city name from this text. If no specific city is mentioned, respond with "United States". Return only the location, nothing else: ${content}`;
+    // Extract metropolitan area
+    const locationPrompt = `Extract the nearest major metropolitan area from this text. If a specific city is mentioned, return its corresponding metropolitan area (e.g., "Palo Alto" should return "San Francisco Bay Area", "Cambridge" should return "Greater Boston"). If no location is mentioned, respond with "United States". Return only the metropolitan area name, nothing else: ${content}`;
     const locationResult = await model.generateContent(locationPrompt);
     const location = locationResult.response.text().trim();
-    console.log('Extracted location:', location);
+    console.log('Extracted metropolitan area:', location);
 
     // Generate search string based on type
     let searchPrompt;

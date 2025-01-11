@@ -33,6 +33,24 @@ export const useAgentOutputs = (jobId: number | null) => {
 
       console.log("Fetching agent outputs for job:", jobId);
       
+      // First verify if the job exists and belongs to the current user
+      const { data: jobData, error: jobError } = await supabase
+        .from("jobs")
+        .select("id, user_id")
+        .eq("id", jobId)
+        .single();
+
+      if (jobError) {
+        console.error("Error fetching job:", jobError);
+        throw jobError;
+      }
+
+      if (!jobData) {
+        console.log("No job found with id:", jobId);
+        return null;
+      }
+
+      // Now fetch the agent outputs
       const { data, error } = await supabase
         .from("agent_outputs")
         .select("*")
@@ -44,7 +62,10 @@ export const useAgentOutputs = (jobId: number | null) => {
         throw error;
       }
 
-      if (!data) return null;
+      if (!data) {
+        console.log("No agent outputs found for job:", jobId);
+        return null;
+      }
 
       // Transform and validate the data
       const output: AgentOutput = {

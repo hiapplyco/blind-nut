@@ -22,12 +22,7 @@ serve(async (req) => {
       throw new Error('No file uploaded or missing user ID')
     }
 
-    // Get file details
-    const fileName = (file as File).name
-    const fileType = (file as File).type
-    const arrayBuffer = await (file as File).arrayBuffer()
-
-    console.log('Processing file:', fileName, 'of type:', fileType)
+    console.log('Processing file:', (file as File).name, 'of type:', (file as File).type)
 
     // Create Supabase client
     const supabase = createClient(
@@ -36,17 +31,21 @@ serve(async (req) => {
     )
 
     // Generate unique file path
-    const filePath = `${crypto.randomUUID()}-${fileName}`
+    const filePath = `${crypto.randomUUID()}-${(file as File).name}`
+
+    // Get file data as ArrayBuffer
+    const arrayBuffer = await (file as File).arrayBuffer()
 
     // Upload file to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from('docs')
       .upload(filePath, arrayBuffer, {
-        contentType: fileType,
+        contentType: (file as File).type,
         upsert: false
       })
 
     if (uploadError) {
+      console.error('Upload error:', uploadError)
       throw new Error(`Failed to upload file: ${uploadError.message}`)
     }
 
@@ -57,48 +56,53 @@ serve(async (req) => {
     await worker.loadLanguage('eng')
     await worker.initialize('eng')
 
-    // Convert array buffer to Uint8Array and then to base64
+    // Convert array buffer to base64
     const uint8Array = new Uint8Array(arrayBuffer)
     const base64Data = base64Encode(uint8Array)
     
     // Create data URL for Tesseract
-    const dataUrl = `data:${fileType};base64,${base64Data}`
-    
-    // Perform OCR
-    const { data: { text } } = await worker.recognize(dataUrl)
-    
-    await worker.terminate()
+    const dataUrl = `data:${(file as File).type};base64,${base64Data}`
 
-    console.log('OCR processing completed, storing results...')
+    try {
+      // Perform OCR
+      const { data: { text } } = await worker.recognize(dataUrl)
+      console.log('OCR completed successfully')
+      
+      await worker.terminate()
 
-    // Store parsed document in database
-    const { error: dbError } = await supabase
-      .from('parsed_documents')
-      .insert({
-        user_id: userId,
-        original_filename: fileName,
-        parsed_text: text,
-        file_path: filePath
-      })
+      // Store parsed document in database
+      const { error: dbError } = await supabase
+        .from('parsed_documents')
+        .insert({
+          user_id: userId,
+          original_filename: (file as File).name,
+          parsed_text: text,
+          file_path: filePath
+        })
 
-    if (dbError) {
-      throw new Error(`Failed to store parsed document: ${dbError.message}`)
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        success: true,
-        text,
-        filePath,
-        message: 'Document processed successfully'
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+      if (dbError) {
+        console.error('Database error:', dbError)
+        throw new Error(`Failed to store parsed document: ${dbError.message}`)
       }
-    )
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          text,
+          filePath,
+          message: 'Document processed successfully'
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    } catch (ocrError) {
+      console.error('OCR error:', ocrError)
+      throw new Error(`OCR processing failed: ${ocrError.message}`)
+    }
 
   } catch (error) {
     console.error('Error processing document:', error)

@@ -15,7 +15,7 @@ type SearchType = "candidates" | "companies" | "candidates-at-company";
 
 interface SearchFormProps {
   userId: string;
-  onJobCreated: (jobId: number) => void;
+  onJobCreated: (jobId: number, searchText: string) => void;
 }
 
 export const SearchForm = ({ userId, onJobCreated }: SearchFormProps) => {
@@ -42,7 +42,7 @@ export const SearchForm = ({ userId, onJobCreated }: SearchFormProps) => {
       if (jobError) throw jobError;
       
       const jobId = jobData.id;
-      onJobCreated(jobId);
+      onJobCreated(jobId, searchText);
 
       const result = await processJobRequirements(searchText, searchType, companyName, userId);
 

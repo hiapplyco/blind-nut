@@ -10,10 +10,19 @@ interface NewSearchFormProps {
 const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
+  const handleSearchSubmit = (text: string, jobId: number) => {
+    setSearchText(text);
+    setCurrentJobId(jobId);
+  };
 
   return (
     <div className="space-y-6">
-      <SearchForm userId={userId} onJobCreated={setCurrentJobId} />
+      <SearchForm 
+        userId={userId} 
+        onJobCreated={(jobId, text) => handleSearchSubmit(text, jobId)} 
+      />
       
       {currentJobId && !isProcessingComplete && (
         <ProcessAgent

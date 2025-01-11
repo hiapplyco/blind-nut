@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Tag, List, KeyRound } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface KeyTermsWindowProps {
   content: string;
@@ -74,27 +75,29 @@ export const KeyTermsWindow = ({ content, shouldExtract }: KeyTermsWindowProps) 
           <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" />
         </div>
       ) : (
-        <div className="space-y-6">
-          {terms.map((group, index) => (
-            <div key={index} className="space-y-2">
-              <div className="flex items-center gap-2 font-bold text-lg">
-                {group.icon}
-                {group.title}
+        <ScrollArea className="h-[400px] pr-4">
+          <div className="space-y-6">
+            {terms.map((group, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex items-center gap-2 font-bold text-lg">
+                  {group.icon}
+                  {group.title}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {group.terms.map((term, termIndex) => (
+                    <span
+                      key={termIndex}
+                      className="px-2 py-1 bg-white border-2 border-black rounded 
+                        shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-sm font-medium"
+                    >
+                      {term}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {group.terms.map((term, termIndex) => (
-                  <span
-                    key={termIndex}
-                    className="px-2 py-1 bg-white border-2 border-black rounded 
-                      shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-sm font-medium"
-                  >
-                    {term}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </ScrollArea>
       )}
     </Card>
   );

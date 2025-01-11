@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface KeyTermsWindowProps {
   content: string;
+  shouldExtract: boolean;
 }
 
 interface TermGroup {
@@ -13,14 +14,13 @@ interface TermGroup {
   icon: React.ReactNode;
 }
 
-export const KeyTermsWindow = ({ content }: KeyTermsWindowProps) => {
+export const KeyTermsWindow = ({ content, shouldExtract }: KeyTermsWindowProps) => {
   const [terms, setTerms] = useState<TermGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const extractTerms = async () => {
-      if (!content.trim()) {
-        setTerms([]);
+      if (!content.trim() || !shouldExtract) {
         return;
       }
 
@@ -59,9 +59,9 @@ export const KeyTermsWindow = ({ content }: KeyTermsWindowProps) => {
     };
 
     extractTerms();
-  }, [content]);
+  }, [content, shouldExtract]);
 
-  if (!content.trim()) return null;
+  if (!content.trim() || !shouldExtract) return null;
 
   return (
     <Card className="fixed right-8 top-32 w-80 p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

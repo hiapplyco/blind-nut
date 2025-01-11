@@ -31,6 +31,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
   const [showAccessDialog, setShowAccessDialog] = useState(false);
+  const [shouldExtractTerms, setShouldExtractTerms] = useState(false);
   const { toast } = useToast();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,6 +81,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
+    setShouldExtractTerms(true);
 
     try {
       toast({
@@ -94,7 +96,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         description: "Content processed and search string generated.",
       });
 
-      setSearchText("");
+      // Don't clear the search text anymore so the terms window persists
       setCompanyName("");
     } catch (error) {
       toast({
@@ -114,6 +116,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
 
   const handleTextUpdate = (text: string) => {
     setSearchText(text);
+    setShouldExtractTerms(false);
     toast({
       title: "Audio transcribed",
       description: "The audio has been transcribed and added to the input field.",
@@ -200,7 +203,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         </form>
       </Card>
 
-      <KeyTermsWindow content={searchText} />
+      <KeyTermsWindow content={searchText} shouldExtract={shouldExtractTerms} />
 
       <Dialog open={showAccessDialog} onOpenChange={setShowAccessDialog}>
         <DialogContent className="border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

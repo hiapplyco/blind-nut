@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AgentWindow } from "../agents/AgentWindow";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
+import { Terms } from "@/types/agent";
 
 interface KeyTermsWindowProps {
   jobId: number | null;
@@ -24,17 +25,17 @@ export const KeyTermsWindow = ({ jobId }: KeyTermsWindowProps) => {
   const terms: TermGroup[] = agentOutput?.terms ? [
     {
       title: "Skills & Technologies",
-      terms: agentOutput.terms.skills || [],
+      terms: (agentOutput.terms as Terms).skills || [],
       icon: <Tag className="h-5 w-5" />
     },
     {
       title: "Job Titles",
-      terms: agentOutput.terms.titles || [],
+      terms: (agentOutput.terms as Terms).titles || [],
       icon: <KeyRound className="h-5 w-5" />
     },
     {
       title: "Keywords",
-      terms: agentOutput.terms.keywords || [],
+      terms: (agentOutput.terms as Terms).keywords || [],
       icon: <List className="h-5 w-5" />
     }
   ] : [];

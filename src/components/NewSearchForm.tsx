@@ -247,12 +247,12 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
       </Card>
 
       {currentJobId && (
-        <>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <KeyTermsWindow jobId={currentJobId} />
           <CompensationAnalysis jobId={currentJobId} />
           <JobDescriptionEnhancer jobId={currentJobId} />
           <JobSummary jobId={currentJobId} />
-        </>
+        </div>
       )}
 
       <Dialog open={showAccessDialog} onOpenChange={setShowAccessDialog}>

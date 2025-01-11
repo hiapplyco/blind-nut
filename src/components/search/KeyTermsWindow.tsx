@@ -1,8 +1,4 @@
-import { Card } from "@/components/ui/card";
 import { Tag, List, KeyRound } from "lucide-react";
-import { useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { AgentWindow } from "../agents/AgentWindow";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { Terms } from "@/types/agent";
 
@@ -17,7 +13,6 @@ interface TermGroup {
 }
 
 export const KeyTermsWindow = ({ jobId }: KeyTermsWindowProps) => {
-  const [isVisible, setIsVisible] = useState(true);
   const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
 
   if (!jobId) return null;
@@ -74,9 +69,6 @@ export const KeyTermsWindow = ({ jobId }: KeyTermsWindowProps) => {
     <AgentWindow
       title="Extracted Terms"
       icon={<Tag className="h-6 w-6" />}
-      isVisible={isVisible}
-      onClose={() => setIsVisible(false)}
-      initialPosition={{ x: window.innerWidth - 400, y: 100 }}
     >
       {termsContent}
     </AgentWindow>

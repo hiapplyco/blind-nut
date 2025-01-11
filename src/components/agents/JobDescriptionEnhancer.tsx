@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { PenLine } from "lucide-react";
 import { AgentWindow } from "./AgentWindow";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
@@ -8,7 +7,6 @@ interface JobDescriptionEnhancerProps {
 }
 
 export const JobDescriptionEnhancer = ({ jobId }: JobDescriptionEnhancerProps) => {
-  const [isVisible, setIsVisible] = useState(true);
   const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
 
   if (!jobId) return null;
@@ -17,9 +15,6 @@ export const JobDescriptionEnhancer = ({ jobId }: JobDescriptionEnhancerProps) =
     <AgentWindow
       title="Enhanced Job Description"
       icon={<PenLine className="h-6 w-6" />}
-      isVisible={isVisible}
-      onClose={() => setIsVisible(false)}
-      initialPosition={{ x: window.innerWidth - 400, y: 300 }}
     >
       {isLoading ? (
         <div className="space-y-4">

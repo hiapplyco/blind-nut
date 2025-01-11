@@ -4,16 +4,17 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import SearchResults from "./SearchResults";
 import { processJobRequirements } from "@/utils/jobRequirements";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Users, Building2 } from "lucide-react";
+import { Users, Building2, Briefcase } from "lucide-react";
+
+type SearchType = "candidates" | "companies" | "candidates-at-company";
 
 const NewSearchForm = () => {
   const [searchText, setSearchText] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentJobId, setCurrentJobId] = useState<number | null>(null);
-  const [searchType, setSearchType] = useState<"candidates" | "companies">("candidates");
+  const [searchType, setSearchType] = useState<SearchType>("candidates");
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,8 +27,7 @@ const NewSearchForm = () => {
         description: "Please wait while we analyze the content...",
       });
 
-      const result = await processJobRequirements(searchText, searchType);
-      setCurrentJobId(result.jobId);
+      const result = await processJobRequirements(searchText, searchType, companyName);
 
       toast({
         title: "Success",
@@ -35,6 +35,7 @@ const NewSearchForm = () => {
       });
 
       setSearchText("");
+      setCompanyName("");
     } catch (error) {
       toast({
         title: "Error",
@@ -54,7 +55,7 @@ const NewSearchForm = () => {
             <ToggleGroup
               type="single"
               value={searchType}
-              onValueChange={(value) => value && setSearchType(value as "candidates" | "companies")}
+              onValueChange={(value) => value && setSearchType(value as SearchType)}
               className="justify-center"
             >
               <ToggleGroupItem value="candidates" aria-label="Search for candidates">
@@ -64,6 +65,10 @@ const NewSearchForm = () => {
               <ToggleGroupItem value="companies" aria-label="Search for companies">
                 <Building2 className="h-4 w-4 mr-2" />
                 Companies
+              </ToggleGroupItem>
+              <ToggleGroupItem value="candidates-at-company" aria-label="Search for candidates at company">
+                <Briefcase className="h-4 w-4 mr-2" />
+                Candidates at Company
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
@@ -83,17 +88,27 @@ const NewSearchForm = () => {
             />
           </div>
 
+          {searchType === "candidates-at-company" && (
+            <div className="space-y-2">
+              <Label htmlFor="companyName">Company Name</Label>
+              <Input
+                id="companyName"
+                placeholder="Enter company name"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+              />
+            </div>
+          )}
+
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={isProcessing || !searchText}
+            disabled={isProcessing || !searchText || (searchType === "candidates-at-company" && !companyName)}
           >
             Generate Search
           </Button>
         </form>
       </Card>
-
-      {searchType === 'candidates' && <SearchResults jobId={currentJobId} />}
     </div>
   );
 };

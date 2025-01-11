@@ -14,8 +14,8 @@ serve(async (req) => {
   }
 
   try {
-    const { content, searchType } = await req.json();
-    console.log('Received content:', content, 'Search type:', searchType);
+    const { content, searchType, companyName } = await req.json();
+    console.log('Received content:', content, 'Search type:', searchType, 'Company:', companyName);
 
     // First, let's try to extract the location using GPT
     const locationPrompt = `Extract only the city name from this text. If no specific city is mentioned, respond with "United States". Return only the location, nothing else: ${content}`;
@@ -39,10 +39,11 @@ serve(async (req) => {
     const location = locationData.choices[0].message.content.trim();
     console.log('Extracted location:', location);
 
-    // Generate search string using OpenAI
-    const prompt = searchType === 'candidates' 
-      ? `You are an AI assistant that helps create search strings. Create a search string that combines LinkedIn profiles and resumes for this job: ${content}. The string should start with "(site:linkedin.com/in OR filetype:pdf OR filetype:doc OR filetype:docx)". DO NOT include any location terms as they will be added separately. Add a concatenated string of similar job titles. Include as many relevant skills as appropriate and exclude any irrelevant skills. The output should be a single search string, no other information. Do not include backticks or quotes around the entire string.`
-      : `Based on this job description: ${content}, provide TWO pieces of information:
+    let prompt;
+    if (searchType === 'candidates') {
+      prompt = `Create a search string for finding candidates. Start with "(site:linkedin.com/in OR filetype:pdf OR filetype:doc OR filetype:docx)". Include "${location}" and then add relevant job titles and skills from this content: ${content}. The output should be a single search string, no other information.`;
+    } else if (searchType === 'companies') {
+      prompt = `Based on this job description: ${content}, provide TWO pieces of information:
          1. Select the most relevant industry from this list ONLY:
          Accommodation Services
          Administrative and Support Services
@@ -68,7 +69,10 @@ serve(async (req) => {
          2. Extract ONE key characteristic about the type of company (e.g., "startup", "enterprise", "non-profit", "public company", etc.)
          
          Format your response exactly like this, nothing else:
-         site:linkedin.com/company/ "INDUSTRY" AND "CHARACTERISTIC"`;
+         site:linkedin.com/company/ "${location}" "INDUSTRY" AND "CHARACTERISTIC"`;
+    } else if (searchType === 'candidates-at-company') {
+      prompt = `Create a search string for finding candidates at a specific company. Start with "(site:linkedin.com/in OR filetype:pdf OR filetype:doc OR filetype:docx)". Include "${location}" AND "current company: ${companyName}" and then add relevant job titles and skills from this content: ${content}. The output should be a single search string, no other information.`;
+    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -86,22 +90,7 @@ serve(async (req) => {
     });
 
     const openAiData = await response.json();
-    let searchString = openAiData.choices[0].message.content.trim();
-    console.log('Generated base search string:', searchString);
-
-    // Insert location for both search types
-    if (searchType === 'candidates') {
-      const siteOperator = "(site:linkedin.com/in OR filetype:pdf OR filetype:doc OR filetype:docx)";
-      if (searchString.startsWith(siteOperator)) {
-        searchString = `${siteOperator} "${location}" ${searchString.slice(siteOperator.length).trim()}`;
-      }
-    } else {
-      const siteOperator = "site:linkedin.com/company/";
-      if (searchString.startsWith(siteOperator)) {
-        searchString = `${siteOperator} "${location}" ${searchString.slice(siteOperator.length).trim()}`;
-      }
-    }
-    
+    const searchString = openAiData.choices[0].message.content.trim();
     console.log('Final search string:', searchString);
 
     // Initialize Supabase client
@@ -121,35 +110,6 @@ serve(async (req) => {
       .single();
 
     if (jobError) throw jobError;
-
-    // Simulate search results
-    const mockResults = searchType === 'candidates' ? [
-      {
-        job_id: jobData.id,
-        profile_name: "John Doe",
-        profile_title: "Senior Software Engineer",
-        profile_location: "San Francisco, CA",
-        profile_url: "https://linkedin.com/in/johndoe",
-        relevance_score: 95
-      },
-      {
-        job_id: jobData.id,
-        profile_name: "Jane Smith",
-        profile_title: "Lead Developer",
-        profile_location: "New York, NY",
-        profile_url: "https://linkedin.com/in/janesmith",
-        relevance_score: 90
-      }
-    ] : [];
-
-    // Store mock results only for candidate searches
-    if (searchType === 'candidates') {
-      const { error: resultsError } = await supabaseClient
-        .from('search_results')
-        .insert(mockResults);
-
-      if (resultsError) throw resultsError;
-    }
 
     return new Response(
       JSON.stringify({

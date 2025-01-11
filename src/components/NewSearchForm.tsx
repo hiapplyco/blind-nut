@@ -94,6 +94,20 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         description: "Please wait while we analyze the content...",
       });
 
+      // First, wait for all agent functions to complete
+      const [termsResponse, compensationResponse, enhancerResponse, summaryResponse] = await Promise.all([
+        supabase.functions.invoke('extract-nlp-terms', { body: { content: searchText } }),
+        supabase.functions.invoke('analyze-compensation', { body: { content: searchText } }),
+        supabase.functions.invoke('enhance-job-description', { body: { content: searchText } }),
+        supabase.functions.invoke('summarize-job', { body: { content: searchText } })
+      ]);
+
+      // Check if any of the agent functions failed
+      if (termsResponse.error || compensationResponse.error || enhancerResponse.error || summaryResponse.error) {
+        throw new Error("One or more agents failed to process the content");
+      }
+
+      // After all agents have processed, handle the search
       const result = await processJobRequirements(searchText, searchType, companyName, userId);
 
       toast({
@@ -103,6 +117,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
 
       setCompanyName("");
     } catch (error) {
+      console.error('Error processing content:', error);
       toast({
         title: "Error",
         description: "Failed to process content. Please try again.",

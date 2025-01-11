@@ -61,10 +61,11 @@ serve(async (req) => {
     const uint8Array = new Uint8Array(arrayBuffer)
     const base64Data = base64Encode(uint8Array)
     
-    // Perform OCR using base64 data URL
-    const { data: { text } } = await worker.recognize(
-      `data:${fileType};base64,${base64Data}`
-    )
+    // Create data URL for Tesseract
+    const dataUrl = `data:${fileType};base64,${base64Data}`
+    
+    // Perform OCR
+    const { data: { text } } = await worker.recognize(dataUrl)
     
     await worker.terminate()
 

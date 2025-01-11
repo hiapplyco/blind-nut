@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchTypeToggle } from "./search/SearchTypeToggle";
 import { InputActions } from "./search/InputActions";
+import { KeyTermsWindow } from "./search/KeyTermsWindow";
 import {
   Dialog,
   DialogContent,
@@ -198,6 +199,8 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
           </Button>
         </form>
       </Card>
+
+      <KeyTermsWindow content={searchText} />
 
       <Dialog open={showAccessDialog} onOpenChange={setShowAccessDialog}>
         <DialogContent className="border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

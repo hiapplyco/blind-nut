@@ -23,9 +23,10 @@ export const useAgentOutputs = (jobId: number | null) => {
         .from("agent_outputs")
         .select("*")
         .eq("job_id", jobId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) return null;
 
       // Transform the raw data into the expected AgentOutput type
       const transformedData: AgentOutput = {

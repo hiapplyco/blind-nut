@@ -2,14 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AgentOutput, Terms } from "@/types/agent";
 
-// Type guard to check if the value matches Terms interface
+// Type guard to check if a value matches the Terms interface
 const isTerms = (value: any): value is Terms => {
   return (
     value !== null &&
     typeof value === 'object' &&
-    Array.isArray(value.skills) &&
-    Array.isArray(value.titles) &&
-    Array.isArray(value.keywords)
+    Array.isArray((value as Terms).skills) &&
+    Array.isArray((value as Terms).titles) &&
+    Array.isArray((value as Terms).keywords)
   );
 };
 

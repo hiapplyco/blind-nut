@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -20,16 +19,25 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Create a concise summary of this job description. Include:
-    - Job title and level
-    - Key responsibilities (3-5 points)
-    - Must-have qualifications
-    - Industry/domain
-    - Work arrangement (remote/hybrid/onsite)
-    
-    Format as a clear, bulleted list. Keep it brief but informative.
-    
-    Job description: ${content}`;
+    const prompt = `Create a concise summary of this job description using markdown formatting:
+
+# Job Summary
+
+## Position Overview
+- Job title and level
+- Industry/domain
+- Work arrangement (remote/hybrid/onsite)
+
+## Key Responsibilities
+- 3-5 main duties or objectives
+
+## Core Requirements
+- Essential qualifications
+- Must-have skills
+
+Format as clear, bulleted sections. Keep it brief but informative.
+
+Job description: ${content}`;
 
     const result = await model.generateContent(prompt);
     const summary = result.response.text();

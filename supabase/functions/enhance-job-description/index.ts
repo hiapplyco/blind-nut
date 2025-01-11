@@ -19,17 +19,36 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Enhance this job description to be more engaging and comprehensive. Include:
-    - A compelling company introduction
-    - Clear role responsibilities
-    - Required and preferred qualifications
-    - Growth opportunities
-    - Company culture and benefits
-    - Clear next steps for applying
-    
-    Maintain a professional but engaging tone. Format with clear sections and bullet points where appropriate.
-    
-    Original job description: ${content}`;
+    const prompt = `Enhance this job description using markdown formatting with clear headers. Include:
+
+# Enhanced Job Description
+
+## Company Overview
+- Brief, compelling introduction to the company
+
+## Role Overview
+- Key responsibilities and objectives
+
+## Required Qualifications
+- Must-have skills and experience
+
+## Preferred Qualifications
+- Nice-to-have skills and experience
+
+## Growth Opportunities
+- Career development possibilities
+- Learning opportunities
+
+## Company Culture & Benefits
+- Work environment
+- Key benefits and perks
+
+## How to Apply
+- Clear next steps for candidates
+
+Maintain a professional but engaging tone throughout.
+
+Original job description: ${content}`;
 
     const result = await model.generateContent(prompt);
     const enhancedDescription = result.response.text();

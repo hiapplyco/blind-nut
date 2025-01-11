@@ -58,25 +58,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
       const jobId = jobData.id;
       setCurrentJobId(jobId);
 
-      // Process the content with agents
-      await AgentProcessor({
-        content: searchText,
-        jobId,
-        onComplete: () => {
-          toast({
-            title: "Content processed",
-            description: "All agents have completed their analysis.",
-          });
-        },
-        onError: (error) => {
-          toast({
-            title: "Error",
-            description: "Failed to process content with agents. " + error.message,
-            variant: "destructive",
-          });
-        }
-      });
-
       // Generate search string
       const result = await processJobRequirements(searchText, searchType, companyName, userId);
 
@@ -88,14 +69,38 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
 
       if (updateError) throw updateError;
 
-      toast({
-        title: "Success",
-        description: "Content processed and search string generated.",
-      });
-
       // Open search in new window
       const searchString = encodeURIComponent(result.searchString);
       window.open(`https://www.google.com/search?q=${searchString}`, '_blank');
+
+      // Process the content with agents
+      await new Promise((resolve, reject) => {
+        const agentProcessor = (
+          <AgentProcessor
+            content={searchText}
+            jobId={jobId}
+            onComplete={() => {
+              toast({
+                title: "Content processed",
+                description: "All agents have completed their analysis.",
+              });
+              resolve(null);
+            }}
+            onError={(error) => {
+              toast({
+                title: "Error",
+                description: "Failed to process content with agents. " + error.message,
+                variant: "destructive",
+              });
+              reject(error);
+            }}
+          />
+        );
+        // Render the AgentProcessor component
+        document.getElementById('agent-processor-container')?.appendChild(
+          document.createElement('div')
+        ).appendChild(agentProcessor as any);
+      });
 
     } catch (error) {
       console.error('Error processing content:', error);
@@ -245,6 +250,8 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
           </Button>
         </form>
       </Card>
+
+      <div id="agent-processor-container" />
 
       {currentJobId && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

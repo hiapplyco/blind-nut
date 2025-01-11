@@ -24,53 +24,29 @@ export const AgentProcessor: FC<AgentProcessorProps> = ({
         const termsResponse = await supabase.functions.invoke('extract-nlp-terms', { 
           body: { content } 
         });
-        if (termsResponse.error) {
-          toast({
-            title: "Terms Extraction",
-            description: "Failed to extract key terms",
-            variant: "destructive",
-          });
-          throw termsResponse.error;
-        }
+        
+        if (termsResponse.error) throw termsResponse.error;
         
         // Process compensation
         const compensationResponse = await supabase.functions.invoke('analyze-compensation', { 
           body: { content } 
         });
-        if (compensationResponse.error) {
-          toast({
-            title: "Compensation Analysis",
-            description: "Failed to analyze compensation",
-            variant: "destructive",
-          });
-          throw compensationResponse.error;
-        }
+        
+        if (compensationResponse.error) throw compensationResponse.error;
 
         // Process job description
         const enhancerResponse = await supabase.functions.invoke('enhance-job-description', { 
           body: { content } 
         });
-        if (enhancerResponse.error) {
-          toast({
-            title: "Job Description Enhancement",
-            description: "Failed to enhance job description",
-            variant: "destructive",
-          });
-          throw enhancerResponse.error;
-        }
+        
+        if (enhancerResponse.error) throw enhancerResponse.error;
 
         // Process summary
         const summaryResponse = await supabase.functions.invoke('summarize-job', { 
           body: { content } 
         });
-        if (summaryResponse.error) {
-          toast({
-            title: "Job Summary",
-            description: "Failed to generate job summary",
-            variant: "destructive",
-          });
-          throw summaryResponse.error;
-        }
+        
+        if (summaryResponse.error) throw summaryResponse.error;
 
         // Store results in Supabase
         const { error: insertError } = await supabase
@@ -83,19 +59,7 @@ export const AgentProcessor: FC<AgentProcessorProps> = ({
             job_summary: summaryResponse.data?.summary
           });
 
-        if (insertError) {
-          toast({
-            title: "Storage Error",
-            description: "Failed to save analysis results",
-            variant: "destructive",
-          });
-          throw insertError;
-        }
-
-        toast({
-          title: "Analysis Complete",
-          description: "All analyses completed successfully",
-        });
+        if (insertError) throw insertError;
 
         onComplete();
       } catch (error) {

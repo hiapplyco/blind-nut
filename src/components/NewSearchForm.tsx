@@ -8,6 +8,7 @@ import { processJobRequirements } from "@/utils/jobRequirements";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Users, Building2, Briefcase, Upload, Video, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -154,10 +155,12 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
                   />
                   <label
                     htmlFor="file-upload"
-                    className="inline-flex items-center px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 cursor-pointer"
+                    className={`inline-flex items-center px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 cursor-pointer ${
+                      isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    Attach PDF
+                    {isProcessing ? 'Processing...' : 'Attach PDF'}
                   </label>
                 </div>
                 <Button
@@ -180,24 +183,38 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
                 </Button>
               </div>
             </div>
-            <Input
-              id="searchText"
-              placeholder="Enter job requirements or paste resume content"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="min-h-[100px]"
-            />
+            {isProcessing ? (
+              <div className="space-y-3">
+                <Skeleton className="h-[100px] w-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </div>
+            ) : (
+              <Input
+                id="searchText"
+                placeholder="Enter job requirements or paste resume content"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="min-h-[100px]"
+              />
+            )}
           </div>
 
           {searchType === "candidates-at-company" && (
             <div className="space-y-2">
               <Label htmlFor="companyName">Company Name</Label>
-              <Input
-                id="companyName"
-                placeholder="Enter company name"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-              />
+              {isProcessing ? (
+                <Skeleton className="h-10 w-full" />
+              ) : (
+                <Input
+                  id="companyName"
+                  placeholder="Enter company name"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                />
+              )}
             </div>
           )}
 
@@ -206,7 +223,16 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
             className="w-full" 
             disabled={isProcessing || !searchText || (searchType === "candidates-at-company" && !companyName)}
           >
-            Generate Search
+            {isProcessing ? (
+              <div className="flex items-center">
+                <div className="animate-spin mr-2">
+                  <Upload className="h-4 w-4" />
+                </div>
+                Processing...
+              </div>
+            ) : (
+              'Generate Search'
+            )}
           </Button>
         </form>
       </Card>

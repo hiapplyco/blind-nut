@@ -33,10 +33,10 @@ export const useAgentOutputs = (jobId: number | null) => {
 
       console.log("Fetching agent outputs for job:", jobId);
       
-      // First verify if the job exists and belongs to the current user
+      // First verify if the job exists
       const { data: jobData, error: jobError } = await supabase
         .from("jobs")
-        .select("id, user_id")
+        .select("id")
         .eq("id", jobId)
         .single();
 
@@ -50,7 +50,7 @@ export const useAgentOutputs = (jobId: number | null) => {
         return null;
       }
 
-      // Now fetch the agent outputs - get the most recent one
+      // Now fetch the agent outputs
       const { data, error } = await supabase
         .from("agent_outputs")
         .select("*")
@@ -83,6 +83,7 @@ export const useAgentOutputs = (jobId: number | null) => {
       return output;
     },
     enabled: !!jobId,
+    // Refetch every 3 seconds until we get data
     refetchInterval: (data) => (!data ? 3000 : false),
   });
 };

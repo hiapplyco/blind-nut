@@ -18,6 +18,7 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
 
   if (!jobId) return null;
 
+  // Show loading state while the agents are processing
   if (!isProcessingComplete) {
     return (
       <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
@@ -34,6 +35,7 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
     );
   }
 
+  // Show loading skeleton while fetching data
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -53,6 +55,7 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
     );
   }
 
+  // Show error state if no data is found after processing is complete
   if (!agentOutput) {
     return (
       <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
@@ -66,6 +69,7 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
     );
   }
 
+  // Show the analysis results grid
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <KeyTermsWindow jobId={jobId} />

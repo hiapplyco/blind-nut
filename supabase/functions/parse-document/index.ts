@@ -47,11 +47,6 @@ serve(async (req) => {
       throw new Error(`Failed to upload file: ${uploadError.message}`)
     }
 
-    // Get public URL for the uploaded file
-    const { data: { publicUrl } } = supabase.storage
-      .from('docs')
-      .getPublicUrl(filePath)
-
     console.log('File uploaded, starting OCR processing...')
 
     // Initialize Tesseract worker
@@ -59,12 +54,14 @@ serve(async (req) => {
     await worker.loadLanguage('eng')
     await worker.initialize('eng')
 
-    // Convert array buffer to base64 for Tesseract
+    // Convert array buffer to Uint8Array for processing
     const uint8Array = new Uint8Array(arrayBuffer)
-    const base64 = btoa(String.fromCharCode.apply(null, uint8Array))
     
-    // Perform OCR
-    const { data: { text } } = await worker.recognize(`data:${fileType};base64,${base64}`)
+    // Create a blob URL for Tesseract
+    const blob = new Blob([uint8Array], { type: fileType })
+    
+    // Perform OCR directly on the blob
+    const { data: { text } } = await worker.recognize(blob)
     await worker.terminate()
 
     console.log('OCR processing completed, storing results...')

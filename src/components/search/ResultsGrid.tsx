@@ -55,27 +55,18 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
     );
   }
 
-  // Show error state if no data is found after processing is complete
-  if (!agentOutput) {
+  // Show the analysis results grid if we have data
+  if (agentOutput) {
     return (
-      <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-        <div className="text-center">
-          <h3 className="text-lg font-bold">No Analysis Results</h3>
-          <p className="text-gray-600">
-            We couldn't find any analysis results. Please try submitting your content again.
-          </p>
-        </div>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <KeyTermsWindow jobId={jobId} />
+        <CompensationAnalysis jobId={jobId} />
+        <JobDescriptionEnhancer jobId={jobId} />
+        <JobSummary jobId={jobId} />
+      </div>
     );
   }
 
-  // Show the analysis results grid
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <KeyTermsWindow jobId={jobId} />
-      <CompensationAnalysis jobId={jobId} />
-      <JobDescriptionEnhancer jobId={jobId} />
-      <JobSummary jobId={jobId} />
-    </div>
-  );
+  // Return null if we don't have data yet
+  return null;
 };

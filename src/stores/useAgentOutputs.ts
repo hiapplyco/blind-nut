@@ -83,7 +83,7 @@ export const useAgentOutputs = (jobId: number | null) => {
       return output;
     },
     enabled: !!jobId,
-    // Refetch every 3 seconds until we get data
-    refetchInterval: (data) => (!data ? 3000 : false),
+    // Refetch more frequently (every 2 seconds) until we get data
+    refetchInterval: (data) => (!data ? 2000 : false),
   });
 };

@@ -14,6 +14,8 @@ interface ResultsGridProps {
 export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) => {
   const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
 
+  console.log("ResultsGrid state:", { jobId, isProcessingComplete, isLoading, agentOutput });
+
   if (!jobId) return null;
 
   if (!isProcessingComplete) {
@@ -32,7 +34,7 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
     );
   }
 
-  if (isLoading || !agentOutput) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[...Array(4)].map((_, i) => (
@@ -48,6 +50,19 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
           </Card>
         ))}
       </div>
+    );
+  }
+
+  if (!agentOutput) {
+    return (
+      <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+        <div className="text-center">
+          <h3 className="text-lg font-bold">No Analysis Results</h3>
+          <p className="text-gray-600">
+            We couldn't find any analysis results. Please try submitting your content again.
+          </p>
+        </div>
+      </Card>
     );
   }
 

@@ -14,24 +14,56 @@ serve(async (req) => {
   try {
     const { content } = await req.json();
 
+    if (!content || content.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          skills: [], 
+          titles: [], 
+          keywords: [] 
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    }
+
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Analyze this text and extract key terms in these categories:
-    1. Skills & Technologies (technical skills, tools, programming languages, etc.)
-    2. Job Titles (positions, roles, job levels)
-    3. Keywords (other important terms, industry-specific vocabulary)
+    const prompt = `Extract key terms from this text and categorize them. Return ONLY a JSON object with exactly this format, no other text:
+    {
+      "skills": ["skill1", "skill2", "skill3"],
+      "titles": ["title1", "title2", "title3"],
+      "keywords": ["keyword1", "keyword2", "keyword3"]
+    }
+
+    Rules for extraction:
+    - skills: technical skills, tools, programming languages, platforms (3-7 items)
+    - titles: job positions, roles, seniority levels (2-5 items)
+    - keywords: other important terms specific to the industry or role (3-7 items)
+    - keep terms concise (1-3 words max)
+    - if a category has no relevant terms, use an empty array []
     
-    Format the response as a JSON object with these exact keys: "skills", "titles", "keywords".
-    Each should be an array of strings, with 3-7 most relevant terms per category.
-    Keep terms concise (1-3 words max).
     Text to analyze: ${content}`;
 
+    console.log('Sending prompt to Gemini...');
     const result = await model.generateContent(prompt);
     const response = result.response.text();
+    console.log('Received response from Gemini:', response);
     
     try {
-      const parsedResponse = JSON.parse(response);
+      const parsedResponse = JSON.parse(response.trim());
+      
+      // Validate the response structure
+      if (!parsedResponse.skills || !Array.isArray(parsedResponse.skills) ||
+          !parsedResponse.titles || !Array.isArray(parsedResponse.titles) ||
+          !parsedResponse.keywords || !Array.isArray(parsedResponse.keywords)) {
+        throw new Error('Response missing required arrays');
+      }
+
       return new Response(
         JSON.stringify(parsedResponse),
         { 
@@ -43,19 +75,41 @@ serve(async (req) => {
       );
     } catch (parseError) {
       console.error('Error parsing Gemini response:', parseError);
-      throw new Error('Invalid response format from Gemini');
+      console.error('Raw response:', response);
+      
+      // Return a valid fallback response
+      return new Response(
+        JSON.stringify({
+          skills: [],
+          titles: [],
+          keywords: [],
+          error: 'Failed to parse terms'
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          },
+          status: 200 // Return 200 with empty arrays instead of 500
+        }
+      );
     }
 
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({
+        skills: [],
+        titles: [],
+        keywords: [],
+        error: error.message
+      }),
       { 
         headers: { 
           ...corsHeaders,
           'Content-Type': 'application/json'
         },
-        status: 500
+        status: 200 // Return 200 with empty arrays instead of 500
       }
     );
   }

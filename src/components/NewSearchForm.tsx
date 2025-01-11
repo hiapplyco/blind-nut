@@ -111,6 +111,14 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     setShowAccessDialog(false);
   };
 
+  const handleTextUpdate = (text: string) => {
+    setSearchText(text);
+    toast({
+      title: "Audio transcribed",
+      description: "The audio has been transcribed and added to the input field.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
@@ -128,6 +136,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
                 onFileUpload={handleFileUpload}
                 isProcessing={isProcessing}
                 onShowAccessDialog={() => setShowAccessDialog(true)}
+                onTextUpdate={handleTextUpdate}
               />
             </div>
             {isProcessing ? (

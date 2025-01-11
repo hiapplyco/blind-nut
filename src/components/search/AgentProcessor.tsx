@@ -20,17 +20,56 @@ export const AgentProcessor: FC<AgentProcessorProps> = ({
   useEffect(() => {
     const processContent = async () => {
       try {
-        // Run all agent functions concurrently
-        const [termsResponse, compensationResponse, enhancerResponse, summaryResponse] = await Promise.all([
-          supabase.functions.invoke('extract-nlp-terms', { body: { content } }),
-          supabase.functions.invoke('analyze-compensation', { body: { content } }),
-          supabase.functions.invoke('enhance-job-description', { body: { content } }),
-          supabase.functions.invoke('summarize-job', { body: { content } })
-        ]);
+        // Process terms
+        const termsResponse = await supabase.functions.invoke('extract-nlp-terms', { 
+          body: { content } 
+        });
+        if (termsResponse.error) {
+          toast({
+            title: "Terms Extraction",
+            description: "Failed to extract key terms",
+            variant: "destructive",
+          });
+          throw termsResponse.error;
+        }
+        
+        // Process compensation
+        const compensationResponse = await supabase.functions.invoke('analyze-compensation', { 
+          body: { content } 
+        });
+        if (compensationResponse.error) {
+          toast({
+            title: "Compensation Analysis",
+            description: "Failed to analyze compensation",
+            variant: "destructive",
+          });
+          throw compensationResponse.error;
+        }
 
-        // Check for errors
-        if (termsResponse.error || compensationResponse.error || enhancerResponse.error || summaryResponse.error) {
-          throw new Error("One or more agents failed to process the content");
+        // Process job description
+        const enhancerResponse = await supabase.functions.invoke('enhance-job-description', { 
+          body: { content } 
+        });
+        if (enhancerResponse.error) {
+          toast({
+            title: "Job Description Enhancement",
+            description: "Failed to enhance job description",
+            variant: "destructive",
+          });
+          throw enhancerResponse.error;
+        }
+
+        // Process summary
+        const summaryResponse = await supabase.functions.invoke('summarize-job', { 
+          body: { content } 
+        });
+        if (summaryResponse.error) {
+          toast({
+            title: "Job Summary",
+            description: "Failed to generate job summary",
+            variant: "destructive",
+          });
+          throw summaryResponse.error;
         }
 
         // Store results in Supabase
@@ -44,7 +83,19 @@ export const AgentProcessor: FC<AgentProcessorProps> = ({
             job_summary: summaryResponse.data?.summary
           });
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          toast({
+            title: "Storage Error",
+            description: "Failed to save analysis results",
+            variant: "destructive",
+          });
+          throw insertError;
+        }
+
+        toast({
+          title: "Analysis Complete",
+          description: "All analyses completed successfully",
+        });
 
         onComplete();
       } catch (error) {
@@ -54,7 +105,7 @@ export const AgentProcessor: FC<AgentProcessorProps> = ({
     };
 
     processContent();
-  }, [content, jobId, onComplete, onError]);
+  }, [content, jobId, onComplete, onError, toast]);
 
   return null;
 };

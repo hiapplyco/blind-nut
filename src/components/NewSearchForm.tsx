@@ -11,6 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SearchTypeToggle } from "./search/SearchTypeToggle";
 import { InputActions } from "./search/InputActions";
 import { KeyTermsWindow } from "./search/KeyTermsWindow";
+import { CompensationAnalysis } from "./agents/CompensationAnalysis";
+import { JobDescriptionEnhancer } from "./agents/JobDescriptionEnhancer";
+import { JobSummary } from "./agents/JobSummary";
 import {
   Dialog,
   DialogContent,
@@ -204,6 +207,9 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
       </Card>
 
       <KeyTermsWindow content={searchText} shouldExtract={shouldExtractTerms} />
+      <CompensationAnalysis content={searchText} shouldAnalyze={shouldExtractTerms} />
+      <JobDescriptionEnhancer content={searchText} shouldEnhance={shouldExtractTerms} />
+      <JobSummary content={searchText} shouldSummarize={shouldExtractTerms} />
 
       <Dialog open={showAccessDialog} onOpenChange={setShowAccessDialog}>
         <DialogContent className="border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

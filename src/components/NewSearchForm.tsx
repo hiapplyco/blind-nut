@@ -34,10 +34,10 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.includes('pdf')) {
+    if (!file.type.includes('pdf') && !file.type.includes('image')) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a PDF file",
+        description: "Please upload a PDF file or an image",
         variant: "destructive",
       });
       return;
@@ -46,6 +46,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     setIsProcessing(true);
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('userId', userId);
 
     try {
       const { data, error } = await supabase.functions.invoke('parse-document', {

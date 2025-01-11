@@ -33,6 +33,33 @@ export type Database = {
         }
         Relationships: []
       }
+      parsed_documents: {
+        Row: {
+          created_at: string | null
+          file_path: string | null
+          id: number
+          original_filename: string | null
+          parsed_text: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_path?: string | null
+          id?: number
+          original_filename?: string | null
+          parsed_text?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_path?: string | null
+          id?: number
+          original_filename?: string | null
+          parsed_text?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       search_results: {
         Row: {
           created_at: string | null

@@ -4,9 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import FileUploadField from "./FileUploadField";
 import SearchResults from "./SearchResults";
-import { processJobRequirements, handleDocumentUpload } from "@/utils/jobRequirements";
+import { processJobRequirements } from "@/utils/jobRequirements";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Users, Building2 } from "lucide-react";
 
@@ -23,8 +22,8 @@ const NewSearchForm = () => {
 
     try {
       toast({
-        title: "Processing job requirements",
-        description: "Please wait while we analyze the requirements...",
+        title: "Processing requirements",
+        description: "Please wait while we analyze the content...",
       });
 
       const result = await processJobRequirements(searchText, searchType);
@@ -32,43 +31,14 @@ const NewSearchForm = () => {
 
       toast({
         title: "Success",
-        description: "Job requirements processed and results available below.",
+        description: "Content processed and search string generated.",
       });
 
       setSearchText("");
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to process job requirements. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const onFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsProcessing(true);
-    toast({
-      title: "Processing document",
-      description: "Please wait while we extract the text...",
-    });
-
-    try {
-      const text = await handleDocumentUpload(file);
-      setSearchText(text);
-      
-      toast({
-        title: "Document processed",
-        description: "Text has been extracted successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to process the document. Please try again.",
+        description: "Failed to process content. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -98,28 +68,27 @@ const NewSearchForm = () => {
             </ToggleGroup>
           </div>
 
+          <p className="text-muted-foreground text-sm text-center mb-4">
+            Paste the resume or job, or just type, or do both. We will generate a new search page for you.
+          </p>
+
           <div className="space-y-2">
-            <Label htmlFor="searchText">Job Requirements</Label>
+            <Label htmlFor="searchText">Content</Label>
             <Input
               id="searchText"
-              placeholder="Enter job requirements or upload a document"
+              placeholder="Enter job requirements or paste resume content"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               className="min-h-[100px]"
             />
           </div>
 
-          <FileUploadField 
-            isDisabled={isProcessing}
-            onFileUpload={onFileUpload}
-          />
-
           <Button 
             type="submit" 
             className="w-full" 
             disabled={isProcessing || !searchText}
           >
-            Process Requirements
+            Generate Search
           </Button>
         </form>
       </Card>

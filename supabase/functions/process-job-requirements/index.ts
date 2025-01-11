@@ -15,7 +15,7 @@ serve(async (req) => {
 
   try {
     const { content, searchType } = await req.json();
-    console.log('Received job requirements:', content, 'Search type:', searchType);
+    console.log('Received content:', content, 'Search type:', searchType);
 
     // First, let's try to extract the location using GPT
     const locationPrompt = `Extract only the city name from this text. If no specific city is mentioned, respond with "United States". Return only the location, nothing else: ${content}`;
@@ -41,7 +41,7 @@ serve(async (req) => {
 
     // Generate search string using OpenAI
     const prompt = searchType === 'candidates' 
-      ? `You are an AI assistant that helps create LinkedIn boolean search strings. Create a boolean string for this job: ${content}. The string should start with "site:linkedin.com/in". DO NOT include any location terms as they will be added separately. Add a concatenated string of similar job titles to the boolean string. Include as many relevant skills as appropriate and exclude any irrelevant skills. The output should be a single boolean search string, no other information. Do not include backticks or quotes around the entire string.`
+      ? `You are an AI assistant that helps create search strings. Create a search string that combines LinkedIn profiles and resumes for this job: ${content}. The string should start with "(site:linkedin.com/in OR filetype:pdf OR filetype:doc OR filetype:docx)". DO NOT include any location terms as they will be added separately. Add a concatenated string of similar job titles. Include as many relevant skills as appropriate and exclude any irrelevant skills. The output should be a single search string, no other information. Do not include backticks or quotes around the entire string.`
       : `Based on this job description: ${content}, provide TWO pieces of information:
          1. Select the most relevant industry from this list ONLY:
          Accommodation Services
@@ -91,7 +91,7 @@ serve(async (req) => {
 
     // Insert location for both search types
     if (searchType === 'candidates') {
-      const siteOperator = "site:linkedin.com/in";
+      const siteOperator = "(site:linkedin.com/in OR filetype:pdf OR filetype:doc OR filetype:docx)";
       if (searchString.startsWith(siteOperator)) {
         searchString = `${siteOperator} "${location}" ${searchString.slice(siteOperator.length).trim()}`;
       }
@@ -153,7 +153,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        message: 'Job requirements processed successfully',
+        message: 'Content processed successfully',
         searchString: searchString,
         jobId: jobData.id
       }),

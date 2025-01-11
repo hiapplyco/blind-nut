@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { createWorker } from 'https://esm.sh/tesseract.js@4.1.1'
-import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts"
+import { GoogleGenerativeAI } from "npm:@google/generative-ai"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -70,13 +71,23 @@ serve(async (req) => {
       
       await worker.terminate()
 
+      // Use Gemini to enhance and clean up the OCR text
+      const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const prompt = `Clean up and format this OCR-extracted text, maintaining all important information but removing any artifacts or formatting issues: ${text}`;
+      
+      const result = await model.generateContent(prompt);
+      const enhancedText = result.response.text();
+      console.log('Text enhanced with Gemini');
+
       // Store parsed document in database
       const { error: dbError } = await supabase
         .from('parsed_documents')
         .insert({
           user_id: userId,
           original_filename: (file as File).name,
-          parsed_text: text,
+          parsed_text: enhancedText,
           file_path: filePath
         })
 
@@ -88,7 +99,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true,
-          text,
+          text: enhancedText,
           filePath,
           message: 'Document processed successfully'
         }),

@@ -71,7 +71,8 @@ serve(async (req) => {
          Format your response exactly like this, nothing else:
          site:linkedin.com/company/ "${location}" "INDUSTRY" AND "CHARACTERISTIC"`;
     } else if (searchType === 'candidates-at-company') {
-      prompt = `Create a search string for finding candidates at a specific company. Start with "(site:linkedin.com/in OR filetype:pdf OR filetype:doc OR filetype:docx)". Include "${location}" AND "current company: ${companyName}" and then add relevant job titles and skills from this content: ${content}. The output should be a single search string, no other information.`;
+      // For candidates at company, we'll just use the raw company name in quotes
+      prompt = `Create a search string for finding candidates at a specific company. Start with "(site:linkedin.com/in OR filetype:pdf OR filetype:doc OR filetype:docx)". Include "${location}" AND "${companyName}" and then add relevant job titles and skills from this content: ${content}. The output should be a single search string, no other information.`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

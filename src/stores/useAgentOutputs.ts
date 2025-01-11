@@ -50,12 +50,14 @@ export const useAgentOutputs = (jobId: number | null) => {
         return null;
       }
 
-      // Now fetch the agent outputs
+      // Now fetch the agent outputs - get the most recent one
       const { data, error } = await supabase
         .from("agent_outputs")
         .select("*")
         .eq("job_id", jobId)
-        .maybeSingle();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
       if (error) {
         console.error("Error fetching agent outputs:", error);

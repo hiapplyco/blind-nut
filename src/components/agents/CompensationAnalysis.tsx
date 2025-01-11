@@ -1,41 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DollarSign } from "lucide-react";
 import { AgentWindow } from "./AgentWindow";
-import { supabase } from "@/integrations/supabase/client";
+import { useAgentOutputs } from "@/stores/useAgentOutputs";
 
 interface CompensationAnalysisProps {
-  content: string;
-  shouldAnalyze: boolean;
+  jobId: number | null;
 }
 
-export const CompensationAnalysis = ({ content, shouldAnalyze }: CompensationAnalysisProps) => {
+export const CompensationAnalysis = ({ jobId }: CompensationAnalysisProps) => {
   const [isVisible, setIsVisible] = useState(true);
-  const [analysis, setAnalysis] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
 
-  useEffect(() => {
-    const analyzeCompensation = async () => {
-      if (!content.trim() || !shouldAnalyze) return;
-      
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('analyze-compensation', {
-          body: { content }
-        });
-
-        if (error) throw error;
-        setAnalysis(data?.analysis || null);
-      } catch (error) {
-        console.error('Error analyzing compensation:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    analyzeCompensation();
-  }, [content, shouldAnalyze]);
-
-  if (!content.trim() || !shouldAnalyze) return null;
+  if (!jobId) return null;
 
   return (
     <AgentWindow
@@ -52,7 +28,7 @@ export const CompensationAnalysis = ({ content, shouldAnalyze }: CompensationAna
         </div>
       ) : (
         <div className="prose prose-sm">
-          {analysis || "No compensation information found."}
+          {agentOutput?.compensation_analysis || "No compensation information found."}
         </div>
       )}
     </AgentWindow>

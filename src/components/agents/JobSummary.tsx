@@ -1,41 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FileText } from "lucide-react";
 import { AgentWindow } from "./AgentWindow";
-import { supabase } from "@/integrations/supabase/client";
+import { useAgentOutputs } from "@/stores/useAgentOutputs";
 
 interface JobSummaryProps {
-  content: string;
-  shouldSummarize: boolean;
+  jobId: number | null;
 }
 
-export const JobSummary = ({ content, shouldSummarize }: JobSummaryProps) => {
+export const JobSummary = ({ jobId }: JobSummaryProps) => {
   const [isVisible, setIsVisible] = useState(true);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
 
-  useEffect(() => {
-    const summarizeJob = async () => {
-      if (!content.trim() || !shouldSummarize) return;
-      
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('summarize-job', {
-          body: { content }
-        });
-
-        if (error) throw error;
-        setSummary(data?.summary || null);
-      } catch (error) {
-        console.error('Error summarizing job:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    summarizeJob();
-  }, [content, shouldSummarize]);
-
-  if (!content.trim() || !shouldSummarize) return null;
+  if (!jobId) return null;
 
   return (
     <AgentWindow
@@ -52,7 +28,7 @@ export const JobSummary = ({ content, shouldSummarize }: JobSummaryProps) => {
         </div>
       ) : (
         <div className="prose prose-sm">
-          {summary || "No job summary available."}
+          {agentOutput?.job_summary || "No job summary available."}
         </div>
       )}
     </AgentWindow>

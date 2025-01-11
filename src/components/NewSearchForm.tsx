@@ -14,6 +14,7 @@ import { KeyTermsWindow } from "./search/KeyTermsWindow";
 import { CompensationAnalysis } from "./agents/CompensationAnalysis";
 import { JobDescriptionEnhancer } from "./agents/JobDescriptionEnhancer";
 import { JobSummary } from "./agents/JobSummary";
+import { AgentProcessor } from "./search/AgentProcessor";
 import {
   Dialog,
   DialogContent,
@@ -34,9 +35,79 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
   const [showAccessDialog, setShowAccessDialog] = useState(false);
-  const [shouldExtractTerms, setShouldExtractTerms] = useState(false);
-  const [showAgentWindows, setShowAgentWindows] = useState(false);
+  const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsProcessing(true);
+
+    try {
+      // First, create the job entry
+      const { data: jobData, error: jobError } = await supabase
+        .from('jobs')
+        .insert({
+          content: searchText,
+          user_id: userId
+        })
+        .select()
+        .single();
+
+      if (jobError) throw jobError;
+      
+      const jobId = jobData.id;
+      setCurrentJobId(jobId);
+
+      // Process the content with agents
+      await AgentProcessor({
+        content: searchText,
+        jobId,
+        onComplete: () => {
+          toast({
+            title: "Content processed",
+            description: "All agents have completed their analysis.",
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: "Failed to process content with agents. " + error.message,
+            variant: "destructive",
+          });
+        }
+      });
+
+      // Generate search string
+      const result = await processJobRequirements(searchText, searchType, companyName, userId);
+
+      // Update job with search string
+      const { error: updateError } = await supabase
+        .from('jobs')
+        .update({ search_string: result.searchString })
+        .eq('id', jobId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Success",
+        description: "Content processed and search string generated.",
+      });
+
+      // Open search in new window
+      const searchString = encodeURIComponent(result.searchString);
+      window.open(`https://www.google.com/search?q=${searchString}`, '_blank');
+
+    } catch (error) {
+      console.error('Error processing content:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process content. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -82,53 +153,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    setShouldExtractTerms(true);
-    setShowAgentWindows(true);
-
-    try {
-      toast({
-        title: "Processing requirements",
-        description: "Please wait while we analyze the content...",
-      });
-
-      // First, wait for all agent functions to complete
-      const [termsResponse, compensationResponse, enhancerResponse, summaryResponse] = await Promise.all([
-        supabase.functions.invoke('extract-nlp-terms', { body: { content: searchText } }),
-        supabase.functions.invoke('analyze-compensation', { body: { content: searchText } }),
-        supabase.functions.invoke('enhance-job-description', { body: { content: searchText } }),
-        supabase.functions.invoke('summarize-job', { body: { content: searchText } })
-      ]);
-
-      // Check if any of the agent functions failed
-      if (termsResponse.error || compensationResponse.error || enhancerResponse.error || summaryResponse.error) {
-        throw new Error("One or more agents failed to process the content");
-      }
-
-      // After all agents have processed, handle the search
-      const result = await processJobRequirements(searchText, searchType, companyName, userId);
-
-      toast({
-        title: "Success",
-        description: "Content processed and search string generated.",
-      });
-
-      setCompanyName("");
-    } catch (error) {
-      console.error('Error processing content:', error);
-      toast({
-        title: "Error",
-        description: "Failed to process content. Please try again.",
-        variant: "destructive",
-      });
-      setShowAgentWindows(false);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const handleRequestAccess = () => {
     window.location.href = "mailto:james@hiapply.co?subject=Request Access to Audio/Video Features";
     setShowAccessDialog(false);
@@ -136,7 +160,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
 
   const handleTextUpdate = (text: string) => {
     setSearchText(text);
-    setShouldExtractTerms(false);
     toast({
       title: "Audio transcribed",
       description: "The audio has been transcribed and added to the input field.",
@@ -223,12 +246,12 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         </form>
       </Card>
 
-      {showAgentWindows && (
+      {currentJobId && (
         <>
-          <KeyTermsWindow content={searchText} shouldExtract={shouldExtractTerms} />
-          <CompensationAnalysis content={searchText} shouldAnalyze={shouldExtractTerms} />
-          <JobDescriptionEnhancer content={searchText} shouldEnhance={shouldExtractTerms} />
-          <JobSummary content={searchText} shouldSummarize={shouldExtractTerms} />
+          <KeyTermsWindow jobId={currentJobId} />
+          <CompensationAnalysis jobId={currentJobId} />
+          <JobDescriptionEnhancer jobId={currentJobId} />
+          <JobSummary jobId={currentJobId} />
         </>
       )}
 

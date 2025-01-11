@@ -1,41 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PenLine } from "lucide-react";
 import { AgentWindow } from "./AgentWindow";
-import { supabase } from "@/integrations/supabase/client";
+import { useAgentOutputs } from "@/stores/useAgentOutputs";
 
 interface JobDescriptionEnhancerProps {
-  content: string;
-  shouldEnhance: boolean;
+  jobId: number | null;
 }
 
-export const JobDescriptionEnhancer = ({ content, shouldEnhance }: JobDescriptionEnhancerProps) => {
+export const JobDescriptionEnhancer = ({ jobId }: JobDescriptionEnhancerProps) => {
   const [isVisible, setIsVisible] = useState(true);
-  const [enhancedJD, setEnhancedJD] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
 
-  useEffect(() => {
-    const enhanceJobDescription = async () => {
-      if (!content.trim() || !shouldEnhance) return;
-      
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('enhance-job-description', {
-          body: { content }
-        });
-
-        if (error) throw error;
-        setEnhancedJD(data?.enhancedDescription || null);
-      } catch (error) {
-        console.error('Error enhancing job description:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    enhanceJobDescription();
-  }, [content, shouldEnhance]);
-
-  if (!content.trim() || !shouldEnhance) return null;
+  if (!jobId) return null;
 
   return (
     <AgentWindow
@@ -52,7 +28,7 @@ export const JobDescriptionEnhancer = ({ content, shouldEnhance }: JobDescriptio
         </div>
       ) : (
         <div className="prose prose-sm">
-          {enhancedJD || "No enhanced job description available."}
+          {agentOutput?.enhanced_description || "No enhanced job description available."}
         </div>
       )}
     </AgentWindow>

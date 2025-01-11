@@ -1,13 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Tag, List, KeyRound } from "lucide-react";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AgentWindow } from "../agents/AgentWindow";
+import { useAgentOutputs } from "@/stores/useAgentOutputs";
 
 interface KeyTermsWindowProps {
-  content: string;
-  shouldExtract: boolean;
+  jobId: number | null;
 }
 
 interface TermGroup {
@@ -16,55 +15,29 @@ interface TermGroup {
   icon: React.ReactNode;
 }
 
-export const KeyTermsWindow = ({ content, shouldExtract }: KeyTermsWindowProps) => {
-  const [terms, setTerms] = useState<TermGroup[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+export const KeyTermsWindow = ({ jobId }: KeyTermsWindowProps) => {
   const [isVisible, setIsVisible] = useState(true);
+  const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
 
-  useEffect(() => {
-    const extractTerms = async () => {
-      if (!content.trim() || !shouldExtract) {
-        return;
-      }
+  if (!jobId) return null;
 
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('extract-nlp-terms', {
-          body: { content }
-        });
-
-        if (error) throw error;
-
-        if (data) {
-          setTerms([
-            {
-              title: "Skills & Technologies",
-              terms: data.skills || [],
-              icon: <Tag className="h-5 w-5" />
-            },
-            {
-              title: "Job Titles",
-              terms: data.titles || [],
-              icon: <KeyRound className="h-5 w-5" />
-            },
-            {
-              title: "Keywords",
-              terms: data.keywords || [],
-              icon: <List className="h-5 w-5" />
-            }
-          ]);
-        }
-      } catch (error) {
-        console.error('Error extracting terms:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    extractTerms();
-  }, [content, shouldExtract]);
-
-  if (!content.trim() || !shouldExtract) return null;
+  const terms: TermGroup[] = agentOutput?.terms ? [
+    {
+      title: "Skills & Technologies",
+      terms: agentOutput.terms.skills || [],
+      icon: <Tag className="h-5 w-5" />
+    },
+    {
+      title: "Job Titles",
+      terms: agentOutput.terms.titles || [],
+      icon: <KeyRound className="h-5 w-5" />
+    },
+    {
+      title: "Keywords",
+      terms: agentOutput.terms.keywords || [],
+      icon: <List className="h-5 w-5" />
+    }
+  ] : [];
 
   const termsContent = isLoading ? (
     <div className="space-y-4">

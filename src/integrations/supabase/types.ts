@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      agent_outputs: {
+        Row: {
+          compensation_analysis: string | null
+          created_at: string | null
+          enhanced_description: string | null
+          id: number
+          job_id: number | null
+          job_summary: string | null
+          terms: Json | null
+        }
+        Insert: {
+          compensation_analysis?: string | null
+          created_at?: string | null
+          enhanced_description?: string | null
+          id?: number
+          job_id?: number | null
+          job_summary?: string | null
+          terms?: Json | null
+        }
+        Update: {
+          compensation_analysis?: string | null
+          created_at?: string | null
+          enhanced_description?: string | null
+          id?: number
+          job_id?: number | null
+          job_summary?: string | null
+          terms?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_outputs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_job"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           content: string | null

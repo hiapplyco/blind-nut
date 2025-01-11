@@ -5,10 +5,11 @@ import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { processJobRequirements } from "@/utils/jobRequirements";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Users, Building2, Briefcase, Upload, Video, Mic } from "lucide-react";
+import { Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SearchTypeToggle } from "./search/SearchTypeToggle";
+import { InputActions } from "./search/InputActions";
 import {
   Dialog,
   DialogContent,
@@ -112,76 +113,22 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6">
+      <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex justify-center mb-6">
-            <ToggleGroup
-              type="single"
-              value={searchType}
-              onValueChange={(value) => value && setSearchType(value as SearchType)}
-              className="justify-center"
-            >
-              <ToggleGroupItem value="candidates" aria-label="Search for candidates">
-                <Users className="h-4 w-4 mr-2" />
-                Candidates
-              </ToggleGroupItem>
-              <ToggleGroupItem value="companies" aria-label="Search for companies">
-                <Building2 className="h-4 w-4 mr-2" />
-                Companies
-              </ToggleGroupItem>
-              <ToggleGroupItem value="candidates-at-company" aria-label="Search for candidates at company">
-                <Briefcase className="h-4 w-4 mr-2" />
-                Candidates at Company
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
+          <SearchTypeToggle value={searchType} onValueChange={(value) => setSearchType(value)} />
 
-          <p className="text-muted-foreground text-sm text-center mb-4">
+          <p className="text-gray-600 text-center mb-4 text-lg">
             Paste the resume or job, or just type, or do both. We will generate a new search page for you.
           </p>
 
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label htmlFor="searchText">Content</Label>
-              <div className="flex gap-2">
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="file-upload"
-                    disabled={isProcessing}
-                  />
-                  <label
-                    htmlFor="file-upload"
-                    className={`inline-flex items-center px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 cursor-pointer ${
-                      isProcessing ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    {isProcessing ? 'Processing...' : 'Attach PDF'}
-                  </label>
-                </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="opacity-50 cursor-not-allowed"
-                  onClick={() => setShowAccessDialog(true)}
-                >
-                  <Video className="h-4 w-4 mr-2" />
-                  Record Video
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="opacity-50 cursor-not-allowed"
-                  onClick={() => setShowAccessDialog(true)}
-                >
-                  <Mic className="h-4 w-4 mr-2" />
-                  Record Audio
-                </Button>
-              </div>
+              <Label htmlFor="searchText" className="text-xl font-bold">Content</Label>
+              <InputActions
+                onFileUpload={handleFileUpload}
+                isProcessing={isProcessing}
+                onShowAccessDialog={() => setShowAccessDialog(true)}
+              />
             </div>
             {isProcessing ? (
               <div className="space-y-3">
@@ -192,19 +139,20 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
                 </div>
               </div>
             ) : (
-              <Input
+              <textarea
                 id="searchText"
                 placeholder="Enter job requirements or paste resume content"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="min-h-[100px]"
+                className="w-full min-h-[100px] p-4 border-4 border-black rounded bg-white resize-none 
+                  shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black"
               />
             )}
           </div>
 
           {searchType === "candidates-at-company" && (
             <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name</Label>
+              <Label htmlFor="companyName" className="text-xl font-bold">Company Name</Label>
               {isProcessing ? (
                 <Skeleton className="h-10 w-full" />
               ) : (
@@ -213,6 +161,8 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
                   placeholder="Enter company name"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
+                  className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] 
+                    focus:ring-0 focus:border-black"
                 />
               )}
             </div>
@@ -220,11 +170,14 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
 
           <Button 
             type="submit" 
-            className="w-full" 
+            className="w-full bg-[#8B5CF6] text-white py-4 rounded font-bold text-lg border-4 
+              border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 
+              hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all
+              disabled:opacity-50 disabled:cursor-not-allowed" 
             disabled={isProcessing || !searchText || (searchType === "candidates-at-company" && !companyName)}
           >
             {isProcessing ? (
-              <div className="flex items-center">
+              <div className="flex items-center justify-center">
                 <div className="animate-spin mr-2">
                   <Upload className="h-4 w-4" />
                 </div>
@@ -238,7 +191,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
       </Card>
 
       <Dialog open={showAccessDialog} onOpenChange={setShowAccessDialog}>
-        <DialogContent>
+        <DialogContent className="border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <DialogHeader>
             <DialogTitle>Feature Access Required</DialogTitle>
             <DialogDescription>
@@ -246,10 +199,19 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end space-x-2">
-            <Button variant="secondary" onClick={() => setShowAccessDialog(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowAccessDialog(false)}
+              className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] 
+                hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            >
               Cancel
             </Button>
-            <Button onClick={handleRequestAccess}>
+            <Button 
+              onClick={handleRequestAccess}
+              className="bg-[#8B5CF6] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] 
+                hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            >
               Send Email
             </Button>
           </div>

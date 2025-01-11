@@ -35,6 +35,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [searchType, setSearchType] = useState<SearchType>("candidates");
   const [showAccessDialog, setShowAccessDialog] = useState(false);
   const [shouldExtractTerms, setShouldExtractTerms] = useState(false);
+  const [showAgentWindows, setShowAgentWindows] = useState(false);
   const { toast } = useToast();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,6 +86,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     e.preventDefault();
     setIsProcessing(true);
     setShouldExtractTerms(true);
+    setShowAgentWindows(true);
 
     try {
       toast({
@@ -99,7 +101,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         description: "Content processed and search string generated.",
       });
 
-      // Don't clear the search text anymore so the terms window persists
       setCompanyName("");
     } catch (error) {
       toast({
@@ -107,6 +108,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         description: "Failed to process content. Please try again.",
         variant: "destructive",
       });
+      setShowAgentWindows(false);
     } finally {
       setIsProcessing(false);
     }
@@ -206,10 +208,14 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         </form>
       </Card>
 
-      <KeyTermsWindow content={searchText} shouldExtract={shouldExtractTerms} />
-      <CompensationAnalysis content={searchText} shouldAnalyze={shouldExtractTerms} />
-      <JobDescriptionEnhancer content={searchText} shouldEnhance={shouldExtractTerms} />
-      <JobSummary content={searchText} shouldSummarize={shouldExtractTerms} />
+      {showAgentWindows && (
+        <>
+          <KeyTermsWindow content={searchText} shouldExtract={shouldExtractTerms} />
+          <CompensationAnalysis content={searchText} shouldAnalyze={shouldExtractTerms} />
+          <JobDescriptionEnhancer content={searchText} shouldEnhance={shouldExtractTerms} />
+          <JobSummary content={searchText} shouldSummarize={shouldExtractTerms} />
+        </>
+      )}
 
       <Dialog open={showAccessDialog} onOpenChange={setShowAccessDialog}>
         <DialogContent className="border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

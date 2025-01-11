@@ -2,6 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AgentOutput, Terms } from "@/types/agent";
 
+// Type guard to check if the value matches Terms interface
+const isTerms = (value: any): value is Terms => {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    Array.isArray(value.skills) &&
+    Array.isArray(value.titles) &&
+    Array.isArray(value.keywords)
+  );
+};
+
 export const useAgentOutputs = (jobId: number | null) => {
   return useQuery({
     queryKey: ["agentOutputs", jobId],
@@ -19,7 +30,7 @@ export const useAgentOutputs = (jobId: number | null) => {
       // Transform the raw data into the expected AgentOutput type
       const transformedData: AgentOutput = {
         ...data,
-        terms: data.terms as Terms || null
+        terms: isTerms(data.terms) ? data.terms : null
       };
 
       return transformedData;

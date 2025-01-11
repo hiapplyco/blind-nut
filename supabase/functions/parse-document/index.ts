@@ -55,15 +55,21 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // Convert array buffer to base64 for processing
-    const uint8Array = new Uint8Array(arrayBuffer)
-    const base64Data = base64Encode(uint8Array)
-    
     try {
-      // Process with Gemini
-      const prompt = `Please extract and format all the text content from this document, maintaining proper structure and removing any artifacts. Focus on preserving all important information including skills, experience, job requirements, and other relevant details.`;
+      // Convert array buffer to base64 for Gemini processing
+      const base64Data = base64Encode(new Uint8Array(arrayBuffer));
       
-      const result = await model.generateContent(prompt);
+      // Process with Gemini using direct PDF handling
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            data: base64Data,
+            mimeType: "application/pdf",
+          },
+        },
+        'Please extract and format all the text content from this document, maintaining proper structure and formatting. Focus on preserving all important information including skills, experience, job requirements, and other relevant details. Remove any artifacts or unnecessary formatting.'
+      ]);
+
       const extractedText = result.response.text();
       console.log('Gemini processing completed successfully');
 

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AgentOutput } from "@/types/agent";
+import { AgentOutput, Terms } from "@/types/agent";
 
 export const useAgentOutputs = (jobId: number | null) => {
   return useQuery({
@@ -15,7 +15,14 @@ export const useAgentOutputs = (jobId: number | null) => {
         .single();
 
       if (error) throw error;
-      return data as AgentOutput;
+
+      // Transform the raw data into the expected AgentOutput type
+      const transformedData: AgentOutput = {
+        ...data,
+        terms: data.terms as Terms || null
+      };
+
+      return transformedData;
     },
     enabled: !!jobId,
   });

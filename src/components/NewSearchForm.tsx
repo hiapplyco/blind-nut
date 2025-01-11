@@ -10,7 +10,11 @@ import { Users, Building2, Briefcase } from "lucide-react";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 
-const NewSearchForm = () => {
+interface NewSearchFormProps {
+  userId: string;
+}
+
+const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [searchText, setSearchText] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -27,7 +31,7 @@ const NewSearchForm = () => {
         description: "Please wait while we analyze the content...",
       });
 
-      const result = await processJobRequirements(searchText, searchType, companyName);
+      const result = await processJobRequirements(searchText, searchType, companyName, userId);
 
       toast({
         title: "Success",

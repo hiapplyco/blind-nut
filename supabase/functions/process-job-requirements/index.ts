@@ -94,29 +94,10 @@ serve(async (req) => {
     const searchString = openAiData.choices[0].message.content.trim();
     console.log('Final search string:', searchString);
 
-    // Initialize Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Store in Supabase jobs table
-    const { data: jobData, error: jobError } = await supabaseClient
-      .from('jobs')
-      .insert([{ 
-        content: content,
-        search_string: searchString
-      }])
-      .select()
-      .single();
-
-    if (jobError) throw jobError;
-
     return new Response(
       JSON.stringify({
         message: 'Content processed successfully',
-        searchString: searchString,
-        jobId: jobData.id
+        searchString: searchString
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

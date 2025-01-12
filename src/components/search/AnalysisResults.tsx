@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { AnalysisHeader } from "./analysis/AnalysisHeader";
 import { AnalysisGrid } from "./analysis/AnalysisGrid";
 import { PDFGenerator } from "./pdf/PDFGenerator";
+import { Progress } from "@/components/ui/progress";
 
 interface AnalysisResultsProps {
   jobId: number;
@@ -17,6 +18,8 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
   const [isExporting, setIsExporting] = useState(false);
   const [pdfContent, setPdfContent] = useState<string>("");
   const [isVisible, setIsVisible] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Trigger entrance animation after a short delay
@@ -28,13 +31,25 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
     const fetchJobData = async () => {
       if (!agentOutput) return;
       
+      setLoadingProgress(25);
+      
       const { data: jobData } = await supabase
         .from('jobs')
         .select('search_string')
         .eq('id', jobId)
         .single();
 
+      setLoadingProgress(50);
       setPdfContent(jobData?.search_string || 'No search string available');
+      
+      // Simulate loading of report components
+      setLoadingProgress(75);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setLoadingProgress(100);
+      
+      // Small delay before hiding loading state
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setIsLoading(false);
     };
 
     fetchJobData();
@@ -71,15 +86,40 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
           "transition-all duration-300 transform",
           isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
         )}>
-          <AnalysisHeader 
-            onClose={() => {
-              setIsVisible(false);
-              setTimeout(onClose, 300);
-            }}
-            onExport={handleExport}
-            isExporting={isExporting}
-          />
-          <AnalysisGrid jobId={jobId} />
+          {isLoading ? (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold">Preparing Analysis Report</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">
+                    Loading report components
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {loadingProgress}%
+                  </span>
+                </div>
+                <Progress 
+                  value={loadingProgress} 
+                  className="h-2"
+                  indicatorClassName={
+                    loadingProgress === 100 ? 'bg-green-500' : 'bg-blue-500'
+                  }
+                />
+              </div>
+            </div>
+          ) : (
+            <>
+              <AnalysisHeader 
+                onClose={() => {
+                  setIsVisible(false);
+                  setTimeout(onClose, 300);
+                }}
+                onExport={handleExport}
+                isExporting={isExporting}
+              />
+              <AnalysisGrid jobId={jobId} />
+            </>
+          )}
         </Card>
       </div>
 

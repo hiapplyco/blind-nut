@@ -27,24 +27,36 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const searchPrompt = `
-    Objective: Extract key skills and similar job titles from the text and construct a Google search query using Boolean operators to find relevant talent profiles.
+    System Prompt for Extracting Key Skills, Job Titles, Location and Using Boolean to Search Google
+    
+    Objective: Extract key skills, similar job titles, and metropolitan area from the text and construct a Google search query using Boolean operators to find relevant talent profiles.
 
     Instructions:
+
     1. Extract Key Skills: Identify the most important skills mentioned in the text. Focus on specific technical skills, software knowledge, and industry-relevant keywords.
 
-    2. Extract Similar Job Titles: Identify the main job title and extract related or similar job titles. Consider variations in seniority and alternative titles.
+    2. Extract Similar Job Titles: Identify the main job title and extract related or similar job titles. Consider variations in seniority (e.g., "Senior Software Engineer" vs. "Software Engineer"), alternative titles (e.g., "Data Scientist" vs. "Machine Learning Engineer"), and industry-specific variations.
 
-    3. Construct Boolean Query with this structure:
-    site:linkedin.com/in/ ${companyName ? `"${companyName}" AND ` : ''}("job title 1" OR "job title 2" OR "job title 3") AND ("skill 1" OR "skill 2") AND ("skill 3" OR "skill 4")
+    3. Extract Metropolitan Area: Identify the nearest major metropolitan area mentioned or implied in the text. If a smaller city is mentioned, use the nearest major metropolitan area (e.g., "Palo Alto" would become "San Francisco Bay Area"). If no location is mentioned, do not include location in the search.
+
+    4. Construct Boolean Query: Use the extracted skills, job titles, and location to build a Google search query with the following structure:
+
+    site:linkedin.com/in/ ${companyName ? `"${companyName}" AND ` : ''}"METROPOLITAN_AREA" AND ("job title 1" OR "job title 2" OR "job title 3") AND ("skill 1" OR "skill 2") AND ("skill 3" OR "skill 4") NOT ("unwanted term 1" OR "unwanted term 2")
 
     Rules:
-    - Enclose each job title and skill group in parentheses
+    - Enclose each job title and each skill group in parentheses
     - Use OR to connect similar job titles or synonymous skills
     - Use AND to connect different skill groups and job titles
+    - Use NOT to exclude irrelevant terms
     - Use quotation marks for exact phrases
     - Keep the number of terms reasonable (3-5 job titles, 4-8 skills)
     - Always start with site:linkedin.com/in/
     - If company name is provided, add it in quotes after site:linkedin.com/in/
+    - Include the metropolitan area in quotes if found
+
+    Example:
+    For a "Marketing Manager" position in Palo Alto with experience in "content marketing," "SEO":
+    site:linkedin.com/in/ "San Francisco Bay Area" AND ("Marketing Manager" OR "Digital Marketing Manager" OR "Growth Marketing Manager") AND ("content marketing" OR "SEO")
 
     Text to analyze: ${content}
 

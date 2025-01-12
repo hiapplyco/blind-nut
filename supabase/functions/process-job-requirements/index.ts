@@ -7,6 +7,87 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Major metro area mapping
+const cityToMetroArea: { [key: string]: string } = {
+  // California
+  'Oceanside': 'San Diego',
+  'La Jolla': 'San Diego',
+  'Carlsbad': 'San Diego',
+  'Escondido': 'San Diego',
+  'Palo Alto': 'San Francisco',
+  'San Jose': 'San Francisco',
+  'Mountain View': 'San Francisco',
+  'Sunnyvale': 'San Francisco',
+  'Berkeley': 'San Francisco',
+  'Oakland': 'San Francisco',
+  'Sacramento': 'Sacramento',
+  'Fresno': 'Fresno',
+  'Santa Barbara': 'Los Angeles',
+  'Pasadena': 'Los Angeles',
+  'Long Beach': 'Los Angeles',
+  'Irvine': 'Los Angeles',
+  
+  // New York
+  'Brooklyn': 'New York City',
+  'Queens': 'New York City',
+  'Bronx': 'New York City',
+  'Staten Island': 'New York City',
+  'Albany': 'New York City',
+  'Buffalo': 'Buffalo',
+  'Rochester': 'Rochester',
+  
+  // Massachusetts
+  'Cambridge': 'Boston',
+  'Somerville': 'Boston',
+  'Brookline': 'Boston',
+  'Newton': 'Boston',
+  'Worcester': 'Boston',
+  
+  // Washington
+  'Bellevue': 'Seattle',
+  'Redmond': 'Seattle',
+  'Kirkland': 'Seattle',
+  'Tacoma': 'Seattle',
+  'Spokane': 'Spokane',
+  
+  // Texas
+  'Arlington': 'Dallas',
+  'Plano': 'Dallas',
+  'Irving': 'Dallas',
+  'Fort Worth': 'Dallas',
+  'The Woodlands': 'Houston',
+  'Sugar Land': 'Houston',
+  'Katy': 'Houston',
+  'Round Rock': 'Austin',
+  'Cedar Park': 'Austin',
+  'Georgetown': 'Austin',
+  
+  // Illinois
+  'Evanston': 'Chicago',
+  'Naperville': 'Chicago',
+  'Schaumburg': 'Chicago',
+  'Oak Park': 'Chicago',
+  
+  // Other major cities remain as is
+  'Chicago': 'Chicago',
+  'New York City': 'New York City',
+  'Los Angeles': 'Los Angeles',
+  'San Francisco': 'San Francisco',
+  'Seattle': 'Seattle',
+  'Boston': 'Boston',
+  'Austin': 'Austin',
+  'Dallas': 'Dallas',
+  'Houston': 'Houston',
+  'Miami': 'Miami',
+  'Atlanta': 'Atlanta',
+  'Denver': 'Denver',
+  'Phoenix': 'Phoenix',
+  'Portland': 'Portland',
+  'Philadelphia': 'Philadelphia',
+  'Washington': 'Washington DC',
+  'San Diego': 'San Diego',
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -19,11 +100,18 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // Extract metropolitan area
-    const locationPrompt = `Extract the nearest major metropolitan area from this text. If a specific city is mentioned, return its corresponding metropolitan area (e.g., "Palo Alto" should return "San Francisco Bay Area", "Cambridge" should return "Greater Boston"). If no location is mentioned, respond with "United States". Return only the metropolitan area name, nothing else: ${content}`;
+    // Extract location and map to major metro area
+    const locationPrompt = `Extract just the city name from this text. If no specific city is mentioned, respond with "United States". Return only the city name, nothing else: ${content}`;
     const locationResult = await model.generateContent(locationPrompt);
-    const location = locationResult.response.text().trim();
-    console.log('Extracted metropolitan area:', location);
+    let extractedCity = locationResult.response.text().trim();
+    
+    // Map the extracted city to its major metro area
+    let location = cityToMetroArea[extractedCity] || extractedCity;
+    if (location === extractedCity && !Object.values(cityToMetroArea).includes(location)) {
+      location = "United States";
+    }
+    
+    console.log('Mapped location:', extractedCity, 'to:', location);
 
     // Generate search string based on type
     let searchPrompt;
@@ -58,8 +146,7 @@ serve(async (req) => {
       5. Add "followers" to find established companies
       6. Add "employees" to ensure company size relevance
       
-      Format your response as a single search string, nothing else. Example:
-      site:linkedin.com/company "San Francisco Bay Area" "Technology, Information and Media" software cloud startup followers employees`;
+      Format your response as a single search string, nothing else.`;
     } else if (searchType === 'candidates-at-company') {
       searchPrompt = `Create a search string for finding candidates at a specific company. Start with "site:linkedin.com/in". Include "${location}" AND "${companyName}" and then add relevant job titles and skills from this content: ${content}. The output should be a single search string, no other information.`;
     }

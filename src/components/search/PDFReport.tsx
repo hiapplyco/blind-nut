@@ -17,40 +17,40 @@ export const PDFReport = ({
   searchString
 }: PDFReportProps) => {
   return (
-    <div className="p-8 space-y-8">
-      <h1 className="text-3xl font-bold">Job Analysis Report</h1>
+    <div className="p-12 space-y-12">
+      <h1 className="text-4xl font-bold mb-8">Job Analysis Report</h1>
       
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold">Job Summary</h2>
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold mb-4">Job Summary</h2>
         <div className="prose max-w-none">
           <ReactMarkdown>{jobSummary}</ReactMarkdown>
         </div>
       </section>
 
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold">Enhanced Description</h2>
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold mb-4">Enhanced Description</h2>
         <div className="prose max-w-none">
           <ReactMarkdown>{enhancedDescription}</ReactMarkdown>
         </div>
       </section>
 
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold">Compensation Analysis</h2>
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold mb-4">Compensation Analysis</h2>
         <div className="prose max-w-none">
           <ReactMarkdown>{compensationAnalysis}</ReactMarkdown>
         </div>
       </section>
 
       {terms && (
-        <section className="space-y-4">
-          <h2 className="text-2xl font-bold">Key Terms</h2>
+        <section className="space-y-6">
+          <h2 className="text-2xl font-bold mb-4">Key Terms</h2>
           
-          <div className="space-y-4">
+          <div className="space-y-8">
             <div>
-              <h3 className="text-xl font-semibold">Skills & Technologies</h3>
-              <div className="flex flex-wrap gap-2">
+              <h3 className="text-xl font-semibold mb-3">Skills & Technologies</h3>
+              <div className="flex flex-wrap gap-3">
                 {terms.skills.map((skill, index) => (
-                  <span key={index} className="px-2 py-1 bg-gray-100 rounded">
+                  <span key={index} className="px-3 py-2 bg-gray-100 rounded">
                     {skill}
                   </span>
                 ))}
@@ -58,10 +58,10 @@ export const PDFReport = ({
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold">Job Titles</h3>
-              <div className="flex flex-wrap gap-2">
+              <h3 className="text-xl font-semibold mb-3">Job Titles</h3>
+              <div className="flex flex-wrap gap-3">
                 {terms.titles.map((title, index) => (
-                  <span key={index} className="px-2 py-1 bg-gray-100 rounded">
+                  <span key={index} className="px-3 py-2 bg-gray-100 rounded">
                     {title}
                   </span>
                 ))}
@@ -69,10 +69,10 @@ export const PDFReport = ({
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold">Keywords</h3>
-              <div className="flex flex-wrap gap-2">
+              <h3 className="text-xl font-semibold mb-3">Keywords</h3>
+              <div className="flex flex-wrap gap-3">
                 {terms.keywords.map((keyword, index) => (
-                  <span key={index} className="px-2 py-1 bg-gray-100 rounded">
+                  <span key={index} className="px-3 py-2 bg-gray-100 rounded">
                     {keyword}
                   </span>
                 ))}
@@ -82,9 +82,9 @@ export const PDFReport = ({
         </section>
       )}
 
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold">Search String</h2>
-        <div className="p-4 bg-gray-100 rounded-lg font-mono text-sm overflow-x-auto">
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold mb-4">Search String</h2>
+        <div className="p-6 bg-gray-100 rounded-lg font-mono text-sm overflow-x-auto">
           {searchString}
         </div>
       </section>

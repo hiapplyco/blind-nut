@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, FileText, User, PlusCircle } from "lucide-react";
+import { Search, FileText, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
@@ -18,9 +18,6 @@ const Dashboard = () => {
           agent_outputs!agent_outputs_job_id_fkey (
             job_summary,
             created_at
-          ),
-          search_results (
-            count
           )
         `)
         .order('created_at', { ascending: false });
@@ -45,7 +42,7 @@ const Dashboard = () => {
   return (
     <div className="container max-w-4xl py-8 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Candidate Searches</h1>
+        <h1 className="text-3xl font-bold">Previous Searches</h1>
         <Button 
           onClick={() => navigate('/')}
           className="flex items-center gap-2"
@@ -68,32 +65,28 @@ const Dashboard = () => {
                 </div>
                 
                 {search.agent_outputs?.[0]?.job_summary && (
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {search.agent_outputs[0].job_summary}
-                  </p>
-                )}
-
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-1 text-sm text-gray-600">
-                    <User className="h-4 w-4" />
-                    <span>{search.search_results?.length || 0} candidates</span>
+                  <div>
+                    <h3 className="font-semibold text-lg">
+                      {search.content?.substring(0, 60) || 'Untitled Search'}
+                    </h3>
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {search.agent_outputs[0].job_summary}
+                    </p>
                   </div>
-                </div>
+                )}
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                  onClick={() => {
-                    navigate(`/?jobId=${search.id}`);
-                  }}
-                >
-                  <FileText className="h-4 w-4" />
-                  View Report
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+                onClick={() => {
+                  navigate(`/?jobId=${search.id}`);
+                }}
+              >
+                <FileText className="h-4 w-4" />
+                View Report
+              </Button>
             </div>
           </Card>
         ))}

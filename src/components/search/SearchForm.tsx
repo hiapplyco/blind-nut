@@ -30,7 +30,7 @@ export const SearchForm = ({
   const [searchText, setSearchText] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [searchType, setSearchType] = useState<SearchType>("candidates");
+  const [searchType, setSearchType] = useState<SearchType>("companies");
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,11 +38,20 @@ export const SearchForm = ({
     setIsProcessing(true);
 
     try {
+      // Generate title and summary
+      const titleResponse = await supabase.functions.invoke('generate-job-title', {
+        body: { content: searchText }
+      });
+
+      if (titleResponse.error) throw titleResponse.error;
+
       const { data: jobData, error: jobError } = await supabase
         .from('jobs')
         .insert({
           content: searchText,
-          user_id: userId
+          user_id: userId,
+          title: titleResponse.data.title,
+          summary: titleResponse.data.summary
         })
         .select()
         .single();

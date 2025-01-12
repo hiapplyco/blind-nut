@@ -51,8 +51,11 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         }
       };
 
-      // Generate the PDF using the hidden div reference
-      await ReactToPdf(pdfRef.current, options);
+      // Create a function that returns the target element
+      const getTargetElement = () => pdfRef.current;
+
+      // Generate the PDF using the target finder function
+      await ReactToPdf(getTargetElement, options);
       
       toast.success("PDF exported successfully");
     } catch (error) {

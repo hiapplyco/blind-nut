@@ -15,7 +15,7 @@ const Dashboard = () => {
         .from("jobs")
         .select(`
           *,
-          agent_outputs (
+          agent_outputs!agent_outputs_job_id_fkey (
             job_summary,
             created_at
           ),
@@ -87,7 +87,6 @@ const Dashboard = () => {
                   size="sm"
                   className="flex items-center gap-2"
                   onClick={() => {
-                    // Navigate to search with job ID
                     navigate(`/?jobId=${search.id}`);
                   }}
                 >

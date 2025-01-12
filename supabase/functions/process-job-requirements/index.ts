@@ -7,93 +7,61 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Major metro area mapping
-const cityToMetroArea: { [key: string]: string } = {
-  // Georgia
-  'Albany, GA': 'Atlanta',
-  'Athens, GA': 'Atlanta',
-  'Augusta, GA': 'Atlanta',
-  'Columbus, GA': 'Atlanta',
-  'Macon, GA': 'Atlanta',
-  'Savannah, GA': 'Atlanta',
+// Common tech skills categories for normalization
+const skillCategories = {
+  programming: ['JavaScript', 'Python', 'Java', 'C++', 'TypeScript', 'Ruby', 'Go', 'Rust', 'PHP', 'Swift'],
+  frameworks: ['React', 'Angular', 'Vue', 'Next.js', 'Django', 'Flask', 'Spring', 'Laravel', 'Express'],
+  databases: ['PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Elasticsearch', 'DynamoDB', 'Cassandra'],
+  cloud: ['AWS', 'Azure', 'GCP', 'Kubernetes', 'Docker', 'Terraform', 'CloudFormation'],
+  tools: ['Git', 'Jenkins', 'CircleCI', 'GitHub Actions', 'Jira', 'Confluence', 'Slack'],
+};
+
+// Helper function to normalize and categorize skills
+const normalizeSkills = (extractedSkills: string[]): Record<string, boolean> => {
+  const normalizedSkills: Record<string, boolean> = {};
   
-  // New York
-  'Albany, NY': 'New York City',
-  'Brooklyn': 'New York City',
-  'Queens': 'New York City',
-  'Bronx': 'New York City',
-  'Staten Island': 'New York City',
-  'Buffalo': 'Buffalo',
-  'Rochester': 'Rochester',
-  
-  // California
-  'Oceanside': 'San Diego',
-  'La Jolla': 'San Diego',
-  'Carlsbad': 'San Diego',
-  'Escondido': 'San Diego',
-  'Palo Alto': 'San Francisco',
-  'San Jose': 'San Francisco',
-  'Mountain View': 'San Francisco',
-  'Sunnyvale': 'San Francisco',
-  'Berkeley': 'San Francisco',
-  'Oakland': 'San Francisco',
-  'Sacramento': 'Sacramento',
-  'Fresno': 'Fresno',
-  'Santa Barbara': 'Los Angeles',
-  'Pasadena': 'Los Angeles',
-  'Long Beach': 'Los Angeles',
-  'Irvine': 'Los Angeles',
-  
-  // Massachusetts
-  'Cambridge': 'Boston',
-  'Somerville': 'Boston',
-  'Brookline': 'Boston',
-  'Newton': 'Boston',
-  'Worcester': 'Boston',
-  
-  // Washington
-  'Bellevue': 'Seattle',
-  'Redmond': 'Seattle',
-  'Kirkland': 'Seattle',
-  'Tacoma': 'Seattle',
-  'Spokane': 'Spokane',
-  
-  // Texas
-  'Arlington': 'Dallas',
-  'Plano': 'Dallas',
-  'Irving': 'Dallas',
-  'Fort Worth': 'Dallas',
-  'The Woodlands': 'Houston',
-  'Sugar Land': 'Houston',
-  'Katy': 'Houston',
-  'Round Rock': 'Austin',
-  'Cedar Park': 'Austin',
-  'Georgetown': 'Austin',
-  
-  // Illinois
-  'Evanston': 'Chicago',
-  'Naperville': 'Chicago',
-  'Schaumburg': 'Chicago',
-  'Oak Park': 'Chicago',
-  
-  // Other major cities remain as is
-  'Chicago': 'Chicago',
-  'New York City': 'New York City',
-  'Los Angeles': 'Los Angeles',
-  'San Francisco': 'San Francisco',
-  'Seattle': 'Seattle',
-  'Boston': 'Boston',
-  'Austin': 'Austin',
-  'Dallas': 'Dallas',
-  'Houston': 'Houston',
-  'Miami': 'Miami',
-  'Atlanta': 'Atlanta',
-  'Denver': 'Denver',
-  'Phoenix': 'Phoenix',
-  'Portland': 'Portland',
-  'Philadelphia': 'Philadelphia',
-  'Washington': 'Washington DC',
-  'San Diego': 'San Diego',
+  // If we have very few skills, add some synthetic ones based on context
+  if (extractedSkills.length < 3) {
+    // Add basic skills that are commonly required
+    normalizedSkills['team_collaboration'] = true;
+    normalizedSkills['problem_solving'] = true;
+    normalizedSkills['communication'] = true;
+    return normalizedSkills;
+  }
+
+  // For each extracted skill, normalize and categorize
+  extractedSkills.forEach(skill => {
+    const normalizedSkill = skill.toLowerCase().trim();
+    
+    // Check against our categories and normalize to standard names
+    for (const [category, skills] of Object.entries(skillCategories)) {
+      const matchedSkill = skills.find(s => 
+        normalizedSkill.includes(s.toLowerCase()) ||
+        s.toLowerCase().includes(normalizedSkill)
+      );
+      
+      if (matchedSkill) {
+        normalizedSkills[matchedSkill] = true;
+        return;
+      }
+    }
+
+    // If it's not in our categories, add it directly if it seems valid
+    if (normalizedSkill.length > 2 && !normalizedSkill.includes('years')) {
+      normalizedSkills[normalizedSkill] = true;
+    }
+  });
+
+  // If we have too many skills, keep only the most relevant ones
+  const maxSkills = 10;
+  if (Object.keys(normalizedSkills).length > maxSkills) {
+    const prioritySkills = Object.entries(normalizedSkills)
+      .slice(0, maxSkills)
+      .reduce((acc, [skill, value]) => ({...acc, [skill]: value}), {});
+    return prioritySkills;
+  }
+
+  return normalizedSkills;
 };
 
 serve(async (req) => {
@@ -108,89 +76,52 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    // Add safety timeout for location extraction
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timed out')), 25000);
-    });
+    // Extract skills with a more focused prompt
+    const skillsPrompt = `Extract technical and soft skills from this job description. Format as a JSON array of strings. Include only clear, specific skills (no years of experience or vague terms). If the text is unclear, return an empty array:
 
-    // Extract location and map to major metro area
-    const locationPrompt = `Extract the complete location (city, state if available) from this text. If no specific city is mentioned, respond with "United States". Return only the location, nothing else: ${content}`;
-    const locationResultPromise = model.generateContent(locationPrompt);
-    const locationResult = await Promise.race([locationResultPromise, timeoutPromise]);
+Input: ${content}
+
+Example output format:
+["JavaScript", "React", "AWS", "team leadership", "agile methodologies"]`;
+
+    const skillsResult = await model.generateContent(skillsPrompt);
+    const skillsText = skillsResult.response.text().trim();
+    let extractedSkills: string[] = [];
     
-    if (locationResult instanceof Error) {
-      throw locationResult;
+    try {
+      // Clean the response string before parsing
+      const cleanedResponse = skillsText.replace(/```json\n?|\n?```/g, '').trim();
+      extractedSkills = JSON.parse(cleanedResponse);
+    } catch (error) {
+      console.error('Error parsing skills:', error);
+      extractedSkills = [];
     }
 
-    let extractedLocation = locationResult.response.text().trim();
-    
-    // Map the extracted location to its major metro area
-    let location = cityToMetroArea[extractedLocation] || extractedLocation;
-    if (location === extractedLocation && !Object.values(cityToMetroArea).includes(location)) {
-      // If we can't map it, use the state or default to United States
-      if (extractedLocation.includes(', ')) {
-        const state = extractedLocation.split(', ')[1];
-        if (state === 'GA') location = 'Atlanta';
-        // Add more state mappings as needed
-      } else {
-        location = "United States";
-      }
-    }
-    
-    console.log('Mapped location:', extractedLocation, 'to:', location);
+    // Normalize and categorize the extracted skills
+    const normalizedSkills = normalizeSkills(extractedSkills);
+    console.log('Normalized skills:', normalizedSkills);
 
-    // Generate search string based on type
-    let searchPrompt;
+    // Generate the search string based on the normalized skills
+    let searchString = '';
     if (searchType === 'candidates') {
-      searchPrompt = `Create a search string for finding candidates. Start with "site:linkedin.com/in". Include "${location}" and then add relevant job titles and skills from this content: ${content}. The output should be a single search string, no other information.`;
+      const skillsForSearch = Object.keys(normalizedSkills).slice(0, 5).join(' OR ');
+      searchString = `site:linkedin.com/in (${skillsForSearch})`;
+      if (companyName) {
+        searchString += ` "${companyName}"`;
+      }
     } else if (searchType === 'companies') {
-      searchPrompt = `Based on this job description: ${content}, create a LinkedIn company search string following these rules:
-      1. Start with 'site:linkedin.com/company'
-      2. Include "${location}" in quotes
-      3. Select 2-3 most relevant industries from this list and combine them with OR operators in parentheses:
-         (industry1 OR industry2 OR industry3)
-         Choose from:
-         - "Accommodation Services"
-         - "Administrative and Support Services"
-         - "Construction"
-         - "Consumer Services"
-         - "Education"
-         - "Entertainment Providers"
-         - "Farming, Ranching, Forestry"
-         - "Financial Services"
-         - "Government Administration"
-         - "Holding Companies"
-         - "Hospitals and Health Care"
-         - "Manufacturing"
-         - "Oil, Gas, and Mining"
-         - "Professional Services"
-         - "Real Estate and Equipment Rental Services"
-         - "Retail"
-         - "Technology, Information and Media"
-         - "Transportation, Logistics, Supply Chain and Storage"
-         - "Utilities"
-         - "Wholesale"
-      4. Add 2-3 relevant keywords from the job description that would help find similar companies
-      
-      Format your response as a single search string, nothing else.`;
+      searchString = `site:linkedin.com/company "${companyName}"`;
     } else if (searchType === 'candidates-at-company') {
-      searchPrompt = `Create a search string for finding candidates at a specific company. Start with "site:linkedin.com/in". Include "${location}" AND "${companyName}" and then add relevant job titles and skills from this content: ${content}. The output should be a single search string, no other information.`;
+      searchString = `site:linkedin.com/in (${Object.keys(normalizedSkills).slice(0, 5).join(' OR ')}) AND "${companyName}"`;
     }
 
-    const searchResultPromise = model.generateContent(searchPrompt);
-    const result = await Promise.race([searchResultPromise, timeoutPromise]);
-    
-    if (result instanceof Error) {
-      throw result;
-    }
-
-    const searchString = result.response.text().trim();
     console.log('Generated search string:', searchString);
 
     return new Response(
       JSON.stringify({
         message: 'Content processed successfully',
-        searchString: searchString
+        searchString: searchString,
+        skills: normalizedSkills
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

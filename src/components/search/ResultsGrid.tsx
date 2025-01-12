@@ -19,15 +19,18 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
   console.log("ResultsGrid state:", { jobId, isProcessingComplete, isLoading, agentOutput });
 
   const handleClose = () => {
-    // Reset the URL without refreshing the page
-    window.history.pushState({}, '', '/');
-    // Reload the page to reset the state
-    window.location.reload();
+    // Only allow closing if we have data or processing is complete
+    if (agentOutput || !isProcessingComplete) {
+      // Reset the URL without refreshing the page
+      window.history.pushState({}, '', '/');
+      // Reload the page to reset the state
+      window.location.reload();
+    }
   };
 
   const handleOverlayClick = (e: React.MouseEvent) => {
-    // Only close if clicking the overlay background, not its children
-    if (e.target === e.currentTarget) {
+    // Only close if clicking the overlay background and we have data
+    if (e.target === e.currentTarget && (agentOutput || !isProcessingComplete)) {
       handleClose();
     }
   };
@@ -55,8 +58,9 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
           </div>
           <Button 
             variant="outline"
-            className="mt-4 w-full border-2 border-black hover:bg-gray-100"
+            className="mt-4 w-full border-2 border-black hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleClose}
+            disabled={isProcessingComplete && !agentOutput}
           >
             Cancel Analysis
           </Button>

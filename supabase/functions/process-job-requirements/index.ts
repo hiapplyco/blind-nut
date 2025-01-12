@@ -9,54 +9,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Common tech skills categories for normalization
-const skillCategories = {
-  programming: ['JavaScript', 'Python', 'Java', 'C++', 'TypeScript', 'Ruby', 'Go', 'Rust', 'PHP', 'Swift'],
-  frameworks: ['React', 'Angular', 'Vue', 'Next.js', 'Django', 'Flask', 'Spring', 'Laravel', 'Express'],
-  databases: ['PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Elasticsearch', 'DynamoDB', 'Cassandra'],
-  cloud: ['AWS', 'Azure', 'GCP', 'Kubernetes', 'Docker', 'Terraform', 'CloudFormation'],
-  tools: ['Git', 'Jenkins', 'CircleCI', 'GitHub Actions', 'Jira', 'Confluence', 'Slack'],
-};
-
-// Helper function to normalize and categorize skills
-const normalizeSkills = (extractedSkills: string[]): Record<string, boolean> => {
-  const normalizedSkills: Record<string, boolean> = {};
-  
-  // For each extracted skill, normalize and categorize
-  extractedSkills.forEach(skill => {
-    const normalizedSkill = skill.toLowerCase().trim();
-    
-    // Check against our categories and normalize to standard names
-    for (const [category, skills] of Object.entries(skillCategories)) {
-      const matchedSkill = skills.find(s => 
-        normalizedSkill.includes(s.toLowerCase()) ||
-        s.toLowerCase().includes(normalizedSkill)
-      );
-      
-      if (matchedSkill) {
-        normalizedSkills[matchedSkill] = true;
-        return;
-      }
-    }
-
-    // If it's not in our categories, add it directly if it seems valid
-    if (normalizedSkill.length > 2 && !normalizedSkill.includes('years')) {
-      normalizedSkills[normalizedSkill] = true;
-    }
-  });
-
-  // If we have too many skills, keep only the most relevant ones
-  const maxSkills = 10;
-  if (Object.keys(normalizedSkills).length > maxSkills) {
-    const prioritySkills = Object.entries(normalizedSkills)
-      .slice(0, maxSkills)
-      .reduce((acc, [skill, value]) => ({...acc, [skill]: value}), {});
-    return prioritySkills;
-  }
-
-  return normalizedSkills;
-};
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -84,13 +36,13 @@ Job description: ${content}`;
     const locationData = JSON.parse(locationResult.response.text());
     console.log('Location analysis result:', locationData);
 
-    // Extract skills with a more focused prompt
-    const skillsPrompt = `Extract technical and soft skills from this job description. Format as a JSON array of strings. Include only clear, specific skills (no years of experience or vague terms). If the text is unclear, return an empty array:
+    // Extract skills with a focused prompt
+    const skillsPrompt = `Extract only the specific technical skills, tools, and technologies mentioned in this job description. Format as a JSON array of strings. Include only clear, specific skills mentioned in the text. If the text is unclear, return an empty array.
 
 Input: ${content}
 
 Example output format:
-["JavaScript", "React", "AWS", "team leadership", "agile methodologies"]`;
+["JavaScript", "React", "AWS"]`;
 
     console.log('Using prompt for skills extraction:', skillsPrompt);
     const skillsResult = await model.generateContent(skillsPrompt);
@@ -100,14 +52,11 @@ Example output format:
     try {
       const cleanedResponse = skillsText.replace(/```json\n?|\n?```/g, '').trim();
       extractedSkills = JSON.parse(cleanedResponse);
-      console.log('Successfully extracted skills:', extractedSkills);
+      console.log('Extracted skills:', extractedSkills);
     } catch (error) {
       console.error('Error parsing skills:', error);
       extractedSkills = [];
     }
-
-    const normalizedSkills = normalizeSkills(extractedSkills);
-    console.log('Normalized skills:', normalizedSkills);
 
     let searchString = '';
     
@@ -115,7 +64,7 @@ Example output format:
       const candidateSearchPrompt = `Create a Google Boolean search string for LinkedIn candidate sourcing based on these requirements:
 
 Job Content: ${content}
-Key Skills: ${Object.keys(normalizedSkills).join(', ')}
+Key Skills: ${extractedSkills.join(', ')}
 Location: ${locationData.metropolitanArea || locationData.location || 'Remote'}
 
 Rules:
@@ -141,7 +90,6 @@ Output only the search string, no explanations.`;
         searchString = `${searchString} AND "${companyName}"`;
       }
     } else if (searchType === 'companies') {
-      // New improved prompt for company search
       const companySearchPrompt = `Create a Google Boolean search string to find company information on LinkedIn:
 
 Company Name: ${companyName}
@@ -156,18 +104,16 @@ Rules:
 Output only the search string, no explanations.`;
 
       console.log('Using company search prompt:', companySearchPrompt);
-      
       const searchResult = await model.generateContent(companySearchPrompt);
       searchString = searchResult.response.text().trim();
       console.log('Generated company search string:', searchString);
 
     } else if (searchType === 'candidates-at-company') {
-      // New improved prompt for candidates at specific company
       const candidatesAtCompanyPrompt = `Create a Google Boolean search string to find candidates at a specific company on LinkedIn:
 
 Company: ${companyName}
 Job Content: ${content}
-Key Skills: ${Object.keys(normalizedSkills).join(', ')}
+Key Skills: ${extractedSkills.join(', ')}
 
 Rules:
 1. Start with 'site:linkedin.com/in'
@@ -184,7 +130,6 @@ site:linkedin.com/in "Current Company Name" AND ("Software Engineer" OR "Develop
 Output only the search string, no explanations.`;
 
       console.log('Using candidates at company prompt:', candidatesAtCompanyPrompt);
-      
       const searchResult = await model.generateContent(candidatesAtCompanyPrompt);
       searchString = searchResult.response.text().trim();
       console.log('Generated candidates at company search string:', searchString);
@@ -194,7 +139,7 @@ Output only the search string, no explanations.`;
       JSON.stringify({
         message: 'Content processed successfully',
         searchString: searchString,
-        skills: normalizedSkills,
+        skills: extractedSkills,
         location: locationData
       }),
       {

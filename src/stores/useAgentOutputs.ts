@@ -38,7 +38,7 @@ export const useAgentOutputs = (jobId: number | null) => {
         .from("jobs")
         .select("id")
         .eq("id", jobId)
-        .single();
+        .maybeSingle();
 
       if (jobError) {
         console.error("Error fetching job:", jobError);

@@ -1,17 +1,22 @@
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { useState, useEffect } from "react";
 import { AnalysisLoading } from "./AnalysisLoading";
-import { ViewReportButton } from "./ViewReportButton";
 import { AnalysisResults } from "./AnalysisResults";
 
 interface ResultsGridProps {
   jobId: number | null;
   isProcessingComplete: boolean;
+  showResults: boolean;
+  onClose: () => void;
 }
 
-export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) => {
+export const ResultsGrid = ({ 
+  jobId, 
+  isProcessingComplete,
+  showResults,
+  onClose
+}: ResultsGridProps) => {
   const { data: agentOutput, isLoading, refetch } = useAgentOutputs(jobId);
-  const [showResults, setShowResults] = useState(false);
   const [dataReady, setDataReady] = useState(false);
 
   console.log("ResultsGrid state:", { 
@@ -41,8 +46,7 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
   }, [isProcessingComplete, dataReady, agentOutput, refetch]);
 
   const handleClose = () => {
-    setShowResults(false);
-    setDataReady(false);
+    onClose();
     window.history.pushState({}, '', '/');
     window.location.reload();
   };
@@ -57,10 +61,6 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
         onCancel={handleClose}
       />
     );
-  }
-
-  if (agentOutput && !showResults) {
-    return <ViewReportButton onClick={() => setShowResults(true)} />;
   }
 
   if (agentOutput && showResults) {

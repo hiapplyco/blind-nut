@@ -8,15 +8,25 @@ import { FormHeader } from "./FormHeader";
 import { ContentTextarea } from "./ContentTextarea";
 import { CompanyNameInput } from "./CompanyNameInput";
 import { SubmitButton } from "./SubmitButton";
+import { ViewReportButton } from "./ViewReportButton";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 
 interface SearchFormProps {
   userId: string;
   onJobCreated: (jobId: number, searchText: string) => void;
+  currentJobId: number | null;
+  isProcessingComplete: boolean;
+  onViewReport: () => void;
 }
 
-export const SearchForm = ({ userId, onJobCreated }: SearchFormProps) => {
+export const SearchForm = ({ 
+  userId, 
+  onJobCreated, 
+  currentJobId,
+  isProcessingComplete,
+  onViewReport 
+}: SearchFormProps) => {
   const [searchText, setSearchText] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -123,6 +133,12 @@ export const SearchForm = ({ userId, onJobCreated }: SearchFormProps) => {
 
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+      {currentJobId && isProcessingComplete && (
+        <div className="mb-6">
+          <ViewReportButton onClick={onViewReport} />
+        </div>
+      )}
+      
       <form onSubmit={handleSubmit} className="space-y-6">
         <SearchTypeToggle value={searchType} onValueChange={(value) => setSearchType(value)} />
         <FormHeader />

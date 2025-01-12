@@ -25,29 +25,29 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#8B5CF6", // Changed to Vivid Purple
+          DEFAULT: "#8B6E5B", // Mocha Mousse primary
           foreground: "#ffffff",
-          hover: "#F59E0B", // Keeping the gold hover color
+          hover: "#A18472", // Lighter Mocha for hover
         },
         secondary: {
-          DEFAULT: "#64748b",
-          foreground: "#ffffff",
+          DEFAULT: "#D2C0B2", // Lighter complementary brown
+          foreground: "#44332A", // Darker brown for contrast
         },
         destructive: {
           DEFAULT: "#ef4444",
           foreground: "#ffffff",
         },
         muted: {
-          DEFAULT: "#f1f5f9",
-          foreground: "#64748b",
+          DEFAULT: "#F5F0ED", // Very light warm beige
+          foreground: "#66534A", // Darker brown for text
         },
         accent: {
-          DEFAULT: "#f8fafc",
-          foreground: "#0f172a",
+          DEFAULT: "#EBE3DD", // Soft warm accent
+          foreground: "#44332A", // Dark brown for contrast
         },
         card: {
           DEFAULT: "#ffffff",
-          foreground: "#0f172a",
+          foreground: "#44332A", // Dark brown for card text
         },
       },
       borderRadius: {

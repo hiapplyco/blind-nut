@@ -12,6 +12,7 @@ import ReactToPdf from "react-to-pdf";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
+import ReactDOM from "react-dom";
 
 interface AnalysisResultsProps {
   jobId: number;
@@ -42,7 +43,23 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
 
       const searchString = jobData?.search_string || 'No search string available';
 
-      // Generate PDF
+      // Create a temporary container for the PDF content
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      // Render the PDF content into the container
+      ReactDOM.render(
+        <PDFReport
+          jobSummary={agentOutput.job_summary || ''}
+          enhancedDescription={agentOutput.enhanced_description || ''}
+          compensationAnalysis={agentOutput.compensation_analysis || ''}
+          terms={agentOutput.terms}
+          searchString={searchString}
+        />,
+        container
+      );
+
+      // Generate PDF options
       const options = {
         filename: `job-analysis-${jobId}.pdf`,
         page: {
@@ -51,22 +68,15 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         }
       };
 
-      const targetRef = document.createElement('div');
-      const pdfReport = (
-        <PDFReport
-          jobSummary={agentOutput.job_summary || ''}
-          enhancedDescription={agentOutput.enhanced_description || ''}
-          compensationAnalysis={agentOutput.compensation_analysis || ''}
-          terms={agentOutput.terms}
-          searchString={searchString}
-        />
-      );
+      // Create a function that returns the container
+      const getTargetElement = () => container;
 
-      // Create a function that returns the target element
-      const getTargetElement = () => targetRef;
-
-      // Use ReactToPdf with the target finder function
+      // Generate the PDF
       await ReactToPdf(getTargetElement, options);
+      
+      // Clean up the temporary container
+      document.body.removeChild(container);
+      
       toast.success("PDF exported successfully");
       setIsExporting(false);
     } catch (error) {

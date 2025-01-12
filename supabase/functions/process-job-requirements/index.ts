@@ -30,33 +30,36 @@ serve(async (req) => {
     if (searchType === 'candidates') {
       searchPrompt = `Create a search string for finding candidates. Start with "site:linkedin.com/in". Include "${location}" and then add relevant job titles and skills from this content: ${content}. The output should be a single search string, no other information.`;
     } else if (searchType === 'companies') {
-      searchPrompt = `Based on this job description: ${content}, provide TWO pieces of information:
-         1. Select the most relevant industry from this list ONLY:
-         Accommodation Services
-         Administrative and Support Services
-         Construction
-         Consumer Services
-         Education
-         Entertainment Providers
-         Farming, Ranching, Forestry
-         Financial Services
-         Government Administration
-         Holding Companies
-         Hospitals and Health Care
-         Manufacturing
-         Oil, Gas, and Mining
-         Professional Services
-         Real Estate and Equipment Rental Services
-         Retail
-         Technology, Information and Media
-         Transportation, Logistics, Supply Chain and Storage
-         Utilities
-         Wholesale
-
-         2. Extract ONE key characteristic about the type of company (e.g., "startup", "enterprise", "non-profit", "public company", etc.)
-         
-         Format your response exactly like this, nothing else:
-         site:linkedin.com/company/ "${location}" "INDUSTRY" AND "CHARACTERISTIC"`;
+      searchPrompt = `Based on this job description: ${content}, create a LinkedIn company search string following these rules:
+      1. Start with 'site:linkedin.com/company'
+      2. Include "${location}" in quotes
+      3. Select ONE most relevant industry from this list and include it in quotes:
+         - Accommodation Services
+         - Administrative and Support Services
+         - Construction
+         - Consumer Services
+         - Education
+         - Entertainment Providers
+         - Farming, Ranching, Forestry
+         - Financial Services
+         - Government Administration
+         - Holding Companies
+         - Hospitals and Health Care
+         - Manufacturing
+         - Oil, Gas, and Mining
+         - Professional Services
+         - Real Estate and Equipment Rental Services
+         - Retail
+         - Technology, Information and Media
+         - Transportation, Logistics, Supply Chain and Storage
+         - Utilities
+         - Wholesale
+      4. Add 2-3 relevant keywords from the job description that would help find similar companies
+      5. Add "followers" to find established companies
+      6. Add "employees" to ensure company size relevance
+      
+      Format your response as a single search string, nothing else. Example:
+      site:linkedin.com/company "San Francisco Bay Area" "Technology, Information and Media" software cloud startup followers employees`;
     } else if (searchType === 'candidates-at-company') {
       searchPrompt = `Create a search string for finding candidates at a specific company. Start with "site:linkedin.com/in". Include "${location}" AND "${companyName}" and then add relevant job titles and skills from this content: ${content}. The output should be a single search string, no other information.`;
     }

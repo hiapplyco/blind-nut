@@ -62,8 +62,11 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         />
       );
 
-      // Use ReactToPdf directly as a function
-      await ReactToPdf(targetRef, options);
+      // Create a function that returns the target element
+      const getTargetElement = () => targetRef;
+
+      // Use ReactToPdf with the target finder function
+      await ReactToPdf(getTargetElement, options);
       toast.success("PDF exported successfully");
       setIsExporting(false);
     } catch (error) {

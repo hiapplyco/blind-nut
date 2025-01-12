@@ -68,18 +68,7 @@ Highlight unique opportunities and growth potential to attract top talent.
 
 Original job description: ${content}`;
 
-    // Add safety timeout
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timed out')), 25000);
-    });
-
-    const resultPromise = model.generateContent(prompt);
-    const result = await Promise.race([resultPromise, timeoutPromise]);
-    
-    if (result instanceof Error) {
-      throw result;
-    }
-
+    const result = await model.generateContent(prompt);
     const enhancedDescription = result.response.text();
     console.log('Enhanced description generated successfully');
     
@@ -87,30 +76,24 @@ Original job description: ${content}`;
       JSON.stringify({ enhancedDescription }),
       { 
         headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         } 
       }
     );
   } catch (error) {
     console.error('Error in enhance-job-description:', error);
-    let errorMessage = error.message;
-    
-    // Handle rate limiting specifically
-    if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
-      errorMessage = 'API rate limit exceeded. Please try again in a few minutes.';
-    }
     
     return new Response(
       JSON.stringify({ 
-        error: errorMessage,
-        details: error.message 
+        error: error.message,
+        details: error.stack 
       }),
       { 
-        status: error.message.includes('429') ? 429 : 500,
+        status: 500,
         headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
       }
     );

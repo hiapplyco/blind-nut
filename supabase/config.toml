@@ -1,4 +1,4 @@
 project_id = "kxghaajojntkqrmvsngn"
 
-[functions.parse-document]
+[functions.enhance-job-description]
 verify_jwt = false

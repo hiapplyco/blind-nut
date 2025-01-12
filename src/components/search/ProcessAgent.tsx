@@ -88,15 +88,19 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
         if (insertError) throw insertError;
         console.log("Agent outputs saved to database:", insertData);
 
-        // Verify the data was saved by attempting to fetch it
-        const verifyData = async () => {
+        // Wait for data to be available before marking as complete
+        const verifyData = async (retries = 0, maxRetries = 10): Promise<void> => {
+          if (retries >= maxRetries) {
+            throw new Error("Data verification timed out");
+          }
+
           const { data: verificationData } = await supabase
             .from('agent_outputs')
             .select('*')
             .eq('job_id', jobId)
             .maybeSingle();
           
-          console.log("Verification fetch result:", verificationData);
+          console.log("Verification attempt", retries + 1, "result:", verificationData);
           
           if (verificationData) {
             toast({
@@ -107,7 +111,8 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
             onComplete();
           } else {
             // If data isn't found, retry after a short delay
-            setTimeout(verifyData, 1000);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await verifyData(retries + 1);
           }
         };
 

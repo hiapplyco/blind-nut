@@ -20,7 +20,7 @@ export const SearchTypeToggle = ({ value, onValueChange }: SearchTypeToggleProps
           <SelectTrigger className="w-full border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <SelectValue placeholder="Select search type" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white border-2 border-black">
             <SelectItem value="candidates">
               <div className="flex items-center">
                 <Users className="h-4 w-4 mr-2" />

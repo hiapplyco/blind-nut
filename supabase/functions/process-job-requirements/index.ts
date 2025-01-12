@@ -10,11 +10,17 @@ const corsHeaders = {
 };
 
 async function analyzeLocation(model: any, content: string) {
-  const locationPrompt = `Extract the location information from this job description and determine the nearest major metropolitan area. Return the result as a JSON object with two properties: "location" (the original location mentioned) and "metropolitanArea" (the nearest major metropolitan area). If no location is mentioned, use "remote" as the location and leave metropolitanArea empty.
+  const locationPrompt = `Extract the location information from this job description and determine the nearest major metropolitan area. Return ONLY the major city name without state abbreviations (e.g., "Los Angeles" not "Los Angeles, CA"). Return the result as a JSON object with two properties: "location" (the original location mentioned) and "metropolitanArea" (the nearest major metropolitan area name only). If no location is mentioned, use "remote" as the location and leave metropolitanArea empty.
+
+Rules for metropolitanArea:
+1. Use only the city name without state abbreviations
+2. For major cities, use their common names (e.g., "New York City", "Los Angeles", "Chicago")
+3. Always map to the nearest major metropolitan area (e.g., "Palo Alto" should map to "San Francisco")
+4. Do not include state abbreviations or additional location information
 
 Example output:
 {
-  "location": "Carlsbad, CA",
+  "location": "Carlsbad, California",
   "metropolitanArea": "San Diego"
 }
 

@@ -19,7 +19,7 @@ interface ProcessingStep {
 export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) => {
   const { toast } = useToast();
   const [steps, setSteps] = useState<ProcessingStep[]>([
-    { name: "Extracting Key Terms", status: 'pending', progress: 0 },
+    { name: "Creating X-Ray Search", status: 'pending', progress: 0 },
     { name: "Analyzing Compensation", status: 'pending', progress: 0 },
     { name: "Enhancing Description", status: 'pending', progress: 0 },
     { name: "Creating Summary", status: 'pending', progress: 0 }

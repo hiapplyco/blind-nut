@@ -13,8 +13,8 @@ export const AgentWindow = ({
   children
 }: AgentWindowProps) => {
   return (
-    <Card className="w-full p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all duration-200">
-      <div className="flex items-center gap-2 mb-4">
+    <Card className="w-full p-4 sm:p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all duration-200">
+      <div className="flex items-center gap-2 mb-6">
         <div className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           {icon}
           <h2 className="text-xl font-bold">{title}</h2>

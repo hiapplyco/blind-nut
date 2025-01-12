@@ -1,6 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
 
 interface ProcessAgentProps {
   content: string;
@@ -8,158 +10,142 @@ interface ProcessAgentProps {
   onComplete: () => void;
 }
 
+interface ProcessingStep {
+  name: string;
+  status: 'pending' | 'processing' | 'complete' | 'error';
+  progress: number;
+}
+
 export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) => {
   const { toast } = useToast();
+  const [steps, setSteps] = useState<ProcessingStep[]>([
+    { name: "Extracting Key Terms", status: 'pending', progress: 0 },
+    { name: "Analyzing Compensation", status: 'pending', progress: 0 },
+    { name: "Enhancing Description", status: 'pending', progress: 0 },
+    { name: "Creating Summary", status: 'pending', progress: 0 }
+  ]);
+
+  const updateStepStatus = (index: number, status: ProcessingStep['status'], progress: number) => {
+    setSteps(currentSteps => 
+      currentSteps.map((step, i) => 
+        i === index ? { ...step, status, progress } : step
+      )
+    );
+  };
+
+  const processStep = async (
+    index: number, 
+    functionName: string, 
+    responseKey: string
+  ): Promise<any> => {
+    try {
+      updateStepStatus(index, 'processing', 25);
+      
+      const response = await supabase.functions.invoke(functionName, { 
+        body: { content } 
+      });
+      
+      if (response.error) throw response.error;
+      updateStepStatus(index, 'complete', 100);
+      
+      return response.data[responseKey];
+    } catch (error) {
+      console.error(`Error in ${functionName}:`, error);
+      updateStepStatus(index, 'error', 0);
+      throw error;
+    }
+  };
 
   useEffect(() => {
-    const processingToast = toast({
-      title: "Processing Started",
-      description: "Our AI agents are analyzing your content. This usually takes about 30-60 seconds...",
-      duration: 5000,
-    });
-
     const processContent = async () => {
       try {
-        console.log("Starting content processing for job:", jobId);
-        
         // Process terms
-        const termsResponse = await supabase.functions.invoke('extract-nlp-terms', { 
-          body: { content } 
-        });
-        
-        if (termsResponse.error) throw termsResponse.error;
-        console.log("Terms extracted:", termsResponse.data);
-        
-        toast({
-          title: "Terms Extracted",
-          description: "Key terms have been identified.",
-          duration: 3000,
-        });
+        const terms = await processStep(0, 'extract-nlp-terms', 'terms');
         
         // Process compensation
-        const compensationResponse = await supabase.functions.invoke('analyze-compensation', { 
-          body: { content } 
-        });
+        const compensationData = await processStep(1, 'analyze-compensation', 'analysis');
         
-        if (compensationResponse.error) throw compensationResponse.error;
-        console.log("Compensation analyzed:", compensationResponse.data);
-
-        toast({
-          title: "Compensation Analyzed",
-          description: "Salary and benefits have been processed.",
-          duration: 3000,
-        });
-
-        // Process job description
-        const enhancerResponse = await supabase.functions.invoke('enhance-job-description', { 
-          body: { content } 
-        });
+        // Process description
+        const enhancerData = await processStep(2, 'enhance-job-description', 'enhancedDescription');
         
-        if (enhancerResponse.error) throw enhancerResponse.error;
-        console.log("Description enhanced:", enhancerResponse.data);
-
-        toast({
-          title: "Description Enhanced",
-          description: "Job description has been improved.",
-          duration: 3000,
-        });
-
         // Process summary
-        const summaryResponse = await supabase.functions.invoke('summarize-job', { 
-          body: { content } 
-        });
-        
-        if (summaryResponse.error) throw summaryResponse.error;
-        console.log("Summary created:", summaryResponse.data);
+        const summaryData = await processStep(3, 'summarize-job', 'summary');
 
-        // Store results in Supabase
-        console.log("Attempting to insert agent outputs for job:", jobId);
-        const { data: insertData, error: insertError } = await supabase
+        // Store all results
+        const { error: insertError } = await supabase
           .from('agent_outputs')
           .insert({
             job_id: jobId,
-            terms: termsResponse.data,
-            compensation_analysis: compensationResponse.data?.analysis,
-            enhanced_description: enhancerResponse.data?.enhancedDescription,
-            job_summary: summaryResponse.data?.summary
+            terms,
+            compensation_analysis: compensationData,
+            enhanced_description: enhancerData,
+            job_summary: summaryData
           })
           .select()
           .single();
 
-        if (insertError) {
-          console.error("Error inserting agent outputs:", insertError);
-          throw insertError;
-        }
-        console.log("Agent outputs saved to database:", insertData);
+        if (insertError) throw insertError;
 
-        // Wait for data to be available before marking as complete
-        const verifyData = async (retries = 0, maxRetries = 10): Promise<void> => {
-          if (retries >= maxRetries) {
-            console.error("Data verification timed out after", maxRetries, "attempts");
-            throw new Error("Data verification timed out");
-          }
+        // Verify data is stored before completing
+        const { data: verificationData, error: verificationError } = await supabase
+          .from('agent_outputs')
+          .select('*')
+          .eq('job_id', jobId)
+          .single();
 
-          console.log(`Verification attempt ${retries + 1} for job ${jobId}`);
-          
-          try {
-            const { data: verificationData, error: verificationError } = await supabase
-              .from('agent_outputs')
-              .select('*')
-              .eq('job_id', jobId)
-              .maybeSingle();
-            
-            if (verificationError) {
-              console.error("Verification attempt error:", verificationError);
-              throw verificationError;
-            }
-            
-            console.log("Verification attempt", retries + 1, "result:", verificationData);
-            
-            if (verificationData) {
-              console.log("Data verification successful for job:", jobId);
-              toast({
-                title: "Analysis Complete",
-                description: "Your report is now ready to view.",
-                duration: 5000,
-              });
-              onComplete();
-            } else {
-              console.log(`Data not yet available, retry ${retries + 1} of ${maxRetries}`);
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              await verifyData(retries + 1);
-            }
-          } catch (error) {
-            console.error("Error during verification:", error);
-            if (retries < maxRetries - 1) {
-              console.log("Retrying verification...");
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              await verifyData(retries + 1);
-            } else {
-              throw error;
-            }
-          }
-        };
+        if (verificationError) throw verificationError;
+        if (!verificationData) throw new Error('Data verification failed');
 
-        // Start verification process
-        await verifyData();
+        toast({
+          title: "Analysis Complete",
+          description: "Your report is ready to view",
+        });
 
+        onComplete();
       } catch (error) {
         console.error('Error in agent processing:', error);
         toast({
           title: "Error",
-          description: "Failed to process content with agents. " + (error instanceof Error ? error.message : "Unknown error"),
+          description: "Failed to process content. Please try again.",
           variant: "destructive",
-          duration: 5000,
         });
       }
     };
 
     processContent();
-
-    return () => {
-      processingToast.dismiss();
-    };
   }, [content, jobId, onComplete, toast]);
 
-  return null;
+  return (
+    <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+      <div className="space-y-6">
+        <h3 className="text-xl font-bold">Analyzing Content</h3>
+        <div className="space-y-4">
+          {steps.map((step, index) => (
+            <div key={index} className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">
+                  {step.name}
+                </span>
+                <span className="text-sm text-gray-500">
+                  {step.status === 'complete' ? '100%' : 
+                   step.status === 'error' ? 'Error' :
+                   step.status === 'processing' ? 'Processing...' : 
+                   'Pending'}
+                </span>
+              </div>
+              <Progress 
+                value={step.progress} 
+                className="h-2"
+                indicatorClassName={
+                  step.status === 'error' ? 'bg-red-500' :
+                  step.status === 'complete' ? 'bg-green-500' :
+                  'bg-blue-500'
+                }
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
 };

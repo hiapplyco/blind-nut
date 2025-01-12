@@ -26,22 +26,43 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
+    // First, let's extract the location with a specific prompt
+    const locationPrompt = `Extract the nearest major metropolitan area from this text. Follow these rules:
+
+    1. If a specific city is mentioned, return the nearest major metropolitan area (e.g., "Palo Alto" should return "San Francisco Bay Area")
+    2. Remove state names and abbreviations (e.g., "CA", "California")
+    3. If no location is mentioned, return an empty string
+    4. Format as a metropolitan area name only (e.g., "Greater Boston" or "New York City")
+    5. Return ONLY the metropolitan area name, nothing else
+
+    Text: ${content}`;
+
+    console.log('Using location prompt:', locationPrompt);
+    const locationResult = await model.generateContent(locationPrompt);
+    const metroArea = locationResult.response.text().trim();
+    console.log('Extracted metro area:', metroArea);
+
     const searchPrompt = `
-    System Prompt for Extracting Key Skills, Job Titles, Location and Using Boolean to Search Google
-    
-    Objective: Extract key skills, similar job titles, and metropolitan area from the text and construct a Google search query using Boolean operators to find relevant talent profiles.
+    System Prompt for Extracting Key Skills and Job Titles for Boolean Search
+
+    Objective: Extract key skills, similar job titles, and construct a Google search query using Boolean operators to find relevant talent profiles.
 
     Instructions:
 
     1. Extract Key Skills: Identify the most important skills mentioned in the text. Focus on specific technical skills, software knowledge, and industry-relevant keywords.
+    - Include ONLY concrete, specific technical skills and technologies
+    - Exclude generic terms like "experience" or "knowledge"
+    - Keep each skill concise (1-3 words maximum)
+    - Format consistently (e.g., "React.js" not "reactjs")
 
-    2. Extract Similar Job Titles: Identify the main job title and extract related or similar job titles. Consider variations in seniority (e.g., "Senior Software Engineer" vs. "Software Engineer"), alternative titles (e.g., "Data Scientist" vs. "Machine Learning Engineer"), and industry-specific variations.
+    2. Extract Similar Job Titles: Identify the main job title and extract related or similar job titles.
+    - Consider variations in seniority
+    - Include alternative titles
+    - Keep titles specific and relevant
 
-    3. Extract Metropolitan Area: Identify the nearest major metropolitan area mentioned or implied in the text. If a smaller city is mentioned, use the nearest major metropolitan area (e.g., "Palo Alto" would become "San Francisco Bay Area"). If no location is mentioned, do not include location in the search.
+    3. Construct Boolean Query: Use the extracted skills and job titles to build a Google search query with the following structure:
 
-    4. Construct Boolean Query: Use the extracted skills, job titles, and location to build a Google search query with the following structure:
-
-    site:linkedin.com/in/ ${companyName ? `"${companyName}" AND ` : ''}"METROPOLITAN_AREA" AND ("job title 1" OR "job title 2" OR "job title 3") AND ("skill 1" OR "skill 2") AND ("skill 3" OR "skill 4") NOT ("unwanted term 1" OR "unwanted term 2")
+    site:linkedin.com/in/ ${companyName ? `"${companyName}" AND ` : ''}${metroArea ? `"${metroArea}" AND ` : ''}("job title 1" OR "job title 2" OR "job title 3") AND ("skill 1" OR "skill 2") AND ("skill 3" OR "skill 4") NOT ("unwanted term 1" OR "unwanted term 2")
 
     Rules:
     - Enclose each job title and each skill group in parentheses
@@ -51,12 +72,6 @@ serve(async (req) => {
     - Use quotation marks for exact phrases
     - Keep the number of terms reasonable (3-5 job titles, 4-8 skills)
     - Always start with site:linkedin.com/in/
-    - If company name is provided, add it in quotes after site:linkedin.com/in/
-    - Include the metropolitan area in quotes if found
-
-    Example:
-    For a "Marketing Manager" position in Palo Alto with experience in "content marketing," "SEO":
-    site:linkedin.com/in/ "San Francisco Bay Area" AND ("Marketing Manager" OR "Digital Marketing Manager" OR "Growth Marketing Manager") AND ("content marketing" OR "SEO")
 
     Text to analyze: ${content}
 
@@ -72,7 +87,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         message: 'Content processed successfully',
-        searchString
+        searchString,
+        metroArea: metroArea || null
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

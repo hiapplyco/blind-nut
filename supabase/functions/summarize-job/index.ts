@@ -43,8 +43,10 @@ Focus on what would most interest potential candidates.
 
 Job description: ${content}`;
 
+    console.log('Using prompt for job summary:', prompt);
     const result = await model.generateContent(prompt);
     const summary = result.response.text();
+    console.log('Job summary generated successfully');
     
     return new Response(
       JSON.stringify({ summary }),

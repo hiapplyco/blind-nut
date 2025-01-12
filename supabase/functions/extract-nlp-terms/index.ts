@@ -53,7 +53,7 @@ Guidelines:
 
 Text to analyze: ${content}`;
 
-    console.log('Sending prompt to Gemini...');
+    console.log('Using prompt for NLP terms extraction:', prompt);
     const result = await model.generateContent(prompt);
     const response = result.response.text();
     console.log('Raw Gemini response:', response);

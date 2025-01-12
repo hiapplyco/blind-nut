@@ -50,6 +50,8 @@ Keep sections concise but impactful, using bold for key figures and italic for c
 
 Job description: ${content}`;
 
+    console.log('Using prompt for compensation analysis:', prompt);
+
     // Add safety timeout
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Request timed out')), 25000);
@@ -63,6 +65,7 @@ Job description: ${content}`;
     }
 
     const analysis = result.response.text();
+    console.log('Compensation analysis completed successfully');
     
     return new Response(
       JSON.stringify({ analysis }),

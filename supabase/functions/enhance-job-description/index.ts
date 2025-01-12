@@ -68,6 +68,8 @@ Highlight unique opportunities and growth potential to attract top talent.
 
 Original job description: ${content}`;
 
+    console.log('Using prompt for job description enhancement:', prompt);
+
     const result = await model.generateContent(prompt);
     const enhancedDescription = result.response.text();
     console.log('Enhanced description generated successfully');

@@ -5,18 +5,37 @@ import { GoogleGenerativeAI } from "npm:@google/generative-ai";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 204
+    });
   }
 
   try {
+    if (!req.body) {
+      throw new Error('Request body is required');
+    }
+
     const { content } = await req.json();
+    
+    if (!content) {
+      throw new Error('Content is required in request body');
+    }
+
     console.log('Analyzing compensation for content:', content?.substring(0, 100) + '...');
 
-    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
+    const apiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY is not configured');
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `As a Talent Acquisition expert, analyze the compensation details in this job description. Format your response in markdown with clear, engaging headers and emphasis on key points. Include:
@@ -69,24 +88,30 @@ Job description: ${content}`;
     
     return new Response(
       JSON.stringify({ analysis }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
+        status: 200
+      }
     );
   } catch (error) {
     console.error('Error in analyze-compensation:', error);
-    let errorMessage = error.message;
     
-    // Handle rate limiting specifically
-    if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
-      errorMessage = 'API rate limit exceeded. Please try again in a few minutes.';
-    }
+    // Determine appropriate status code
+    let status = 500;
+    if (error.message.includes('not configured')) status = 503;
+    if (error.message.includes('required')) status = 400;
+    if (error.message.includes('rate limit') || error.message.includes('429')) status = 429;
     
     return new Response(
       JSON.stringify({ 
-        error: errorMessage,
-        details: error.message 
+        error: error.message,
+        details: error.stack 
       }),
       { 
-        status: error.message.includes('429') ? 429 : 500,
+        status,
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 

@@ -6,6 +6,7 @@ import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { Card } from "@/components/ui/card";
 import { Bot, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface ResultsGridProps {
   jobId: number | null;
@@ -52,6 +53,13 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
               </div>
             </div>
           </div>
+          <Button 
+            variant="outline"
+            className="mt-4 w-full border-2 border-black hover:bg-gray-100"
+            onClick={handleClose}
+          >
+            Cancel Analysis
+          </Button>
         </Card>
       </div>
     );

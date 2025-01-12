@@ -3,13 +3,9 @@ import { TooltipProvider } from "@radix-ui/react-tooltip"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { SidebarContext } from "./sidebar-context"
-
-const SIDEBAR_COOKIE_NAME = "sidebar:state"
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "18rem"
-const SIDEBAR_WIDTH_ICON = "3rem"
-const SIDEBAR_KEYBOARD_SHORTCUT = "b"
+import { SIDEBAR_WIDTH, SIDEBAR_WIDTH_ICON } from "./sidebar-constants"
+import { useSidebarState } from "./use-sidebar-state"
+import { useSidebarKeyboard } from "./use-sidebar-keyboard"
 
 export const SidebarProvider = React.forwardRef<
   HTMLDivElement,
@@ -33,21 +29,12 @@ export const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
-    const [_open, _setOpen] = React.useState(defaultOpen)
-    const open = openProp ?? _open
     
-    const setOpen = React.useCallback(
-      (value: boolean | ((value: boolean) => boolean)) => {
-        const openState = typeof value === "function" ? value(open) : value
-        if (setOpenProp) {
-          setOpenProp(openState)
-        } else {
-          _setOpen(openState)
-        }
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
-      },
-      [setOpenProp, open]
-    )
+    const { open, setOpen } = useSidebarState({
+      defaultOpen,
+      open: openProp,
+      onOpenChange: setOpenProp,
+    })
 
     const toggleSidebar = React.useCallback(() => {
       return isMobile
@@ -55,20 +42,7 @@ export const SidebarProvider = React.forwardRef<
         : setOpen((open) => !open)
     }, [isMobile, setOpen, setOpenMobile])
 
-    React.useEffect(() => {
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (
-          event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-          (event.metaKey || event.ctrlKey)
-        ) {
-          event.preventDefault()
-          toggleSidebar()
-        }
-      }
-
-      window.addEventListener("keydown", handleKeyDown)
-      return () => window.removeEventListener("keydown", handleKeyDown)
-    }, [toggleSidebar])
+    useSidebarKeyboard(toggleSidebar)
 
     const state: "expanded" | "collapsed" = open ? "expanded" : "collapsed"
 

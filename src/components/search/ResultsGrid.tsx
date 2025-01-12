@@ -47,8 +47,8 @@ export const ResultsGrid = ({
 
   const handleClose = () => {
     onClose();
+    // Remove URL parameters without refreshing the page
     window.history.pushState({}, '', '/');
-    window.location.reload();
   };
 
   if (!jobId) return null;

@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { processJobRequirements } from "@/utils/jobRequirements";
 import { supabase } from "@/integrations/supabase/client";
-import { SearchTypeToggle } from "./SearchTypeToggle";
-import { FormHeader } from "./FormHeader";
-import { ContentTextarea } from "./ContentTextarea";
-import { CompanyNameInput } from "./CompanyNameInput";
-import { SubmitButton } from "./SubmitButton";
-import { ViewReportButton } from "./ViewReportButton";
+import { SearchTypeToggle } from "@/components/search/SearchTypeToggle";
+import { FormHeader } from "@/components/search/FormHeader";
+import { ContentTextarea } from "@/components/search/ContentTextarea";
+import { CompanyNameInput } from "@/components/search/CompanyNameInput";
+import { SubmitButton } from "@/components/search/SubmitButton";
+import { ViewReportButton } from "@/components/search/ViewReportButton";
 import { Bot } from "lucide-react";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 

@@ -88,16 +88,31 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
         if (insertError) throw insertError;
         console.log("Agent outputs saved to database:", insertData);
 
-        toast({
-          title: "Analysis Complete",
-          description: "Your report is now ready to view.",
-          duration: 5000,
-        });
-        
-        // Small delay to ensure database write is complete
-        setTimeout(() => {
-          onComplete();
-        }, 1000);
+        // Verify the data was saved by attempting to fetch it
+        const verifyData = async () => {
+          const { data: verificationData } = await supabase
+            .from('agent_outputs')
+            .select('*')
+            .eq('job_id', jobId)
+            .maybeSingle();
+          
+          console.log("Verification fetch result:", verificationData);
+          
+          if (verificationData) {
+            toast({
+              title: "Analysis Complete",
+              description: "Your report is now ready to view.",
+              duration: 5000,
+            });
+            onComplete();
+          } else {
+            // If data isn't found, retry after a short delay
+            setTimeout(verifyData, 1000);
+          }
+        };
+
+        // Start verification process
+        await verifyData();
 
       } catch (error) {
         console.error('Error in agent processing:', error);

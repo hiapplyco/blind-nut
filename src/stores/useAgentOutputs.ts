@@ -49,9 +49,6 @@ export const useAgentOutputs = (jobId: number | null) => {
         return null;
       }
 
-      // Add a small delay before fetching agent outputs
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       // Now fetch the agent outputs
       const { data, error } = await supabase
         .from("agent_outputs")
@@ -85,8 +82,12 @@ export const useAgentOutputs = (jobId: number | null) => {
       return output;
     },
     enabled: !!jobId,
-    // Refetch more frequently until we get data
-    refetchInterval: (data) => (!data ? 1000 : false),
-    staleTime: 30000, // Consider data fresh for 30 seconds
+    // Refetch more frequently until we get data (every 500ms)
+    refetchInterval: (data) => (!data ? 500 : false),
+    // Keep retrying if we don't get data
+    retry: true,
+    retryDelay: 500,
+    // Consider data fresh for 30 seconds once we have it
+    staleTime: 30000,
   });
 };

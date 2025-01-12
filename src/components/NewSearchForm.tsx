@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SearchForm } from "./search/SearchForm";
-import { ProcessAgent } from "./search/ProcessAgent";
+import { AgentProcessor } from "./search/AgentProcessor";
 import { ResultsGrid } from "./search/ResultsGrid";
 import { toast } from "sonner";
 
@@ -28,6 +28,11 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     toast.success("Analysis complete! Click 'View Analysis Report' to see results.");
   };
 
+  const handleViewReport = () => {
+    console.log("View report requested");
+    setShowResults(true);
+  };
+
   return (
     <div className="space-y-6">
       <SearchForm 
@@ -35,14 +40,11 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         onJobCreated={(jobId, text) => handleSearchSubmit(text, jobId)}
         currentJobId={currentJobId}
         isProcessingComplete={isProcessingComplete}
-        onViewReport={() => {
-          console.log("View report requested from SearchForm");
-          setShowResults(true);
-        }}
+        onViewReport={handleViewReport}
       />
       
       {currentJobId && !isProcessingComplete && (
-        <ProcessAgent
+        <AgentProcessor
           content={searchText}
           jobId={currentJobId}
           onComplete={handleProcessingComplete}

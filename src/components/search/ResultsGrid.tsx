@@ -36,15 +36,21 @@ export const ResultsGrid = ({
   }, [agentOutput]);
 
   useEffect(() => {
-    if (isProcessingComplete && !showResults) {
+    if (isProcessingComplete) {
       console.log("Processing complete, showing analysis loading");
       setDataReady(true);
     }
-  }, [isProcessingComplete, showResults]);
+  }, [isProcessingComplete]);
 
   const handleClose = () => {
+    console.log("Handling close in ResultsGrid");
+    setDataReady(false);
     onClose();
-    window.history.pushState({}, '', '/');
+  };
+
+  const handleViewReport = () => {
+    console.log("View report clicked in ResultsGrid");
+    setDataReady(true);
   };
 
   if (!jobId) return null;
@@ -56,12 +62,7 @@ export const ResultsGrid = ({
           isProcessingComplete={isProcessingComplete}
           dataReady={dataReady}
           onCancel={handleClose}
-          onViewReport={() => {
-            console.log("View report clicked");
-            setDataReady(true);
-            // Instead of calling onClose here, we want to show the results
-            onClose(); // This will reset the loading modal
-          }}
+          onViewReport={handleViewReport}
         />
       )}
       

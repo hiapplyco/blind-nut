@@ -34,11 +34,7 @@ export const SearchForm = ({
     if (!file) return;
 
     if (!file.type.includes('pdf') && !file.type.includes('image')) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a PDF file or an image",
-        variant: "destructive",
-      });
+      toast("Invalid file type. Please upload a PDF file or an image");
       return;
     }
 
@@ -56,18 +52,11 @@ export const SearchForm = ({
 
       if (data?.text) {
         setSearchText(data.text);
-        toast({
-          title: "File processed",
-          description: "The content has been extracted and added to the input field.",
-        });
+        toast("File processed successfully. The content has been extracted and added to the input field.");
       }
     } catch (error) {
       console.error('Error processing file:', error);
-      toast({
-        title: "Error",
-        description: "Failed to process the file. Please try again.",
-        variant: "destructive",
-      });
+      toast("Failed to process the file. Please try again.");
     } finally {
       setIsProcessing(false);
     }

@@ -77,6 +77,22 @@ serve(async (req) => {
 
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
+    // First, let's analyze the location from the content
+    const locationPrompt = `Extract the location information from this job description and determine the nearest major metropolitan area. Return the result as a JSON object with two properties: "location" (the original location mentioned) and "metropolitanArea" (the nearest major metropolitan area). If no location is mentioned, use "remote" as the location and leave metropolitanArea empty.
+
+Example output:
+{
+  "location": "Carlsbad, CA",
+  "metropolitanArea": "San Diego"
+}
+
+Job description: ${content}`;
+
+    console.log('Using location analysis prompt:', locationPrompt);
+    const locationResult = await model.generateContent(locationPrompt);
+    const locationData = JSON.parse(locationResult.response.text());
+    console.log('Location analysis result:', locationData);
+
     // Extract skills with a more focused prompt
     const skillsPrompt = `Extract technical and soft skills from this job description. Format as a JSON array of strings. Include only clear, specific skills (no years of experience or vague terms). If the text is unclear, return an empty array:
 
@@ -86,13 +102,11 @@ Example output format:
 ["JavaScript", "React", "AWS", "team leadership", "agile methodologies"]`;
 
     console.log('Using prompt for skills extraction:', skillsPrompt);
-
     const skillsResult = await model.generateContent(skillsPrompt);
     const skillsText = skillsResult.response.text().trim();
     let extractedSkills: string[] = [];
     
     try {
-      // Clean the response string before parsing
       const cleanedResponse = skillsText.replace(/```json\n?|\n?```/g, '').trim();
       extractedSkills = JSON.parse(cleanedResponse);
       console.log('Successfully extracted skills:', extractedSkills);
@@ -101,36 +115,33 @@ Example output format:
       extractedSkills = [];
     }
 
-    // Normalize and categorize the extracted skills
     const normalizedSkills = normalizeSkills(extractedSkills);
     console.log('Normalized skills:', normalizedSkills);
 
-    // Generate the search string based on the normalized skills
     let searchString = '';
     
     if (searchType === 'candidates') {
-      // New improved prompt for candidate search
       const candidateSearchPrompt = `Create a Google Boolean search string for LinkedIn candidate sourcing based on these requirements:
 
 Job Content: ${content}
 Key Skills: ${Object.keys(normalizedSkills).join(', ')}
+Location: ${locationData.metropolitanArea || locationData.location || 'Remote'}
 
 Rules:
-1. Start with 'site:linkedin.com/in'
+1. Start with 'site:linkedin.com/in OR site:linkedin.com/pub'
 2. Include job titles and variations in parentheses with OR operators
 3. Include 3-5 most critical skills with AND operators
-4. Add relevant industry terms if applicable
-5. Exclude irrelevant results (e.g., job postings, recruiters) using NOT
+4. Add the metropolitan area in quotes (e.g. "San Francisco Bay Area")
+5. Exclude irrelevant results using -intitle:"profiles" -inurl:"dir/ "
 6. Keep the string under 300 characters for Google compatibility
 7. Focus on finding profiles, not job posts
 
 Example format:
-site:linkedin.com/in ("Software Engineer" OR "Backend Developer") AND (Python AND AWS AND Kubernetes) NOT (recruiter OR "job post" OR "we're hiring")
+("Software Engineer" OR "Backend Developer") AND (Python AND AWS AND Kubernetes) "San Francisco Bay Area" -intitle:"profiles" -inurl:"dir/ " site:linkedin.com/in OR site:linkedin.com/pub
 
 Output only the search string, no explanations.`;
 
       console.log('Using candidate search prompt:', candidateSearchPrompt);
-      
       const searchResult = await model.generateContent(candidateSearchPrompt);
       searchString = searchResult.response.text().trim();
       console.log('Generated candidate search string:', searchString);
@@ -192,7 +203,8 @@ Output only the search string, no explanations.`;
       JSON.stringify({
         message: 'Content processed successfully',
         searchString: searchString,
-        skills: normalizedSkills
+        skills: normalizedSkills,
+        location: locationData
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

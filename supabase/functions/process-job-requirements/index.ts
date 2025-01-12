@@ -17,38 +17,18 @@ function sanitizeContent(content: string): string {
     .trim();
 }
 
-// Safely generate content with retries and error handling
-async function safeGenerateContent(model: any, prompt: string, maxRetries = 2) {
-  let lastError = null;
-  
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const result = await model.generateContent(prompt);
-      return result.response.text();
-    } catch (error) {
-      console.error(`Generation attempt ${i + 1} failed:`, error);
-      lastError = error;
-      
-      // If it's not a safety error, don't retry
-      if (!error.message?.includes('SAFETY')) {
-        throw error;
-      }
-    }
-  }
-  
-  // If we get here, all retries failed
-  throw lastError;
-}
-
 async function analyzeLocation(model: any, content: string) {
   const sanitizedContent = sanitizeContent(content);
-  const locationPrompt = `Extract location from this text: "${sanitizedContent}"
-  Return only city name without state. If no location found, return "remote".
-  Example: { "location": "San Francisco" }`;
+  const locationPrompt = `Extract location information from this text: "${sanitizedContent}"
+  Return a JSON object with:
+  - location: The city name (without state)
+  - metropolitanArea: The broader metro area (e.g., "San Francisco Bay Area", "Greater Boston Area")
+  If no location found, return "remote" for location and empty string for metropolitanArea.
+  Example: { "location": "San Francisco", "metropolitanArea": "San Francisco Bay Area" }`;
 
   try {
-    const locationResponse = await safeGenerateContent(model, locationPrompt);
-    const locationData = JSON.parse(locationResponse.replace(/```json\n?|\n?```/g, '').trim());
+    const locationResponse = await model.generateContent(locationPrompt);
+    const locationData = JSON.parse(locationResponse.response.text().replace(/```json\n?|\n?```/g, '').trim());
     console.log('Location analysis result:', locationData);
     return locationData;
   } catch (error) {
@@ -59,37 +39,75 @@ async function analyzeLocation(model: any, content: string) {
 
 async function extractSkills(model: any, content: string) {
   const sanitizedContent = sanitizeContent(content);
-  const skillsPrompt = `List technical skills from: "${sanitizedContent}"
-  Return only an array of strings. If unclear, return empty array.
-  Example: ["JavaScript", "React"]`;
+  const skillsPrompt = `Analyze this job description and extract:
+  1. Technical skills and tools (e.g., "JavaScript", "React", "AWS")
+  2. Job titles or roles (e.g., "Software Engineer", "Full Stack Developer")
+  3. Soft skills (e.g., "communication", "leadership")
+  
+  Return as JSON with arrays:
+  {
+    "technicalSkills": ["skill1", "skill2"],
+    "jobTitles": ["title1", "title2"],
+    "softSkills": ["skill1", "skill2"]
+  }
+  
+  Text to analyze: "${sanitizedContent}"`;
 
   try {
-    const skillsText = await safeGenerateContent(model, skillsPrompt);
-    const skills = JSON.parse(skillsText.replace(/```json\n?|\n?```/g, '').trim());
+    const skillsResponse = await model.generateContent(skillsPrompt);
+    const skills = JSON.parse(skillsResponse.response.text().replace(/```json\n?|\n?```/g, '').trim());
     console.log('Extracted skills:', skills);
     return skills;
   } catch (error) {
     console.error('Error extracting skills:', error);
-    return [];
+    return { technicalSkills: [], jobTitles: [], softSkills: [] };
   }
 }
 
-async function generateSearchString(model: any, content: string, type: string, location: any, companyName?: string) {
+async function generateSearchString(model: any, content: string, type: string, location: any, skills: any, companyName?: string) {
   const sanitizedContent = sanitizeContent(content);
-  const basePrompt = `Create a Google search string for: "${sanitizedContent}"
-  Include only essential terms. Keep under 200 chars.
-  Start with site:linkedin.com`;
+  
+  // Build location part
+  const locationPart = location.metropolitanArea 
+    ? `"${location.metropolitanArea}"` 
+    : location.location !== "remote" 
+      ? `"${location.location}"` 
+      : '';
 
-  try {
-    const searchString = await safeGenerateContent(model, basePrompt);
-    console.log('Generated search string:', searchString);
-    return searchString.trim();
-  } catch (error) {
-    console.error('Error generating search string:', error);
-    // Fallback to a basic search string
-    const fallbackString = `site:linkedin.com "${sanitizedContent.substring(0, 100)}"`;
-    return fallbackString;
+  // Build skills part - wrap each in quotes and join with OR
+  const technicalSkillsPart = skills.technicalSkills
+    .map((skill: string) => `"${skill}"`)
+    .join(' OR ');
+
+  // Build titles part - wrap each in quotes and join with OR
+  const titlesPart = skills.jobTitles
+    .map((title: string) => `"${title}"`)
+    .join(' OR ');
+
+  // Build the base search string
+  let searchString = 'site:linkedin.com/in/ ';
+  
+  // Add company specific search if needed
+  if (type === "candidates-at-company" && companyName) {
+    searchString += `"${companyName}" `;
   }
+
+  // Add location if available
+  if (locationPart) {
+    searchString += `${locationPart} `;
+  }
+
+  // Add skills and titles with boolean operators
+  if (technicalSkillsPart) {
+    searchString += `(${technicalSkillsPart}) `;
+  }
+  
+  if (titlesPart) {
+    searchString += `(${titlesPart})`;
+  }
+
+  console.log('Generated search string:', searchString);
+  return searchString.trim();
 }
 
 serve(async (req) => {
@@ -122,6 +140,7 @@ serve(async (req) => {
       content, 
       searchType, 
       locationData, 
+      extractedSkills,
       companyName
     );
 

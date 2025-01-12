@@ -10,7 +10,7 @@ import { PDFReport } from "./PDFReport";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import ReactToPdf from "react-to-pdf";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 
 interface AnalysisResultsProps {
@@ -22,6 +22,23 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
   const { data: agentOutput } = useAgentOutputs(jobId);
   const [isExporting, setIsExporting] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
+  const [pdfContent, setPdfContent] = useState<string>("");
+
+  useEffect(() => {
+    const fetchJobData = async () => {
+      if (!agentOutput) return;
+      
+      const { data: jobData } = await supabase
+        .from('jobs')
+        .select('search_string')
+        .eq('id', jobId)
+        .single();
+
+      setPdfContent(jobData?.search_string || 'No search string available');
+    };
+
+    fetchJobData();
+  }, [agentOutput, jobId]);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -34,14 +51,6 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
 
     setIsExporting(true);
     try {
-      const { data: jobData } = await supabase
-        .from('jobs')
-        .select('search_string')
-        .eq('id', jobId)
-        .single();
-
-      const searchString = jobData?.search_string || 'No search string available';
-
       // Generate PDF options
       const options = {
         filename: `job-analysis-${jobId}.pdf`,
@@ -53,6 +62,9 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
 
       // Create a function that returns the target element
       const getTargetElement = () => pdfRef.current;
+
+      // Wait a brief moment for content to be fully rendered
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Generate the PDF using the target finder function
       await ReactToPdf(getTargetElement, options);
@@ -102,15 +114,19 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         </Card>
       </div>
 
-      {/* Hidden div for PDF generation */}
-      <div className="hidden" ref={pdfRef}>
+      {/* Hidden div for PDF generation with explicit dimensions */}
+      <div 
+        className="fixed left-0 top-0 w-[800px] h-auto bg-white p-8" 
+        style={{ visibility: 'hidden' }} 
+        ref={pdfRef}
+      >
         {agentOutput && (
           <PDFReport
             jobSummary={agentOutput.job_summary || ''}
             enhancedDescription={agentOutput.enhanced_description || ''}
             compensationAnalysis={agentOutput.compensation_analysis || ''}
             terms={agentOutput.terms}
-            searchString=""
+            searchString={pdfContent}
           />
         )}
       </div>

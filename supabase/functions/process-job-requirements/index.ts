@@ -28,9 +28,18 @@ Job description: ${content}`;
 
   console.log('Analyzing location with prompt:', locationPrompt);
   const locationResult = await model.generateContent(locationPrompt);
-  const locationData = JSON.parse(locationResult.response.text());
-  console.log('Location analysis result:', locationData);
-  return locationData;
+  const locationResponse = locationResult.response.text();
+  
+  try {
+    // Clean up the response and parse it
+    const cleanedResponse = locationResponse.replace(/```json\n?|\n?```/g, '').trim();
+    const locationData = JSON.parse(cleanedResponse);
+    console.log('Location analysis result:', locationData);
+    return locationData;
+  } catch (error) {
+    console.error('Error parsing location data:', error);
+    return { location: "remote", metropolitanArea: "" };
+  }
 }
 
 async function extractSkills(model: any, content: string) {
@@ -138,12 +147,13 @@ Output only the search string, no explanations.`;
 
   console.log('Generating candidates at company string with prompt:', candidatesAtCompanyPrompt);
   const searchResult = await model.generateContent(candidatesAtCompanyPrompt);
-  const searchString = searchResult.response.text().trim();
+  const searchString = searchResult.response.text().trim().replace(/```.*\n?|\n?```/g, '');
   console.log('Generated candidates at company search string:', searchString);
   return searchString;
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -170,15 +180,23 @@ serve(async (req) => {
         break;
     }
 
+    // Clean up any markdown code block syntax from the search string
+    searchString = searchString.replace(/```.*\n?|\n?```/g, '').trim();
+
+    const response = {
+      message: 'Content processed successfully',
+      searchString,
+      skills: extractedSkills,
+      location: locationData
+    };
+
     return new Response(
-      JSON.stringify({
-        message: 'Content processed successfully',
-        searchString,
-        skills: extractedSkills,
-        location: locationData
-      }),
+      JSON.stringify(response),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
       }
     );
   } catch (error) {

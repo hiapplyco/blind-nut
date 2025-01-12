@@ -82,11 +82,11 @@ export const useAgentOutputs = (jobId: number | null) => {
       return output;
     },
     enabled: !!jobId,
-    // Refetch more frequently until we get data (every 500ms)
-    refetchInterval: (data) => (!data ? 500 : false),
+    // Refetch more frequently until we get data
+    refetchInterval: (data) => (!data ? 1000 : false),
     // Keep retrying if we don't get data
     retry: true,
-    retryDelay: 500,
+    retryDelay: 1000,
     // Consider data fresh for 30 seconds once we have it
     staleTime: 30000,
   });

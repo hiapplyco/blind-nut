@@ -59,7 +59,8 @@ export const ResultsGrid = ({
           onViewReport={() => {
             console.log("View report clicked");
             setDataReady(true);
-            onClose();
+            // Instead of calling onClose here, we want to show the results
+            onClose(); // This will reset the loading modal
           }}
         />
       )}

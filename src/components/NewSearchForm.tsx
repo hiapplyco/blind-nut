@@ -35,7 +35,10 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         onJobCreated={(jobId, text) => handleSearchSubmit(text, jobId)}
         currentJobId={currentJobId}
         isProcessingComplete={isProcessingComplete}
-        onViewReport={() => setShowResults(true)}
+        onViewReport={() => {
+          console.log("View report requested from SearchForm");
+          setShowResults(true);
+        }}
       />
       
       {currentJobId && !isProcessingComplete && (
@@ -50,7 +53,10 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         jobId={currentJobId} 
         isProcessingComplete={isProcessingComplete}
         showResults={showResults}
-        onClose={() => setShowResults(false)}
+        onClose={() => {
+          console.log("Closing results");
+          setShowResults(false);
+        }}
       />
     </div>
   );

@@ -84,6 +84,8 @@ Input: ${content}
 Example output format:
 ["JavaScript", "React", "AWS", "team leadership", "agile methodologies"]`;
 
+    console.log('Using prompt for skills extraction:', skillsPrompt);
+
     const skillsResult = await model.generateContent(skillsPrompt);
     const skillsText = skillsResult.response.text().trim();
     let extractedSkills: string[] = [];
@@ -92,6 +94,7 @@ Example output format:
       // Clean the response string before parsing
       const cleanedResponse = skillsText.replace(/```json\n?|\n?```/g, '').trim();
       extractedSkills = JSON.parse(cleanedResponse);
+      console.log('Successfully extracted skills:', extractedSkills);
     } catch (error) {
       console.error('Error parsing skills:', error);
       extractedSkills = [];

@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
+import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
+import { useMutation } from "@tanstack/react-query";
 
 interface ProcessAgentProps {
   content: string;
@@ -18,6 +20,7 @@ interface ProcessingStep {
 
 export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) => {
   const { toast } = useToast();
+  const { setOutput } = useClientAgentOutputs();
   const [steps, setSteps] = useState<ProcessingStep[]>([
     { name: "Creating X-Ray Search", status: 'pending', progress: 0 },
     { name: "Analyzing Compensation", status: 'pending', progress: 0 },
@@ -56,6 +59,26 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
     }
   };
 
+  const persistToDatabase = useMutation({
+    mutationFn: async (agentOutput: any) => {
+      const { error } = await supabase
+        .from('agent_outputs')
+        .insert({
+          job_id: jobId,
+          terms: agentOutput.terms,
+          compensation_analysis: agentOutput.compensationData,
+          enhanced_description: agentOutput.enhancerData,
+          job_summary: agentOutput.summaryData
+        });
+
+      if (error) throw error;
+    },
+    onError: (error) => {
+      console.error('Error persisting to database:', error);
+      // Continue with client-side data even if database persistence fails
+    }
+  });
+
   useEffect(() => {
     const processContent = async () => {
       try {
@@ -71,30 +94,22 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
         // Process summary
         const summaryData = await processStep(3, 'summarize-job', 'summary');
 
-        // Store all results
-        const { error: insertError } = await supabase
-          .from('agent_outputs')
-          .insert({
-            job_id: jobId,
-            terms,
-            compensation_analysis: compensationData,
-            enhanced_description: enhancerData,
-            job_summary: summaryData
-          })
-          .select()
-          .single();
+        // Create agent output object
+        const agentOutput = {
+          id: Date.now(), // Temporary client-side ID
+          job_id: jobId,
+          created_at: new Date().toISOString(),
+          terms,
+          compensation_analysis: compensationData,
+          enhanced_description: enhancerData,
+          job_summary: summaryData
+        };
 
-        if (insertError) throw insertError;
+        // Update client-side state immediately
+        setOutput(jobId, agentOutput);
 
-        // Verify data is stored before completing
-        const { data: verificationData, error: verificationError } = await supabase
-          .from('agent_outputs')
-          .select('*')
-          .eq('job_id', jobId)
-          .single();
-
-        if (verificationError) throw verificationError;
-        if (!verificationData) throw new Error('Data verification failed');
+        // Persist to database in the background
+        persistToDatabase.mutate(agentOutput);
 
         toast({
           title: "Analysis Complete",
@@ -113,7 +128,7 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
     };
 
     processContent();
-  }, [content, jobId, onComplete, toast]);
+  }, [content, jobId, onComplete, toast, setOutput]);
 
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

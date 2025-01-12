@@ -57,10 +57,14 @@ Example output format:
 }
 
 async function generateCandidateSearchString(model: any, content: string, skills: string[], location: any, companyName?: string) {
+  const wrapInQuotes = (term: string) => {
+    return term.includes(' ') ? `"${term}"` : term;
+  };
+
   const candidateSearchPrompt = `Create a Google Boolean search string for LinkedIn candidate sourcing based on these requirements:
 
 Job Content: ${content}
-Key Skills: ${skills.join(', ')}
+Key Skills: ${skills.map(wrapInQuotes).join(', ')}
 Location: ${location.metropolitanArea || location.location || 'Remote'}
 
 Rules:
@@ -71,9 +75,10 @@ Rules:
 5. Exclude irrelevant results using -intitle:"profiles" -inurl:"dir/ "
 6. Keep the string under 300 characters for Google compatibility
 7. Focus on finding profiles, not job posts
+8. Wrap any multi-word terms in double quotes (e.g. "product manager" instead of product manager)
 
 Example format:
-("Software Engineer" OR "Backend Developer") AND (Python AND AWS AND Kubernetes) "San Francisco Bay Area" -intitle:"profiles" -inurl:"dir/ " site:linkedin.com/in OR site:linkedin.com/pub
+("Software Engineer" OR "Backend Developer") AND ("Python" AND "Amazon Web Services" AND "Kubernetes") "San Francisco Bay Area" -intitle:"profiles" -inurl:"dir/ " site:linkedin.com/in OR site:linkedin.com/pub
 
 Output only the search string, no explanations.`;
 

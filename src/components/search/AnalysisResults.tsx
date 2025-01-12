@@ -32,6 +32,7 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
       if (!agentOutput) return;
       
       setLoadingProgress(25);
+      console.log("Loading report: 25%");
       
       const { data: jobData } = await supabase
         .from('jobs')
@@ -40,19 +41,25 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         .single();
 
       setLoadingProgress(50);
+      console.log("Loading report: 50%");
       setPdfContent(jobData?.search_string || 'No search string available');
       
       // Simulate loading of report components
       setLoadingProgress(75);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setLoadingProgress(100);
+      console.log("Loading report: 75%");
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Small delay before hiding loading state
-      await new Promise(resolve => setTimeout(resolve, 300));
+      setLoadingProgress(100);
+      console.log("Loading report: 100%");
+      
+      // Longer delay before hiding loading state for better UX
+      await new Promise(resolve => setTimeout(resolve, 500));
       setIsLoading(false);
     };
 
-    fetchJobData();
+    if (agentOutput) {
+      fetchJobData();
+    }
   }, [agentOutput, jobId]);
 
   const handleOverlayClick = (e: React.MouseEvent) => {

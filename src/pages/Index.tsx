@@ -17,7 +17,7 @@ const Index = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        navigate('/dashboard');
+        navigate('/');
       }
     });
 
@@ -27,7 +27,7 @@ const Index = () => {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        navigate('/dashboard');
+        navigate('/');
         toast.success('Successfully signed in!');
       }
     });

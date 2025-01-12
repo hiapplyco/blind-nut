@@ -8,7 +8,7 @@ import { JobSummary } from "../agents/JobSummary";
 import { ExportButton } from "./ExportButton";
 import { PDFReport } from "./PDFReport";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
-import { toPDF } from "react-to-pdf";
+import ReactToPdf from "react-to-pdf";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -51,22 +51,32 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         }
       };
 
-      await toPDF(
+      const targetRef = document.createElement('div');
+      const pdfReport = (
         <PDFReport
           jobSummary={agentOutput.job_summary || ''}
           enhancedDescription={agentOutput.enhanced_description || ''}
           compensationAnalysis={agentOutput.compensation_analysis || ''}
           terms={agentOutput.terms}
           searchString={searchString}
-        />,
-        options
+        />
       );
 
-      toast.success("PDF exported successfully");
+      ReactToPdf
+        .generatePdf(targetRef, options)
+        .then(() => {
+          toast.success("PDF exported successfully");
+        })
+        .catch((error) => {
+          console.error('Error exporting PDF:', error);
+          toast.error("Failed to export PDF");
+        })
+        .finally(() => {
+          setIsExporting(false);
+        });
     } catch (error) {
       console.error('Error exporting PDF:', error);
       toast.error("Failed to export PDF");
-    } finally {
       setIsExporting(false);
     }
   };
@@ -87,7 +97,7 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
               Analysis Results
             </h2>
             <div className="flex items-center gap-4">
-              <ExportButton onClick={handleExport} />
+              <ExportButton onClick={handleExport} isLoading={isExporting} />
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"

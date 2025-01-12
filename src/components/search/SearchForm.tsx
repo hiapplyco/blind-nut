@@ -11,6 +11,7 @@ import { CompanyNameInput } from "./CompanyNameInput";
 import { SubmitButton } from "./SubmitButton";
 import { ViewReportButton } from "./ViewReportButton";
 import { Bot } from "lucide-react";
+import { useAgentOutputs } from "@/stores/useAgentOutputs";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 
@@ -34,6 +35,7 @@ export const SearchForm = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
   const { toast } = useToast();
+  const { data: agentOutput } = useAgentOutputs(currentJobId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,8 +64,6 @@ export const SearchForm = ({
         .eq('id', jobId);
 
       if (updateError) throw updateError;
-
-      window.open(`https://www.google.com/search?q=${encodeURIComponent(result.searchString)}`, '_blank');
 
       toast({
         title: "Search generated",
@@ -135,7 +135,7 @@ export const SearchForm = ({
 
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-      {currentJobId && isProcessingComplete && (
+      {currentJobId && isProcessingComplete && agentOutput && (
         <div className="mb-6">
           <Button
             type="button"

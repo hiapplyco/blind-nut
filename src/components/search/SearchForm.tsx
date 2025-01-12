@@ -10,7 +10,7 @@ import { CompanyNameInput } from "./CompanyNameInput";
 import { SubmitButton } from "./SubmitButton";
 import { ViewReportButton } from "./ViewReportButton";
 
-type SearchType = "candidates" | "companies" | "candidates-at-company";
+type SearchType = "companies" | "candidates-at-company";
 
 interface SearchFormProps {
   userId: string;

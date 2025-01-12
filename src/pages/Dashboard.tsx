@@ -64,16 +64,14 @@ const Dashboard = () => {
                   </span>
                 </div>
                 
-                {search.agent_outputs?.[0]?.job_summary && (
-                  <div>
-                    <h3 className="font-semibold text-lg">
-                      {search.content?.substring(0, 60) || 'Untitled Search'}
-                    </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {search.agent_outputs[0].job_summary}
-                    </p>
-                  </div>
-                )}
+                <div>
+                  <h3 className="font-semibold text-lg">
+                    {search.title || 'Untitled Search'}
+                  </h3>
+                  <p className="text-sm text-gray-600 line-clamp-2">
+                    {search.summary || search.agent_outputs?.[0]?.job_summary || 'No summary available'}
+                  </p>
+                </div>
               </div>
 
               <Button

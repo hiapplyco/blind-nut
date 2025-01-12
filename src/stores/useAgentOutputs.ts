@@ -11,7 +11,6 @@ interface AgentOutput {
   job_summary: string | null;
 }
 
-// Type guard to validate the Terms structure
 function isTerms(value: unknown): value is Terms {
   if (typeof value !== 'object' || value === null) return false;
   const terms = value as Record<string, unknown>;
@@ -83,7 +82,9 @@ export const useAgentOutputs = (jobId: number | null) => {
       return output;
     },
     enabled: !!jobId,
-    // Refetch more frequently (every 2 seconds) until we get data
-    refetchInterval: (data) => (!data ? 2000 : false),
+    // Refetch more frequently until we get data
+    refetchInterval: (data) => (!data ? 1000 : false),
+    // Add a small delay before starting to refetch
+    refetchDelay: 1000,
   });
 };

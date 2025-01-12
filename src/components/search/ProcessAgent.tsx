@@ -12,21 +12,23 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
   const { toast } = useToast();
 
   useEffect(() => {
-    // Show initial processing toast
     const processingToast = toast({
       title: "Processing Started",
       description: "Our AI agents are analyzing your content. This usually takes about 30-60 seconds...",
-      duration: 5000, // Show for 5 seconds
+      duration: 5000,
     });
 
     const processContent = async () => {
       try {
+        console.log("Starting content processing for job:", jobId);
+        
         // Process terms
         const termsResponse = await supabase.functions.invoke('extract-nlp-terms', { 
           body: { content } 
         });
         
         if (termsResponse.error) throw termsResponse.error;
+        console.log("Terms extracted:", termsResponse.data);
         
         toast({
           title: "Terms Extracted",
@@ -40,6 +42,7 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
         });
         
         if (compensationResponse.error) throw compensationResponse.error;
+        console.log("Compensation analyzed:", compensationResponse.data);
 
         toast({
           title: "Compensation Analyzed",
@@ -53,6 +56,7 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
         });
         
         if (enhancerResponse.error) throw enhancerResponse.error;
+        console.log("Description enhanced:", enhancerResponse.data);
 
         toast({
           title: "Description Enhanced",
@@ -66,9 +70,10 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
         });
         
         if (summaryResponse.error) throw summaryResponse.error;
+        console.log("Summary created:", summaryResponse.data);
 
         // Store results in Supabase
-        const { error: insertError } = await supabase
+        const { data: insertData, error: insertError } = await supabase
           .from('agent_outputs')
           .insert({
             job_id: jobId,
@@ -76,9 +81,12 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
             compensation_analysis: compensationResponse.data?.analysis,
             enhanced_description: enhancerResponse.data?.enhancedDescription,
             job_summary: summaryResponse.data?.summary
-          });
+          })
+          .select()
+          .single();
 
         if (insertError) throw insertError;
+        console.log("Agent outputs saved to database:", insertData);
 
         toast({
           title: "Analysis Complete",
@@ -86,8 +94,11 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
           duration: 5000,
         });
         
-        // Ensure we call onComplete after successful processing
-        onComplete();
+        // Small delay to ensure database write is complete
+        setTimeout(() => {
+          onComplete();
+        }, 1000);
+
       } catch (error) {
         console.error('Error in agent processing:', error);
         toast({
@@ -101,7 +112,6 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
 
     processContent();
 
-    // Cleanup function to dismiss the initial toast if component unmounts
     return () => {
       processingToast.dismiss();
     };

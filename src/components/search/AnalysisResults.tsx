@@ -10,9 +10,8 @@ import { PDFReport } from "./PDFReport";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import ReactToPdf from "react-to-pdf";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
-import ReactDOM from "react-dom";
 
 interface AnalysisResultsProps {
   jobId: number;
@@ -22,6 +21,7 @@ interface AnalysisResultsProps {
 export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
   const { data: agentOutput } = useAgentOutputs(jobId);
   const [isExporting, setIsExporting] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -30,11 +30,10 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
   };
 
   const handleExport = async () => {
-    if (!agentOutput) return;
+    if (!agentOutput || !pdfRef.current) return;
 
     setIsExporting(true);
     try {
-      // Get the search string from the jobs table
       const { data: jobData } = await supabase
         .from('jobs')
         .select('search_string')
@@ -42,22 +41,6 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         .single();
 
       const searchString = jobData?.search_string || 'No search string available';
-
-      // Create a temporary container for the PDF content
-      const container = document.createElement('div');
-      document.body.appendChild(container);
-
-      // Render the PDF content into the container
-      ReactDOM.render(
-        <PDFReport
-          jobSummary={agentOutput.job_summary || ''}
-          enhancedDescription={agentOutput.enhanced_description || ''}
-          compensationAnalysis={agentOutput.compensation_analysis || ''}
-          terms={agentOutput.terms}
-          searchString={searchString}
-        />,
-        container
-      );
 
       // Generate PDF options
       const options = {
@@ -68,20 +51,14 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         }
       };
 
-      // Create a function that returns the container
-      const getTargetElement = () => container;
-
-      // Generate the PDF
-      await ReactToPdf(getTargetElement, options);
-      
-      // Clean up the temporary container
-      document.body.removeChild(container);
+      // Generate the PDF using the hidden div reference
+      await ReactToPdf(pdfRef.current, options);
       
       toast.success("PDF exported successfully");
-      setIsExporting(false);
     } catch (error) {
       console.error('Error exporting PDF:', error);
       toast.error("Failed to export PDF");
+    } finally {
       setIsExporting(false);
     }
   };
@@ -120,6 +97,19 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
             <JobSummary jobId={jobId} />
           </div>
         </Card>
+      </div>
+
+      {/* Hidden div for PDF generation */}
+      <div className="hidden" ref={pdfRef}>
+        {agentOutput && (
+          <PDFReport
+            jobSummary={agentOutput.job_summary || ''}
+            enhancedDescription={agentOutput.enhanced_description || ''}
+            compensationAnalysis={agentOutput.compensation_analysis || ''}
+            terms={agentOutput.terms}
+            searchString=""
+          />
+        )}
       </div>
     </div>
   );

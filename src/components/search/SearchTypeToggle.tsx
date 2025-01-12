@@ -1,5 +1,7 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Users, Building2, Briefcase } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 
@@ -9,6 +11,40 @@ interface SearchTypeToggleProps {
 }
 
 export const SearchTypeToggle = ({ value, onValueChange }: SearchTypeToggleProps) => {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <div className="w-full mb-6">
+        <Select value={value} onValueChange={(value) => onValueChange(value as SearchType)}>
+          <SelectTrigger className="w-full border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <SelectValue placeholder="Select search type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="candidates">
+              <div className="flex items-center">
+                <Users className="h-4 w-4 mr-2" />
+                Candidates
+              </div>
+            </SelectItem>
+            <SelectItem value="companies">
+              <div className="flex items-center">
+                <Building2 className="h-4 w-4 mr-2" />
+                Companies
+              </div>
+            </SelectItem>
+            <SelectItem value="candidates-at-company">
+              <div className="flex items-center">
+                <Briefcase className="h-4 w-4 mr-2" />
+                Candidates at Company
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+
   return (
     <div className="flex justify-center mb-6">
       <ToggleGroup

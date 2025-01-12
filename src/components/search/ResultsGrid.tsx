@@ -81,7 +81,7 @@ export const ResultsGrid = ({
 
   return (
     <>
-      {!showResults && (
+      {!showResults && !isProcessingComplete && (
         <AnalysisLoading
           isProcessingComplete={isProcessingComplete}
           dataReady={dataReady}

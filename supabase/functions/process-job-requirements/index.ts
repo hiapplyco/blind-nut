@@ -2,6 +2,8 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "npm:@google/generative-ai";
 
+const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -73,7 +75,6 @@ serve(async (req) => {
     const { content, searchType, companyName } = await req.json();
     console.log('Received content:', content?.substring(0, 100) + '...', 'Search type:', searchType, 'Company:', companyName);
 
-    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     // Extract skills with a more focused prompt
@@ -106,19 +107,86 @@ Example output format:
 
     // Generate the search string based on the normalized skills
     let searchString = '';
+    
     if (searchType === 'candidates') {
-      const skillsForSearch = Object.keys(normalizedSkills).slice(0, 5).join(' OR ');
-      searchString = `site:linkedin.com/in (${skillsForSearch})`;
+      // New improved prompt for candidate search
+      const candidateSearchPrompt = `Create a Google Boolean search string for LinkedIn candidate sourcing based on these requirements:
+
+Job Content: ${content}
+Key Skills: ${Object.keys(normalizedSkills).join(', ')}
+
+Rules:
+1. Start with 'site:linkedin.com/in'
+2. Include job titles and variations in parentheses with OR operators
+3. Include 3-5 most critical skills with AND operators
+4. Add relevant industry terms if applicable
+5. Exclude irrelevant results (e.g., job postings, recruiters) using NOT
+6. Keep the string under 300 characters for Google compatibility
+7. Focus on finding profiles, not job posts
+
+Example format:
+site:linkedin.com/in ("Software Engineer" OR "Backend Developer") AND (Python AND AWS AND Kubernetes) NOT (recruiter OR "job post" OR "we're hiring")
+
+Output only the search string, no explanations.`;
+
+      console.log('Using candidate search prompt:', candidateSearchPrompt);
+      
+      const searchResult = await model.generateContent(candidateSearchPrompt);
+      searchString = searchResult.response.text().trim();
+      console.log('Generated candidate search string:', searchString);
+
       if (companyName) {
-        searchString += ` "${companyName}"`;
+        searchString = `${searchString} AND "${companyName}"`;
       }
     } else if (searchType === 'companies') {
-      searchString = `site:linkedin.com/company "${companyName}"`;
-    } else if (searchType === 'candidates-at-company') {
-      searchString = `site:linkedin.com/in (${Object.keys(normalizedSkills).slice(0, 5).join(' OR ')}) AND "${companyName}"`;
-    }
+      // New improved prompt for company search
+      const companySearchPrompt = `Create a Google Boolean search string to find company information on LinkedIn:
 
-    console.log('Generated search string:', searchString);
+Company Name: ${companyName}
+
+Rules:
+1. Start with 'site:linkedin.com/company'
+2. Include company name variations if applicable
+3. Add relevant industry terms if present in the job description
+4. Exclude job postings and irrelevant pages
+5. Keep the string concise and focused
+
+Output only the search string, no explanations.`;
+
+      console.log('Using company search prompt:', companySearchPrompt);
+      
+      const searchResult = await model.generateContent(companySearchPrompt);
+      searchString = searchResult.response.text().trim();
+      console.log('Generated company search string:', searchString);
+
+    } else if (searchType === 'candidates-at-company') {
+      // New improved prompt for candidates at specific company
+      const candidatesAtCompanyPrompt = `Create a Google Boolean search string to find candidates at a specific company on LinkedIn:
+
+Company: ${companyName}
+Job Content: ${content}
+Key Skills: ${Object.keys(normalizedSkills).join(', ')}
+
+Rules:
+1. Start with 'site:linkedin.com/in'
+2. Include current company name with exact match
+3. Include relevant job titles with OR operators
+4. Add 2-3 most critical skills with AND operators
+5. Exclude irrelevant results
+6. Keep the string under 300 characters
+7. Focus on finding current employees
+
+Example format:
+site:linkedin.com/in "Current Company Name" AND ("Software Engineer" OR "Developer") AND (Python AND AWS) NOT (recruiter OR "job post")
+
+Output only the search string, no explanations.`;
+
+      console.log('Using candidates at company prompt:', candidatesAtCompanyPrompt);
+      
+      const searchResult = await model.generateContent(candidatesAtCompanyPrompt);
+      searchString = searchResult.response.text().trim();
+      console.log('Generated candidates at company search string:', searchString);
+    }
 
     return new Response(
       JSON.stringify({
@@ -132,23 +200,11 @@ Example output format:
     );
   } catch (error) {
     console.error('Error:', error);
-    let errorMessage = error.message;
-    
-    if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
-      errorMessage = 'API rate limit exceeded. Please try again in a few minutes.';
-    }
-    
     return new Response(
-      JSON.stringify({ 
-        error: errorMessage,
-        details: error.message 
-      }),
+      JSON.stringify({ error: error.message }),
       { 
-        status: error.message.includes('429') ? 429 : 500,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        }
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }

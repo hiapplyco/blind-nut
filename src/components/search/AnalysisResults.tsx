@@ -47,13 +47,13 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
       // Simulate loading of report components
       setLoadingProgress(75);
       console.log("Loading report: 75%");
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       setLoadingProgress(100);
       console.log("Loading report: 100%");
       
       // Longer delay before hiding loading state for better UX
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 800));
       setIsLoading(false);
     };
 
@@ -95,11 +95,11 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         )}>
           {isLoading ? (
             <div className="space-y-4">
-              <h3 className="text-xl font-bold">Preparing Analysis Report</h3>
+              <h3 className="text-xl font-bold">Generating Analysis Report</h3>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">
-                    Loading report components
+                    Preparing report components
                   </span>
                   <span className="text-sm text-gray-500">
                     {loadingProgress}%

@@ -37,7 +37,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
           jobId={currentJobId}
           onComplete={() => {
             setIsProcessingComplete(true);
-            setShowResults(true);
           }}
         />
       )}

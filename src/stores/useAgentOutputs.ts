@@ -5,6 +5,7 @@ import { Terms } from "@/types/agent";
 interface AgentOutput {
   id: number;
   job_id: number;
+  created_at: string | null;
   terms: Terms | null;
   compensation_analysis: string | null;
   enhanced_description: string | null;
@@ -72,6 +73,7 @@ export const useAgentOutputs = (jobId: number | null) => {
       const output: AgentOutput = {
         id: data.id,
         job_id: data.job_id,
+        created_at: data.created_at,
         terms: isTerms(data.terms) ? data.terms : null,
         compensation_analysis: data.compensation_analysis,
         enhanced_description: data.enhanced_description,

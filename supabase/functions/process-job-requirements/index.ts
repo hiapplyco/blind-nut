@@ -9,6 +9,23 @@ const corsHeaders = {
 
 // Major metro area mapping
 const cityToMetroArea: { [key: string]: string } = {
+  // Georgia
+  'Albany, GA': 'Atlanta',
+  'Athens, GA': 'Atlanta',
+  'Augusta, GA': 'Atlanta',
+  'Columbus, GA': 'Atlanta',
+  'Macon, GA': 'Atlanta',
+  'Savannah, GA': 'Atlanta',
+  
+  // New York
+  'Albany, NY': 'New York City',
+  'Brooklyn': 'New York City',
+  'Queens': 'New York City',
+  'Bronx': 'New York City',
+  'Staten Island': 'New York City',
+  'Buffalo': 'Buffalo',
+  'Rochester': 'Rochester',
+  
   // California
   'Oceanside': 'San Diego',
   'La Jolla': 'San Diego',
@@ -26,15 +43,6 @@ const cityToMetroArea: { [key: string]: string } = {
   'Pasadena': 'Los Angeles',
   'Long Beach': 'Los Angeles',
   'Irvine': 'Los Angeles',
-  
-  // New York
-  'Brooklyn': 'New York City',
-  'Queens': 'New York City',
-  'Bronx': 'New York City',
-  'Staten Island': 'New York City',
-  'Albany': 'New York City',
-  'Buffalo': 'Buffalo',
-  'Rochester': 'Rochester',
   
   // Massachusetts
   'Cambridge': 'Boston',
@@ -106,7 +114,7 @@ serve(async (req) => {
     });
 
     // Extract location and map to major metro area
-    const locationPrompt = `Extract just the city name from this text. If no specific city is mentioned, respond with "United States". Return only the city name, nothing else: ${content}`;
+    const locationPrompt = `Extract the complete location (city, state if available) from this text. If no specific city is mentioned, respond with "United States". Return only the location, nothing else: ${content}`;
     const locationResultPromise = model.generateContent(locationPrompt);
     const locationResult = await Promise.race([locationResultPromise, timeoutPromise]);
     
@@ -114,15 +122,22 @@ serve(async (req) => {
       throw locationResult;
     }
 
-    let extractedCity = locationResult.response.text().trim();
+    let extractedLocation = locationResult.response.text().trim();
     
-    // Map the extracted city to its major metro area
-    let location = cityToMetroArea[extractedCity] || extractedCity;
-    if (location === extractedCity && !Object.values(cityToMetroArea).includes(location)) {
-      location = "United States";
+    // Map the extracted location to its major metro area
+    let location = cityToMetroArea[extractedLocation] || extractedLocation;
+    if (location === extractedLocation && !Object.values(cityToMetroArea).includes(location)) {
+      // If we can't map it, use the state or default to United States
+      if (extractedLocation.includes(', ')) {
+        const state = extractedLocation.split(', ')[1];
+        if (state === 'GA') location = 'Atlanta';
+        // Add more state mappings as needed
+      } else {
+        location = "United States";
+      }
     }
     
-    console.log('Mapped location:', extractedCity, 'to:', location);
+    console.log('Mapped location:', extractedLocation, 'to:', location);
 
     // Generate search string based on type
     let searchPrompt;
@@ -185,7 +200,6 @@ serve(async (req) => {
     console.error('Error:', error);
     let errorMessage = error.message;
     
-    // Handle rate limiting specifically
     if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
       errorMessage = 'API rate limit exceeded. Please try again in a few minutes.';
     }

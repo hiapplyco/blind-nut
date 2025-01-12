@@ -35,9 +35,7 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Extract and categorize key terms from this job description. Focus on identifying specific, relevant skills and technologies.
-
-Format your response EXACTLY as a JSON object with these arrays:
+    const prompt = `Extract and categorize key terms from this job description into specific categories. Format your response EXACTLY as a JSON object with these arrays:
 
 {
   "skills": ["skill1", "skill2"],
@@ -47,17 +45,23 @@ Format your response EXACTLY as a JSON object with these arrays:
 
 Guidelines for skills extraction:
 - Include ONLY concrete, specific technical skills, tools, and technologies
-- Exclude generic terms like "experience" or "knowledge"
+- Exclude generic terms like "experience", "knowledge", "critical thinking", or "decision making"
 - Keep each skill concise (1-3 words maximum)
 - Include 3-7 most relevant skills
-- Format consistently (e.g., "React.js" not "reactjs" or "React")
-- DO NOT include unrelated or generic terms
+- Format consistently (e.g., "Medical Billing" not "medical billing")
+- DO NOT include soft skills or generic competencies
 
-Guidelines for other fields:
-- titles: relevant job titles (2-5 items)
-- keywords: other important specific terms (3-7 items)
-- use empty arrays [] if no relevant terms found
-- ONLY return the JSON object, no other text
+Guidelines for titles:
+- Include 2-5 relevant job titles
+- Format consistently with proper capitalization
+- Include variations and similar roles
+
+Guidelines for keywords:
+- Include 3-7 specific industry terms or certifications
+- Exclude generic terms
+- Focus on concrete, measurable terms
+
+Return ONLY the JSON object, no other text.
 
 Text to analyze: ${content}`;
 
@@ -70,27 +74,31 @@ Text to analyze: ${content}`;
       const cleanedResponse = response.replace(/```json\n?|\n?```/g, '').trim();
       const parsedResponse = JSON.parse(cleanedResponse);
       
-      // Validate response structure and content
+      // Validate response structure
       if (!Array.isArray(parsedResponse.skills) || 
           !Array.isArray(parsedResponse.titles) || 
           !Array.isArray(parsedResponse.keywords)) {
         throw new Error('Invalid response structure');
       }
 
-      // Additional validation for skills
+      // Clean and validate skills
       parsedResponse.skills = parsedResponse.skills
         .filter(skill => 
           typeof skill === 'string' && 
           skill.trim().length > 0 &&
           skill.split(' ').length <= 3 &&
           !skill.toLowerCase().includes('experience') &&
-          !skill.toLowerCase().includes('knowledge')
+          !skill.toLowerCase().includes('knowledge') &&
+          !skill.toLowerCase().includes('critical thinking') &&
+          !skill.toLowerCase().includes('decision making')
         )
         .map(skill => skill.trim());
 
       console.log('Successfully parsed and validated response:', parsedResponse);
       return new Response(
-        JSON.stringify(parsedResponse),
+        JSON.stringify({
+          terms: parsedResponse
+        }),
         { 
           headers: { 
             ...corsHeaders,
@@ -104,9 +112,11 @@ Text to analyze: ${content}`;
       
       return new Response(
         JSON.stringify({
-          skills: [],
-          titles: [],
-          keywords: [],
+          terms: {
+            skills: [],
+            titles: [],
+            keywords: []
+          },
           error: 'Failed to parse terms'
         }),
         { 
@@ -122,9 +132,11 @@ Text to analyze: ${content}`;
     console.error('Error in extract-nlp-terms:', error);
     return new Response(
       JSON.stringify({
-        skills: [],
-        titles: [],
-        keywords: [],
+        terms: {
+          skills: [],
+          titles: [],
+          keywords: []
+        },
         error: error.message
       }),
       { 

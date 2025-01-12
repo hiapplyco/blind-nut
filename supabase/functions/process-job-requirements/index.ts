@@ -42,40 +42,27 @@ serve(async (req) => {
     const metroArea = locationResult.response.text().trim();
     console.log('Extracted metro area:', metroArea);
 
-    const searchPrompt = `
-    System Prompt for Extracting Key Skills and Job Titles for Boolean Search
+    const searchPrompt = `Create a targeted LinkedIn X-Ray search string for this job description. Follow these rules:
 
-    Objective: Extract key skills, similar job titles, and construct a Google search query using Boolean operators to find relevant talent profiles.
+1. Extract 2-4 relevant job titles that are specific to this role
+2. Extract 3-6 concrete, technical skills or qualifications (no soft skills)
+3. DO NOT include any "NOT" operators or exclusions
+4. Format the search string exactly like this:
 
-    Instructions:
+site:linkedin.com/in/ ${companyName ? '"COMPANY_NAME" AND ' : ''}${metroArea ? '"METRO_AREA" AND ' : ''}("JOB_TITLE_1" OR "JOB_TITLE_2") AND ("SKILL_1" OR "SKILL_2") AND ("SKILL_3" OR "SKILL_4")
 
-    1. Extract Key Skills: Identify the most important skills mentioned in the text. Focus on specific technical skills, software knowledge, and industry-relevant keywords.
-    - Include ONLY concrete, specific technical skills and technologies
-    - Exclude generic terms like "experience" or "knowledge"
-    - Keep each skill concise (1-3 words maximum)
-    - Format consistently (e.g., "React.js" not "reactjs")
+Rules:
+- Replace placeholders with actual values
+- Use proper capitalization
+- Include quotes around exact phrases
+- Group similar terms with OR
+- Connect different term types with AND
+- No exclusions or NOT operators
+- Keep skills specific and technical (no soft skills)
 
-    2. Extract Similar Job Titles: Identify the main job title and extract related or similar job titles.
-    - Consider variations in seniority
-    - Include alternative titles
-    - Keep titles specific and relevant
+Job Description: ${content}
 
-    3. Construct Boolean Query: Use the extracted skills and job titles to build a Google search query with the following structure:
-
-    site:linkedin.com/in/ ${companyName ? `"${companyName}" AND ` : ''}${metroArea ? `"${metroArea}" AND ` : ''}("job title 1" OR "job title 2" OR "job title 3") AND ("skill 1" OR "skill 2") AND ("skill 3" OR "skill 4") NOT ("unwanted term 1" OR "unwanted term 2")
-
-    Rules:
-    - Enclose each job title and each skill group in parentheses
-    - Use OR to connect similar job titles or synonymous skills
-    - Use AND to connect different skill groups and job titles
-    - Use NOT to exclude irrelevant terms
-    - Use quotation marks for exact phrases
-    - Keep the number of terms reasonable (3-5 job titles, 4-8 skills)
-    - Always start with site:linkedin.com/in/
-
-    Text to analyze: ${content}
-
-    Return ONLY the final search string, no explanations or other text.`;
+Return ONLY the final search string, no explanations.`;
 
     console.log('Using search prompt:', searchPrompt);
     

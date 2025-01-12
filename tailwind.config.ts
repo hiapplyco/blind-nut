@@ -28,10 +28,12 @@ export default {
           DEFAULT: "#8B6E5B", // Mocha Mousse primary
           foreground: "#ffffff",
           hover: "#A18472", // Lighter Mocha for hover
+          contrast: "#8B5CF6", // Vivid Purple for contrast
         },
         secondary: {
           DEFAULT: "#D2C0B2", // Lighter complementary brown
           foreground: "#44332A", // Darker brown for contrast
+          contrast: "#D946EF", // Magenta Pink for additional contrast
         },
         destructive: {
           DEFAULT: "#ef4444",
@@ -40,10 +42,12 @@ export default {
         muted: {
           DEFAULT: "#F5F0ED", // Very light warm beige
           foreground: "#66534A", // Darker brown for text
+          contrast: "#A78BFA", // Lighter purple for muted contrast
         },
         accent: {
           DEFAULT: "#EBE3DD", // Soft warm accent
           foreground: "#44332A", // Dark brown for contrast
+          contrast: "#C4B5FD", // Softest purple for accent contrast
         },
         card: {
           DEFAULT: "#ffffff",

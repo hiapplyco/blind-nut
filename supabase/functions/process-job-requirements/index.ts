@@ -9,179 +9,121 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function analyzeLocation(model: any, content: string) {
-  const locationPrompt = `Extract the location information from this job description and determine the nearest major metropolitan area. Return ONLY the major city name without state abbreviations (e.g., "Los Angeles" not "Los Angeles, CA"). Return the result as a JSON object with two properties: "location" (the original location mentioned) and "metropolitanArea" (the nearest major metropolitan area name only). If no location is mentioned, use "remote" as the location and leave metropolitanArea empty.
-
-Rules for metropolitanArea:
-1. Use only the city name without state abbreviations
-2. For major cities, use their common names (e.g., "New York City", "Los Angeles", "Chicago")
-3. Always map to the nearest major metropolitan area (e.g., "Palo Alto" should map to "San Francisco")
-4. Do not include state abbreviations or additional location information
-
-Example output:
-{
-  "location": "Carlsbad, California",
-  "metropolitanArea": "San Diego"
+// Sanitize content to avoid safety blocks
+function sanitizeContent(content: string): string {
+  return content
+    .replace(/[^\w\s.,!?@#$%^&*()-]/g, '') // Remove special characters
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
 }
 
-Job description: ${content}`;
-
-  console.log('Analyzing location with prompt:', locationPrompt);
-  const locationResult = await model.generateContent(locationPrompt);
-  const locationResponse = locationResult.response.text();
+// Safely generate content with retries and error handling
+async function safeGenerateContent(model: any, prompt: string, maxRetries = 2) {
+  let lastError = null;
   
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (error) {
+      console.error(`Generation attempt ${i + 1} failed:`, error);
+      lastError = error;
+      
+      // If it's not a safety error, don't retry
+      if (!error.message?.includes('SAFETY')) {
+        throw error;
+      }
+    }
+  }
+  
+  // If we get here, all retries failed
+  throw lastError;
+}
+
+async function analyzeLocation(model: any, content: string) {
+  const sanitizedContent = sanitizeContent(content);
+  const locationPrompt = `Extract location from this text: "${sanitizedContent}"
+  Return only city name without state. If no location found, return "remote".
+  Example: { "location": "San Francisco" }`;
+
   try {
-    // Clean up the response and parse it
-    const cleanedResponse = locationResponse.replace(/```json\n?|\n?```/g, '').trim();
-    const locationData = JSON.parse(cleanedResponse);
+    const locationResponse = await safeGenerateContent(model, locationPrompt);
+    const locationData = JSON.parse(locationResponse.replace(/```json\n?|\n?```/g, '').trim());
     console.log('Location analysis result:', locationData);
     return locationData;
   } catch (error) {
-    console.error('Error parsing location data:', error);
+    console.error('Error in location analysis:', error);
     return { location: "remote", metropolitanArea: "" };
   }
 }
 
 async function extractSkills(model: any, content: string) {
-  const skillsPrompt = `Extract only the specific technical skills, tools, and technologies mentioned in this job description. Format as a JSON array of strings. Include only clear, specific skills mentioned in the text. If the text is unclear, return an empty array.
+  const sanitizedContent = sanitizeContent(content);
+  const skillsPrompt = `List technical skills from: "${sanitizedContent}"
+  Return only an array of strings. If unclear, return empty array.
+  Example: ["JavaScript", "React"]`;
 
-Input: ${content}
-
-Example output format:
-["JavaScript", "React", "AWS"]`;
-
-  console.log('Extracting skills with prompt:', skillsPrompt);
-  const skillsResult = await model.generateContent(skillsPrompt);
-  const skillsText = skillsResult.response.text().trim();
-  
   try {
-    const cleanedResponse = skillsText.replace(/```json\n?|\n?```/g, '').trim();
-    const skills = JSON.parse(cleanedResponse);
+    const skillsText = await safeGenerateContent(model, skillsPrompt);
+    const skills = JSON.parse(skillsText.replace(/```json\n?|\n?```/g, '').trim());
     console.log('Extracted skills:', skills);
     return skills;
   } catch (error) {
-    console.error('Error parsing skills:', error);
+    console.error('Error extracting skills:', error);
     return [];
   }
 }
 
-async function generateCandidateSearchString(model: any, content: string, skills: string[], location: any, companyName?: string) {
-  const wrapInQuotes = (term: string) => {
-    return term.includes(' ') ? `"${term}"` : term;
-  };
+async function generateSearchString(model: any, content: string, type: string, location: any, companyName?: string) {
+  const sanitizedContent = sanitizeContent(content);
+  const basePrompt = `Create a Google search string for: "${sanitizedContent}"
+  Include only essential terms. Keep under 200 chars.
+  Start with site:linkedin.com`;
 
-  const candidateSearchPrompt = `Create a Google Boolean search string for LinkedIn candidate sourcing based on these requirements:
-
-Job Content: ${content}
-Key Skills: ${skills.map(wrapInQuotes).join(', ')}
-Location: ${location.metropolitanArea || location.location || 'Remote'}
-
-Rules:
-1. Start with 'site:linkedin.com/in OR site:linkedin.com/pub'
-2. Include job titles and variations in parentheses with OR operators
-3. Include 3-5 most critical skills with AND operators
-4. Add the metropolitan area in quotes (e.g. "San Francisco Bay Area")
-5. Exclude irrelevant results using -intitle:"profiles" -inurl:"dir/ "
-6. Keep the string under 300 characters for Google compatibility
-7. Focus on finding profiles, not job posts
-8. Wrap any multi-word terms in double quotes (e.g. "product manager" instead of product manager)
-
-Example format:
-("Software Engineer" OR "Backend Developer") AND ("Python" AND "Amazon Web Services" AND "Kubernetes") "San Francisco Bay Area" -intitle:"profiles" -inurl:"dir/ " site:linkedin.com/in OR site:linkedin.com/pub
-
-Output only the search string, no explanations.`;
-
-  console.log('Generating candidate search string with prompt:', candidateSearchPrompt);
-  const searchResult = await model.generateContent(candidateSearchPrompt);
-  let searchString = searchResult.response.text().trim();
-  console.log('Generated candidate search string:', searchString);
-
-  if (companyName) {
-    searchString = `${searchString} AND "${companyName}"`;
+  try {
+    const searchString = await safeGenerateContent(model, basePrompt);
+    console.log('Generated search string:', searchString);
+    return searchString.trim();
+  } catch (error) {
+    console.error('Error generating search string:', error);
+    // Fallback to a basic search string
+    const fallbackString = `site:linkedin.com "${sanitizedContent.substring(0, 100)}"`;
+    return fallbackString;
   }
-  
-  return searchString;
-}
-
-async function generateCompanySearchString(model: any, companyName: string) {
-  const companySearchPrompt = `Create a Google Boolean search string to find company information on LinkedIn:
-
-Company Name: ${companyName}
-
-Rules:
-1. Start with 'site:linkedin.com/company'
-2. Include company name variations if applicable
-3. Add relevant industry terms if present in the job description
-4. Exclude job postings and irrelevant pages
-5. Keep the string concise and focused
-
-Output only the search string, no explanations.`;
-
-  console.log('Generating company search string with prompt:', companySearchPrompt);
-  const searchResult = await model.generateContent(companySearchPrompt);
-  const searchString = searchResult.response.text().trim();
-  console.log('Generated company search string:', searchString);
-  return searchString;
-}
-
-async function generateCandidatesAtCompanyString(model: any, content: string, skills: string[], companyName: string) {
-  const candidatesAtCompanyPrompt = `Create a Google Boolean search string to find candidates at a specific company on LinkedIn:
-
-Company: ${companyName}
-Job Content: ${content}
-Key Skills: ${skills.join(', ')}
-
-Rules:
-1. Start with 'site:linkedin.com/in'
-2. Include current company name with exact match
-3. Include relevant job titles with OR operators
-4. Add 2-3 most critical skills with AND operators
-5. Exclude irrelevant results
-6. Keep the string under 300 characters
-7. Focus on finding current employees
-
-Example format:
-site:linkedin.com/in "Current Company Name" AND ("Software Engineer" OR "Developer") AND (Python AND AWS) NOT (recruiter OR "job post")
-
-Output only the search string, no explanations.`;
-
-  console.log('Generating candidates at company string with prompt:', candidatesAtCompanyPrompt);
-  const searchResult = await model.generateContent(candidatesAtCompanyPrompt);
-  const searchString = searchResult.response.text().trim().replace(/```.*\n?|\n?```/g, '');
-  console.log('Generated candidates at company search string:', searchString);
-  return searchString;
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { content, searchType, companyName } = await req.json();
-    console.log('Processing request:', { content: content?.substring(0, 100) + '...', searchType, companyName });
+    console.log('Processing request:', { 
+      contentPreview: content?.substring(0, 100) + '...', 
+      searchType, 
+      companyName 
+    });
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const locationData = await analyzeLocation(model, content);
-    const extractedSkills = await extractSkills(model, content);
-
-    let searchString = '';
-    
-    switch (searchType) {
-      case 'candidates':
-        searchString = await generateCandidateSearchString(model, content, extractedSkills, locationData, companyName);
-        break;
-      case 'companies':
-        searchString = await generateCompanySearchString(model, companyName);
-        break;
-      case 'candidates-at-company':
-        searchString = await generateCandidatesAtCompanyString(model, content, extractedSkills, companyName);
-        break;
+    if (!content) {
+      throw new Error('Content is required');
     }
 
-    // Clean up any markdown code block syntax from the search string
-    searchString = searchString.replace(/```.*\n?|\n?```/g, '').trim();
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    
+    // Process in parallel for better performance
+    const [locationData, extractedSkills] = await Promise.all([
+      analyzeLocation(model, content),
+      extractSkills(model, content)
+    ]);
+
+    const searchString = await generateSearchString(
+      model, 
+      content, 
+      searchType, 
+      locationData, 
+      companyName
+    );
 
     const response = {
       message: 'Content processed successfully',
@@ -192,20 +134,19 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(response),
-      {
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error processing request:', error);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'An error occurred while processing the content. Please try again with different content.'
+      }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

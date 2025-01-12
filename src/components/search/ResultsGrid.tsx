@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Bot, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface ResultsGridProps {
   jobId: number | null;
@@ -15,22 +16,21 @@ interface ResultsGridProps {
 
 export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) => {
   const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
+  const [showResults, setShowResults] = useState(false);
 
   console.log("ResultsGrid state:", { jobId, isProcessingComplete, isLoading, agentOutput });
 
   const handleClose = () => {
-    // Only allow closing if we have data or processing is complete
-    if (agentOutput || !isProcessingComplete) {
-      // Reset the URL without refreshing the page
-      window.history.pushState({}, '', '/');
-      // Reload the page to reset the state
-      window.location.reload();
-    }
+    setShowResults(false);
+    // Reset the URL without refreshing the page
+    window.history.pushState({}, '', '/');
+    // Reload the page to reset the state
+    window.location.reload();
   };
 
   const handleOverlayClick = (e: React.MouseEvent) => {
-    // Only close if clicking the overlay background and we have data
-    if (e.target === e.currentTarget && (agentOutput || !isProcessingComplete)) {
+    // Only close if clicking the overlay background
+    if (e.target === e.currentTarget) {
       handleClose();
     }
   };
@@ -69,8 +69,23 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
     );
   }
 
-  // Show the analysis results in a centered card if we have data
-  if (agentOutput) {
+  // Show the "View Report" button when processing is complete and we have data
+  if (agentOutput && !showResults) {
+    return (
+      <div className="flex justify-center mt-6">
+        <Button
+          onClick={() => setShowResults(true)}
+          className="border-4 border-black bg-[#8B5CF6] text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+        >
+          <Bot className="w-5 h-5 mr-2" />
+          View Analysis Report
+        </Button>
+      </div>
+    );
+  }
+
+  // Show the analysis results in a centered card if we have data and showResults is true
+  if (agentOutput && showResults) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6 overflow-y-auto" onClick={handleOverlayClick}>
         <Card className={cn(

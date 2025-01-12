@@ -16,9 +16,8 @@ export const ResultsGrid = ({
   showResults,
   onClose
 }: ResultsGridProps) => {
-  const { data: agentOutput, isLoading, refetch } = useAgentOutputs(jobId);
+  const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
   const [dataReady, setDataReady] = useState(false);
-  const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
 
   console.log("ResultsGrid state:", { 
     jobId, 
@@ -30,46 +29,11 @@ export const ResultsGrid = ({
   });
 
   useEffect(() => {
-    // Clear any existing polling interval when component unmounts
-    return () => {
-      if (pollInterval) {
-        clearInterval(pollInterval);
-      }
-    };
-  }, [pollInterval]);
-
-  useEffect(() => {
-    if (isProcessingComplete && !dataReady && !agentOutput) {
-      console.log("Starting polling for data...");
-      
-      // Clear any existing interval
-      if (pollInterval) {
-        clearInterval(pollInterval);
-      }
-
-      // Start new polling interval
-      const interval = setInterval(() => {
-        console.log("Polling for data...");
-        refetch().then((result) => {
-          if (result.data) {
-            console.log("Data found:", result.data);
-            setDataReady(true);
-            clearInterval(interval);
-          }
-        });
-      }, 1000);
-
-      setPollInterval(interval);
-
-      return () => clearInterval(interval);
-    }
-
-    // If we already have data, mark as ready
-    if (agentOutput && !dataReady) {
+    if (agentOutput) {
       console.log("Setting data ready from existing agent output");
       setDataReady(true);
     }
-  }, [isProcessingComplete, dataReady, agentOutput, refetch, pollInterval]);
+  }, [agentOutput]);
 
   const handleClose = () => {
     onClose();

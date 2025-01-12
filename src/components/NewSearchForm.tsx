@@ -15,10 +15,17 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [showResults, setShowResults] = useState(false);
 
   const handleSearchSubmit = (text: string, jobId: number) => {
+    console.log("Search submitted:", { text, jobId });
     setSearchText(text);
     setCurrentJobId(jobId);
     setIsProcessingComplete(false);
     setShowResults(false);
+  };
+
+  const handleProcessingComplete = () => {
+    console.log("Processing complete");
+    setIsProcessingComplete(true);
+    toast.success("Analysis complete! Click 'View Analysis Report' to see results.");
   };
 
   return (
@@ -35,9 +42,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         <ProcessAgent
           content={searchText}
           jobId={currentJobId}
-          onComplete={() => {
-            setIsProcessingComplete(true);
-          }}
+          onComplete={handleProcessingComplete}
         />
       )}
 

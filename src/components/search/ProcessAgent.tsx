@@ -75,28 +75,37 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
     },
     onError: (error) => {
       console.error('Error persisting to database:', error);
-      // Continue with client-side data even if database persistence fails
+    },
+    onSuccess: () => {
+      console.log('Successfully persisted agent output to database');
+      onComplete();
     }
   });
 
   useEffect(() => {
+    let isMounted = true;
+
     const processContent = async () => {
       try {
         // Process terms
         const terms = await processStep(0, 'extract-nlp-terms', 'terms');
+        if (!isMounted) return;
         
         // Process compensation
         const compensationData = await processStep(1, 'analyze-compensation', 'analysis');
+        if (!isMounted) return;
         
         // Process description
         const enhancerData = await processStep(2, 'enhance-job-description', 'enhancedDescription');
+        if (!isMounted) return;
         
         // Process summary
         const summaryData = await processStep(3, 'summarize-job', 'summary');
+        if (!isMounted) return;
 
         // Create agent output object
         const agentOutput = {
-          id: Date.now(), // Temporary client-side ID
+          id: Date.now(),
           job_id: jobId,
           created_at: new Date().toISOString(),
           terms,
@@ -107,6 +116,7 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
 
         // Update client-side state immediately
         setOutput(jobId, agentOutput);
+        console.log('Set client-side agent output:', agentOutput);
 
         // Persist to database in the background
         persistToDatabase.mutate(agentOutput);
@@ -116,9 +126,10 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
           description: "Your report is ready to view",
         });
 
-        onComplete();
       } catch (error) {
         console.error('Error in agent processing:', error);
+        if (!isMounted) return;
+        
         toast({
           title: "Error",
           description: "Failed to process content. Please try again.",
@@ -128,7 +139,10 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
     };
 
     processContent();
-  }, [content, jobId, onComplete, toast, setOutput]);
+    return () => {
+      isMounted = false;
+    };
+  }, [content, jobId, toast, setOutput]);
 
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

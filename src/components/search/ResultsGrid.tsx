@@ -35,6 +35,13 @@ export const ResultsGrid = ({
     }
   }, [agentOutput]);
 
+  useEffect(() => {
+    if (isProcessingComplete && !showResults) {
+      console.log("Processing complete, showing analysis loading");
+      setDataReady(true);
+    }
+  }, [isProcessingComplete, showResults]);
+
   const handleClose = () => {
     onClose();
     window.history.pushState({}, '', '/');
@@ -44,12 +51,13 @@ export const ResultsGrid = ({
 
   return (
     <>
-      {!showResults && !isProcessingComplete && (
+      {!showResults && isProcessingComplete && (
         <AnalysisLoading
           isProcessingComplete={isProcessingComplete}
           dataReady={dataReady}
           onCancel={handleClose}
           onViewReport={() => {
+            console.log("View report clicked");
             setDataReady(true);
             onClose();
           }}

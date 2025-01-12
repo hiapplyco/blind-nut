@@ -132,30 +132,30 @@ serve(async (req) => {
       searchPrompt = `Based on this job description: ${content}, create a LinkedIn company search string following these rules:
       1. Start with 'site:linkedin.com/company'
       2. Include "${location}" in quotes
-      3. Select ONE most relevant industry from this list and include it in quotes:
-         - Accommodation Services
-         - Administrative and Support Services
-         - Construction
-         - Consumer Services
-         - Education
-         - Entertainment Providers
-         - Farming, Ranching, Forestry
-         - Financial Services
-         - Government Administration
-         - Holding Companies
-         - Hospitals and Health Care
-         - Manufacturing
-         - Oil, Gas, and Mining
-         - Professional Services
-         - Real Estate and Equipment Rental Services
-         - Retail
-         - Technology, Information and Media
-         - Transportation, Logistics, Supply Chain and Storage
-         - Utilities
-         - Wholesale
+      3. Select 2-3 most relevant industries from this list and combine them with OR operators in parentheses:
+         (industry1 OR industry2 OR industry3)
+         Choose from:
+         - "Accommodation Services"
+         - "Administrative and Support Services"
+         - "Construction"
+         - "Consumer Services"
+         - "Education"
+         - "Entertainment Providers"
+         - "Farming, Ranching, Forestry"
+         - "Financial Services"
+         - "Government Administration"
+         - "Holding Companies"
+         - "Hospitals and Health Care"
+         - "Manufacturing"
+         - "Oil, Gas, and Mining"
+         - "Professional Services"
+         - "Real Estate and Equipment Rental Services"
+         - "Retail"
+         - "Technology, Information and Media"
+         - "Transportation, Logistics, Supply Chain and Storage"
+         - "Utilities"
+         - "Wholesale"
       4. Add 2-3 relevant keywords from the job description that would help find similar companies
-      5. Add "followers" to find established companies
-      6. Add "employees" to ensure company size relevance
       
       Format your response as a single search string, nothing else.`;
     } else if (searchType === 'candidates-at-company') {

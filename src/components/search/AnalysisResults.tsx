@@ -62,18 +62,10 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         />
       );
 
-      ReactToPdf
-        .generatePdf(targetRef, options)
-        .then(() => {
-          toast.success("PDF exported successfully");
-        })
-        .catch((error) => {
-          console.error('Error exporting PDF:', error);
-          toast.error("Failed to export PDF");
-        })
-        .finally(() => {
-          setIsExporting(false);
-        });
+      // Use ReactToPdf directly as a function
+      await ReactToPdf(targetRef, options);
+      toast.success("PDF exported successfully");
+      setIsExporting(false);
     } catch (error) {
       console.error('Error exporting PDF:', error);
       toast.error("Failed to export PDF");

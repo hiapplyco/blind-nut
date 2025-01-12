@@ -1,6 +1,7 @@
 import { PenLine } from "lucide-react";
 import { AgentWindow } from "./AgentWindow";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
+import ReactMarkdown from "react-markdown";
 
 interface JobDescriptionEnhancerProps {
   jobId: number | null;
@@ -22,12 +23,11 @@ export const JobDescriptionEnhancer = ({ jobId }: JobDescriptionEnhancerProps) =
           <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
         </div>
       ) : (
-        <div 
-          className="prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ 
-            __html: agentOutput?.enhanced_description?.replace(/\n/g, '<br/>') || "No enhanced job description available."
-          }} 
-        />
+        <div className="prose prose-sm max-w-none">
+          <ReactMarkdown>
+            {agentOutput?.enhanced_description || "No enhanced job description available."}
+          </ReactMarkdown>
+        </div>
       )}
     </AgentWindow>
   );

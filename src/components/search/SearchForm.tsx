@@ -10,7 +10,7 @@ import { CompanyNameInput } from "./CompanyNameInput";
 import { SubmitButton } from "./SubmitButton";
 import { ViewReportButton } from "./ViewReportButton";
 
-type SearchType = "companies" | "candidates-at-company";
+type SearchType = "candidates" | "companies" | "candidates-at-company";
 
 interface SearchFormProps {
   userId: string;
@@ -30,7 +30,7 @@ export const SearchForm = ({
   const [searchText, setSearchText] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [searchType, setSearchType] = useState<SearchType>("companies");
+  const [searchType, setSearchType] = useState<SearchType>("candidates");
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,20 +38,11 @@ export const SearchForm = ({
     setIsProcessing(true);
 
     try {
-      // Generate title and summary
-      const titleResponse = await supabase.functions.invoke('generate-job-title', {
-        body: { content: searchText }
-      });
-
-      if (titleResponse.error) throw titleResponse.error;
-
       const { data: jobData, error: jobError } = await supabase
         .from('jobs')
         .insert({
           content: searchText,
-          user_id: userId,
-          title: titleResponse.data.title,
-          summary: titleResponse.data.summary
+          user_id: userId
         })
         .select()
         .single();

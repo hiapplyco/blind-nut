@@ -50,7 +50,7 @@ export const useAgentOutputs = (jobId: number | null) => {
         return null;
       }
 
-      // Now fetch the agent outputs
+      // Now fetch the agent outputs - get the most recent one
       const { data, error } = await supabase
         .from("agent_outputs")
         .select("*")

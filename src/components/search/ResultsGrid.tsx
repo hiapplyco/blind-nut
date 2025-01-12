@@ -19,15 +19,6 @@ export const ResultsGrid = ({
   const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
   const [dataReady, setDataReady] = useState(false);
 
-  console.log("ResultsGrid state:", { 
-    jobId, 
-    isProcessingComplete, 
-    isLoading, 
-    agentOutput,
-    dataReady,
-    showResults 
-  });
-
   useEffect(() => {
     if (agentOutput) {
       console.log("Setting data ready from existing agent output");
@@ -48,11 +39,6 @@ export const ResultsGrid = ({
     onClose();
   };
 
-  const handleViewReport = () => {
-    console.log("View report clicked in ResultsGrid");
-    setDataReady(true);
-  };
-
   if (!jobId) return null;
 
   return (
@@ -62,11 +48,14 @@ export const ResultsGrid = ({
           isProcessingComplete={isProcessingComplete}
           dataReady={dataReady}
           onCancel={handleClose}
-          onViewReport={handleViewReport}
+          onViewReport={() => {
+            console.log("View report clicked in ResultsGrid");
+            setDataReady(true);
+          }}
         />
       )}
       
-      {agentOutput && showResults && (
+      {showResults && (
         <AnalysisResults jobId={jobId} onClose={handleClose} />
       )}
     </>

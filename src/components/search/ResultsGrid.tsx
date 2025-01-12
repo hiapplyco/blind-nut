@@ -19,6 +19,7 @@ export const ResultsGrid = ({
   const { data: agentOutput, isLoading, refetch } = useAgentOutputs(jobId);
   const [dataReady, setDataReady] = useState(false);
   const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
+  const [showLoading, setShowLoading] = useState(true);
 
   console.log("ResultsGrid state:", { 
     jobId, 
@@ -54,6 +55,8 @@ export const ResultsGrid = ({
           if (result.data) {
             console.log("Data found:", result.data);
             setDataReady(true);
+            // Keep loading visible for a short moment to allow for transition
+            setTimeout(() => setShowLoading(false), 500);
             clearInterval(interval);
           }
         });
@@ -68,6 +71,7 @@ export const ResultsGrid = ({
     if (agentOutput && !dataReady) {
       console.log("Setting data ready from existing agent output");
       setDataReady(true);
+      setTimeout(() => setShowLoading(false), 500);
     }
   }, [isProcessingComplete, dataReady, agentOutput, refetch, pollInterval]);
 
@@ -79,21 +83,21 @@ export const ResultsGrid = ({
 
   if (!jobId) return null;
 
-  if (!dataReady || isLoading) {
-    return (
-      <AnalysisLoading
-        isProcessingComplete={isProcessingComplete}
-        dataReady={dataReady}
-        onCancel={handleClose}
-      />
-    );
-  }
-
-  if (agentOutput && showResults) {
-    return <AnalysisResults jobId={jobId} onClose={handleClose} />;
-  }
-
-  return null;
+  return (
+    <>
+      {showLoading && (
+        <AnalysisLoading
+          isProcessingComplete={isProcessingComplete}
+          dataReady={dataReady}
+          onCancel={handleClose}
+        />
+      )}
+      
+      {agentOutput && showResults && !showLoading && (
+        <AnalysisResults jobId={jobId} onClose={handleClose} />
+      )}
+    </>
+  );
 };
 
 export default ResultsGrid;

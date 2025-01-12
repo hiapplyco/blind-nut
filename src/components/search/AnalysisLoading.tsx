@@ -1,6 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface AnalysisLoadingProps {
   isProcessingComplete: boolean;
@@ -14,8 +15,18 @@ export const AnalysisLoading = ({
   onCancel,
 }: AnalysisLoadingProps) => {
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <Card className="w-full max-w-lg p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-fade-in">
+    <div className={cn(
+      "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50",
+      "transition-opacity duration-300",
+      dataReady ? "opacity-0 pointer-events-none" : "opacity-100"
+    )}>
+      <Card className={cn(
+        "w-full max-w-lg p-6 border-4 border-black bg-[#FFFBF4]",
+        "shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]",
+        "transition-all duration-300",
+        "animate-fade-in",
+        dataReady ? "scale-95 opacity-0" : "scale-100 opacity-100"
+      )}>
         <div className="flex items-center gap-4">
           <div className="flex-shrink-0">
             <Loader2 className="w-12 h-12 animate-spin text-primary" />

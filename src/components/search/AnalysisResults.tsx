@@ -16,6 +16,13 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
   const { data: agentOutput } = useAgentOutputs(jobId);
   const [isExporting, setIsExporting] = useState(false);
   const [pdfContent, setPdfContent] = useState<string>("");
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Trigger entrance animation after a short delay
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const fetchJobData = async () => {
@@ -35,7 +42,9 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
-      onClose();
+      setIsVisible(false);
+      // Add a delay before closing to allow exit animation to complete
+      setTimeout(onClose, 300);
     }
   };
 
@@ -48,16 +57,25 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 sm:p-6 overflow-y-auto" 
+      className={cn(
+        "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 sm:p-6 overflow-y-auto",
+        "transition-opacity duration-300",
+        isVisible ? "opacity-100" : "opacity-0"
+      )}
       onClick={handleOverlayClick}
     >
       <div className="w-full max-w-4xl my-8">
         <Card className={cn(
           "bg-[#FFFBF4] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]",
-          "animate-scale-in p-6 space-y-6 relative max-h-[85vh] overflow-y-auto"
+          "p-6 space-y-6 relative max-h-[85vh] overflow-y-auto",
+          "transition-all duration-300 transform",
+          isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
         )}>
           <AnalysisHeader 
-            onClose={onClose}
+            onClose={() => {
+              setIsVisible(false);
+              setTimeout(onClose, 300);
+            }}
             onExport={handleExport}
             isExporting={isExporting}
           />

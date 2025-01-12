@@ -1,4 +1,5 @@
 import { Terms } from "@/types/agent";
+import ReactMarkdown from 'react-markdown';
 
 interface PDFReportProps {
   jobSummary: string;
@@ -21,17 +22,23 @@ export const PDFReport = ({
       
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">Job Summary</h2>
-        <div className="prose">{jobSummary}</div>
+        <div className="prose max-w-none">
+          <ReactMarkdown>{jobSummary}</ReactMarkdown>
+        </div>
       </section>
 
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">Enhanced Description</h2>
-        <div className="prose">{enhancedDescription}</div>
+        <div className="prose max-w-none">
+          <ReactMarkdown>{enhancedDescription}</ReactMarkdown>
+        </div>
       </section>
 
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">Compensation Analysis</h2>
-        <div className="prose">{compensationAnalysis}</div>
+        <div className="prose max-w-none">
+          <ReactMarkdown>{compensationAnalysis}</ReactMarkdown>
+        </div>
       </section>
 
       {terms && (

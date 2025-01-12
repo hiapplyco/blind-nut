@@ -35,7 +35,9 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Analyze this text and extract key terms into specific categories. Format your response EXACTLY as a JSON object with these arrays:
+    const prompt = `Extract and categorize key terms from this job description. Focus on identifying specific, relevant skills and technologies.
+
+Format your response EXACTLY as a JSON object with these arrays:
 
 {
   "skills": ["skill1", "skill2"],
@@ -43,12 +45,18 @@ serve(async (req) => {
   "keywords": ["keyword1", "keyword2"]
 }
 
-Guidelines:
-- skills: technical skills, tools, technologies (3-7 items)
-- titles: job titles and roles (2-5 items)
-- keywords: other important terms (3-7 items)
-- keep terms short (1-3 words)
-- use empty arrays [] if no terms found
+Guidelines for skills extraction:
+- Include ONLY concrete, specific technical skills, tools, and technologies
+- Exclude generic terms like "experience" or "knowledge"
+- Keep each skill concise (1-3 words maximum)
+- Include 3-7 most relevant skills
+- Format consistently (e.g., "React.js" not "reactjs" or "React")
+- DO NOT include unrelated or generic terms
+
+Guidelines for other fields:
+- titles: relevant job titles (2-5 items)
+- keywords: other important specific terms (3-7 items)
+- use empty arrays [] if no relevant terms found
 - ONLY return the JSON object, no other text
 
 Text to analyze: ${content}`;
@@ -59,18 +67,28 @@ Text to analyze: ${content}`;
     console.log('Raw Gemini response:', response);
     
     try {
-      // Clean the response string before parsing
       const cleanedResponse = response.replace(/```json\n?|\n?```/g, '').trim();
       const parsedResponse = JSON.parse(cleanedResponse);
       
-      // Validate response structure
+      // Validate response structure and content
       if (!Array.isArray(parsedResponse.skills) || 
           !Array.isArray(parsedResponse.titles) || 
           !Array.isArray(parsedResponse.keywords)) {
         throw new Error('Invalid response structure');
       }
 
-      console.log('Successfully parsed response:', parsedResponse);
+      // Additional validation for skills
+      parsedResponse.skills = parsedResponse.skills
+        .filter(skill => 
+          typeof skill === 'string' && 
+          skill.trim().length > 0 &&
+          skill.split(' ').length <= 3 &&
+          !skill.toLowerCase().includes('experience') &&
+          !skill.toLowerCase().includes('knowledge')
+        )
+        .map(skill => skill.trim());
+
+      console.log('Successfully parsed and validated response:', parsedResponse);
       return new Response(
         JSON.stringify(parsedResponse),
         { 
@@ -84,7 +102,6 @@ Text to analyze: ${content}`;
       console.error('Error parsing Gemini response:', parseError);
       console.error('Raw response that failed parsing:', response);
       
-      // Return a fallback response instead of throwing
       return new Response(
         JSON.stringify({
           skills: [],

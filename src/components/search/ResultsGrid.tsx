@@ -55,8 +55,10 @@ export const ResultsGrid = ({
           if (result.data) {
             console.log("Data found:", result.data);
             setDataReady(true);
-            // Keep loading visible for a short moment to allow for transition
-            setTimeout(() => setShowLoading(false), 500);
+            // Increase the delay to allow for proper transition
+            setTimeout(() => {
+              setShowLoading(false);
+            }, 1000); // Increased from 500ms to 1000ms
             clearInterval(interval);
           }
         });
@@ -71,7 +73,10 @@ export const ResultsGrid = ({
     if (agentOutput && !dataReady) {
       console.log("Setting data ready from existing agent output");
       setDataReady(true);
-      setTimeout(() => setShowLoading(false), 500);
+      // Increase the delay to allow for proper transition
+      setTimeout(() => {
+        setShowLoading(false);
+      }, 1000); // Increased from 500ms to 1000ms
     }
   }, [isProcessingComplete, dataReady, agentOutput, refetch, pollInterval]);
 

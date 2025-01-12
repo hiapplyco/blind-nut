@@ -19,27 +19,58 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `As a Talent Acquisition professional, create a compelling summary of this job description using clear markdown formatting:
+    const prompt = `As a senior Talent Acquisition professional, create a compelling and comprehensive summary of this job description using clear markdown formatting. Focus on the key aspects that would most interest potential candidates:
 
-# 📝 Job Summary
+# 📝 Comprehensive Job Summary
 
-## 🎯 Position Snapshot
-- **Role:** *[Job title and level]*
-- **Industry:** *[Domain/sector]*
+## 🎯 Position Overview
+- **Role:** *[Specific job title and level]*
+- **Industry:** *[Business sector/domain]*
 - **Location:** *[Work arrangement - remote/hybrid/onsite]*
+- **Company Type:** *[Size, stage, market position]*
 
-## 💫 Key Responsibilities
-- **Primary Focus:** *[Main objective]*
+## 💫 Key Responsibilities & Impact
+- **Primary Focus:** *[Main objective and purpose]*
 - **Core Duties:** *[3-4 key responsibilities]*
-- **Impact Areas:** *[Where this role makes a difference]*
+- **Strategic Impact:** *[How role affects business]*
+- **Team Context:** *[Reporting structure & collaboration]*
 
-## 🎓 Essential Requirements
-- **Must-Have Skills:** *[Critical technical skills]*
-- **Experience Level:** *[Years/background needed]*
-- **Key Competencies:** *[Important soft skills]*
+## 🎓 Required Qualifications
+- **Technical Skills:** *[Critical technical requirements]*
+- **Experience Level:** *[Years and type of experience]*
+- **Education:** *[Required degrees/certifications]*
+- **Industry Knowledge:** *[Sector expertise needed]*
 
-Format the content to be engaging and concise, using bold for categories and italic for details.
-Focus on what would most interest potential candidates.
+## 🌟 Key Competencies
+- **Technical Expertise:** *[Specific tools/technologies]*
+- **Soft Skills:** *[Critical interpersonal abilities]*
+- **Leadership:** *[Management/mentoring requirements]*
+- **Communication:** *[Important communication skills]*
+
+## 📈 Growth & Opportunity
+- **Career Path:** *[Progression opportunities]*
+- **Learning:** *[Development resources]*
+- **Impact:** *[Ability to influence outcomes]*
+- **Innovation:** *[Opportunity to drive change]*
+
+## 🎁 Package Highlights
+- **Compensation:** *[Salary range if provided]*
+- **Benefits:** *[Key benefits overview]*
+- **Perks:** *[Notable additional benefits]*
+- **Work Style:** *[Flexibility/arrangements]*
+
+Format the content to be engaging and concise, using:
+- Bold for categories and key terms
+- Italic for supporting details
+- Bullet points for clear organization
+- Emojis for visual engagement
+
+Focus on what would most interest potential candidates, including:
+- Role impact and growth potential
+- Key responsibilities and expectations
+- Required skills and experience
+- Company culture and benefits
+- Career development opportunities
 
 Job description: ${content}`;
 

@@ -9,7 +9,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       headers: corsHeaders,
@@ -38,34 +37,66 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    const prompt = `As a Talent Acquisition expert, analyze the compensation details in this job description. Format your response in markdown with clear, engaging headers and emphasis on key points. Include:
+    const prompt = `As a seasoned Talent Acquisition expert with deep knowledge of compensation structures and market trends, analyze the compensation details in this job description. Format your response in markdown with clear, engaging headers and emphasis on key points. Include:
 
-# 💰 Compensation Analysis
+# 💰 Comprehensive Compensation Analysis
 
 ## 📊 Base Salary Range
-- **Specified Range:** [Extract or estimate the range]
-- *Market Position:* [How this compares to market]
+- **Specified Range:** [Extract or estimate the salary range based on role, location, and industry standards]
+- *Market Position:* [How this compares to market averages, whether it's competitive]
+- **Location Factor:** [How location impacts the compensation]
 
 ## 🎯 Total Compensation Package
-- **Performance Bonuses:** [Details if available]
-- **Equity Components:** [Stock options, RSUs, etc.]
-- **Additional Incentives:** [Commission, profit sharing, etc.]
+- **Performance Bonuses:** [Details of any performance-based compensation]
+- **Equity Components:** [Stock options, RSUs, or other equity compensation]
+- **Additional Incentives:** [Commission structure, profit sharing, performance bonuses]
+- *Total Package Value:* [Estimated total compensation range]
 
-## ✨ Benefits Highlights
-- **Healthcare:** [Medical, dental, vision coverage]
-- **Time Off:** [Vacation, PTO policy]
-- **Additional Perks:** [List standout benefits]
+## ✨ Benefits and Perks Analysis
+- **Healthcare Coverage:**
+  - Medical insurance details
+  - Dental and vision coverage
+  - Health savings accounts or flexible spending options
+- **Time Off Benefits:**
+  - Vacation policy
+  - Sick leave
+  - Paid holidays
+  - Parental leave
+- **Additional Benefits:**
+  - 401(k) or retirement plans
+  - Life insurance
+  - Disability coverage
+  - Professional development allowance
 
-## 📈 Market Context
-- **Industry Alignment:** [How package compares to industry]
-- **Growth Potential:** [Compensation growth opportunities]
+## 📈 Market Context and Competitiveness
+- **Industry Alignment:** [How the package compares to industry standards]
+- **Competitive Analysis:** [Strengths and potential gaps in the offering]
+- **Growth Potential:** [Career progression and compensation growth opportunities]
+- *Market Trends:* [Relevant compensation trends in this sector]
 
-## 🌟 Notable Policies
-- **Highlight any unique or attractive compensation policies**
-- *Include remote work stipends or special allowances*
+## 🌟 Notable Compensation Policies
+- **Unique Benefits:** [Standout or unusual perks]
+- **Work Arrangement Benefits:** [Remote work stipends, home office allowances]
+- **Wellness Programs:** [Health and wellness benefits]
+- **Professional Growth:** [Training budgets, certification support]
 
-If specific numbers aren't provided, provide informed estimates based on industry standards, location, and role level.
-Keep sections concise but impactful, using bold for key figures and italic for contextual insights.
+## 💡 Strategic Insights
+- **Attraction Factors:** [Key selling points of the compensation package]
+- **Retention Elements:** [Components designed for long-term retention]
+- **Areas for Negotiation:** [Flexible components of the package]
+
+If specific numbers aren't provided, provide informed estimates based on:
+- Industry standards
+- Company size and stage
+- Location and market conditions
+- Role level and requirements
+- Current market trends
+
+Keep sections concise but impactful, using:
+- Bold for key figures and important terms
+- Italic for contextual insights and market analysis
+- Bullet points for clear organization
+- Emojis for visual engagement
 
 Job description: ${content}`;
 

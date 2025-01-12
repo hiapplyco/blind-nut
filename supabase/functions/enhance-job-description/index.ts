@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -24,47 +23,102 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    const prompt = `As a Talent Acquisition specialist, enhance this job description using engaging markdown formatting with clear headers and emphasis on key points that will attract top talent:
+    const prompt = `As an experienced Talent Acquisition specialist, enhance this job description using engaging markdown formatting with clear headers and emphasis on key points that will attract top talent. Create a comprehensive, well-structured description that highlights:
 
 # 🚀 Enhanced Job Description
 
-## 🏢 Company Impact
-- **Mission:** *What makes this company special*
-- **Culture:** *Key aspects of work environment*
-- **Growth:** *Company trajectory and vision*
+## 🏢 Company Impact & Culture
+- **Mission & Vision:** *What makes this company unique and inspiring*
+- **Company Culture:** *Key aspects of work environment and values*
+- **Growth Trajectory:** *Company's market position and future vision*
+- **Innovation Focus:** *How the company drives industry change*
 
-## 💫 Role Overview
-- **Position Impact:** *How this role contributes to success*
-- **Key Objectives:** *What success looks like*
-- **Team Context:** *Where this role fits in*
+## 💫 Role Overview & Impact
+- **Position Impact:** *How this role contributes to company success*
+- **Key Objectives:** *Clear definition of what success looks like*
+- **Team Context:** *Where this role fits in the organization*
+- **Strategic Value:** *How this role shapes company direction*
 
 ## 📋 Essential Qualifications
-- **Technical Skills:** *Must-have technical requirements*
-- **Experience:** *Required background*
-- **Soft Skills:** *Critical interpersonal abilities*
+- **Technical Expertise:** *Must-have technical skills and tools*
+- **Experience Level:** *Required years and type of background*
+- **Industry Knowledge:** *Specific sector expertise needed*
+- **Core Competencies:** *Critical technical requirements*
+- **Soft Skills:** *Essential interpersonal abilities*
 
 ## 🌟 Preferred Qualifications
-- **Advanced Skills:** *Nice-to-have expertise*
-- **Industry Knowledge:** *Beneficial background*
-- **Additional Assets:** *What sets candidates apart*
+- **Advanced Skills:** *Nice-to-have technical expertise*
+- **Additional Experience:** *Beneficial background areas*
+- **Industry Insights:** *Valuable sector knowledge*
+- **Leadership Abilities:** *Management or mentoring experience*
+- **Certifications:** *Relevant professional certifications*
 
 ## 📈 Growth & Development
-- **Career Path:** *Progression opportunities*
-- **Learning:** *Professional development support*
-- **Mentorship:** *Available guidance and support*
+- **Career Progression:** *Clear advancement opportunities*
+- **Professional Development:** *Learning and growth resources*
+- **Mentorship:** *Available guidance and support systems*
+- **Training Programs:** *Structured learning opportunities*
+- **Innovation Opportunities:** *Chances to drive change*
 
-## 🎯 Success Metrics
-- **First 90 Days:** *Initial objectives*
-- **Long-term Impact:** *Expected contributions*
-- **Key Deliverables:** *Major responsibilities*
+## 🎯 Success Metrics & Expectations
+- **First 90 Days:** *Initial objectives and milestones*
+- **Key Responsibilities:** *Primary duties and projects*
+- **Performance Indicators:** *How success will be measured*
+- **Team Collaboration:** *Cross-functional partnerships*
+- **Strategic Goals:** *Long-term objectives*
 
-## 🤝 Next Steps
+## 🤝 Work Environment & Culture
+- **Team Structure:** *Immediate team composition*
+- **Collaboration Style:** *How the team works together*
+- **Work Arrangement:** *Remote/hybrid/office expectations*
+- **Company Values:** *Core principles in action*
+- **Innovation Culture:** *Approach to new ideas*
+
+## 📊 Impact & Outcomes
+- **Business Impact:** *How role affects company success*
+- **Team Influence:** *Leadership and mentoring opportunities*
+- **Growth Potential:** *Future role evolution*
+- **Innovation Scope:** *Opportunities to drive change*
+- **Success Metrics:** *Key performance indicators*
+
+## 🌈 Diversity & Inclusion
+- **Inclusive Culture:** *Commitment to diversity*
+- **Equal Opportunity:** *Fair hiring practices*
+- **Support Systems:** *Employee resource groups*
+- **Accessibility:** *Accommodations and support*
+
+## 🎁 Benefits & Perks Highlights
+- **Health & Wellness:** *Comprehensive benefits*
+- **Work-Life Balance:** *Flexible arrangements*
+- **Professional Growth:** *Development opportunities*
+- **Additional Perks:** *Unique company benefits*
+
+## 🚀 Next Steps & Application
 - **Application Process:** *How to apply*
 - **Timeline:** *What to expect*
-- **Contact:** *Who to reach out to*
+- **Contact Details:** *Who to reach out to*
+- **Required Materials:** *What to submit*
 
-Format the content to be engaging and scannable, using bold for headers and italic for supporting details.
-Highlight unique opportunities and growth potential to attract top talent.
+Format the content to be:
+- Engaging and scannable
+- Clear and concise
+- Action-oriented
+- Value-focused
+- Achievement-centered
+
+Use:
+- Bold for headers and key terms
+- Italic for supporting details
+- Bullet points for easy scanning
+- Emojis for visual engagement
+- Active voice and strong verbs
+
+Highlight:
+- Unique opportunities
+- Growth potential
+- Company culture
+- Innovation focus
+- Impact potential
 
 Original job description: ${content}`;
 

@@ -19,33 +19,38 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6 overflow-y-auto" onClick={handleOverlayClick}>
-      <Card className={cn(
-        "w-full max-w-4xl bg-[#FFFBF4] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]",
-        "animate-scale-in p-6 space-y-6 relative"
-      )}>
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
-          aria-label="Close results"
-        >
-          <X className="w-6 h-6" />
-        </button>
-        
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Bot className="w-6 h-6 text-primary" />
-            Analysis Results
-          </h2>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <KeyTermsWindow jobId={jobId} />
-          <CompensationAnalysis jobId={jobId} />
-          <JobDescriptionEnhancer jobId={jobId} />
-          <JobSummary jobId={jobId} />
-        </div>
-      </Card>
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 sm:p-6 overflow-y-auto" 
+      onClick={handleOverlayClick}
+    >
+      <div className="w-full max-w-4xl my-8">
+        <Card className={cn(
+          "bg-[#FFFBF4] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]",
+          "animate-scale-in p-6 space-y-6 relative max-h-[85vh] overflow-y-auto"
+        )}>
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Close results"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Bot className="w-6 h-6 text-primary" />
+              Analysis Results
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <KeyTermsWindow jobId={jobId} />
+            <CompensationAnalysis jobId={jobId} />
+            <JobDescriptionEnhancer jobId={jobId} />
+            <JobSummary jobId={jobId} />
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

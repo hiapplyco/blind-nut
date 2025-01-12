@@ -22,15 +22,6 @@ const skillCategories = {
 const normalizeSkills = (extractedSkills: string[]): Record<string, boolean> => {
   const normalizedSkills: Record<string, boolean> = {};
   
-  // If we have very few skills, add some synthetic ones based on context
-  if (extractedSkills.length < 3) {
-    // Add basic skills that are commonly required
-    normalizedSkills['team_collaboration'] = true;
-    normalizedSkills['problem_solving'] = true;
-    normalizedSkills['communication'] = true;
-    return normalizedSkills;
-  }
-
   // For each extracted skill, normalize and categorize
   extractedSkills.forEach(skill => {
     const normalizedSkill = skill.toLowerCase().trim();

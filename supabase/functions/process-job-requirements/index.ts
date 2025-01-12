@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "npm:@google/generative-ai";
 
@@ -42,14 +43,39 @@ serve(async (req) => {
     const metroArea = locationResult.response.text().trim();
     console.log('Extracted metro area:', metroArea);
 
-    const searchPrompt = `Create a targeted LinkedIn X-Ray search string for this job description. Follow these rules:
+    let searchPrompt;
+    if (searchType === 'companies') {
+      searchPrompt = `Create a targeted LinkedIn X-Ray search string to find similar companies. Follow these rules:
+
+1. Analyze the company description and extract:
+   - Industry and sector
+   - Company specializations (2-3 key areas)
+   - Company size indicators
+   - Key technologies or services
+
+2. Format the search string exactly like this:
+site:linkedin.com/company ${metroArea ? `"${metroArea}" AND ` : ''}("INDUSTRY_1" OR "INDUSTRY_2") AND ("SPECIALIZATION_1" OR "SPECIALIZATION_2")
+
+Rules:
+- Replace placeholders with actual values
+- Use proper capitalization
+- Include quotes around exact phrases
+- Group similar terms with OR
+- Connect different term types with AND
+- No exclusions or NOT operators
+- Keep terms specific and technical (no soft skills)
+- If company name is provided, exclude it with -"COMPANY_NAME"
+
+Company Description: ${content}`;
+    } else {
+      searchPrompt = `Create a targeted LinkedIn X-Ray search string for this job description. Follow these rules:
 
 1. Extract 2-4 relevant job titles that are specific to this role
 2. Extract 3-6 concrete, technical skills or qualifications (no soft skills)
 3. DO NOT include any "NOT" operators or exclusions
 4. Format the search string exactly like this:
 
-site:linkedin.com/in/ ${companyName ? '"COMPANY_NAME" AND ' : ''}${metroArea ? '"METRO_AREA" AND ' : ''}("JOB_TITLE_1" OR "JOB_TITLE_2") AND ("SKILL_1" OR "SKILL_2") AND ("SKILL_3" OR "SKILL_4")
+site:linkedin.com/in/ ${companyName ? `"${companyName}" AND ` : ''}${metroArea ? `"${metroArea}" AND ` : ''}("JOB_TITLE_1" OR "JOB_TITLE_2") AND ("SKILL_1" OR "SKILL_2") AND ("SKILL_3" OR "SKILL_4")
 
 Rules:
 - Replace placeholders with actual values
@@ -60,9 +86,8 @@ Rules:
 - No exclusions or NOT operators
 - Keep skills specific and technical (no soft skills)
 
-Job Description: ${content}
-
-Return ONLY the final search string, no explanations.`;
+Job Description: ${content}`;
+    }
 
     console.log('Using search prompt:', searchPrompt);
     

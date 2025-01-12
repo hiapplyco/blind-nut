@@ -6,6 +6,8 @@ import { ContentTextarea } from "./ContentTextarea";
 import { CompanyNameInput } from "./CompanyNameInput";
 import { SubmitButton } from "./SubmitButton";
 import { useSearchFormSubmit } from "./SearchFormSubmit";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 

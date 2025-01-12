@@ -5,6 +5,13 @@ import { KeyTermsWindow } from "./KeyTermsWindow";
 import { CompensationAnalysis } from "../agents/CompensationAnalysis";
 import { JobDescriptionEnhancer } from "../agents/JobDescriptionEnhancer";
 import { JobSummary } from "../agents/JobSummary";
+import { ExportButton } from "./ExportButton";
+import { PDFReport } from "./PDFReport";
+import { useAgentOutputs } from "@/stores/useAgentOutputs";
+import { toPDF } from "react-to-pdf";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface AnalysisResultsProps {
   jobId: number;
@@ -12,9 +19,55 @@ interface AnalysisResultsProps {
 }
 
 export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
+  const { data: agentOutput } = useAgentOutputs(jobId);
+  const [isExporting, setIsExporting] = useState(false);
+
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
+    }
+  };
+
+  const handleExport = async () => {
+    if (!agentOutput) return;
+
+    setIsExporting(true);
+    try {
+      // Get the search string from the jobs table
+      const { data: jobData } = await supabase
+        .from('jobs')
+        .select('search_string')
+        .eq('id', jobId)
+        .single();
+
+      const searchString = jobData?.search_string || 'No search string available';
+
+      // Generate PDF
+      const options = {
+        filename: `job-analysis-${jobId}.pdf`,
+        page: {
+          margin: 20,
+          format: 'A4'
+        }
+      };
+
+      await toPDF(
+        <PDFReport
+          jobSummary={agentOutput.job_summary || ''}
+          enhancedDescription={agentOutput.enhanced_description || ''}
+          compensationAnalysis={agentOutput.compensation_analysis || ''}
+          terms={agentOutput.terms}
+          searchString={searchString}
+        />,
+        options
+      );
+
+      toast.success("PDF exported successfully");
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast.error("Failed to export PDF");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -28,19 +81,21 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
           "bg-[#FFFBF4] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]",
           "animate-scale-in p-6 space-y-6 relative max-h-[85vh] overflow-y-auto"
         )}>
-          <button
-            onClick={onClose}
-            className="absolute right-4 top-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Close results"
-          >
-            <X className="w-6 h-6" />
-          </button>
-          
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <Bot className="w-6 h-6 text-primary" />
               Analysis Results
             </h2>
+            <div className="flex items-center gap-4">
+              <ExportButton onClick={handleExport} />
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Close results"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

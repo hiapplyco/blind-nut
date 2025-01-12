@@ -73,6 +73,7 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
         console.log("Summary created:", summaryResponse.data);
 
         // Store results in Supabase
+        console.log("Attempting to insert agent outputs for job:", jobId);
         const { data: insertData, error: insertError } = await supabase
           .from('agent_outputs')
           .insert({
@@ -85,34 +86,57 @@ export const ProcessAgent = ({ content, jobId, onComplete }: ProcessAgentProps) 
           .select()
           .single();
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error("Error inserting agent outputs:", insertError);
+          throw insertError;
+        }
         console.log("Agent outputs saved to database:", insertData);
 
         // Wait for data to be available before marking as complete
         const verifyData = async (retries = 0, maxRetries = 10): Promise<void> => {
           if (retries >= maxRetries) {
+            console.error("Data verification timed out after", maxRetries, "attempts");
             throw new Error("Data verification timed out");
           }
 
-          const { data: verificationData } = await supabase
-            .from('agent_outputs')
-            .select('*')
-            .eq('job_id', jobId)
-            .maybeSingle();
+          console.log(`Verification attempt ${retries + 1} for job ${jobId}`);
           
-          console.log("Verification attempt", retries + 1, "result:", verificationData);
-          
-          if (verificationData) {
-            toast({
-              title: "Analysis Complete",
-              description: "Your report is now ready to view.",
-              duration: 5000,
-            });
-            onComplete();
-          } else {
-            // If data isn't found, retry after a short delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            await verifyData(retries + 1);
+          try {
+            const { data: verificationData, error: verificationError } = await supabase
+              .from('agent_outputs')
+              .select('*')
+              .eq('job_id', jobId)
+              .maybeSingle();
+            
+            if (verificationError) {
+              console.error("Verification attempt error:", verificationError);
+              throw verificationError;
+            }
+            
+            console.log("Verification attempt", retries + 1, "result:", verificationData);
+            
+            if (verificationData) {
+              console.log("Data verification successful for job:", jobId);
+              toast({
+                title: "Analysis Complete",
+                description: "Your report is now ready to view.",
+                duration: 5000,
+              });
+              onComplete();
+            } else {
+              console.log(`Data not yet available, retry ${retries + 1} of ${maxRetries}`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              await verifyData(retries + 1);
+            }
+          } catch (error) {
+            console.error("Error during verification:", error);
+            if (retries < maxRetries - 1) {
+              console.log("Retrying verification...");
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              await verifyData(retries + 1);
+            } else {
+              throw error;
+            }
           }
         };
 

@@ -19,29 +19,34 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Analyze the compensation details in this job description and format your response in markdown with proper headers. Include:
+    const prompt = `As a Talent Acquisition expert, analyze the compensation details in this job description. Format your response in markdown with clear, engaging headers and emphasis on key points. Include:
 
-# Compensation Analysis
+# 💰 Compensation Analysis
 
-## Base Salary
-- Specify the range or estimate
+## 📊 Base Salary Range
+- **Specified Range:** [Extract or estimate the range]
+- *Market Position:* [How this compares to market]
 
-## Additional Compensation
-- Bonuses
-- Equity
-- Other incentives
+## 🎯 Total Compensation Package
+- **Performance Bonuses:** [Details if available]
+- **Equity Components:** [Stock options, RSUs, etc.]
+- **Additional Incentives:** [Commission, profit sharing, etc.]
 
-## Benefits
-- Key benefits highlights
+## ✨ Benefits Highlights
+- **Healthcare:** [Medical, dental, vision coverage]
+- **Time Off:** [Vacation, PTO policy]
+- **Additional Perks:** [List standout benefits]
 
-## Market Comparison
-- How this compares to market rates
+## 📈 Market Context
+- **Industry Alignment:** [How package compares to industry]
+- **Growth Potential:** [Compensation growth opportunities]
 
-## Notable Policies
-- Any specific compensation policies worth mentioning
+## 🌟 Notable Policies
+- **Highlight any unique or attractive compensation policies**
+- *Include remote work stipends or special allowances*
 
-If specific numbers aren't provided, estimate based on industry standards and job level.
-Keep each section concise but thorough.
+If specific numbers aren't provided, provide informed estimates based on industry standards, location, and role level.
+Keep sections concise but impactful, using bold for key figures and italic for contextual insights.
 
 Job description: ${content}`;
 

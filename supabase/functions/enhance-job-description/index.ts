@@ -19,34 +19,47 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Enhance this job description using markdown formatting with clear headers. Include:
+    const prompt = `As a Talent Acquisition specialist, enhance this job description using engaging markdown formatting with clear headers and emphasis on key points that will attract top talent:
 
-# Enhanced Job Description
+# 🚀 Enhanced Job Description
 
-## Company Overview
-- Brief, compelling introduction to the company
+## 🏢 Company Impact
+- **Mission:** *What makes this company special*
+- **Culture:** *Key aspects of work environment*
+- **Growth:** *Company trajectory and vision*
 
-## Role Overview
-- Key responsibilities and objectives
+## 💫 Role Overview
+- **Position Impact:** *How this role contributes to success*
+- **Key Objectives:** *What success looks like*
+- **Team Context:** *Where this role fits in*
 
-## Required Qualifications
-- Must-have skills and experience
+## 📋 Essential Qualifications
+- **Technical Skills:** *Must-have technical requirements*
+- **Experience:** *Required background*
+- **Soft Skills:** *Critical interpersonal abilities*
 
-## Preferred Qualifications
-- Nice-to-have skills and experience
+## 🌟 Preferred Qualifications
+- **Advanced Skills:** *Nice-to-have expertise*
+- **Industry Knowledge:** *Beneficial background*
+- **Additional Assets:** *What sets candidates apart*
 
-## Growth Opportunities
-- Career development possibilities
-- Learning opportunities
+## 📈 Growth & Development
+- **Career Path:** *Progression opportunities*
+- **Learning:** *Professional development support*
+- **Mentorship:** *Available guidance and support*
 
-## Company Culture & Benefits
-- Work environment
-- Key benefits and perks
+## 🎯 Success Metrics
+- **First 90 Days:** *Initial objectives*
+- **Long-term Impact:** *Expected contributions*
+- **Key Deliverables:** *Major responsibilities*
 
-## How to Apply
-- Clear next steps for candidates
+## 🤝 Next Steps
+- **Application Process:** *How to apply*
+- **Timeline:** *What to expect*
+- **Contact:** *Who to reach out to*
 
-Maintain a professional but engaging tone throughout.
+Format the content to be engaging and scannable, using bold for headers and italic for supporting details.
+Highlight unique opportunities and growth potential to attract top talent.
 
 Original job description: ${content}`;
 

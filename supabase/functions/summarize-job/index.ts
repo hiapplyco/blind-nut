@@ -19,23 +19,27 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Create a concise summary of this job description using markdown formatting:
+    const prompt = `As a Talent Acquisition professional, create a compelling summary of this job description using clear markdown formatting:
 
-# Job Summary
+# 📝 Job Summary
 
-## Position Overview
-- Job title and level
-- Industry/domain
-- Work arrangement (remote/hybrid/onsite)
+## 🎯 Position Snapshot
+- **Role:** *[Job title and level]*
+- **Industry:** *[Domain/sector]*
+- **Location:** *[Work arrangement - remote/hybrid/onsite]*
 
-## Key Responsibilities
-- 3-5 main duties or objectives
+## 💫 Key Responsibilities
+- **Primary Focus:** *[Main objective]*
+- **Core Duties:** *[3-4 key responsibilities]*
+- **Impact Areas:** *[Where this role makes a difference]*
 
-## Core Requirements
-- Essential qualifications
-- Must-have skills
+## 🎓 Essential Requirements
+- **Must-Have Skills:** *[Critical technical skills]*
+- **Experience Level:** *[Years/background needed]*
+- **Key Competencies:** *[Important soft skills]*
 
-Format as clear, bulleted sections. Keep it brief but informative.
+Format the content to be engaging and concise, using bold for categories and italic for details.
+Focus on what would most interest potential candidates.
 
 Job description: ${content}`;
 

@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { processJobRequirements } from "@/utils/jobRequirements";
-import { supabase } from "@/integrations/supabase/client";
 import { SearchTypeToggle } from "./SearchTypeToggle";
 import { FormHeader } from "./FormHeader";
 import { ContentTextarea } from "./ContentTextarea";
 import { CompanyNameInput } from "./CompanyNameInput";
 import { SubmitButton } from "./SubmitButton";
-import { ViewReportButton } from "./ViewReportButton";
-import { Bot } from "lucide-react";
+import { SearchFormHeader } from "./SearchFormHeader";
+import { FileUploadHandler } from "./FileUploadHandler";
+import { useSearchFormSubmit } from "./SearchFormSubmit";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
@@ -34,122 +31,42 @@ export const SearchForm = ({
   const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
-  const { toast } = useToast();
   const { data: agentOutput } = useAgentOutputs(currentJobId);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
+  const handleFileUpload = FileUploadHandler({ 
+    userId, 
+    onTextUpdate: setSearchText,
+    onProcessingChange: setIsProcessing 
+  });
 
-    try {
-      const { data: jobData, error: jobError } = await supabase
-        .from('jobs')
-        .insert({
-          content: searchText,
-          user_id: userId
-        })
-        .select()
-        .single();
-
-      if (jobError) throw jobError;
-      
-      const jobId = jobData.id;
-      onJobCreated(jobId, searchText);
-
-      const result = await processJobRequirements(searchText, searchType, companyName, userId);
-
-      const { error: updateError } = await supabase
-        .from('jobs')
-        .update({ search_string: result.searchString })
-        .eq('id', jobId);
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: "Search generated",
-        description: "Your search has been generated and opened in a new tab.",
-      });
-    } catch (error) {
-      console.error('Error processing content:', error);
-      toast({
-        title: "Error",
-        description: "Failed to process content. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.includes('pdf') && !file.type.includes('image')) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a PDF file or an image",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('userId', userId);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('parse-document', {
-        body: formData,
-      });
-
-      if (error) throw error;
-
-      if (data?.text) {
-        setSearchText(data.text);
-        toast({
-          title: "File processed",
-          description: "The content has been extracted and added to the input field.",
-        });
-      }
-    } catch (error) {
-      console.error('Error processing file:', error);
-      toast({
-        title: "Error",
-        description: "Failed to process the file. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  const handleSubmit = useSearchFormSubmit({
+    userId,
+    searchText,
+    searchType,
+    companyName,
+    onJobCreated,
+    onProcessingChange: setIsProcessing
+  });
 
   const handleTextUpdate = (text: string) => {
     setSearchText(text);
-    toast({
-      title: "Audio transcribed",
-      description: "The audio has been transcribed and added to the input field.",
-    });
   };
 
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-      {currentJobId && isProcessingComplete && agentOutput && (
-        <div className="mb-6">
-          <Button
-            type="button"
-            onClick={onViewReport}
-            className="w-full border-4 border-black bg-[#8B5CF6] text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
-          >
-            <Bot className="w-5 h-5 mr-2" />
-            View Analysis Report
-          </Button>
-        </div>
-      )}
+      <SearchFormHeader
+        currentJobId={currentJobId}
+        isProcessingComplete={isProcessingComplete}
+        hasAgentOutput={!!agentOutput}
+        onViewReport={onViewReport}
+      />
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        <SearchTypeToggle value={searchType} onValueChange={(value) => setSearchType(value)} />
+        <SearchTypeToggle 
+          value={searchType} 
+          onValueChange={(value) => setSearchType(value)} 
+        />
+        
         <FormHeader />
         
         <ContentTextarea

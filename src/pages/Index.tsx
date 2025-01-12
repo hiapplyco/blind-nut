@@ -6,24 +6,34 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
+import { toast } from "sonner";
 
 const Index = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
 
   useEffect(() => {
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session) {
+        navigate('/dashboard');
+      }
     });
 
+    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) {
+        navigate('/dashboard');
+        toast.success('Successfully signed in!');
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   if (!session) {
     return (

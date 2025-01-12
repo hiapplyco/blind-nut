@@ -9,6 +9,7 @@ import { ContentTextarea } from "./ContentTextarea";
 import { CompanyNameInput } from "./CompanyNameInput";
 import { SubmitButton } from "./SubmitButton";
 import { ViewReportButton } from "./ViewReportButton";
+import { Bot } from "lucide-react";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 
@@ -135,7 +136,14 @@ export const SearchForm = ({
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
       {currentJobId && isProcessingComplete && (
         <div className="mb-6">
-          <ViewReportButton onClick={onViewReport} />
+          <Button
+            type="button"
+            onClick={onViewReport}
+            className="w-full border-4 border-black bg-[#8B5CF6] text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+          >
+            <Bot className="w-5 h-5 mr-2" />
+            View Analysis Report
+          </Button>
         </div>
       )}
       

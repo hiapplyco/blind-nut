@@ -73,7 +73,6 @@ export const ResultsGrid = ({
 
   const handleClose = () => {
     onClose();
-    // Remove URL parameters without refreshing the page
     window.history.pushState({}, '', '/');
   };
 
@@ -86,6 +85,10 @@ export const ResultsGrid = ({
           isProcessingComplete={isProcessingComplete}
           dataReady={dataReady}
           onCancel={handleClose}
+          onViewReport={() => {
+            setDataReady(true);
+            onClose();
+          }}
         />
       )}
       

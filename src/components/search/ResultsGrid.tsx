@@ -4,7 +4,7 @@ import { JobDescriptionEnhancer } from "../agents/JobDescriptionEnhancer";
 import { JobSummary } from "../agents/JobSummary";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { Card } from "@/components/ui/card";
-import { Bot, Loader2 } from "lucide-react";
+import { Bot, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ResultsGridProps {
@@ -16,6 +16,20 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
   const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
 
   console.log("ResultsGrid state:", { jobId, isProcessingComplete, isLoading, agentOutput });
+
+  const handleClose = () => {
+    // Reset the URL without refreshing the page
+    window.history.pushState({}, '', '/');
+    // Reload the page to reset the state
+    window.location.reload();
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    // Only close if clicking the overlay background, not its children
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
 
   if (!jobId) return null;
 
@@ -46,11 +60,19 @@ export const ResultsGrid = ({ jobId, isProcessingComplete }: ResultsGridProps) =
   // Show the analysis results in a centered card if we have data
   if (agentOutput) {
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6 overflow-y-auto">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6 overflow-y-auto" onClick={handleOverlayClick}>
         <Card className={cn(
           "w-full max-w-4xl bg-[#FFFBF4] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]",
-          "animate-scale-in p-6 space-y-6"
+          "animate-scale-in p-6 space-y-6 relative"
         )}>
+          <button
+            onClick={handleClose}
+            className="absolute right-4 top-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Close results"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <Bot className="w-6 h-6 text-primary" />

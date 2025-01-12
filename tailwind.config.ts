@@ -27,6 +27,7 @@ export default {
         primary: {
           DEFAULT: "#2563eb",
           foreground: "#ffffff",
+          hover: "#F59E0B", // Added gold color for hover
         },
         secondary: {
           DEFAULT: "#64748b",

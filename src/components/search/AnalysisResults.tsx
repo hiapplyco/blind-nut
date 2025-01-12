@@ -57,18 +57,46 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         page: {
           margin: 20,
           format: 'A4'
-        }
+        },
+        overrides: {
+          // Ensure content is visible during PDF generation
+          pdf: {
+            compress: false,
+            scale: 1,
+            useCORS: true,
+            background: true,
+          },
+          canvas: {
+            useCORS: true,
+            scale: 2,
+          },
+        },
       };
 
       // Create a function that returns the target element
       const getTargetElement = () => pdfRef.current;
 
-      // Wait a brief moment for content to be fully rendered
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Make the PDF content temporarily visible
+      if (pdfRef.current) {
+        pdfRef.current.style.position = 'absolute';
+        pdfRef.current.style.visibility = 'visible';
+        pdfRef.current.style.opacity = '1';
+        pdfRef.current.style.zIndex = '-1000';
+      }
 
-      // Generate the PDF using the target finder function
+      // Wait for content to be fully rendered
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Generate the PDF
       await ReactToPdf(getTargetElement, options);
       
+      // Hide the PDF content again
+      if (pdfRef.current) {
+        pdfRef.current.style.position = 'fixed';
+        pdfRef.current.style.visibility = 'hidden';
+        pdfRef.current.style.opacity = '0';
+      }
+
       toast.success("PDF exported successfully");
     } catch (error) {
       console.error('Error exporting PDF:', error);
@@ -114,11 +142,20 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         </Card>
       </div>
 
-      {/* Hidden div for PDF generation with explicit dimensions */}
+      {/* Hidden div for PDF generation */}
       <div 
-        className="fixed left-0 top-0 w-[800px] h-auto bg-white p-8" 
-        style={{ visibility: 'hidden' }} 
         ref={pdfRef}
+        style={{
+          position: 'fixed',
+          left: '-9999px',
+          top: 0,
+          width: '800px',
+          height: 'auto',
+          backgroundColor: 'white',
+          padding: '2rem',
+          visibility: 'hidden',
+          opacity: '0',
+        }}
       >
         {agentOutput && (
           <PDFReport

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SearchForm } from "./search/SearchForm";
 import { AgentProcessor } from "./search/AgentProcessor";
-import { ResultsGrid } from "./search/ResultsGrid";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface NewSearchFormProps {
@@ -9,28 +9,25 @@ interface NewSearchFormProps {
 }
 
 const NewSearchForm = ({ userId }: NewSearchFormProps) => {
+  const navigate = useNavigate();
   const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [showResults, setShowResults] = useState(false);
 
   const handleSearchSubmit = (text: string, jobId: number) => {
     console.log("Search submitted:", { text, jobId });
     setSearchText(text);
     setCurrentJobId(jobId);
     setIsProcessingComplete(false);
-    setShowResults(false);
   };
 
   const handleProcessingComplete = () => {
     console.log("Processing complete");
     setIsProcessingComplete(true);
-    toast.success("Analysis complete! Click 'View Analysis Report' to see results.");
-  };
-
-  const handleViewReport = () => {
-    console.log("View report requested");
-    setShowResults(true);
+    toast.success("Analysis complete! Redirecting to report...");
+    if (currentJobId) {
+      navigate(`/report/${currentJobId}`);
+    }
   };
 
   return (
@@ -40,7 +37,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         onJobCreated={(jobId, text) => handleSearchSubmit(text, jobId)}
         currentJobId={currentJobId}
         isProcessingComplete={isProcessingComplete}
-        onViewReport={handleViewReport}
       />
       
       {currentJobId && !isProcessingComplete && (
@@ -50,16 +46,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
           onComplete={handleProcessingComplete}
         />
       )}
-
-      <ResultsGrid 
-        jobId={currentJobId} 
-        isProcessingComplete={isProcessingComplete}
-        showResults={showResults}
-        onClose={() => {
-          console.log("Closing results");
-          setShowResults(false);
-        }}
-      />
     </div>
   );
 };

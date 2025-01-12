@@ -5,10 +5,7 @@ import { FormHeader } from "./FormHeader";
 import { ContentTextarea } from "./ContentTextarea";
 import { CompanyNameInput } from "./CompanyNameInput";
 import { SubmitButton } from "./SubmitButton";
-import { SearchFormHeader } from "./SearchFormHeader";
-import { FileUploadHandler } from "./FileUploadHandler";
 import { useSearchFormSubmit } from "./SearchFormSubmit";
-import { useAgentOutputs } from "@/stores/useAgentOutputs";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 
@@ -17,7 +14,6 @@ interface SearchFormProps {
   onJobCreated: (jobId: number, searchText: string) => void;
   currentJobId: number | null;
   isProcessingComplete: boolean;
-  onViewReport: () => void;
 }
 
 export const SearchForm = ({ 
@@ -25,19 +21,55 @@ export const SearchForm = ({
   onJobCreated, 
   currentJobId,
   isProcessingComplete,
-  onViewReport 
 }: SearchFormProps) => {
   const [searchText, setSearchText] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
-  const { data: agentOutput } = useAgentOutputs(currentJobId);
 
-  const handleFileUpload = FileUploadHandler({ 
-    userId, 
-    onTextUpdate: setSearchText,
-    onProcessingChange: setIsProcessing 
-  });
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.includes('pdf') && !file.type.includes('image')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF file or an image",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('userId', userId);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('parse-document', {
+        body: formData,
+      });
+
+      if (error) throw error;
+
+      if (data?.text) {
+        setSearchText(data.text);
+        toast({
+          title: "File processed",
+          description: "The content has been extracted and added to the input field.",
+        });
+      }
+    } catch (error) {
+      console.error('Error processing file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process the file. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleSubmit = useSearchFormSubmit({
     userId,
@@ -54,13 +86,6 @@ export const SearchForm = ({
 
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-      <SearchFormHeader
-        currentJobId={currentJobId}
-        isProcessingComplete={isProcessingComplete}
-        hasAgentOutput={!!agentOutput}
-        onViewReport={onViewReport}
-      />
-      
       <form onSubmit={handleSubmit} className="space-y-6">
         <SearchTypeToggle 
           value={searchType} 

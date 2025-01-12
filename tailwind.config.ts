@@ -25,9 +25,9 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#2563eb",
+          DEFAULT: "#4F46E5", // Changed to match the blue in the image
           foreground: "#ffffff",
-          hover: "#F59E0B", // Added gold color for hover
+          hover: "#F59E0B", // Keeping the gold hover color as requested
         },
         secondary: {
           DEFAULT: "#64748b",

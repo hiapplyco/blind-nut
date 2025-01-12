@@ -22,7 +22,7 @@ serve(async (req) => {
     }
 
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `As a Talent Acquisition specialist, enhance this job description using engaging markdown formatting with clear headers and emphasis on key points that will attract top talent:
 
@@ -68,9 +68,19 @@ Highlight unique opportunities and growth potential to attract top talent.
 
 Original job description: ${content}`;
 
-    const result = await model.generateContent(prompt);
-    const enhancedDescription = result.response.text();
+    // Add safety timeout
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timed out')), 25000);
+    });
+
+    const resultPromise = model.generateContent(prompt);
+    const result = await Promise.race([resultPromise, timeoutPromise]);
     
+    if (result instanceof Error) {
+      throw result;
+    }
+
+    const enhancedDescription = result.response.text();
     console.log('Enhanced description generated successfully');
     
     return new Response(
@@ -84,10 +94,20 @@ Original job description: ${content}`;
     );
   } catch (error) {
     console.error('Error in enhance-job-description:', error);
+    let errorMessage = error.message;
+    
+    // Handle rate limiting specifically
+    if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
+      errorMessage = 'API rate limit exceeded. Please try again in a few minutes.';
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: error.message 
+      }),
       { 
-        status: 500,
+        status: error.message.includes('429') ? 429 : 500,
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 

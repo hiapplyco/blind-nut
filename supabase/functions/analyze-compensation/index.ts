@@ -17,7 +17,7 @@ serve(async (req) => {
     console.log('Analyzing compensation for content:', content?.substring(0, 100) + '...');
 
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `As a Talent Acquisition expert, analyze the compensation details in this job description. Format your response in markdown with clear, engaging headers and emphasis on key points. Include:
 
@@ -50,7 +50,18 @@ Keep sections concise but impactful, using bold for key figures and italic for c
 
 Job description: ${content}`;
 
-    const result = await model.generateContent(prompt);
+    // Add safety timeout
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timed out')), 25000);
+    });
+
+    const resultPromise = model.generateContent(prompt);
+    const result = await Promise.race([resultPromise, timeoutPromise]);
+    
+    if (result instanceof Error) {
+      throw result;
+    }
+
     const analysis = result.response.text();
     
     return new Response(
@@ -59,11 +70,24 @@ Job description: ${content}`;
     );
   } catch (error) {
     console.error('Error in analyze-compensation:', error);
+    let errorMessage = error.message;
+    
+    // Handle rate limiting specifically
+    if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
+      errorMessage = 'API rate limit exceeded. Please try again in a few minutes.';
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: error.message 
+      }),
       { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: error.message.includes('429') ? 429 : 500,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }
       }
     );
   }

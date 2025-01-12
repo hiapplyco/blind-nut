@@ -95,14 +95,25 @@ serve(async (req) => {
 
   try {
     const { content, searchType, companyName } = await req.json();
-    console.log('Received content:', content, 'Search type:', searchType, 'Company:', companyName);
+    console.log('Received content:', content?.substring(0, 100) + '...', 'Search type:', searchType, 'Company:', companyName);
 
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    // Add safety timeout for location extraction
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timed out')), 25000);
+    });
 
     // Extract location and map to major metro area
     const locationPrompt = `Extract just the city name from this text. If no specific city is mentioned, respond with "United States". Return only the city name, nothing else: ${content}`;
-    const locationResult = await model.generateContent(locationPrompt);
+    const locationResultPromise = model.generateContent(locationPrompt);
+    const locationResult = await Promise.race([locationResultPromise, timeoutPromise]);
+    
+    if (locationResult instanceof Error) {
+      throw locationResult;
+    }
+
     let extractedCity = locationResult.response.text().trim();
     
     // Map the extracted city to its major metro area
@@ -151,7 +162,13 @@ serve(async (req) => {
       searchPrompt = `Create a search string for finding candidates at a specific company. Start with "site:linkedin.com/in". Include "${location}" AND "${companyName}" and then add relevant job titles and skills from this content: ${content}. The output should be a single search string, no other information.`;
     }
 
-    const result = await model.generateContent(searchPrompt);
+    const searchResultPromise = model.generateContent(searchPrompt);
+    const result = await Promise.race([searchResultPromise, timeoutPromise]);
+    
+    if (result instanceof Error) {
+      throw result;
+    }
+
     const searchString = result.response.text().trim();
     console.log('Generated search string:', searchString);
 
@@ -166,11 +183,24 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error:', error);
+    let errorMessage = error.message;
+    
+    // Handle rate limiting specifically
+    if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
+      errorMessage = 'API rate limit exceeded. Please try again in a few minutes.';
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      JSON.stringify({ 
+        error: errorMessage,
+        details: error.message 
+      }),
+      { 
+        status: error.message.includes('429') ? 429 : 500,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }
       }
     );
   }

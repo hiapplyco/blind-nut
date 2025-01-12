@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -15,6 +16,10 @@ serve(async (req) => {
   try {
     const { content } = await req.json();
     console.log('Enhancing job description:', content?.substring(0, 100) + '...');
+
+    if (!content) {
+      throw new Error('No content provided');
+    }
 
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -66,9 +71,16 @@ Original job description: ${content}`;
     const result = await model.generateContent(prompt);
     const enhancedDescription = result.response.text();
     
+    console.log('Enhanced description generated successfully');
+    
     return new Response(
       JSON.stringify({ enhancedDescription }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
     );
   } catch (error) {
     console.error('Error in enhance-job-description:', error);
@@ -76,7 +88,10 @@ Original job description: ${content}`;
       JSON.stringify({ error: error.message }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }
       }
     );
   }

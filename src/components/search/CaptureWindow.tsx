@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Video, Mic, StopCircle } from "lucide-react";
@@ -25,6 +25,15 @@ export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
+  // Cleanup function to stop all tracks when component unmounts
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
   const startRecording = async (type: RecordingType) => {
     try {
       const constraints = {
@@ -41,10 +50,12 @@ export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
       if (type === 'video' || type === 'both') {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(error => {
+          try {
+            await videoRef.current.play();
+          } catch (error) {
             console.error('Error playing video:', error);
             toast.error('Failed to start video preview');
-          });
+          }
         }
       }
 

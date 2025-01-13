@@ -29,7 +29,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const handleProcessingComplete = () => {
     console.log("Processing complete");
     setIsProcessingComplete(true);
-    setIsGeneratingAnalysis(false);
   };
 
   const handleGenerateAnalysis = () => {
@@ -42,6 +41,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     if (agentOutput && !isLoading) {
       console.log("Agent output received:", agentOutput);
       setIsProcessingComplete(true);
+      setIsGeneratingAnalysis(false); // Reset analysis generation state when we have output
     }
   }, [agentOutput, isLoading]);
 
@@ -66,7 +66,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         <GenerateAnalysisButton onClick={handleGenerateAnalysis} />
       )}
 
-      {currentJobId && isProcessingComplete && agentOutput && (
+      {currentJobId && agentOutput && (
         <AnalysisReport agentOutput={agentOutput} />
       )}
     </div>

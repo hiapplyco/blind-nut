@@ -8,6 +8,7 @@ import { FormHeader } from "@/components/search/FormHeader";
 import { ContentTextarea } from "@/components/search/ContentTextarea";
 import { CompanyNameInput } from "@/components/search/CompanyNameInput";
 import { SubmitButton } from "@/components/search/SubmitButton";
+import { GoogleSearchWindow } from "@/components/search/GoogleSearchWindow";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
@@ -32,6 +33,7 @@ export const SearchForm = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
+  const [searchString, setSearchString] = useState("");
 
   useEffect(() => {
     // Handle auto-run from location state
@@ -44,6 +46,30 @@ export const SearchForm = ({
       handleSubmit(new Event('submit') as any);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    // Fetch search string when job is created
+    const fetchSearchString = async () => {
+      if (currentJobId) {
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('search_string')
+          .eq('id', currentJobId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching search string:', error);
+          return;
+        }
+
+        if (data?.search_string) {
+          setSearchString(data.search_string);
+        }
+      }
+    };
+
+    fetchSearchString();
+  }, [currentJobId]);
 
   const generateSummary = async (content: string) => {
     try {
@@ -98,6 +124,7 @@ export const SearchForm = ({
 
       if (updateError) throw updateError;
 
+      setSearchString(result.searchString);
       toast.success("Search string generated successfully!");
 
     } catch (error) {
@@ -185,6 +212,12 @@ export const SearchForm = ({
           )}
         </div>
       </form>
+
+      {searchString && (
+        <div className="mt-6">
+          <GoogleSearchWindow searchString={searchString} />
+        </div>
+      )}
     </Card>
   );
 };

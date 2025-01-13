@@ -33,7 +33,7 @@ export const GoogleSearchWindow = ({
       
       if (keyError) throw keyError;
       
-      // Use different CSE ID based on search type
+      // Use candidates CSE for both candidates and candidates-at-company searches
       const cseId = searchType === 'companies' 
         ? 'e391b913931574878'  // Companies CSE
         : 'b28705633bcb44cf0'; // Candidates CSE

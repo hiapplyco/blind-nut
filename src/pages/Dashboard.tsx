@@ -6,11 +6,16 @@ import { Search, FileText, PlusCircle, RotateCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useRef, useState } from "react";
 import { PDFGenerator } from "@/components/search/pdf/PDFGenerator";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [isExporting, setIsExporting] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
   
   const { data: searches, isLoading } = useQuery({
     queryKey: ["searches"],
@@ -36,11 +41,12 @@ const Dashboard = () => {
 
   const handleDownloadReport = async (jobId: number) => {
     const { data: agentOutput } = useAgentOutputs(jobId);
-    if (!agentOutput) {
+    if (!agentOutput || !pdfRef.current) {
       toast.error("No report data available");
       return;
     }
 
+    setIsExporting(true);
     try {
       const { data: jobData } = await supabase
         .from('jobs')
@@ -48,18 +54,31 @@ const Dashboard = () => {
         .eq('id', jobId)
         .single();
 
-      const { handleExport } = PDFGenerator({ 
-        agentOutput, 
-        pdfContent: jobData?.search_string || '', 
-        isExporting: false, 
-        setIsExporting: () => {} 
+      const canvas = await html2canvas(pdfRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
       });
 
-      await handleExport();
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`job-analysis-${jobId}.pdf`);
+
       toast.success("Report downloaded successfully");
     } catch (error) {
       console.error('Error downloading report:', error);
       toast.error("Failed to download report");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -77,7 +96,7 @@ const Dashboard = () => {
             content: jobData.content, 
             autoRun: true 
           },
-          replace: true // This ensures we don't create a new history entry
+          replace: true
         });
       } else {
         toast.error("No search content found");
@@ -169,6 +188,13 @@ const Dashboard = () => {
           </Card>
         )}
       </div>
+
+      <PDFGenerator
+        ref={pdfRef}
+        agentOutput={null}
+        pdfContent=""
+        isExporting={isExporting}
+      />
     </div>
   );
 };

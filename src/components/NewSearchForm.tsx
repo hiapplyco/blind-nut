@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { SearchForm } from "./search/SearchForm";
 import { AgentProcessor } from "./search/AgentProcessor";
 import { useNavigate } from "react-router-dom";

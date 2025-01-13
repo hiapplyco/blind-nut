@@ -13,37 +13,32 @@ interface AgentProcessorProps {
 }
 
 interface ProcessingStep {
-  name: string;
-  status: 'pending' | 'processing' | 'complete' | 'error';
+  message: string;
   progress: number;
 }
 
 export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorProps) => {
   const { toast } = useToast();
   const { setOutput } = useClientAgentOutputs();
-  const [steps, setSteps] = useState<ProcessingStep[]>([
-    { name: "Creating X-Ray Search", status: 'pending', progress: 0 },
-    { name: "Analyzing Compensation", status: 'pending', progress: 0 },
-    { name: "Enhancing Description", status: 'pending', progress: 0 },
-    { name: "Creating Summary", status: 'pending', progress: 0 }
-  ]);
+  const [currentStep, setCurrentStep] = useState<ProcessingStep>({
+    message: "Initializing analysis...",
+    progress: 0
+  });
 
-  const updateStepStatus = (index: number, status: ProcessingStep['status'], progress: number) => {
-    setSteps(currentSteps => 
-      currentSteps.map((step, i) => 
-        i === index ? { ...step, status, progress } : step
-      )
-    );
+  const updateProgress = (message: string, progress: number) => {
+    setCurrentStep({ message, progress });
   };
 
   const processStep = async (
-    index: number, 
+    stepMessage: string, 
     functionName: string, 
-    responseKey: string
+    responseKey: string,
+    progressStart: number,
+    progressEnd: number
   ): Promise<any> => {
     try {
       console.log(`Starting ${functionName} processing...`);
-      updateStepStatus(index, 'processing', 25);
+      updateProgress(stepMessage, progressStart);
       
       const response = await supabase.functions.invoke(functionName, { 
         body: { content } 
@@ -55,13 +50,11 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
       }
 
       console.log(`${functionName} response:`, response.data);
-      console.log(`${functionName} completed successfully`);
-      updateStepStatus(index, 'complete', 100);
+      updateProgress(stepMessage, progressEnd);
       
       return response.data[responseKey];
     } catch (error) {
       console.error(`Error in ${functionName}:`, error);
-      updateStepStatus(index, 'error', 0);
       throw error;
     }
   };
@@ -69,6 +62,8 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
   const persistToDatabase = useMutation({
     mutationFn: async (agentOutput: any) => {
       console.log('Persisting agent output to database:', agentOutput);
+      updateProgress("Saving analysis results...", 95);
+      
       const { error } = await supabase
         .from('agent_outputs')
         .insert({
@@ -91,6 +86,7 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
     },
     onSuccess: () => {
       console.log('Successfully persisted agent output to database');
+      updateProgress("Analysis complete!", 100);
       toast({
         title: "Analysis Complete",
         description: "Your report is ready to view",
@@ -105,16 +101,45 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
     const processContent = async () => {
       try {
         console.log('Starting content processing...');
-        const terms = await processStep(0, 'extract-nlp-terms', 'terms');
+        
+        // Extract terms
+        const terms = await processStep(
+          "Analyzing requirements and extracting key terms...",
+          'extract-nlp-terms',
+          'terms',
+          10,
+          25
+        );
         if (!isMounted) return;
         
-        const compensationData = await processStep(1, 'analyze-compensation', 'analysis');
+        // Analyze compensation
+        const compensationData = await processStep(
+          "Evaluating compensation details...",
+          'analyze-compensation',
+          'analysis',
+          30,
+          50
+        );
         if (!isMounted) return;
         
-        const enhancerData = await processStep(2, 'enhance-job-description', 'enhancedDescription');
+        // Enhance description
+        const enhancerData = await processStep(
+          "Enhancing job description...",
+          'enhance-job-description',
+          'enhancedDescription',
+          55,
+          75
+        );
         if (!isMounted) return;
         
-        const summaryData = await processStep(3, 'summarize-job', 'summary');
+        // Generate summary
+        const summaryData = await processStep(
+          "Generating comprehensive report...",
+          'summarize-job',
+          'summary',
+          80,
+          90
+        );
         if (!isMounted) return;
 
         const agentOutput = {
@@ -160,30 +185,24 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
       <div className="space-y-6">
         <h3 className="text-xl font-bold">Analyzing Content</h3>
         <div className="space-y-4">
-          {steps.map((step, index) => (
-            <div key={index} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">
-                  {step.name}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {step.status === 'complete' ? '100%' : 
-                   step.status === 'error' ? 'Error' :
-                   step.status === 'processing' ? 'Processing...' : 
-                   'Pending'}
-                </span>
-              </div>
-              <Progress 
-                value={step.progress} 
-                className="h-2"
-                indicatorClassName={
-                  step.status === 'error' ? 'bg-red-500' :
-                  step.status === 'complete' ? 'bg-green-500' :
-                  'bg-blue-500'
-                }
-              />
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">
+                {currentStep.message}
+              </span>
+              <span className="text-sm text-gray-500">
+                {currentStep.progress}%
+              </span>
             </div>
-          ))}
+            <Progress 
+              value={currentStep.progress} 
+              className="h-2"
+              indicatorClassName={
+                currentStep.progress === 100 ? 'bg-green-500' :
+                'bg-blue-500 transition-all duration-500'
+              }
+            />
+          </div>
         </div>
       </div>
     </Card>

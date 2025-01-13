@@ -1,70 +1,108 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Video, Mic } from "lucide-react";
+import { Video, Mic, StopCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface CaptureWindowProps {
   onTextUpdate: (text: string) => void;
 }
 
+type RecordingType = 'audio' | 'video' | 'both' | null;
+
 export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
   const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorderRef, setMediaRecorderRef] = useState<MediaRecorder | null>(null);
-  const chunksRef = useState<Blob[]>([]);
+  const [recordingType, setRecordingType] = useState<RecordingType>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
-  const startRecording = async () => {
+  const startRecording = async (type: RecordingType) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const constraints = {
+        audio: type === 'audio' || type === 'both',
+        video: type === 'video' || type === 'both'
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
+      
+      if (type === 'video' || type === 'both') {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+      }
+
       const mediaRecorder = new MediaRecorder(stream);
-      setMediaRecorderRef(mediaRecorder);
-      chunksRef[1]([]);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
-          chunksRef[0].push(e.data);
+          chunksRef.current.push(e.data);
         }
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(chunksRef[0], { type: 'audio/webm' });
-        const reader = new FileReader();
+        const mimeType = type === 'audio' ? 'audio/webm' : 'video/webm';
+        const recordingBlob = new Blob(chunksRef.current, { type: mimeType });
         
-        reader.onloadend = async () => {
-          const base64Audio = (reader.result as string).split(',')[1];
-          
-          try {
-            const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-              body: { audio: base64Audio }
-            });
+        try {
+          // Upload to Supabase Storage
+          const fileName = `${auth.uid()}/${Date.now()}.webm`;
+          const { error: uploadError } = await supabase.storage
+            .from('recordings')
+            .upload(fileName, recordingBlob);
 
-            if (error) throw error;
-            if (data?.text) {
-              onTextUpdate(data.text);
-            }
-          } catch (error) {
-            console.error('Error transcribing audio:', error);
-            toast.error('Failed to transcribe audio');
+          if (uploadError) throw uploadError;
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('recordings')
+            .getPublicUrl(fileName);
+
+          // Process with Gemini
+          const { data, error } = await supabase.functions.invoke('process-recording', {
+            body: { url: publicUrl, type }
+          });
+
+          if (error) throw error;
+
+          if (data?.text) {
+            onTextUpdate(data.text);
           }
-        };
-
-        reader.readAsDataURL(audioBlob);
+        } catch (error) {
+          console.error('Error processing recording:', error);
+          toast.error('Failed to process recording');
+        }
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      setRecordingType(type);
     } catch (error) {
-      console.error('Error accessing microphone:', error);
-      toast.error('Failed to access microphone');
+      console.error('Error accessing media devices:', error);
+      toast.error('Failed to access media devices');
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef && isRecording) {
-      mediaRecorderRef.stop();
-      mediaRecorderRef.stream.getTracks().forEach(track => track.stop());
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
       setIsRecording(false);
+      setRecordingType(null);
     }
   };
 
@@ -75,29 +113,56 @@ export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
         <p className="text-gray-600">
           Record meetings, intake calls, or onboarding sessions to generate search queries
         </p>
-        <div className="flex gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] 
-              hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] 
-              transition-all opacity-50 cursor-not-allowed"
-            disabled
-          >
-            <Video className="h-4 w-4 mr-2" />
-            Record Video
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className={`flex-1 border-2 border-black ${isRecording ? 'bg-red-500 text-white' : 'bg-white'} 
-              shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:translate-x-0.5 
-              hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all`}
-            onClick={isRecording ? stopRecording : startRecording}
-          >
-            <Mic className="h-4 w-4 mr-2" />
-            {isRecording ? 'Stop Recording' : 'Record Audio'}
-          </Button>
+        
+        {(recordingType === 'video' || recordingType === 'both') && (
+          <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+            <video 
+              ref={videoRef} 
+              className="absolute inset-0 w-full h-full object-cover"
+              muted
+              playsInline
+            />
+          </div>
+        )}
+
+        <div className="flex justify-center">
+          {!isRecording ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] 
+                    hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] 
+                    transition-all"
+                >
+                  Start Recording
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => startRecording('audio')}>
+                  <Mic className="w-4 h-4 mr-2" />
+                  Record Audio
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => startRecording('video')}>
+                  <Video className="w-4 h-4 mr-2" />
+                  Record Video
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => startRecording('both')}>
+                  <Video className="w-4 h-4 mr-2" />
+                  Record Both
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              onClick={stopRecording}
+              className="bg-red-500 text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
+                hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                transition-all"
+            >
+              <StopCircle className="w-4 h-4 mr-2" />
+              Stop Recording
+            </Button>
+          )}
         </div>
       </div>
     </Card>

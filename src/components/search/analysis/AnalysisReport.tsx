@@ -33,7 +33,7 @@ export const AnalysisReport = ({
 
         {/* Show report content when available */}
         {agentOutput && isProcessingComplete && (
-          <div className="space-y-8">
+          <div className="space-y-8 mt-6">
             <section>
               <h3 className="text-xl font-semibold mb-4">Job Summary</h3>
               <div className="prose prose-slate max-w-none">

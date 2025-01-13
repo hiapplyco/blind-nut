@@ -60,7 +60,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
           isGeneratingAnalysis={isGeneratingAnalysis}
           isProcessingComplete={isProcessingComplete}
         >
-          {/* Show AgentProcessor only when generating analysis and not complete */}
           {isGeneratingAnalysis && !isProcessingComplete && (
             <AgentProcessor
               content={searchText}
@@ -68,8 +67,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
               onComplete={handleProcessingComplete}
             />
           )}
-
-          {/* Show Generate Analysis button when we have a job but haven't started analysis */}
           {!isGeneratingAnalysis && !isProcessingComplete && (
             <GenerateAnalysisButton onClick={handleGenerateAnalysis} />
           )}

@@ -35,7 +35,10 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   };
 
   const handleDownloadReport = async () => {
-    if (!currentJobId || !agentOutput) return;
+    if (!currentJobId || !agentOutput) {
+      toast.error("No report data available");
+      return;
+    }
 
     setIsExporting(true);
     try {
@@ -45,15 +48,19 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         .eq('id', currentJobId)
         .single();
 
+      if (!jobData) {
+        toast.error("Search data not found");
+        return;
+      }
+
       const { handleExport } = PDFGenerator({ 
         agentOutput, 
-        pdfContent: jobData?.search_string || '', 
+        pdfContent: jobData.search_string || '', 
         isExporting, 
         setIsExporting 
       });
 
       await handleExport();
-      toast.success("Report downloaded successfully");
     } catch (error) {
       console.error('Error downloading report:', error);
       toast.error("Failed to download report");

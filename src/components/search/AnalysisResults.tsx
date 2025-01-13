@@ -6,6 +6,7 @@ import { AnalysisHeader } from "./analysis/AnalysisHeader";
 import { AnalysisGrid } from "./analysis/AnalysisGrid";
 import { PDFGenerator } from "./pdf/PDFGenerator";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 
 interface AnalysisResultsProps {
   jobId: number;
@@ -52,12 +53,29 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
     }
   }, [agentOutput, jobId]);
 
-  const { handleExport, PDFContent } = PDFGenerator({ 
-    agentOutput, 
-    pdfContent, 
-    isExporting, 
-    setIsExporting 
-  });
+  const handleExport = async () => {
+    if (!agentOutput) {
+      toast.error("No report data available");
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const { handleExport } = PDFGenerator({ 
+        agentOutput, 
+        pdfContent, 
+        isExporting, 
+        setIsExporting 
+      });
+
+      await handleExport();
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast.error("Failed to export PDF");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <Card className="bg-[#FFFBF4] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 space-y-6">
@@ -92,7 +110,16 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
           <AnalysisGrid jobId={jobId} />
         </>
       )}
-      {PDFContent}
+      {agentOutput && (
+        <div style={{ display: 'none' }}>
+          <PDFGenerator
+            agentOutput={agentOutput}
+            pdfContent={pdfContent}
+            isExporting={isExporting}
+            setIsExporting={setIsExporting}
+          />
+        </div>
+      )}
     </Card>
   );
 };

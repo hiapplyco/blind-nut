@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
-import ReactToPdf from "react-to-pdf";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import { PDFReport } from "../PDFReport";
 import { AgentOutput } from "@/types/agent";
 import { toast } from "sonner";
@@ -20,49 +21,33 @@ export const PDFGenerator = ({
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const handleExport = async () => {
-    if (!agentOutput || !pdfRef.current) return;
+    if (!agentOutput || !pdfRef.current) {
+      toast.error("No report data available");
+      return;
+    }
 
     setIsExporting(true);
     try {
-      const options = {
-        filename: `job-analysis-${agentOutput.job_id}.pdf`,
-        page: {
-          margin: 20,
-          format: 'A4'
-        },
-        overrides: {
-          pdf: {
-            compress: false,
-            scale: 1,
-            useCORS: true,
-            background: true,
-          },
-          canvas: {
-            useCORS: true,
-            scale: 2,
-          },
-        },
-      };
+      const canvas = await html2canvas(pdfRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
 
-      const getTargetElement = () => pdfRef.current;
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
 
-      if (pdfRef.current) {
-        pdfRef.current.style.position = 'absolute';
-        pdfRef.current.style.visibility = 'visible';
-        pdfRef.current.style.opacity = '1';
-        pdfRef.current.style.zIndex = '-1000';
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await ReactToPdf(getTargetElement, options);
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      if (pdfRef.current) {
-        pdfRef.current.style.position = 'fixed';
-        pdfRef.current.style.visibility = 'hidden';
-        pdfRef.current.style.opacity = '0';
-      }
-
-      toast.success("PDF exported successfully");
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`job-analysis-${agentOutput.job_id}.pdf`);
+      
+      toast.success("Report downloaded successfully");
     } catch (error) {
       console.error('Error exporting PDF:', error);
       toast.error("Failed to export PDF");
@@ -72,7 +57,6 @@ export const PDFGenerator = ({
   };
 
   return {
-    pdfRef,
     handleExport,
     PDFContent: (
       <div 

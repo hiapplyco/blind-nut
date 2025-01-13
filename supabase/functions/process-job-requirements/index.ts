@@ -29,7 +29,6 @@ serve(async (req) => {
 
     // First, let's extract the location with a specific prompt
     const locationPrompt = `Extract the nearest major metropolitan area from this text. Follow these rules:
-
     1. If a specific city is mentioned, return the nearest major metropolitan area (e.g., "Palo Alto" should return "San Francisco Bay Area")
     2. Remove state names and abbreviations (e.g., "CA", "California")
     3. If no location is mentioned, return an empty string
@@ -45,26 +44,26 @@ serve(async (req) => {
 
     let searchPrompt;
     if (searchType === 'companies') {
-      searchPrompt = `Create a targeted LinkedIn X-Ray search string to find similar companies. Follow these rules:
+      searchPrompt = `Create a comprehensive LinkedIn X-Ray search string to find similar companies. Follow these rules:
 
 1. Analyze the company description and extract:
-   - Industry and sector
-   - Company specializations (2-3 key areas)
-   - Company size indicators
-   - Key technologies or services
+   - Primary industry and sector terms (3-4 terms)
+   - Company specializations and core offerings (3-4 terms)
+   - Key technologies or platforms they use/provide
+   - Company size and stage indicators
+   - Market focus or target audience
 
 2. Format the search string exactly like this:
-site:linkedin.com/company ${metroArea ? `"${metroArea}" AND ` : ''}("INDUSTRY_1" OR "INDUSTRY_2") AND ("SPECIALIZATION_1" OR "SPECIALIZATION_2")
+site:linkedin.com/company ${metroArea ? `"${metroArea}" AND ` : ''}("INDUSTRY_TERMS") AND ("SPECIALIZATION_TERMS") AND ("TECHNOLOGY_TERMS")
 
 Rules:
-- Replace placeholders with actual values
-- Use proper capitalization
-- Include quotes around exact phrases
-- Group similar terms with OR
-- Connect different term types with AND
-- No exclusions or NOT operators
-- Keep terms specific and technical (no soft skills)
-- If company name is provided, exclude it with -"COMPANY_NAME"
+- Replace placeholders with actual extracted terms
+- Group similar terms with OR operators
+- Use proper capitalization for all terms
+- Include quotes around multi-word phrases
+- Use specific, technical terms (avoid generic terms)
+- Aim for 3-4 terms in each group
+- If company name provided, exclude it with -"COMPANY_NAME"
 
 Company Description: ${content}`;
     } else if (searchType === 'candidates-at-company') {
@@ -74,39 +73,50 @@ Company Description: ${content}`;
       
       searchPrompt = `Create a targeted LinkedIn X-Ray search string to find candidates at ${companyName}. Follow these rules:
 
-1. Extract 3-6 concrete, technical skills or qualifications from the job description (no soft skills)
+1. Extract from the job description:
+   - Required technical skills (programming languages, tools, platforms)
+   - Technical certifications or qualifications
+   - Domain expertise areas
+   - Specific technologies or frameworks
+   - Industry-specific technical terms
+
 2. Format the search string exactly like this:
-site:linkedin.com/in/ "${companyName}" ${metroArea ? `AND "${metroArea}" ` : ''}AND ("SKILL_1" OR "SKILL_2") AND ("SKILL_3" OR "SKILL_4")
+site:linkedin.com/in/ "${companyName}" ${metroArea ? `AND "${metroArea}" ` : ''}AND ("TECHNICAL_SKILLS") AND ("DOMAIN_EXPERTISE") AND ("CERTIFICATIONS")
 
 Rules:
-- Replace SKILL placeholders with actual technical skills from the job description
+- Extract 8-12 most relevant technical terms total
+- Group similar skills with OR operators
 - Use proper capitalization
-- Include quotes around exact phrases
-- Group similar skills with OR
-- Connect different term types with AND
-- No exclusions or NOT operators
-- Keep skills specific and technical (no soft skills)
-- IMPORTANT: Always include the company name in quotes
+- Include quotes around multi-word terms
+- Focus ONLY on hard technical skills and qualifications
+- NO soft skills or generic terms
+- MUST include company name in quotes
+- Aim for 3-4 terms in each group
 
 Job Description: ${content}`;
     } else {
-      searchPrompt = `Create a targeted LinkedIn X-Ray search string for this job description. Follow these rules:
+      searchPrompt = `Create a comprehensive LinkedIn X-Ray search string for finding candidates. Follow these rules:
 
-1. Extract 2-4 relevant job titles that are specific to this role
-2. Extract 3-6 concrete, technical skills or qualifications (no soft skills)
-3. DO NOT include any "NOT" operators or exclusions
-4. Format the search string exactly like this:
+1. Extract from the job description:
+   - Specific technical skills (languages, frameworks, tools)
+   - Technical certifications and qualifications
+   - Industry-specific expertise areas
+   - Required technologies and platforms
+   - Technical job titles and roles
 
-site:linkedin.com/in/ ${metroArea ? `"${metroArea}" AND ` : ''}("JOB_TITLE_1" OR "JOB_TITLE_2") AND ("SKILL_1" OR "SKILL_2") AND ("SKILL_3" OR "SKILL_4")
+2. Format the search string exactly like this:
+site:linkedin.com/in/ ${metroArea ? `"${metroArea}" AND ` : ''}("JOB_TITLES") AND ("TECHNICAL_SKILLS") AND ("DOMAIN_EXPERTISE")
 
 Rules:
-- Replace placeholders with actual values
+- Extract 10-15 most relevant technical terms total
+- Include 2-4 relevant job titles
+- Group similar terms with OR operators
 - Use proper capitalization
-- Include quotes around exact phrases
-- Group similar terms with OR
-- Connect different term types with AND
-- No exclusions or NOT operators
-- Keep skills specific and technical (no soft skills)
+- Include quotes around multi-word terms
+- Focus ONLY on hard technical skills and qualifications
+- NO soft skills or generic terms
+- Aim for 3-5 terms in each group
+- Be specific and technical (e.g., "React Native" not just "Mobile Development")
 
 Job Description: ${content}`;
     }

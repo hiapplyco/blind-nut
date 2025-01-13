@@ -20,6 +20,9 @@ export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) =>
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Remove site:linkedin.com/in/ from the search string
+  const strippedSearchString = searchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, '');
+
   const handleSearch = async () => {
     setIsLoading(true);
     try {
@@ -54,9 +57,9 @@ export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) =>
     }
   };
 
-  const handleCopySearchString = () => {
-    navigator.clipboard.writeText(searchString);
-    toast.success("Search string copied to clipboard");
+  const handleCopySearchString = (text: string, type: 'full' | 'stripped') => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${type === 'full' ? 'Full' : 'Stripped'} search string copied to clipboard`);
   };
 
   const handleExport = () => {
@@ -123,19 +126,38 @@ export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) =>
           </div>
         </div>
 
-        <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
-          <div className="flex justify-between items-center">
-            <h3 className="font-medium text-sm text-gray-600">Search String:</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCopySearchString}
-              className="hover:bg-gray-200"
-            >
-              <Copy className="w-4 h-4" />
-            </Button>
+        <div className="space-y-4">
+          {/* Full Search String */}
+          <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium text-sm text-gray-600">Full Search String (with LinkedIn filter):</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleCopySearchString(searchString, 'full')}
+                className="hover:bg-gray-200"
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+            <p className="mt-2 text-sm font-mono break-all">{searchString}</p>
           </div>
-          <p className="mt-2 text-sm font-mono break-all">{searchString}</p>
+
+          {/* Stripped Search String */}
+          <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium text-sm text-gray-600">Search String (without LinkedIn filter):</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleCopySearchString(strippedSearchString, 'stripped')}
+                className="hover:bg-gray-200"
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+            <p className="mt-2 text-sm font-mono break-all">{strippedSearchString}</p>
+          </div>
         </div>
 
         <div className="space-y-4">

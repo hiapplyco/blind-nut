@@ -31,12 +31,18 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const handleProcessingComplete = () => {
     console.log("Processing complete");
     setIsProcessingComplete(true);
-    setIsGeneratingAnalysis(false); // Reset this when processing is complete
+    setIsGeneratingAnalysis(false);
   };
 
   const handleGenerateAnalysis = () => {
     console.log("Starting analysis generation");
     setIsGeneratingAnalysis(true);
+  };
+
+  const formatText = (text: string) => {
+    return text?.split('\n').map((line, index) => (
+      <p key={index} className="mb-2">{line}</p>
+    ));
   };
 
   return (
@@ -72,20 +78,20 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         <div className="mt-8">
           <div className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <h2 className="text-2xl font-bold mb-6">Analysis Report</h2>
-            <div className="prose max-w-none">
-              <section className="mb-8">
+            <div className="space-y-8">
+              <section>
                 <h3 className="text-xl font-semibold mb-4">Job Summary</h3>
-                <div className="whitespace-pre-wrap">{agentOutput.job_summary}</div>
+                <div className="text-gray-800">{formatText(agentOutput.job_summary)}</div>
               </section>
               
-              <section className="mb-8">
+              <section>
                 <h3 className="text-xl font-semibold mb-4">Enhanced Description</h3>
-                <div className="whitespace-pre-wrap">{agentOutput.enhanced_description}</div>
+                <div className="text-gray-800">{formatText(agentOutput.enhanced_description)}</div>
               </section>
               
-              <section className="mb-8">
+              <section>
                 <h3 className="text-xl font-semibold mb-4">Compensation Analysis</h3>
-                <div className="whitespace-pre-wrap">{agentOutput.compensation_analysis}</div>
+                <div className="text-gray-800">{formatText(agentOutput.compensation_analysis)}</div>
               </section>
 
               {agentOutput.terms && (

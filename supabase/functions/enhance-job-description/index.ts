@@ -7,6 +7,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+
+async function generateWithRetry(model: any, prompt: string, retryCount = 0): Promise<string> {
+  try {
+    console.log(`Attempt ${retryCount + 1} of ${MAX_RETRIES}`);
+    const result = await model.generateContent(prompt);
+    return result.response.text();
+  } catch (error) {
+    console.error(`Error on attempt ${retryCount + 1}:`, error);
+    
+    // Check if error is due to service overload
+    if (error.message?.includes('503 Service Unavailable') && retryCount < MAX_RETRIES - 1) {
+      const delayTime = INITIAL_RETRY_DELAY * Math.pow(2, retryCount); // Exponential backoff
+      console.log(`Retrying in ${delayTime}ms...`);
+      await delay(delayTime);
+      return generateWithRetry(model, prompt, retryCount + 1);
+    }
+    
+    throw error;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -23,81 +48,79 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    const prompt = `As an experienced Talent Acquisition specialist, enhance this job description using engaging markdown formatting with clear headers and emphasis on key points that will attract top talent. Create a comprehensive, well-structured description that highlights:
+    const prompt = `As an experienced Talent Acquisition specialist, enhance this job description using clear headers and emphasis on key points that will attract top talent. Create a comprehensive, well-structured description that highlights:
 
-# 🚀 Enhanced Job Description
+🏢 Company Impact & Culture
+- Mission & Vision
+- Company Culture
+- Growth Trajectory
+- Innovation Focus
 
-## 🏢 Company Impact & Culture
-- **Mission & Vision:** *What makes this company unique and inspiring*
-- **Company Culture:** *Key aspects of work environment and values*
-- **Growth Trajectory:** *Company's market position and future vision*
-- **Innovation Focus:** *How the company drives industry change*
+💫 Role Overview & Impact
+- Position Impact
+- Key Objectives
+- Team Context
+- Strategic Value
 
-## 💫 Role Overview & Impact
-- **Position Impact:** *How this role contributes to company success*
-- **Key Objectives:** *Clear definition of what success looks like*
-- **Team Context:** *Where this role fits in the organization*
-- **Strategic Value:** *How this role shapes company direction*
+📋 Essential Qualifications
+- Technical Expertise
+- Experience Level
+- Industry Knowledge
+- Core Competencies
+- Soft Skills
 
-## 📋 Essential Qualifications
-- **Technical Expertise:** *Must-have technical skills and tools*
-- **Experience Level:** *Required years and type of background*
-- **Industry Knowledge:** *Specific sector expertise needed*
-- **Core Competencies:** *Critical technical requirements*
-- **Soft Skills:** *Essential interpersonal abilities*
+🌟 Preferred Qualifications
+- Advanced Skills
+- Additional Experience
+- Industry Insights
+- Leadership Abilities
+- Certifications
 
-## 🌟 Preferred Qualifications
-- **Advanced Skills:** *Nice-to-have technical expertise*
-- **Additional Experience:** *Beneficial background areas*
-- **Industry Insights:** *Valuable sector knowledge*
-- **Leadership Abilities:** *Management or mentoring experience*
-- **Certifications:** *Relevant professional certifications*
+📈 Growth & Development
+- Career Progression
+- Professional Development
+- Mentorship
+- Training Programs
+- Innovation Opportunities
 
-## 📈 Growth & Development
-- **Career Progression:** *Clear advancement opportunities*
-- **Professional Development:** *Learning and growth resources*
-- **Mentorship:** *Available guidance and support systems*
-- **Training Programs:** *Structured learning opportunities*
-- **Innovation Opportunities:** *Chances to drive change*
+🎯 Success Metrics & Expectations
+- First 90 Days
+- Key Responsibilities
+- Performance Indicators
+- Team Collaboration
+- Strategic Goals
 
-## 🎯 Success Metrics & Expectations
-- **First 90 Days:** *Initial objectives and milestones*
-- **Key Responsibilities:** *Primary duties and projects*
-- **Performance Indicators:** *How success will be measured*
-- **Team Collaboration:** *Cross-functional partnerships*
-- **Strategic Goals:** *Long-term objectives*
+🤝 Work Environment & Culture
+- Team Structure
+- Collaboration Style
+- Work Arrangement
+- Company Values
+- Innovation Culture
 
-## 🤝 Work Environment & Culture
-- **Team Structure:** *Immediate team composition*
-- **Collaboration Style:** *How the team works together*
-- **Work Arrangement:** *Remote/hybrid/office expectations*
-- **Company Values:** *Core principles in action*
-- **Innovation Culture:** *Approach to new ideas*
+📊 Impact & Outcomes
+- Business Impact
+- Team Influence
+- Growth Potential
+- Innovation Scope
+- Success Metrics
 
-## 📊 Impact & Outcomes
-- **Business Impact:** *How role affects company success*
-- **Team Influence:** *Leadership and mentoring opportunities*
-- **Growth Potential:** *Future role evolution*
-- **Innovation Scope:** *Opportunities to drive change*
-- **Success Metrics:** *Key performance indicators*
+🌈 Diversity & Inclusion
+- Inclusive Culture
+- Equal Opportunity
+- Support Systems
+- Accessibility
 
-## 🌈 Diversity & Inclusion
-- **Inclusive Culture:** *Commitment to diversity*
-- **Equal Opportunity:** *Fair hiring practices*
-- **Support Systems:** *Employee resource groups*
-- **Accessibility:** *Accommodations and support*
+🎁 Benefits & Perks Highlights
+- Health & Wellness
+- Work-Life Balance
+- Professional Growth
+- Additional Perks
 
-## 🎁 Benefits & Perks Highlights
-- **Health & Wellness:** *Comprehensive benefits*
-- **Work-Life Balance:** *Flexible arrangements*
-- **Professional Growth:** *Development opportunities*
-- **Additional Perks:** *Unique company benefits*
-
-## 🚀 Next Steps & Application
-- **Application Process:** *How to apply*
-- **Timeline:** *What to expect*
-- **Contact Details:** *Who to reach out to*
-- **Required Materials:** *What to submit*
+🚀 Next Steps & Application
+- Application Process
+- Timeline
+- Contact Details
+- Required Materials
 
 Format the content to be:
 - Engaging and scannable
@@ -107,8 +130,7 @@ Format the content to be:
 - Achievement-centered
 
 Use:
-- Bold for headers and key terms
-- Italic for supporting details
+- Bold for emphasis on key terms
 - Bullet points for easy scanning
 - Emojis for visual engagement
 - Active voice and strong verbs
@@ -122,10 +144,9 @@ Highlight:
 
 Original job description: ${content}`;
 
-    console.log('Using prompt for job description enhancement:', prompt);
-
-    const result = await model.generateContent(prompt);
-    const enhancedDescription = result.response.text();
+    console.log('Using prompt for job description enhancement');
+    
+    const enhancedDescription = await generateWithRetry(model, prompt);
     console.log('Enhanced description generated successfully');
     
     return new Response(
@@ -140,9 +161,14 @@ Original job description: ${content}`;
   } catch (error) {
     console.error('Error in enhance-job-description:', error);
     
+    // Create a user-friendly error message
+    const userMessage = error.message?.includes('503 Service Unavailable')
+      ? "The AI service is temporarily unavailable. We tried multiple times but couldn't get a response. Please try again in a few minutes."
+      : "There was an error enhancing the job description. Please try again.";
+    
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: userMessage,
         details: error.stack 
       }),
       { 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { processJobRequirements } from "@/utils/jobRequirements";
 import { supabase } from "@/integrations/supabase/client";
 import { SearchTypeToggle } from "@/components/search/SearchTypeToggle";
@@ -35,7 +36,6 @@ export const SearchForm = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
-  const { toast } = useToast();
   const { data: agentOutput } = useAgentOutputs(currentJobId);
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export const SearchForm = ({
     if (!file) return;
 
     if (!file.type.includes('pdf') && !file.type.includes('image')) {
-      toast("Invalid file type. Please upload a PDF file or an image");
+      toast.error("Invalid file type. Please upload a PDF file or an image");
       return;
     }
 
@@ -110,11 +110,11 @@ export const SearchForm = ({
 
       if (data?.text) {
         setSearchText(data.text);
-        toast("File processed successfully. The content has been extracted and added to the input field.");
+        toast.success("File processed successfully. The content has been extracted and added to the input field.");
       }
     } catch (error) {
       console.error('Error processing file:', error);
-      toast("Failed to process the file. Please try again.");
+      toast.error("Failed to process the file. Please try again.");
     } finally {
       setIsProcessing(false);
     }

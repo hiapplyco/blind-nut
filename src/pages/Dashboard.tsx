@@ -72,7 +72,15 @@ const Dashboard = () => {
         .single();
 
       if (jobData?.content) {
-        navigate('/', { state: { content: jobData.content, autoRun: true } });
+        navigate('/', { 
+          state: { 
+            content: jobData.content, 
+            autoRun: true 
+          },
+          replace: true // This ensures we don't create a new history entry
+        });
+      } else {
+        toast.error("No search content found");
       }
     } catch (error) {
       console.error('Error running search again:', error);

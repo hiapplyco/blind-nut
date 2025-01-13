@@ -29,7 +29,10 @@ export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
     try {
       const constraints = {
         audio: type === 'audio' || type === 'both',
-        video: type === 'video' || type === 'both'
+        video: type === 'video' || type === 'both' ? {
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } : false
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -38,7 +41,10 @@ export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
       if (type === 'video' || type === 'both') {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          await videoRef.current.play();
+          videoRef.current.play().catch(error => {
+            console.error('Error playing video:', error);
+            toast.error('Failed to start video preview');
+          });
         }
       }
 
@@ -107,6 +113,9 @@ export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
       setIsRecording(false);
       setRecordingType(null);
     }
@@ -125,8 +134,9 @@ export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
             <video 
               ref={videoRef} 
               className="absolute inset-0 w-full h-full object-cover"
-              muted
+              autoPlay
               playsInline
+              muted
             />
           </div>
         )}

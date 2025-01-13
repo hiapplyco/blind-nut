@@ -1,4 +1,4 @@
-import { Bot } from "lucide-react";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -23,14 +23,14 @@ export const AnalysisLoading = ({
         <div className="space-y-4">
           <h3 className="text-xl font-bold">Analysis Complete</h3>
           <p className="text-gray-600">
-            Your analysis report is ready to view
+            Your analysis report is ready to download
           </p>
           <Button 
             onClick={onViewReport}
             className="w-full border-4 border-black bg-[#8B5CF6] text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
           >
-            <Bot className="w-5 h-5 mr-2" />
-            View Analysis Report
+            <Download className="w-5 h-5 mr-2" />
+            Download Analysis Report
           </Button>
         </div>
       </Card>

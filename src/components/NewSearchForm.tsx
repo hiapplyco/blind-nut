@@ -4,7 +4,10 @@ import { AgentProcessor } from "./search/AgentProcessor";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
-import { FileText } from "lucide-react";
+import { Download } from "lucide-react";
+import { PDFGenerator } from "./search/pdf/PDFGenerator";
+import { useAgentOutputs } from "@/stores/useAgentOutputs";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NewSearchFormProps {
   userId: string;
@@ -15,6 +18,8 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+  const { data: agentOutput } = useAgentOutputs(currentJobId);
 
   const handleSearchSubmit = (text: string, jobId: number) => {
     console.log("Search submitted:", { text, jobId });
@@ -26,12 +31,34 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const handleProcessingComplete = () => {
     console.log("Processing complete");
     setIsProcessingComplete(true);
-    toast.success("Analysis complete! Click 'View Report' to see the results.");
+    toast.success("Analysis complete! Click 'Download Report' to save the results.");
   };
 
-  const handleViewReport = () => {
-    if (currentJobId) {
-      navigate(`/report/${currentJobId}`);
+  const handleDownloadReport = async () => {
+    if (!currentJobId || !agentOutput) return;
+
+    setIsExporting(true);
+    try {
+      const { data: jobData } = await supabase
+        .from('jobs')
+        .select('search_string')
+        .eq('id', currentJobId)
+        .single();
+
+      const { handleExport } = PDFGenerator({ 
+        agentOutput, 
+        pdfContent: jobData?.search_string || '', 
+        isExporting, 
+        setIsExporting 
+      });
+
+      await handleExport();
+      toast.success("Report downloaded successfully");
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      toast.error("Failed to download report");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -54,11 +81,12 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
 
       {isProcessingComplete && (
         <Button
-          onClick={handleViewReport}
+          onClick={handleDownloadReport}
+          disabled={isExporting}
           className="w-full border-4 border-black bg-[#8B5CF6] text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
         >
-          <FileText className="w-5 h-5 mr-2" />
-          View Analysis Report
+          <Download className="w-5 h-5 mr-2" />
+          {isExporting ? 'Downloading...' : 'Download Analysis Report'}
         </Button>
       )}
     </div>

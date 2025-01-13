@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { processJobRequirements } from "@/utils/jobRequirements";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,8 +8,8 @@ import { FormHeader } from "@/components/search/FormHeader";
 import { ContentTextarea } from "@/components/search/ContentTextarea";
 import { CompanyNameInput } from "@/components/search/CompanyNameInput";
 import { SubmitButton } from "@/components/search/SubmitButton";
-import { Bot, Loader2 } from "lucide-react";
-import { useAgentOutputs } from "@/stores/useAgentOutputs";
+import { GoogleSearchWindow } from "@/components/search/GoogleSearchWindow";
+import { Loader2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
@@ -20,7 +19,6 @@ interface SearchFormProps {
   onJobCreated: (jobId: number, searchText: string) => void;
   currentJobId: number | null;
   isProcessingComplete: boolean;
-  onViewReport: () => void;
 }
 
 export const SearchForm = ({ 
@@ -28,7 +26,6 @@ export const SearchForm = ({
   onJobCreated, 
   currentJobId,
   isProcessingComplete,
-  onViewReport 
 }: SearchFormProps) => {
   const location = useLocation();
   const [searchText, setSearchText] = useState("");
@@ -36,7 +33,7 @@ export const SearchForm = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
-  const { data: agentOutput } = useAgentOutputs(currentJobId);
+  const [searchString, setSearchString] = useState("");
 
   useEffect(() => {
     // Handle auto-run from location state
@@ -49,6 +46,30 @@ export const SearchForm = ({
       handleSubmit(new Event('submit') as any);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    // Fetch search string when job is created
+    const fetchSearchString = async () => {
+      if (currentJobId) {
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('search_string')
+          .eq('id', currentJobId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching search string:', error);
+          return;
+        }
+
+        if (data?.search_string) {
+          setSearchString(data.search_string);
+        }
+      }
+    };
+
+    fetchSearchString();
+  }, [currentJobId]);
 
   const generateSummary = async (content: string) => {
     try {
@@ -103,6 +124,7 @@ export const SearchForm = ({
 
       if (updateError) throw updateError;
 
+      setSearchString(result.searchString);
       toast.success("Search string generated successfully!");
 
     } catch (error) {
@@ -152,19 +174,6 @@ export const SearchForm = ({
 
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-      {currentJobId && isProcessingComplete && agentOutput && (
-        <div className="mb-6">
-          <Button
-            type="button"
-            onClick={onViewReport}
-            className="w-full border-4 border-black bg-[#8B5CF6] text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
-          >
-            <Bot className="w-5 h-5 mr-2" />
-            Download Analysis Report
-          </Button>
-        </div>
-      )}
-      
       <form onSubmit={handleSubmit} className="space-y-6">
         <SearchTypeToggle 
           value={searchType} 
@@ -203,6 +212,12 @@ export const SearchForm = ({
           )}
         </div>
       </form>
+
+      {searchString && (
+        <div className="mt-6">
+          <GoogleSearchWindow searchString={searchString} />
+        </div>
+      )}
     </Card>
   );
 };

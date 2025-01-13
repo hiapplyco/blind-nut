@@ -28,6 +28,7 @@ export const SearchForm = ({
   const [searchText, setSearchText] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,10 +104,19 @@ export const SearchForm = ({
             />
           )}
 
-          <SubmitButton 
-            isProcessing={isProcessing}
-            isDisabled={isProcessing || !searchText || (searchType === "candidates-at-company" && !companyName)}
-          />
+          <div className="space-y-4">
+            <SubmitButton 
+              isProcessing={isProcessing || isScrapingProfiles}
+              isDisabled={isProcessing || isScrapingProfiles || !searchText || (searchType === "candidates-at-company" && !companyName)}
+            />
+            
+            {isScrapingProfiles && (
+              <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Scraping profiles from search results...</span>
+              </div>
+            )}
+          </div>
         </form>
       </Card>
       

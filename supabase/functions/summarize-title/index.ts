@@ -18,15 +18,19 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Create a concise, professional title (maximum 6 words) that summarizes this job description. Focus on the role and industry. Return only the title, no additional text or punctuation:
+    const prompt = `Given this job description, create:
+1. A concise, professional title (maximum 6 words) that summarizes the role
+2. A brief summary (2-3 sentences) highlighting the key aspects of the position
+
+Format the response as JSON with 'title' and 'summary' fields. Here's the job description:
 
 ${content}`;
 
     const result = await model.generateContent(prompt);
-    const title = result.response.text().trim();
+    const response = JSON.parse(result.response.text());
     
     return new Response(
-      JSON.stringify({ title }),
+      JSON.stringify(response),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

@@ -33,13 +33,33 @@ serve(async (req) => {
 1. A concise, professional title (maximum 6 words) that summarizes the role
 2. A brief summary (2-3 sentences) highlighting the key aspects of the position
 
-Format the response as JSON with 'title' and 'summary' fields. Here's the job description:
+Return ONLY a valid JSON object with 'title' and 'summary' fields, nothing else. Example:
+{
+  "title": "Senior Software Engineer",
+  "summary": "Leadership role in software development."
+}
+
+Here's the job description:
 
 ${content}`;
 
     try {
       const result = await model.generateContent(prompt);
-      const response = JSON.parse(result.response.text());
+      const responseText = result.response.text();
+      
+      // Try to extract JSON from the response if it's wrapped in markdown or other text
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in response');
+      }
+
+      const jsonStr = jsonMatch[0];
+      const response = JSON.parse(jsonStr);
+
+      // Validate the response has the required fields
+      if (!response.title || !response.summary) {
+        throw new Error('Response missing required fields');
+      }
       
       return new Response(
         JSON.stringify(response),
@@ -56,7 +76,7 @@ ${content}`;
           JSON.stringify({ 
             error: 'Rate limit exceeded. Please try again later.',
             shouldRetry: true,
-            retryAfter: 60 // Suggest retry after 60 seconds
+            retryAfter: 60
           }),
           { 
             status: 429,
@@ -65,6 +85,21 @@ ${content}`;
               'Content-Type': 'application/json',
               'Retry-After': '60'
             }
+          }
+        );
+      }
+      
+      // Handle JSON parsing errors specifically
+      if (error instanceof SyntaxError || error.message.includes('JSON')) {
+        console.error('JSON Parsing Error:', error);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Failed to parse response from AI',
+            details: 'Invalid response format'
+          }),
+          { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         );
       }

@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Download, Search, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GoogleSearchWindowProps {
   searchString: string;
@@ -22,8 +23,13 @@ export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) =>
   const handleSearch = async () => {
     setIsLoading(true);
     try {
+      // First get the API key from Supabase Edge Function
+      const { data: { key }, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
+      
+      if (keyError) throw keyError;
+      
       const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?key=${process.env.GOOGLE_CSE_API_KEY}&cx=b28705633bcb44cf0&q=${encodeURIComponent(
+        `https://www.googleapis.com/customsearch/v1?key=${key}&cx=b28705633bcb44cf0&q=${encodeURIComponent(
           searchString
         )}`
       );

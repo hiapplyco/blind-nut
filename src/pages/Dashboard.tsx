@@ -40,10 +40,13 @@ const Dashboard = () => {
             });
 
             if (titleError) {
-              // Check if it's a rate limit error
+              // Check if it's a rate limit error (429)
               if (titleError.status === 429) {
-                console.log('Rate limit hit, will retry later');
-                toast.error("Couldn't generate all titles due to rate limiting. Try again later.");
+                const retryAfter = 60; // Default to 60 seconds if not specified
+                toast.error(
+                  `Rate limit reached. Please wait ${retryAfter} seconds before trying again.`,
+                  { duration: retryAfter * 1000 }
+                );
                 return search;
               }
               throw titleError;

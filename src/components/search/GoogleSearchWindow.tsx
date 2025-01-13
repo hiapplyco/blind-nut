@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface GoogleSearchWindowProps {
   searchString: string;
+  searchType?: "candidates" | "companies" | "candidates-at-company";
 }
 
 interface SearchResult {
@@ -17,7 +18,10 @@ interface SearchResult {
   htmlTitle: string;
 }
 
-export const GoogleSearchWindow = ({ searchString: initialSearchString }: GoogleSearchWindowProps) => {
+export const GoogleSearchWindow = ({ 
+  searchString: initialSearchString,
+  searchType = "candidates" 
+}: GoogleSearchWindowProps) => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchString, setSearchString] = useState(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
@@ -29,8 +33,13 @@ export const GoogleSearchWindow = ({ searchString: initialSearchString }: Google
       
       if (keyError) throw keyError;
       
+      // Use different CSE ID based on search type
+      const cseId = searchType === 'companies' 
+        ? 'e391b913931574878'  // Companies CSE
+        : 'b28705633bcb44cf0'; // Candidates CSE
+      
       const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?key=${key}&cx=b28705633bcb44cf0&q=${encodeURIComponent(
+        `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cseId}&q=${encodeURIComponent(
           searchString
         )}`
       );

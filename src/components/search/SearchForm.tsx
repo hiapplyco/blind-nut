@@ -215,7 +215,10 @@ export const SearchForm = ({
 
       {searchString && (
         <div className="mt-6">
-          <GoogleSearchWindow searchString={searchString} />
+          <GoogleSearchWindow 
+            searchString={searchString} 
+            searchType={searchType}
+          />
         </div>
       )}
     </Card>

@@ -1,9 +1,9 @@
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { InputActions } from "./InputActions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ContentTextareaProps {
   searchText: string;
@@ -48,24 +48,34 @@ export const ContentTextarea = ({
             >
               Upload File
             </DropdownMenuItem>
-            <DropdownMenuItem 
-              className="cursor-pointer"
-              onClick={() => onTextUpdate("")}
-            >
-              Record Audio
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
     }
 
     return (
-      <InputActions
-        onFileUpload={onFileUpload}
-        isProcessing={isProcessing}
-        onShowAccessDialog={() => {}}
-        onTextUpdate={onTextUpdate}
-      />
+      <div className="flex gap-2">
+        <div className="relative">
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={onFileUpload}
+            className="hidden"
+            id="file-upload"
+            disabled={isProcessing}
+          />
+          <label
+            htmlFor="file-upload"
+            className={`inline-flex items-center px-4 py-2 bg-white border-2 border-black rounded font-bold 
+              shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:translate-x-0.5 
+              hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer
+              ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            {isProcessing ? 'Processing...' : 'Attach PDF'}
+          </label>
+        </div>
+      </div>
     );
   };
 

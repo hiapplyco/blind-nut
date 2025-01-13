@@ -5,6 +5,7 @@ import { FormHeader } from "./FormHeader";
 import { ContentTextarea } from "./ContentTextarea";
 import { CompanyNameInput } from "./CompanyNameInput";
 import { SubmitButton } from "./SubmitButton";
+import { CaptureWindow } from "./CaptureWindow";
 import { useSearchFormSubmit } from "./SearchFormSubmit";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,36 +77,40 @@ export const SearchForm = ({
   };
 
   return (
-    <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <SearchTypeToggle 
-          value={searchType} 
-          onValueChange={(value) => setSearchType(value)} 
-        />
-        
-        <FormHeader />
-        
-        <ContentTextarea
-          searchText={searchText}
-          isProcessing={isProcessing}
-          onTextChange={setSearchText}
-          onFileUpload={handleFileUpload}
-          onTextUpdate={handleTextUpdate}
-        />
-
-        {searchType === "candidates-at-company" && (
-          <CompanyNameInput
-            companyName={companyName}
-            isProcessing={isProcessing}
-            onChange={setCompanyName}
+    <div className="space-y-6">
+      <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <SearchTypeToggle 
+            value={searchType} 
+            onValueChange={(value) => setSearchType(value)} 
           />
-        )}
+          
+          <FormHeader />
+          
+          <ContentTextarea
+            searchText={searchText}
+            isProcessing={isProcessing}
+            onTextChange={setSearchText}
+            onFileUpload={handleFileUpload}
+            onTextUpdate={handleTextUpdate}
+          />
 
-        <SubmitButton 
-          isProcessing={isProcessing}
-          isDisabled={isProcessing || !searchText || (searchType === "candidates-at-company" && !companyName)}
-        />
-      </form>
-    </Card>
+          {searchType === "candidates-at-company" && (
+            <CompanyNameInput
+              companyName={companyName}
+              isProcessing={isProcessing}
+              onChange={setCompanyName}
+            />
+          )}
+
+          <SubmitButton 
+            isProcessing={isProcessing}
+            isDisabled={isProcessing || !searchText || (searchType === "candidates-at-company" && !companyName)}
+          />
+        </form>
+      </Card>
+      
+      <CaptureWindow onTextUpdate={handleTextUpdate} />
+    </div>
   );
 };

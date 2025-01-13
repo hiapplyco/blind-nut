@@ -65,11 +65,12 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
 
       if (error) throw error;
       
-      // Set progress to 100% before completing
+      // Set progress to 100% and trigger completion
       setCurrentStepIndex(PROCESSING_STEPS.length - 1);
       
-      // Small delay to ensure the UI shows 100% before completion
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Ensure UI updates before completing
+      await new Promise(resolve => setTimeout(resolve, 100));
+      onComplete();
     },
     onError: (error) => {
       console.error('Error persisting to database:', error);
@@ -85,7 +86,6 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
         title: "Success",
         description: "Your purple squirrel report is ready! 🐿️",
       });
-      onComplete();
     }
   });
 

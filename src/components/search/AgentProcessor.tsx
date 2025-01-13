@@ -65,8 +65,11 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
 
       if (error) throw error;
       
-      // Update to final step after successful database persistence
+      // Set progress to 100% before completing
       setCurrentStepIndex(PROCESSING_STEPS.length - 1);
+      
+      // Small delay to ensure the UI shows 100% before completion
+      await new Promise(resolve => setTimeout(resolve, 500));
     },
     onError: (error) => {
       console.error('Error persisting to database:', error);

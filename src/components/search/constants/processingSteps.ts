@@ -46,8 +46,8 @@ export const PROCESSING_STEPS = [
   },
   {
     step: "finalReview",
-    message: "Carefully examining purple pawprints before declaring mission accomplished...",
-    progress: 95
+    message: "Mission accomplished! Purple squirrel report ready for review...",
+    progress: 100
   }
 ];
 

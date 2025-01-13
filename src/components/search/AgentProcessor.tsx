@@ -25,6 +25,9 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
     try {
       console.log(`Starting ${functionName} processing...`);
       
+      // Update progress before API call
+      setCurrentStepIndex(prev => Math.min(prev + 1, PROCESSING_STEPS.length - 1));
+      
       const response = await supabase.functions.invoke(functionName, { 
         body: { content } 
       });
@@ -32,7 +35,8 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
       if (response.error) throw response.error;
       console.log(`${functionName} response:`, response.data);
       
-      setCurrentStepIndex(prev => Math.min(prev + 1, PROCESSING_STEPS.length - 1));
+      // Update progress after successful API call
+      setCurrentStepIndex(prev => Math.min(prev + 2, PROCESSING_STEPS.length - 1));
       return response.data[responseKey];
     } catch (error) {
       console.error(`Error in ${functionName}:`, error);
@@ -60,6 +64,9 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
         });
 
       if (error) throw error;
+      
+      // Update to final step after successful database persistence
+      setCurrentStepIndex(PROCESSING_STEPS.length - 1);
     },
     onError: (error) => {
       console.error('Error persisting to database:', error);

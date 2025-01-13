@@ -6,6 +6,7 @@ import { ContentTextarea } from "./ContentTextarea";
 import { CompanyNameInput } from "./CompanyNameInput";
 import { SubmitButton } from "./SubmitButton";
 import { CaptureWindow } from "./CaptureWindow";
+import { GoogleSearchWindow } from "./GoogleSearchWindow";
 import { useSearchFormSubmit } from "./SearchFormSubmit";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,7 @@ export const SearchForm = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
+  const [generatedSearchString, setGeneratedSearchString] = useState<string>("");
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -65,14 +67,44 @@ export const SearchForm = ({
     }
   };
 
-  const handleSubmit = useSearchFormSubmit({
-    userId,
-    searchText,
-    searchType,
-    companyName,
-    onJobCreated,
-    onProcessingChange: setIsProcessing
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsProcessing(true);
+
+    try {
+      const { data: jobData, error: jobError } = await supabase
+        .from('jobs')
+        .insert({
+          content: searchText,
+          user_id: userId
+        })
+        .select()
+        .single();
+
+      if (jobError) throw jobError;
+      
+      const jobId = jobData.id;
+      onJobCreated(jobId, searchText);
+
+      const result = await processJobRequirements(searchText, searchType, companyName, userId);
+      setGeneratedSearchString(result.searchString);
+
+      const { error: updateError } = await supabase
+        .from('jobs')
+        .update({ search_string: result.searchString })
+        .eq('id', jobId);
+
+      if (updateError) throw updateError;
+
+      toast.success("Search string generated successfully!");
+
+    } catch (error) {
+      console.error('Error processing content:', error);
+      toast.error("Failed to process content. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleTextUpdate = (text: string) => {
     setSearchText(text);
@@ -80,6 +112,10 @@ export const SearchForm = ({
 
   return (
     <div className="space-y-6">
+      {generatedSearchString && (
+        <GoogleSearchWindow searchString={generatedSearchString} />
+      )}
+      
       <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <form onSubmit={handleSubmit} className="space-y-6">
           <SearchTypeToggle 

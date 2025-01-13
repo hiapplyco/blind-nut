@@ -1,8 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "npm:@google/generative-ai";
-import { compensationPrompt } from "../../../src/prompts/agents/compensation.prompt.ts";
-import { promptManager } from "../../../src/services/promptManager.ts";
+import { compensationPrompt } from "../_shared/prompts/compensation.prompt.ts";
+import { promptManager } from "../_shared/prompts/promptManager.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

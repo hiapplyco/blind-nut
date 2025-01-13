@@ -1,4 +1,4 @@
-import { PromptTemplate } from './types';
+import { PromptTemplate } from './types.ts';
 
 export const compensationPrompt: PromptTemplate = {
   name: "Compensation Analysis",

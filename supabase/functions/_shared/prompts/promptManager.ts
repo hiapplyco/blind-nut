@@ -1,4 +1,4 @@
-import { PromptTemplate, PromptParams } from './types';
+import { PromptTemplate, PromptParams } from './types.ts';
 
 export class PromptManager {
   render(template: PromptTemplate, params: PromptParams): string {

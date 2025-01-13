@@ -22,7 +22,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     console.log("Search submitted:", { text, jobId });
     setSearchText(text);
     setCurrentJobId(jobId);
-    // Reset states when new search is submitted
     setIsProcessingComplete(false);
     setIsGeneratingAnalysis(false);
   };
@@ -30,7 +29,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const handleProcessingComplete = () => {
     console.log("Processing complete");
     setIsProcessingComplete(true);
-    setIsGeneratingAnalysis(false); // Reset analysis state when processing is complete
+    setIsGeneratingAnalysis(false);
   };
 
   const handleGenerateAnalysis = () => {
@@ -38,7 +37,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     setIsGeneratingAnalysis(true);
   };
 
-  // Effect to handle agent output state
   useEffect(() => {
     if (agentOutput && !isLoading) {
       console.log("Agent output received:", agentOutput);
@@ -56,23 +54,26 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         isProcessingComplete={isProcessingComplete}
       />
       
-      {/* Show AgentProcessor only when generating analysis and not complete */}
-      {currentJobId && isGeneratingAnalysis && !isProcessingComplete && (
-        <AgentProcessor
-          content={searchText}
-          jobId={currentJobId}
-          onComplete={handleProcessingComplete}
-        />
-      )}
+      {currentJobId && (
+        <AnalysisReport 
+          agentOutput={agentOutput}
+          isGeneratingAnalysis={isGeneratingAnalysis}
+          isProcessingComplete={isProcessingComplete}
+        >
+          {/* Show AgentProcessor only when generating analysis and not complete */}
+          {isGeneratingAnalysis && !isProcessingComplete && (
+            <AgentProcessor
+              content={searchText}
+              jobId={currentJobId}
+              onComplete={handleProcessingComplete}
+            />
+          )}
 
-      {/* Show Generate Analysis button when we have a job but haven't started analysis */}
-      {currentJobId && !isGeneratingAnalysis && !isProcessingComplete && (
-        <GenerateAnalysisButton onClick={handleGenerateAnalysis} />
-      )}
-
-      {/* Show Analysis Report only when we have agent output */}
-      {currentJobId && agentOutput && !isLoading && (
-        <AnalysisReport agentOutput={agentOutput} />
+          {/* Show Generate Analysis button when we have a job but haven't started analysis */}
+          {!isGeneratingAnalysis && !isProcessingComplete && (
+            <GenerateAnalysisButton onClick={handleGenerateAnalysis} />
+          )}
+        </AnalysisReport>
       )}
     </div>
   );

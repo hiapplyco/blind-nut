@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
-import { Card } from "@/components/ui/card";
 import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
 import { useMutation } from "@tanstack/react-query";
+import { ProcessingProgress } from "./ProcessingProgress";
+import { PROCESSING_STEPS, ERROR_MESSAGES } from "./constants/processingSteps";
 
 interface AgentProcessorProps {
   content: string;
@@ -12,49 +12,35 @@ interface AgentProcessorProps {
   onComplete: () => void;
 }
 
-interface ProcessingStep {
-  message: string;
-  progress: number;
-}
-
 export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorProps) => {
   const { toast } = useToast();
   const { setOutput } = useClientAgentOutputs();
-  const [currentStep, setCurrentStep] = useState<ProcessingStep>({
-    message: "Initializing analysis...",
-    progress: 0
-  });
-
-  const updateProgress = (message: string, progress: number) => {
-    setCurrentStep({ message, progress });
-  };
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const currentStep = PROCESSING_STEPS[currentStepIndex];
 
   const processStep = async (
-    stepMessage: string, 
     functionName: string, 
     responseKey: string,
-    progressStart: number,
-    progressEnd: number
   ): Promise<any> => {
     try {
       console.log(`Starting ${functionName} processing...`);
-      updateProgress(stepMessage, progressStart);
       
       const response = await supabase.functions.invoke(functionName, { 
         body: { content } 
       });
       
-      if (response.error) {
-        console.error(`Error in ${functionName}:`, response.error);
-        throw response.error;
-      }
-
+      if (response.error) throw response.error;
       console.log(`${functionName} response:`, response.data);
-      updateProgress(stepMessage, progressEnd);
       
+      setCurrentStepIndex(prev => Math.min(prev + 1, PROCESSING_STEPS.length - 1));
       return response.data[responseKey];
     } catch (error) {
       console.error(`Error in ${functionName}:`, error);
+      toast({
+        title: "Error",
+        description: ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)],
+        variant: "destructive",
+      });
       throw error;
     }
   };
@@ -62,7 +48,6 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
   const persistToDatabase = useMutation({
     mutationFn: async (agentOutput: any) => {
       console.log('Persisting agent output to database:', agentOutput);
-      updateProgress("Saving analysis results...", 95);
       
       const { error } = await supabase
         .from('agent_outputs')
@@ -80,16 +65,15 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
       console.error('Error persisting to database:', error);
       toast({
         title: "Error",
-        description: "Failed to save analysis results. Please try again.",
+        description: ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)],
         variant: "destructive",
       });
     },
     onSuccess: () => {
       console.log('Successfully persisted agent output to database');
-      updateProgress("Analysis complete!", 100);
       toast({
-        title: "Analysis Complete",
-        description: "Your report is ready to view",
+        title: "Success",
+        description: "Your purple squirrel report is ready! 🐿️",
       });
       onComplete();
     }
@@ -100,46 +84,20 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
 
     const processContent = async () => {
       try {
-        console.log('Starting content processing...');
-        
         // Extract terms
-        const terms = await processStep(
-          "Analyzing requirements and extracting key terms...",
-          'extract-nlp-terms',
-          'terms',
-          10,
-          25
-        );
+        const terms = await processStep('extract-nlp-terms', 'terms');
         if (!isMounted) return;
         
         // Analyze compensation
-        const compensationData = await processStep(
-          "Evaluating compensation details...",
-          'analyze-compensation',
-          'analysis',
-          30,
-          50
-        );
+        const compensationData = await processStep('analyze-compensation', 'analysis');
         if (!isMounted) return;
         
         // Enhance description
-        const enhancerData = await processStep(
-          "Enhancing job description...",
-          'enhance-job-description',
-          'enhancedDescription',
-          55,
-          75
-        );
+        const enhancerData = await processStep('enhance-job-description', 'enhancedDescription');
         if (!isMounted) return;
         
         // Generate summary
-        const summaryData = await processStep(
-          "Generating comprehensive report...",
-          'summarize-job',
-          'summary',
-          80,
-          90
-        );
+        const summaryData = await processStep('summarize-job', 'summary');
         if (!isMounted) return;
 
         const agentOutput = {
@@ -168,7 +126,7 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
         
         toast({
           title: "Error",
-          description: "Failed to process content. Please try again.",
+          description: ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)],
           variant: "destructive",
         });
       }
@@ -181,30 +139,10 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
   }, [content, jobId]);
 
   return (
-    <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-      <div className="space-y-6">
-        <h3 className="text-xl font-bold">Analyzing Content</h3>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">
-                {currentStep.message}
-              </span>
-              <span className="text-sm text-gray-500">
-                {currentStep.progress}%
-              </span>
-            </div>
-            <Progress 
-              value={currentStep.progress} 
-              className="h-2"
-              indicatorClassName={
-                currentStep.progress === 100 ? 'bg-green-500' :
-                'bg-blue-500 transition-all duration-500'
-              }
-            />
-          </div>
-        </div>
-      </div>
-    </Card>
+    <ProcessingProgress 
+      message={currentStep.message}
+      progress={currentStep.progress}
+      isComplete={currentStepIndex === PROCESSING_STEPS.length - 1}
+    />
   );
 };

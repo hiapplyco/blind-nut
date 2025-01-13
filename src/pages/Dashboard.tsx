@@ -30,53 +30,7 @@ const Dashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      // Generate titles for searches that don't have one
-      const updatedSearches = await Promise.all(data.map(async (search) => {
-        if (!search.title && search.content) {
-          try {
-            const { data: titleData, error: titleError } = await supabase.functions.invoke('summarize-title', {
-              body: { content: search.content }
-            });
-
-            if (titleError) {
-              // Check if it's a rate limit error (429)
-              if (titleError.status === 429) {
-                const retryAfter = 60; // Default to 60 seconds if not specified
-                toast.error(
-                  `Rate limit reached. Please wait ${retryAfter} seconds before trying again.`,
-                  { duration: retryAfter * 1000 }
-                );
-                return search;
-              }
-              throw titleError;
-            }
-            
-            // Update the search with the new title
-            const { error: updateError } = await supabase
-              .from('jobs')
-              .update({ 
-                title: titleData.title,
-                summary: titleData.summary 
-              })
-              .eq('id', search.id);
-
-            if (updateError) throw updateError;
-            
-            return { ...search, title: titleData.title, summary: titleData.summary };
-          } catch (error) {
-            console.error('Error generating title:', error);
-            // Don't show error toast for rate limits as we already handled that
-            if (!error.status || error.status !== 429) {
-              toast.error("Failed to generate title for search");
-            }
-            return search;
-          }
-        }
-        return search;
-      }));
-
-      return updatedSearches;
+      return data;
     },
   });
 

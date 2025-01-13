@@ -50,16 +50,42 @@ export const SearchForm = ({
     }
   }, [location.state]);
 
+  const generateSummary = async (content: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('summarize-job', {
+        body: { content }
+      });
+
+      if (error) throw error;
+
+      return {
+        title: data.title || 'Untitled Search',
+        summary: data.summary || ''
+      };
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      return {
+        title: 'Untitled Search',
+        summary: ''
+      };
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
 
     try {
+      // Generate title and summary first
+      const { title, summary } = await generateSummary(searchText);
+
       const { data: jobData, error: jobError } = await supabase
         .from('jobs')
         .insert({
           content: searchText,
-          user_id: userId
+          user_id: userId,
+          title,
+          summary
         })
         .select()
         .single();

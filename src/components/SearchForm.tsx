@@ -52,7 +52,7 @@ export const SearchForm = ({
 
   const generateSummary = async (content: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('summarize-job', {
+      const { data, error } = await supabase.functions.invoke('summarize-title', {
         body: { content }
       });
 

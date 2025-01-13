@@ -1,11 +1,11 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { SearchForm } from "./search/SearchForm";
 import { AgentProcessor } from "./search/AgentProcessor";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { supabase } from "@/integrations/supabase/client";
-import { ResultsGrid } from "./search/ResultsGrid";
+import { AnalysisGrid } from "./search/analysis/AnalysisGrid";
 
 interface NewSearchFormProps {
   userId: string;
@@ -16,7 +16,6 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [showResults, setShowResults] = useState(false);
   const { data: agentOutput } = useAgentOutputs(currentJobId);
 
   const handleSearchSubmit = (text: string, jobId: number) => {
@@ -24,19 +23,12 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     setSearchText(text);
     setCurrentJobId(jobId);
     setIsProcessingComplete(false);
-    setShowResults(false);
   };
 
   const handleProcessingComplete = () => {
     console.log("Processing complete");
     setIsProcessingComplete(true);
     toast.success("Analysis complete!");
-  };
-
-  const handleClose = () => {
-    setShowResults(false);
-    setCurrentJobId(null);
-    setIsProcessingComplete(false);
   };
 
   return (
@@ -56,12 +48,11 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         />
       )}
 
-      <ResultsGrid
-        jobId={currentJobId}
-        isProcessingComplete={isProcessingComplete}
-        showResults={showResults}
-        onClose={handleClose}
-      />
+      {currentJobId && isProcessingComplete && (
+        <div className="mt-8">
+          <AnalysisGrid jobId={currentJobId} />
+        </div>
+      )}
     </div>
   );
 };

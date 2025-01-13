@@ -11,6 +11,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       headers: corsHeaders,
@@ -33,6 +34,7 @@ serve(async (req) => {
 
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!apiKey) {
+      console.error('GEMINI_API_KEY is not configured');
       throw new Error('GEMINI_API_KEY is not configured');
     }
 

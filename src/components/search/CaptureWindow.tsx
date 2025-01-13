@@ -57,8 +57,14 @@ export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
         const recordingBlob = new Blob(chunksRef.current, { type: mimeType });
         
         try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            toast.error('User not authenticated');
+            return;
+          }
+
           // Upload to Supabase Storage
-          const fileName = `${auth.uid()}/${Date.now()}.webm`;
+          const fileName = `${user.id}/${Date.now()}.webm`;
           const { error: uploadError } = await supabase.storage
             .from('recordings')
             .upload(fileName, recordingBlob);

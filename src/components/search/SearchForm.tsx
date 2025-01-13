@@ -1,18 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { SearchTypeToggle } from "./SearchTypeToggle";
-import { FormHeader } from "./FormHeader";
-import { ContentTextarea } from "./ContentTextarea";
-import { CompanyNameInput } from "./CompanyNameInput";
-import { SubmitButton } from "./SubmitButton";
-import { CaptureWindow } from "./CaptureWindow";
-import { GoogleSearchWindow } from "./GoogleSearchWindow";
-import { useSearchFormSubmit } from "./SearchFormSubmit";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Bot } from "lucide-react";
 import { processJobRequirements } from "@/utils/jobRequirements";
-import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { SearchTypeToggle } from "@/components/search/SearchTypeToggle";
+import { FormHeader } from "@/components/search/FormHeader";
+import { ContentTextarea } from "@/components/search/ContentTextarea";
+import { CompanyNameInput } from "@/components/search/CompanyNameInput";
+import { SubmitButton } from "@/components/search/SubmitButton";
+import { Loader2 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 
@@ -29,43 +26,43 @@ export const SearchForm = ({
   currentJobId,
   isProcessingComplete,
 }: SearchFormProps) => {
+  const location = useLocation();
   const [searchText, setSearchText] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
-  const [generatedSearchString, setGeneratedSearchString] = useState<string>("");
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.includes('pdf') && !file.type.includes('image')) {
-      toast("Invalid file type. Please upload a PDF file or an image");
-      return;
+  useEffect(() => {
+    // Handle auto-run from location state
+    const state = location.state as { content?: string; autoRun?: boolean } | null;
+    if (state?.content && state?.autoRun) {
+      setSearchText(state.content);
+      // Clear the state to prevent re-running
+      window.history.replaceState({}, document.title);
+      // Trigger the search
+      handleSubmit(new Event('submit') as any);
     }
+  }, [location.state]);
 
-    setIsProcessing(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('userId', userId);
-
+  const generateSummary = async (content: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('parse-document', {
-        body: formData,
+      const { data, error } = await supabase.functions.invoke('summarize-title', {
+        body: { content }
       });
 
       if (error) throw error;
 
-      if (data?.text) {
-        setSearchText(data.text);
-        toast("File processed successfully. The content has been extracted and added to the input field.");
-      }
+      return {
+        title: data.title || 'Untitled Search',
+        summary: data.summary || ''
+      };
     } catch (error) {
-      console.error('Error processing file:', error);
-      toast("Failed to process the file. Please try again.");
-    } finally {
-      setIsProcessing(false);
+      console.error('Error generating summary:', error);
+      return {
+        title: 'Untitled Search',
+        summary: ''
+      };
     }
   };
 
@@ -74,11 +71,16 @@ export const SearchForm = ({
     setIsProcessing(true);
 
     try {
+      // Generate title and summary first
+      const { title, summary } = await generateSummary(searchText);
+
       const { data: jobData, error: jobError } = await supabase
         .from('jobs')
         .insert({
           content: searchText,
-          user_id: userId
+          user_id: userId,
+          title,
+          summary
         })
         .select()
         .single();
@@ -89,8 +91,6 @@ export const SearchForm = ({
       onJobCreated(jobId, searchText);
 
       const result = await processJobRequirements(searchText, searchType, companyName, userId);
-      setGeneratedSearchString(result.searchString);
-
       const { error: updateError } = await supabase
         .from('jobs')
         .update({ search_string: result.searchString })
@@ -108,71 +108,85 @@ export const SearchForm = ({
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.includes('pdf') && !file.type.includes('image')) {
+      toast.error("Invalid file type. Please upload a PDF file or an image");
+      return;
+    }
+
+    setIsProcessing(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('userId', userId);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('parse-document', {
+        body: formData,
+      });
+
+      if (error) throw error;
+
+      if (data?.text) {
+        setSearchText(data.text);
+        toast.success("File processed successfully. The content has been extracted and added to the input field.");
+      }
+    } catch (error) {
+      console.error('Error processing file:', error);
+      toast.error("Failed to process the file. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleTextUpdate = (text: string) => {
     setSearchText(text);
   };
 
   return (
-    <div className="space-y-6">
-      {generatedSearchString && (
-        <GoogleSearchWindow searchString={generatedSearchString} />
-      )}
-      
-      <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-        {currentJobId && isProcessingComplete && (
-          <div className="mb-6">
-            <Button
-              type="button"
-              onClick={() => window.location.href = `/report/${currentJobId}`}
-              className="w-full border-4 border-black bg-[#8B5CF6] text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
-            >
-              <Bot className="w-5 h-5 mr-2" />
-              View Analysis Report
-            </Button>
-          </div>
+    <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <SearchTypeToggle 
+          value={searchType} 
+          onValueChange={(value) => setSearchType(value)} 
+        />
+        
+        <FormHeader />
+        
+        <ContentTextarea
+          searchText={searchText}
+          isProcessing={isProcessing}
+          onTextChange={setSearchText}
+          onFileUpload={handleFileUpload}
+          onTextUpdate={handleTextUpdate}
+        />
+
+        {searchType === "candidates-at-company" && (
+          <CompanyNameInput
+            companyName={companyName}
+            isProcessing={isProcessing}
+            onChange={setCompanyName}
+          />
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <SearchTypeToggle 
-            value={searchType} 
-            onValueChange={(value) => setSearchType(value)} 
+        <div className="space-y-4">
+          <SubmitButton 
+            isProcessing={isProcessing || isScrapingProfiles}
+            isDisabled={isProcessing || isScrapingProfiles || !searchText || (searchType === "candidates-at-company" && !companyName)}
           />
           
-          <FormHeader />
-          
-          <ContentTextarea
-            searchText={searchText}
-            isProcessing={isProcessing}
-            onTextChange={setSearchText}
-            onFileUpload={handleFileUpload}
-            onTextUpdate={handleTextUpdate}
-          />
-
-          {searchType === "candidates-at-company" && (
-            <CompanyNameInput
-              companyName={companyName}
-              isProcessing={isProcessing}
-              onChange={setCompanyName}
-            />
+          {isScrapingProfiles && (
+            <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Scraping profiles from search results...</span>
+            </div>
           )}
-
-          <div className="space-y-4">
-            <SubmitButton 
-              isProcessing={isProcessing || isScrapingProfiles}
-              isDisabled={isProcessing || isScrapingProfiles || !searchText || (searchType === "candidates-at-company" && !companyName)}
-            />
-            
-            {isScrapingProfiles && (
-              <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Scraping profiles from search results...</span>
-              </div>
-            )}
-          </div>
-        </form>
-      </Card>
-      
-      <CaptureWindow onTextUpdate={handleTextUpdate} />
-    </div>
+        </div>
+      </form>
+    </Card>
   );
 };
+
+export default SearchForm;

@@ -197,14 +197,14 @@ export const SearchForm = ({
 
         <div className="space-y-4">
           <SubmitButton 
-            isProcessing={isProcessing || isGeneratingProfiles}
-            isDisabled={isProcessing || isGeneratingProfiles || !searchText || (searchType === "candidates-at-company" && !companyName)}
+            isProcessing={isProcessing || isScrapingProfiles}
+            isDisabled={isProcessing || isScrapingProfiles || !searchText || (searchType === "candidates-at-company" && !companyName)}
           />
           
-          {isGeneratingProfiles && (
+          {isScrapingProfiles && (
             <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Generating matching profiles...</span>
+              <span>Scraping profiles from search results...</span>
             </div>
           )}
         </div>

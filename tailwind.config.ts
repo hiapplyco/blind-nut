@@ -54,6 +54,48 @@ export default {
           foreground: "#44332A", // Dark brown for card text
         },
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: 'none',
+            color: '#44332A',
+            h1: {
+              color: '#44332A',
+            },
+            h2: {
+              color: '#44332A',
+            },
+            h3: {
+              color: '#44332A',
+            },
+            h4: {
+              color: '#44332A',
+            },
+            strong: {
+              color: '#44332A',
+            },
+            a: {
+              color: '#8B6E5B',
+              '&:hover': {
+                color: '#A18472',
+              },
+            },
+            code: {
+              color: '#8B6E5B',
+            },
+            'code::before': {
+              content: '""',
+            },
+            'code::after': {
+              content: '""',
+            },
+            pre: {
+              backgroundColor: '#F5F0ED',
+              color: '#44332A',
+            },
+          },
+        },
+      },
       borderRadius: {
         lg: "0.5rem",
         md: "0.375rem",
@@ -75,5 +117,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;

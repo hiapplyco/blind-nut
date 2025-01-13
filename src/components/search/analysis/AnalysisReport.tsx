@@ -1,16 +1,11 @@
 import { AgentOutput } from "@/types/agent";
+import ReactMarkdown from 'react-markdown';
 
 interface AnalysisReportProps {
   agentOutput: AgentOutput;
 }
 
 export const AnalysisReport = ({ agentOutput }: AnalysisReportProps) => {
-  const formatText = (text: string) => {
-    return text?.split('\n').map((line, index) => (
-      <p key={index} className="mb-2">{line}</p>
-    ));
-  };
-
   return (
     <div className="mt-8">
       <div className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
@@ -18,17 +13,23 @@ export const AnalysisReport = ({ agentOutput }: AnalysisReportProps) => {
         <div className="space-y-8">
           <section>
             <h3 className="text-xl font-semibold mb-4">Job Summary</h3>
-            <div className="text-gray-800">{formatText(agentOutput.job_summary)}</div>
+            <div className="prose prose-slate max-w-none">
+              <ReactMarkdown>{agentOutput.job_summary}</ReactMarkdown>
+            </div>
           </section>
           
           <section>
             <h3 className="text-xl font-semibold mb-4">Enhanced Description</h3>
-            <div className="text-gray-800">{formatText(agentOutput.enhanced_description)}</div>
+            <div className="prose prose-slate max-w-none">
+              <ReactMarkdown>{agentOutput.enhanced_description}</ReactMarkdown>
+            </div>
           </section>
           
           <section>
             <h3 className="text-xl font-semibold mb-4">Compensation Analysis</h3>
-            <div className="text-gray-800">{formatText(agentOutput.compensation_analysis)}</div>
+            <div className="prose prose-slate max-w-none">
+              <ReactMarkdown>{agentOutput.compensation_analysis}</ReactMarkdown>
+            </div>
           </section>
 
           {agentOutput.terms && (

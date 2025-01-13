@@ -1,10 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnalysisHeader } from "./analysis/AnalysisHeader";
 import { AnalysisGrid } from "./analysis/AnalysisGrid";
-import { PDFGenerator } from "./pdf/PDFGenerator";
+import { PDFGenerator, usePDFExport } from "./pdf/PDFGenerator";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 
@@ -19,6 +19,8 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
   const [pdfContent, setPdfContent] = useState<string>("");
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const pdfRef = useRef<HTMLDivElement>(null);
+  const { handleExport } = usePDFExport(pdfRef, agentOutput);
 
   useEffect(() => {
     const fetchJobData = async () => {
@@ -53,7 +55,7 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
     }
   }, [agentOutput, jobId]);
 
-  const handleExport = async () => {
+  const handleExportWrapper = async () => {
     if (!agentOutput) {
       toast.error("No report data available");
       return;
@@ -61,13 +63,6 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
 
     setIsExporting(true);
     try {
-      const { handleExport } = PDFGenerator({ 
-        agentOutput, 
-        pdfContent, 
-        isExporting, 
-        setIsExporting 
-      });
-
       await handleExport();
     } catch (error) {
       console.error('Error exporting PDF:', error);
@@ -104,21 +99,19 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         <>
           <AnalysisHeader 
             onClose={onClose}
-            onExport={handleExport}
+            onExport={handleExportWrapper}
             isExporting={isExporting}
           />
           <AnalysisGrid jobId={jobId} />
         </>
       )}
       {agentOutput && (
-        <div style={{ display: 'none' }}>
-          <PDFGenerator
-            agentOutput={agentOutput}
-            pdfContent={pdfContent}
-            isExporting={isExporting}
-            setIsExporting={setIsExporting}
-          />
-        </div>
+        <PDFGenerator
+          ref={pdfRef}
+          agentOutput={agentOutput}
+          pdfContent={pdfContent}
+          isExporting={isExporting}
+        />
       )}
     </Card>
   );

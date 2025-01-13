@@ -31,9 +31,11 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const handleProcessingComplete = () => {
     console.log("Processing complete");
     setIsProcessingComplete(true);
+    setIsGeneratingAnalysis(false); // Reset this when processing is complete
   };
 
   const handleGenerateAnalysis = () => {
+    console.log("Starting analysis generation");
     setIsGeneratingAnalysis(true);
   };
 
@@ -54,7 +56,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         />
       )}
 
-      {currentJobId && !isGeneratingAnalysis && (
+      {currentJobId && !isGeneratingAnalysis && !isProcessingComplete && (
         <div className="mt-8 flex justify-center">
           <Button
             onClick={handleGenerateAnalysis}

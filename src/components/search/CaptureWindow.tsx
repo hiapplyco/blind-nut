@@ -136,23 +136,32 @@ export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] 
-                    hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] 
+                  className="bg-[#8B5CF6] text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] 
+                    hover:bg-[#7C3AED] hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] 
                     transition-all"
                 >
                   Start Recording
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => startRecording('audio')}>
+              <DropdownMenuContent className="bg-white border-2 border-black shadow-lg">
+                <DropdownMenuItem 
+                  onClick={() => startRecording('audio')}
+                  className="hover:bg-[#8B5CF6]/10 cursor-pointer"
+                >
                   <Mic className="w-4 h-4 mr-2" />
                   Record Audio
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => startRecording('video')}>
+                <DropdownMenuItem 
+                  onClick={() => startRecording('video')}
+                  className="hover:bg-[#8B5CF6]/10 cursor-pointer"
+                >
                   <Video className="w-4 h-4 mr-2" />
                   Record Video
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => startRecording('both')}>
+                <DropdownMenuItem 
+                  onClick={() => startRecording('both')}
+                  className="hover:bg-[#8B5CF6]/10 cursor-pointer"
+                >
                   <Video className="w-4 h-4 mr-2" />
                   Record Both
                 </DropdownMenuItem>
@@ -162,7 +171,7 @@ export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
             <Button
               onClick={stopRecording}
               className="bg-red-500 text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
-                hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                hover:bg-red-600 hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
                 transition-all"
             >
               <StopCircle className="w-4 h-4 mr-2" />

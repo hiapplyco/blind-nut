@@ -68,7 +68,11 @@ Rules:
 
 Company Description: ${content}`;
     } else if (searchType === 'candidates-at-company') {
-      searchPrompt = `Create a targeted LinkedIn X-Ray search string to find candidates at a specific company. Follow these rules:
+      if (!companyName) {
+        throw new Error('Company name is required for candidates-at-company search');
+      }
+      
+      searchPrompt = `Create a targeted LinkedIn X-Ray search string to find candidates at ${companyName}. Follow these rules:
 
 1. Extract 3-6 concrete, technical skills or qualifications from the job description (no soft skills)
 2. Format the search string exactly like this:
@@ -82,6 +86,7 @@ Rules:
 - Connect different term types with AND
 - No exclusions or NOT operators
 - Keep skills specific and technical (no soft skills)
+- IMPORTANT: Always include the company name in quotes
 
 Job Description: ${content}`;
     } else {
@@ -92,7 +97,7 @@ Job Description: ${content}`;
 3. DO NOT include any "NOT" operators or exclusions
 4. Format the search string exactly like this:
 
-site:linkedin.com/in/ ${companyName ? `"${companyName}" AND ` : ''}${metroArea ? `"${metroArea}" AND ` : ''}("JOB_TITLE_1" OR "JOB_TITLE_2") AND ("SKILL_1" OR "SKILL_2") AND ("SKILL_3" OR "SKILL_4")
+site:linkedin.com/in/ ${metroArea ? `"${metroArea}" AND ` : ''}("JOB_TITLE_1" OR "JOB_TITLE_2") AND ("SKILL_1" OR "SKILL_2") AND ("SKILL_3" OR "SKILL_4")
 
 Rules:
 - Replace placeholders with actual values

@@ -3,6 +3,8 @@ import { SearchForm } from "./search/SearchForm";
 import { AgentProcessor } from "./search/AgentProcessor";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
+import { FileText } from "lucide-react";
 
 interface NewSearchFormProps {
   userId: string;
@@ -24,7 +26,10 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const handleProcessingComplete = () => {
     console.log("Processing complete");
     setIsProcessingComplete(true);
-    toast.success("Analysis complete! Redirecting to report...");
+    toast.success("Analysis complete! Click 'View Report' to see the results.");
+  };
+
+  const handleViewReport = () => {
     if (currentJobId) {
       navigate(`/report/${currentJobId}`);
     }
@@ -45,6 +50,16 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
           jobId={currentJobId}
           onComplete={handleProcessingComplete}
         />
+      )}
+
+      {isProcessingComplete && (
+        <Button
+          onClick={handleViewReport}
+          className="w-full border-4 border-black bg-[#8B5CF6] text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+        >
+          <FileText className="w-5 h-5 mr-2" />
+          View Analysis Report
+        </Button>
       )}
     </div>
   );

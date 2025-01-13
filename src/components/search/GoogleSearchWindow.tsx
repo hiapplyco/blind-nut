@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Download, Search, AlertCircle, Copy } from "lucide-react";
@@ -25,6 +25,12 @@ export const GoogleSearchWindow = ({
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchString, setSearchString] = useState(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
+
+  // Clear results when search string changes
+  useEffect(() => {
+    setSearchString(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
+    setResults([]);
+  }, [initialSearchString]);
 
   const handleSearch = async () => {
     setIsLoading(true);

@@ -11,6 +11,7 @@ import { useSearchFormSubmit } from "./SearchFormSubmit";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { processJobRequirements } from "@/utils/jobRequirements";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 

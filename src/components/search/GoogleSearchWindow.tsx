@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Download, Search, AlertCircle, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Textarea } from "@/components/ui/textarea";
 
 interface GoogleSearchWindowProps {
   searchString: string;
@@ -16,9 +17,10 @@ interface SearchResult {
   htmlTitle: string;
 }
 
-export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) => {
+export const GoogleSearchWindow = ({ searchString: initialSearchString }: GoogleSearchWindowProps) => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchString, setSearchString] = useState(initialSearchString);
 
   // Remove site:linkedin.com/in/ from the search string
   const strippedSearchString = searchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, '');
@@ -129,7 +131,7 @@ export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) =>
         <div className="space-y-4">
           {/* Full Search String */}
           <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-2">
               <h3 className="font-medium text-sm text-gray-600">Full Search String (with LinkedIn filter):</h3>
               <Button
                 variant="ghost"
@@ -140,7 +142,12 @@ export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) =>
                 <Copy className="w-4 h-4" />
               </Button>
             </div>
-            <p className="mt-2 text-sm font-mono break-all">{searchString}</p>
+            <Textarea
+              value={searchString}
+              onChange={(e) => setSearchString(e.target.value)}
+              className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
+              rows={4}
+            />
           </div>
 
           {/* Stripped Search String */}

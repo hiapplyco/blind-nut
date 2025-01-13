@@ -9,6 +9,7 @@ import { CaptureWindow } from "./CaptureWindow";
 import { useSearchFormSubmit } from "./SearchFormSubmit";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
 

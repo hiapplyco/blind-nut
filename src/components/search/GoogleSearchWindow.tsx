@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Search, AlertCircle } from "lucide-react";
+import { Loader2, Download, Search, AlertCircle, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -52,6 +52,11 @@ export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) =>
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCopySearchString = () => {
+    navigator.clipboard.writeText(searchString);
+    toast.success("Search string copied to clipboard");
   };
 
   const handleExport = () => {
@@ -116,6 +121,21 @@ export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) =>
               Export to CSV
             </Button>
           </div>
+        </div>
+
+        <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium text-sm text-gray-600">Search String:</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopySearchString}
+              className="hover:bg-gray-200"
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
+          <p className="mt-2 text-sm font-mono break-all">{searchString}</p>
         </div>
 
         <div className="space-y-4">

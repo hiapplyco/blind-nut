@@ -39,7 +39,15 @@ const Dashboard = () => {
               body: { content: search.content }
             });
 
-            if (titleError) throw titleError;
+            if (titleError) {
+              // Check if it's a rate limit error
+              if (titleError.status === 429) {
+                console.log('Rate limit hit, will retry later');
+                toast.error("Couldn't generate all titles due to rate limiting. Try again later.");
+                return search;
+              }
+              throw titleError;
+            }
             
             // Update the search with the new title
             const { error: updateError } = await supabase
@@ -55,7 +63,10 @@ const Dashboard = () => {
             return { ...search, title: titleData.title, summary: titleData.summary };
           } catch (error) {
             console.error('Error generating title:', error);
-            toast.error("Failed to generate title for search");
+            // Don't show error toast for rate limits as we already handled that
+            if (!error.status || error.status !== 429) {
+              toast.error("Failed to generate title for search");
+            }
             return search;
           }
         }

@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -15,6 +16,16 @@ serve(async (req) => {
   try {
     const { content } = await req.json();
     
+    if (!content) {
+      return new Response(
+        JSON.stringify({ error: 'Content is required' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -26,17 +37,47 @@ Format the response as JSON with 'title' and 'summary' fields. Here's the job de
 
 ${content}`;
 
-    const result = await model.generateContent(prompt);
-    const response = JSON.parse(result.response.text());
-    
-    return new Response(
-      JSON.stringify(response),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    try {
+      const result = await model.generateContent(prompt);
+      const response = JSON.parse(result.response.text());
+      
+      return new Response(
+        JSON.stringify(response),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    } catch (error) {
+      console.error('Gemini API Error:', error);
+      
+      // Check if it's a rate limit error
+      if (error.message?.includes('429') || error.message?.includes('quota')) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Rate limit exceeded. Please try again later.',
+            shouldRetry: true,
+            retryAfter: 60 // Suggest retry after 60 seconds
+          }),
+          { 
+            status: 429,
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json',
+              'Retry-After': '60'
+            }
+          }
+        );
+      }
+      
+      throw error; // Re-throw other errors to be caught by outer try-catch
+    }
   } catch (error) {
-    console.error('Error in summarize-title:', error);
+    console.error('Function error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Failed to generate title and summary',
+        details: error.message
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -33,7 +33,7 @@ export const SearchForm = ({
   const [searchText, setSearchText] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isGeneratingProfiles, setIsGeneratingProfiles] = useState(false);
+  const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
   const { toast } = useToast();
   const { data: agentOutput } = useAgentOutputs(currentJobId);
@@ -69,22 +69,30 @@ export const SearchForm = ({
       // Open Google search in new tab
       window.open(`https://www.google.com/search?q=${encodeURIComponent(result.searchString)}`, '_blank');
 
-      // Start generating profiles
-      setIsGeneratingProfiles(true);
+      // Start scraping profiles
+      setIsScrapingProfiles(true);
       toast({
-        title: "Generating profiles",
-        description: "We're generating the first 25 matching profiles. This may take a few minutes...",
+        title: "Scraping profiles",
+        description: "We're scraping the first 25 matching profiles from LinkedIn. This may take a few minutes...",
       });
 
-      const { error: processError } = await supabase.functions.invoke('process-search-results', {
+      const { error: scrapeError } = await supabase.functions.invoke('scrape-search-results', {
         body: { searchString: result.searchString }
       });
 
-      if (processError) throw processError;
+      if (scrapeError) throw scrapeError;
+
+      // Update job_id for the scraped profiles
+      const { error: updateProfilesError } = await supabase
+        .from('search_results')
+        .update({ job_id: jobId })
+        .is('job_id', null);
+
+      if (updateProfilesError) throw updateProfilesError;
 
       toast({
-        title: "Profiles generated",
-        description: "The first 25 matching profiles have been generated and saved.",
+        title: "Profiles scraped",
+        description: "LinkedIn profiles have been scraped and saved.",
       });
 
     } catch (error) {
@@ -96,7 +104,7 @@ export const SearchForm = ({
       });
     } finally {
       setIsProcessing(false);
-      setIsGeneratingProfiles(false);
+      setIsScrapingProfiles(false);
     }
   };
 
@@ -204,3 +212,5 @@ export const SearchForm = ({
     </Card>
   );
 };
+
+export default SearchForm;

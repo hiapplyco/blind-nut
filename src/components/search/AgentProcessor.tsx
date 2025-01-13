@@ -54,6 +54,7 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
         throw response.error;
       }
 
+      console.log(`${functionName} response:`, response.data);
       console.log(`${functionName} completed successfully`);
       updateStepStatus(index, 'complete', 100);
       
@@ -128,7 +129,13 @@ export const AgentProcessor = ({ content, jobId, onComplete }: AgentProcessorPro
 
         setOutput(jobId, agentOutput);
         console.log('Set client-side agent output:', agentOutput);
-        persistToDatabase.mutate(agentOutput);
+        
+        await persistToDatabase.mutateAsync({
+          terms,
+          compensationData,
+          enhancerData,
+          summaryData
+        });
 
       } catch (error) {
         console.error('Error in agent processing:', error);

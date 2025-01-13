@@ -22,7 +22,7 @@ export const JobDescriptionEnhancer = ({ jobId }: JobDescriptionEnhancerProps) =
           <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
         </div>
       ) : (
-        <div className="prose prose-sm max-w-none">
+        <div className="prose prose-sm max-w-none whitespace-pre-line text-gray-800">
           {agentOutput?.enhanced_description || "No enhanced job description available."}
         </div>
       )}

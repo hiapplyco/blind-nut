@@ -22,7 +22,7 @@ export const JobSummary = ({ jobId }: JobSummaryProps) => {
           <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
         </div>
       ) : (
-        <div className="prose prose-sm max-w-none">
+        <div className="prose prose-sm max-w-none whitespace-pre-line text-gray-800">
           {agentOutput?.job_summary || "No job summary available."}
         </div>
       )}

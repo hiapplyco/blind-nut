@@ -22,6 +22,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     console.log("Search submitted:", { text, jobId });
     setSearchText(text);
     setCurrentJobId(jobId);
+    // Reset states when new search is submitted
     setIsProcessingComplete(false);
     setIsGeneratingAnalysis(false);
   };
@@ -29,6 +30,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const handleProcessingComplete = () => {
     console.log("Processing complete");
     setIsProcessingComplete(true);
+    setIsGeneratingAnalysis(false); // Reset analysis state when processing is complete
   };
 
   const handleGenerateAnalysis = () => {
@@ -36,12 +38,12 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     setIsGeneratingAnalysis(true);
   };
 
-  // Effect to check if we have agent output and update state accordingly
+  // Effect to handle agent output state
   useEffect(() => {
     if (agentOutput && !isLoading) {
       console.log("Agent output received:", agentOutput);
       setIsProcessingComplete(true);
-      setIsGeneratingAnalysis(false); // Reset analysis generation state when we have output
+      setIsGeneratingAnalysis(false);
     }
   }, [agentOutput, isLoading]);
 
@@ -54,7 +56,8 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         isProcessingComplete={isProcessingComplete}
       />
       
-      {currentJobId && !isProcessingComplete && isGeneratingAnalysis && (
+      {/* Show AgentProcessor only when generating analysis and not complete */}
+      {currentJobId && isGeneratingAnalysis && !isProcessingComplete && (
         <AgentProcessor
           content={searchText}
           jobId={currentJobId}
@@ -62,11 +65,13 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
         />
       )}
 
+      {/* Show Generate Analysis button when we have a job but haven't started analysis */}
       {currentJobId && !isGeneratingAnalysis && !isProcessingComplete && (
         <GenerateAnalysisButton onClick={handleGenerateAnalysis} />
       )}
 
-      {currentJobId && agentOutput && (
+      {/* Show Analysis Report only when we have agent output */}
+      {currentJobId && agentOutput && !isLoading && (
         <AnalysisReport agentOutput={agentOutput} />
       )}
     </div>

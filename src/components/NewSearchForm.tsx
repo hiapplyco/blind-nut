@@ -8,6 +8,8 @@ import { Download } from "lucide-react";
 import { PDFGenerator } from "./search/pdf/PDFGenerator";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { supabase } from "@/integrations/supabase/client";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 interface NewSearchFormProps {
   userId: string;
@@ -20,6 +22,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [searchText, setSearchText] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const { data: agentOutput } = useAgentOutputs(currentJobId);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   const handleSearchSubmit = (text: string, jobId: number) => {
     console.log("Search submitted:", { text, jobId });
@@ -35,32 +38,46 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   };
 
   const handleDownloadReport = async () => {
-    if (!currentJobId || !agentOutput) {
+    if (!currentJobId || !agentOutput || !pdfRef.current) {
       toast.error("No report data available");
       return;
     }
 
     setIsExporting(true);
     try {
-      const { data: jobData } = await supabase
+      const { data: jobData, error } = await supabase
         .from('jobs')
         .select('search_string')
         .eq('id', currentJobId)
         .single();
+
+      if (error) throw error;
 
       if (!jobData) {
         toast.error("Search data not found");
         return;
       }
 
-      const { handleExport } = PDFGenerator({ 
-        agentOutput, 
-        pdfContent: jobData.search_string || '', 
-        isExporting, 
-        setIsExporting 
+      const canvas = await html2canvas(pdfRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
       });
 
-      await handleExport();
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`job-analysis-${currentJobId}.pdf`);
+      
+      toast.success("Report downloaded successfully");
     } catch (error) {
       console.error('Error downloading report:', error);
       toast.error("Failed to download report");
@@ -96,6 +113,13 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
           {isExporting ? 'Downloading...' : 'Download Analysis Report'}
         </Button>
       )}
+
+      <PDFGenerator
+        ref={pdfRef}
+        agentOutput={agentOutput}
+        pdfContent={searchText}
+        isExporting={isExporting}
+      />
     </div>
   );
 };

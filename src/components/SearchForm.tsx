@@ -10,7 +10,7 @@ import { ContentTextarea } from "@/components/search/ContentTextarea";
 import { CompanyNameInput } from "@/components/search/CompanyNameInput";
 import { SubmitButton } from "@/components/search/SubmitButton";
 import { ViewReportButton } from "@/components/search/ViewReportButton";
-import { Bot } from "lucide-react";
+import { Bot, Loader2 } from "lucide-react";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 
 type SearchType = "candidates" | "companies" | "candidates-at-company";
@@ -33,6 +33,7 @@ export const SearchForm = ({
   const [searchText, setSearchText] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isGeneratingProfiles, setIsGeneratingProfiles] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
   const { toast } = useToast();
   const { data: agentOutput } = useAgentOutputs(currentJobId);
@@ -65,12 +66,27 @@ export const SearchForm = ({
 
       if (updateError) throw updateError;
 
+      // Open Google search in new tab
       window.open(`https://www.google.com/search?q=${encodeURIComponent(result.searchString)}`, '_blank');
 
+      // Start generating profiles
+      setIsGeneratingProfiles(true);
       toast({
-        title: "Search generated",
-        description: "Your search has been generated and opened in a new tab.",
+        title: "Generating profiles",
+        description: "We're generating the first 25 matching profiles. This may take a few minutes...",
       });
+
+      const { error: processError } = await supabase.functions.invoke('process-search-results', {
+        body: { searchString: result.searchString }
+      });
+
+      if (processError) throw processError;
+
+      toast({
+        title: "Profiles generated",
+        description: "The first 25 matching profiles have been generated and saved.",
+      });
+
     } catch (error) {
       console.error('Error processing content:', error);
       toast({
@@ -80,6 +96,7 @@ export const SearchForm = ({
       });
     } finally {
       setIsProcessing(false);
+      setIsGeneratingProfiles(false);
     }
   };
 
@@ -170,10 +187,19 @@ export const SearchForm = ({
           />
         )}
 
-        <SubmitButton 
-          isProcessing={isProcessing}
-          isDisabled={isProcessing || !searchText || (searchType === "candidates-at-company" && !companyName)}
-        />
+        <div className="space-y-4">
+          <SubmitButton 
+            isProcessing={isProcessing || isGeneratingProfiles}
+            isDisabled={isProcessing || isGeneratingProfiles || !searchText || (searchType === "candidates-at-company" && !companyName)}
+          />
+          
+          {isGeneratingProfiles && (
+            <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Generating matching profiles...</span>
+            </div>
+          )}
+        </div>
       </form>
     </Card>
   );

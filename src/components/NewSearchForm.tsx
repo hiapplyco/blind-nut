@@ -28,8 +28,11 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
 
   const handleProcessingComplete = () => {
     console.log("Processing complete");
-    setIsProcessingComplete(true);
-    setIsGeneratingAnalysis(false);
+    // Don't set processing complete until we have agent output
+    if (agentOutput) {
+      setIsProcessingComplete(true);
+      setIsGeneratingAnalysis(false);
+    }
   };
 
   const handleGenerateAnalysis = () => {
@@ -37,6 +40,7 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
     setIsGeneratingAnalysis(true);
   };
 
+  // Monitor agent output changes
   useEffect(() => {
     if (agentOutput && !isLoading) {
       console.log("Agent output received:", agentOutput);

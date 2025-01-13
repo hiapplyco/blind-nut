@@ -72,7 +72,7 @@ Company Description: ${content}`;
 
 1. Extract 3-6 concrete, technical skills or qualifications from the job description (no soft skills)
 2. Format the search string exactly like this:
-site:linkedin.com/in/ "${companyName}" ${metroArea ? `AND "${metroArea}"` : ''} AND ("SKILL_1" OR "SKILL_2") AND ("SKILL_3" OR "SKILL_4")
+site:linkedin.com/in/ "${companyName}" ${metroArea ? `AND "${metroArea}" ` : ''}AND ("SKILL_1" OR "SKILL_2") AND ("SKILL_3" OR "SKILL_4")
 
 Rules:
 - Replace SKILL placeholders with actual technical skills from the job description

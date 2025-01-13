@@ -6,7 +6,7 @@ export const linkedinSearchPrompt: PromptTemplate = {
   description: "Generates optimized LinkedIn X-Ray search strings",
   parameters: ["content", "searchType", "companyName", "metroArea"],
   template: `{{#if searchType === 'companies'}}
-Create a targeted LinkedIn X-Ray search string to find similar companies. Follow these rules:
+Create a targeted search string to find similar companies. Follow these rules:
 
 1. Analyze the company description and extract:
    - Industry and sector
@@ -15,7 +15,7 @@ Create a targeted LinkedIn X-Ray search string to find similar companies. Follow
    - Key technologies or services
 
 2. Format the search string exactly like this:
-site:linkedin.com/company {{#if metroArea}}"{{metroArea}}" AND {{/if}}("INDUSTRY_1" OR "INDUSTRY_2") AND ("SPECIALIZATION_1" OR "SPECIALIZATION_2")
+{{#if metroArea}}"{{metroArea}}" AND {{/if}}("INDUSTRY_1" OR "INDUSTRY_2") AND ("SPECIALIZATION_1" OR "SPECIALIZATION_2")
 
 Rules:
 - Replace placeholders with actual values

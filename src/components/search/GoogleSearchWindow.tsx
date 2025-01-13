@@ -23,7 +23,6 @@ export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) =>
   const handleSearch = async () => {
     setIsLoading(true);
     try {
-      // First get the API key from Supabase Edge Function
       const { data: { key }, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
       
       if (keyError) throw keyError;
@@ -56,8 +55,35 @@ export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) =>
   };
 
   const handleExport = () => {
-    // Future implementation for CSV/Excel export
-    toast.info("Export functionality coming soon!");
+    if (results.length === 0) {
+      toast.error("No results to export");
+      return;
+    }
+
+    // Create CSV content
+    const csvContent = [
+      ["Title", "URL", "Description"], // CSV header
+      ...results.map(result => [
+        result.title.replace(/"/g, '""'), // Escape quotes in title
+        result.link,
+        result.snippet.replace(/"/g, '""') // Escape quotes in snippet
+      ])
+    ]
+      .map(row => row.map(cell => `"${cell}"`).join(","))
+      .join("\n");
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `search-results-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success("Search results exported successfully");
   };
 
   return (
@@ -82,11 +108,12 @@ export const GoogleSearchWindow = ({ searchString }: GoogleSearchWindowProps) =>
             </Button>
             <Button
               onClick={handleExport}
+              disabled={results.length === 0}
               variant="outline"
               className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
             >
               <Download className="w-4 h-4 mr-2" />
-              Export
+              Export to CSV
             </Button>
           </div>
         </div>

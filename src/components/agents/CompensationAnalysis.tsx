@@ -1,7 +1,6 @@
 import { DollarSign } from "lucide-react";
 import { AgentWindow } from "./AgentWindow";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
-import ReactMarkdown from "react-markdown";
 
 interface CompensationAnalysisProps {
   jobId: number | null;
@@ -24,9 +23,7 @@ export const CompensationAnalysis = ({ jobId }: CompensationAnalysisProps) => {
         </div>
       ) : (
         <div className="prose prose-sm max-w-none">
-          <ReactMarkdown>
-            {agentOutput?.compensation_analysis || "No compensation information found."}
-          </ReactMarkdown>
+          {agentOutput?.compensation_analysis || "No compensation information found."}
         </div>
       )}
     </AgentWindow>

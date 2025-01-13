@@ -1,7 +1,6 @@
 import { FileText } from "lucide-react";
 import { AgentWindow } from "./AgentWindow";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
-import ReactMarkdown from "react-markdown";
 
 interface JobSummaryProps {
   jobId: number | null;
@@ -24,9 +23,7 @@ export const JobSummary = ({ jobId }: JobSummaryProps) => {
         </div>
       ) : (
         <div className="prose prose-sm max-w-none">
-          <ReactMarkdown>
-            {agentOutput?.job_summary || "No job summary available."}
-          </ReactMarkdown>
+          {agentOutput?.job_summary || "No job summary available."}
         </div>
       )}
     </AgentWindow>

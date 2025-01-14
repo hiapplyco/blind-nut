@@ -1,69 +1,56 @@
-# Welcome to your Lovable project
+# Even a blind nut can find a Purple Squirrel
 
-## Project info
+A powerful AI-driven search tool that helps recruiters and hiring managers generate optimized search strings and analyze job requirements.
 
-**URL**: https://lovable.dev/projects/4a9946f7-ab92-49e3-8010-79bfdf195111
+## Key Features
 
-## How can I edit this code?
+- **AI-Powered Search String Generation**: Convert job descriptions and requirements into optimized search strings
+- **Audio Input Support**: Record interviews or job requirements directly through voice input
+- **PDF Document Support**: Upload and parse PDF resumes and job descriptions
+- **Real-time Analysis**: Get instant insights about job requirements and candidate matches
+- **Secure Data Handling**: Enterprise-grade security with Supabase authentication and storage
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend**: React with TypeScript
+- **UI Components**: shadcn/ui
+- **Styling**: Tailwind CSS
+- **Backend**: Supabase
+- **AI Integration**: Google Gemini API
+- **Authentication**: Supabase Auth
+- **Database**: PostgreSQL (via Supabase)
+- **File Storage**: Supabase Storage
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4a9946f7-ab92-49e3-8010-79bfdf195111) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables:
+   ```
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_GEMINI_API_KEY=your_gemini_api_key
+   ```
+4. Run the development server: `npm run dev`
 
-**Use your preferred IDE**
+## Key Components
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **SearchForm**: Main component for input handling (text, audio, PDF)
+- **CaptureWindow**: Audio recording and processing
+- **SearchResults**: Display and management of search results
+- **AgentWindow**: AI analysis and processing interface
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Security Features
 
-Follow these steps:
+- Row Level Security (RLS) policies in Supabase
+- Secure file storage with access control
+- Protected API endpoints
+- User authentication and authorization
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Support
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+For issues or questions, please contact support at support@lovable.dev
 
-# Step 3: Install the necessary dependencies.
-npm i
+## License
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/4a9946f7-ab92-49e3-8010-79bfdf195111) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+This project is proprietary and confidential. All rights reserved.

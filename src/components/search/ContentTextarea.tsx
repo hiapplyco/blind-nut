@@ -2,8 +2,10 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Upload } from "lucide-react";
+import { MoreVertical, Upload, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CaptureWindow } from "./CaptureWindow";
+import { useState } from "react";
 
 interface ContentTextareaProps {
   searchText: string;
@@ -21,6 +23,7 @@ export const ContentTextarea = ({
   onTextUpdate
 }: ContentTextareaProps) => {
   const isMobile = useIsMobile();
+  const [showCaptureWindow, setShowCaptureWindow] = useState(false);
 
   if (isProcessing) {
     return (
@@ -47,6 +50,12 @@ export const ContentTextarea = ({
               onClick={() => document.getElementById('file-upload')?.click()}
             >
               Upload File
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => setShowCaptureWindow(true)}
+            >
+              Record Audio
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -75,6 +84,16 @@ export const ContentTextarea = ({
             {isProcessing ? 'Processing...' : 'Attach PDF'}
           </label>
         </div>
+        <Button
+          onClick={() => setShowCaptureWindow(true)}
+          className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] 
+            hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] 
+            transition-all"
+          disabled={isProcessing}
+        >
+          <Mic className="h-4 w-4 mr-2" />
+          Record Audio
+        </Button>
       </div>
     );
   };
@@ -100,6 +119,12 @@ export const ContentTextarea = ({
         onChange={onFileUpload}
         accept="application/pdf,image/*"
       />
+      {showCaptureWindow && (
+        <CaptureWindow onTextUpdate={(text) => {
+          onTextUpdate(text);
+          setShowCaptureWindow(false);
+        }} />
+      )}
     </div>
   );
 };

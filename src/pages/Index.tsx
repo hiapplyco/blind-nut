@@ -42,7 +42,7 @@ const Index = () => {
           <div className="w-16 h-16 bg-[#8B5CF6] rounded-none border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center text-white text-2xl font-bold mb-4">
             a
           </div>
-          <h1 className="text-5xl font-bold text-center mb-4">X-Ray Sourcing with Apply</h1>
+          <h1 className="text-5xl font-bold text-center mb-4">Even a blind nut can find a Purple Squirrel</h1>
           <p className="text-gray-600 text-lg text-center">
             Generate powerful search strings for recruiting
           </p>
@@ -83,7 +83,7 @@ const Index = () => {
           <div className="w-16 h-16 bg-[#8B5CF6] rounded-none border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center text-white text-2xl font-bold mb-4">
             a
           </div>
-          <h1 className="text-5xl font-bold mb-4">X-Ray Sourcing with Apply</h1>
+          <h1 className="text-5xl font-bold mb-4">Even a blind nut can find a Purple Squirrel</h1>
           <p className="text-gray-600 text-lg">
             Generate powerful search strings for recruiting
           </p>

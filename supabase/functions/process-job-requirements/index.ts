@@ -14,15 +14,38 @@ serve(async (req) => {
 
   try {
     const { content, searchType, companyName } = await req.json();
+    
+    if (!content?.trim()) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Content is required',
+          details: 'Please provide some content to analyze'
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    if (searchType === 'candidates-at-company' && !companyName?.trim()) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Company name is required',
+          details: 'Please provide a company name for this search type'
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     console.log('Processing request:', { 
       contentPreview: content?.substring(0, 100) + '...', 
       searchType, 
       companyName 
     });
-
-    if (!content) {
-      throw new Error('Content is required');
-    }
 
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
@@ -128,6 +151,10 @@ Job Description: ${content}`;
     
     console.log('Generated search string:', searchString);
 
+    if (!searchString) {
+      throw new Error('Failed to generate search string');
+    }
+
     return new Response(
       JSON.stringify({
         message: 'Content processed successfully',
@@ -142,8 +169,8 @@ Job Description: ${content}`;
     
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: 'An error occurred while processing the content. Please try again.'
+        error: error.message || 'An error occurred while processing the content',
+        details: 'Please try again.'
       }),
       { 
         status: 500,

@@ -72,6 +72,10 @@ export const SearchForm = ({
   }, [currentJobId]);
 
   const generateSummary = async (content: string) => {
+    if (!content?.trim()) {
+      throw new Error('Content is required');
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('summarize-title', {
         body: { content }
@@ -80,20 +84,29 @@ export const SearchForm = ({
       if (error) throw error;
 
       return {
-        title: data.title || 'Untitled Search',
-        summary: data.summary || ''
+        title: data?.title || 'Untitled Search',
+        summary: data?.summary || ''
       };
     } catch (error) {
       console.error('Error generating summary:', error);
-      return {
-        title: 'Untitled Search',
-        summary: ''
-      };
+      throw error;
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!searchText?.trim()) {
+      toast.error("Please enter some content before submitting");
+      return;
+    }
+
+    if (searchType === "candidates-at-company" && !companyName?.trim()) {
+      toast.error("Please enter a company name");
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -117,6 +130,11 @@ export const SearchForm = ({
       onJobCreated(jobId, searchText);
 
       const result = await processJobRequirements(searchText, searchType, companyName, userId);
+      
+      if (!result?.searchString) {
+        throw new Error('Failed to generate search string');
+      }
+
       const { error: updateError } = await supabase
         .from('jobs')
         .update({ search_string: result.searchString })
@@ -129,7 +147,7 @@ export const SearchForm = ({
 
     } catch (error) {
       console.error('Error processing content:', error);
-      toast.error("Failed to process content. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to process content. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -201,7 +219,12 @@ export const SearchForm = ({
         <div className="space-y-4">
           <SubmitButton 
             isProcessing={isProcessing || isScrapingProfiles}
-            isDisabled={isProcessing || isScrapingProfiles || !searchText || (searchType === "candidates-at-company" && !companyName)}
+            isDisabled={
+              isProcessing || 
+              isScrapingProfiles || 
+              !searchText?.trim() || 
+              (searchType === "candidates-at-company" && !companyName?.trim())
+            }
           />
           
           {isScrapingProfiles && (
@@ -215,10 +238,7 @@ export const SearchForm = ({
 
       {searchString && (
         <div className="mt-6">
-          <GoogleSearchWindow 
-            searchString={searchString} 
-            searchType={searchType}
-          />
+          <GoogleSearchWindow searchString={searchString} />
         </div>
       )}
     </Card>

@@ -16,9 +16,12 @@ serve(async (req) => {
   try {
     const { content } = await req.json();
     
-    if (!content) {
+    if (!content?.trim()) {
       return new Response(
-        JSON.stringify({ error: 'Content is required' }),
+        JSON.stringify({ 
+          error: 'Content is required',
+          details: 'Please provide some content to analyze'
+        }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -89,22 +92,7 @@ ${content}`;
         );
       }
       
-      // Handle JSON parsing errors specifically
-      if (error instanceof SyntaxError || error.message.includes('JSON')) {
-        console.error('JSON Parsing Error:', error);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Failed to parse response from AI',
-            details: 'Invalid response format'
-          }),
-          { 
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
-      }
-      
-      throw error; // Re-throw other errors to be caught by outer try-catch
+      throw error;
     }
   } catch (error) {
     console.error('Function error:', error);

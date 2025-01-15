@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Mic, MicOff, Video, VideoOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const InterviewPrep = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -13,30 +14,28 @@ const InterviewPrep = () => {
   const [isCamEnabled, setIsCamEnabled] = useState(false);
   const [voiceClient, setVoiceClient] = useState<RTVIClient | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const initializeClient = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       // Initialize Daily bot through edge function
-      const { data: botData, error: botError } = await supabase.functions.invoke('initialize-daily-bot')
+      const { data: botData, error: botError } = await supabase.functions.invoke('initialize-daily-bot');
       
       if (botError) {
-        console.error('Error initializing bot:', botError)
-        toast.error('Failed to initialize interview assistant. Please try again later.')
-        setIsLoading(false)
-        return
+        console.error('Error initializing bot:', botError);
+        throw new Error('Failed to initialize interview assistant');
       }
 
-      if (botData.error === "forbidden-error") {
-        console.error('Daily Bots not enabled:', botData)
-        toast.error('Interview service is not available for this domain. Please contact support.')
-        setIsLoading(false)
-        return
+      if (!botData || !botData.room_url) {
+        console.error('Invalid bot data received:', botData);
+        throw new Error('Invalid response from interview service');
       }
 
-      console.log('Bot initialized:', botData)
+      console.log('Bot initialized:', botData);
 
-      const transport = new DailyTransport()
+      const transport = new DailyTransport();
       const client = new RTVIClient({
         transport,
         enableMic: isMicEnabled,
@@ -53,7 +52,7 @@ const InterviewPrep = () => {
           },
           onError: (error) => {
             console.error("Bot error:", error);
-            toast.error("Error connecting to interview assistant. Please try again later.");
+            setError("Error connecting to interview assistant");
             setIsConnected(false);
             setIsLoading(false);
           },
@@ -72,13 +71,11 @@ const InterviewPrep = () => {
         await client.connect();
       } catch (e) {
         console.error('Connection error:', e);
-        toast.error("Failed to connect to interview assistant. Service may be temporarily unavailable.");
-        client.disconnect();
-        setIsLoading(false);
+        throw new Error('Failed to connect to interview service');
       }
     } catch (error) {
       console.error('Error in initializeClient:', error);
-      toast.error("Failed to initialize interview assistant. Please try again later.");
+      setError(error instanceof Error ? error.message : 'Failed to initialize interview assistant');
       setIsLoading(false);
     }
   };
@@ -101,6 +98,7 @@ const InterviewPrep = () => {
     if (voiceClient) {
       voiceClient.disconnect();
       setIsConnected(false);
+      setError(null);
     }
   };
 
@@ -138,6 +136,13 @@ const InterviewPrep = () => {
             </Button>
           </div>
         </div>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <div className="space-y-4">
           {!isConnected ? (

@@ -71,7 +71,12 @@ const ScreeningRoom = () => {
 
   const generateMeetingSummary = async (transcriptText: string) => {
     try {
-      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+      const { data: { secret: geminiApiKey } } = await supabase.functions.invoke('get-gemini-key');
+      if (!geminiApiKey) {
+        throw new Error('GEMINI_API_KEY not found');
+      }
+
+      const genAI = new GoogleGenerativeAI(geminiApiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const prompt = `Please provide a concise summary of this meeting transcript, highlighting:

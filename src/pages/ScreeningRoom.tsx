@@ -27,10 +27,12 @@ const ScreeningRoom = () => {
 
   const handleJoinMeeting = () => {
     console.log('Joined meeting');
+    toast.success('Welcome to the screening room! Your camera and microphone should start automatically.');
   };
 
   const handleParticipantJoined = (participant: Participant) => {
     setParticipants(prev => [...prev, participant]);
+    toast.info(`${participant.name || 'A new participant'} joined the meeting`);
   };
 
   const handleParticipantLeft = (participant: { id: string }) => {
@@ -46,8 +48,10 @@ const ScreeningRoom = () => {
         participants,
         transcription: whisperTranscript
       });
+      toast.success('Meeting data saved successfully');
     } catch (error) {
       console.error('Error saving meeting data:', error);
+      toast.error('Failed to save meeting data');
     }
   };
 
@@ -55,8 +59,10 @@ const ScreeningRoom = () => {
     try {
       const transcript = await transcriptionProcessor.processRecording(recordingId);
       setWhisperTranscript(transcript);
+      toast.success('Recording started successfully');
     } catch (error) {
       console.error('Error processing recording:', error);
+      toast.error('Failed to process recording');
     }
   };
 

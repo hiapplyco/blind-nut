@@ -74,8 +74,18 @@ export const VideoCallFrame = ({
         onParticipantLeft({ id: event.participant.user_id });
       });
 
+      // Handle both the leave button click and the browser's back button
       callFrame.on("left-meeting", () => {
+        console.log("Left meeting, triggering closing animation");
         setIsClosing(true);
+      });
+
+      // Add a handler for the leave button click
+      callFrame.on("click", (event) => {
+        if (event.name === "leave-meeting") {
+          console.log("Leave button clicked");
+          setIsClosing(true);
+        }
       });
     } catch (error) {
       console.error("Error initializing call frame:", error);
@@ -84,12 +94,13 @@ export const VideoCallFrame = ({
   };
 
   const handleClosingAnimationComplete = () => {
+    console.log("Animation complete, calling onLeaveMeeting");
     setIsClosing(false);
     onLeaveMeeting();
   };
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full relative">
       <VideoPreview 
         onCallFrameReady={handleCallFrameReady} 
         roomUrl={ROOM_URL}

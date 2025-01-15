@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Video } from "lucide-react";
 import { DailyProvider } from "@daily-co/daily-react";
 import { useEffect, useRef } from "react";
-import { DailyCall, DailyIframe } from "@daily-co/daily-js";
+import DailyIframe, { DailyCall } from "@daily-co/daily-js";
 
 const ROOM_URL = "https://hiapplyco.daily.co/lovable";
 

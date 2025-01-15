@@ -32,7 +32,16 @@ export const VideoCallFrame = ({
         return;
       }
 
-      await callFrameRef.current.startRecording();
+      await callFrameRef.current.startRecording({
+        layout: {
+          preset: "active-participant",
+          max_cam_streams: 9
+        },
+        width: 1920,
+        height: 1080,
+        backgroundColor: "#000000"
+      });
+      
       setIsRecording(true);
       toast.success('Recording started automatically');
     } catch (error) {
@@ -88,7 +97,13 @@ export const VideoCallFrame = ({
 
         callFrameRef.current.on('left-meeting', onLeaveMeeting);
 
-        await callFrameRef.current.join({ url: ROOM_URL });
+        await callFrameRef.current.join({ 
+          url: ROOM_URL,
+          token: {
+            enable_recording: "cloud",
+            start_cloud_recording: true
+          }
+        });
 
       } catch (error) {
         console.error('Error initializing call frame:', error);

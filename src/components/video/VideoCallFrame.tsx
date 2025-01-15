@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { RecordingManager } from "./RecordingManager";
 import { MeetingTokenManager } from "./MeetingTokenManager";
 import { VideoPreview } from "./VideoPreview";
+import { VideoClosingAnimation } from "./VideoClosingAnimation";
 
 interface VideoCallFrameProps {
   onJoinMeeting: () => void;
@@ -23,6 +24,7 @@ export const VideoCallFrame = ({
   const callFrameRef = useRef<DailyCall | null>(null);
   const [isCallFrameReady, setIsCallFrameReady] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const ROOM_URL = "https://hiapplyco.daily.co/lovable";
   const meetingTokenManager = MeetingTokenManager();
@@ -72,11 +74,18 @@ export const VideoCallFrame = ({
         onParticipantLeft({ id: event.participant.user_id });
       });
 
-      callFrame.on("left-meeting", onLeaveMeeting);
+      callFrame.on("left-meeting", () => {
+        setIsClosing(true);
+      });
     } catch (error) {
       console.error("Error initializing call frame:", error);
       toast.error("Failed to initialize video call");
     }
+  };
+
+  const handleClosingAnimationComplete = () => {
+    setIsClosing(false);
+    onLeaveMeeting();
   };
 
   return (
@@ -84,6 +93,10 @@ export const VideoCallFrame = ({
       <VideoPreview 
         onCallFrameReady={handleCallFrameReady} 
         roomUrl={ROOM_URL}
+      />
+      <VideoClosingAnimation 
+        isVisible={isClosing}
+        onAnimationComplete={handleClosingAnimationComplete}
       />
     </div>
   );

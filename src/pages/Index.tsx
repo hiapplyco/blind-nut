@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Button } from "@/components/ui/button";
-import { FileText, Video } from "lucide-react";
+import { FileText, Video, Theater } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -110,7 +110,7 @@ const Index = () => {
             onClick={() => navigate('/interview-prep')}
             className="flex items-center gap-2"
           >
-            <Video className="h-4 w-4" />
+            <Theater className="h-4 w-4" />
             Interview Prep
           </Button>
         </div>

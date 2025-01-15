@@ -4,6 +4,9 @@ import { DailyCall } from "@daily-co/daily-js";
 import { toast } from "sonner";
 import { RecordingManager } from "./RecordingManager";
 import { MeetingTokenManager } from "./MeetingTokenManager";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface VideoCallFrameProps {
   onJoinMeeting: () => void;
@@ -24,6 +27,12 @@ export const VideoCallFrame = ({
   const callFrameRef = useRef<DailyCall | null>(null);
   const [isCallFrameReady, setIsCallFrameReady] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [showSettings, setShowSettings] = useState(true);
+  const [settings, setSettings] = useState({
+    allowParticipantControls: true,
+    showFullscreenButton: true,
+    showLeaveButton: true,
+  });
 
   const ROOM_URL = "https://hiapplyco.daily.co/lovable";
   const meetingTokenManager = MeetingTokenManager();
@@ -34,14 +43,30 @@ export const VideoCallFrame = ({
     setIsRecording
   });
 
+  const joinMeeting = async () => {
+    try {
+      if (!callFrameRef.current) return;
+      
+      const token = await meetingTokenManager.createMeetingToken();
+      await callFrameRef.current.join({ 
+        url: ROOM_URL,
+        token
+      });
+      setShowSettings(false);
+    } catch (error) {
+      console.error('Error joining meeting:', error);
+      toast.error('Failed to join meeting');
+    }
+  };
+
   useEffect(() => {
     if (!callWrapperRef.current || callFrameRef.current) return;
 
     const initializeCallFrame = async () => {
       try {
         callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
-          showLeaveButton: true,
-          showFullscreenButton: true,
+          showLeaveButton: settings.showLeaveButton,
+          showFullscreenButton: settings.showFullscreenButton,
           iframeStyle: {
             position: 'absolute',
             top: '0',
@@ -84,12 +109,6 @@ export const VideoCallFrame = ({
 
         callFrameRef.current.on('left-meeting', onLeaveMeeting);
 
-        const token = await meetingTokenManager.createMeetingToken();
-        await callFrameRef.current.join({ 
-          url: ROOM_URL,
-          token
-        });
-
       } catch (error) {
         console.error('Error initializing call frame:', error);
         toast.error('Failed to initialize video call');
@@ -103,7 +122,53 @@ export const VideoCallFrame = ({
         callFrameRef.current.destroy();
       }
     };
-  }, [onJoinMeeting, onParticipantJoined, onParticipantLeft, onLeaveMeeting, onRecordingStarted]);
+  }, [onJoinMeeting, onParticipantJoined, onParticipantLeft, onLeaveMeeting, onRecordingStarted, settings]);
+
+  if (showSettings) {
+    return (
+      <div className="w-full h-full bg-white rounded-lg p-6 space-y-6">
+        <h3 className="text-lg font-semibold">Room Settings</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="participant-controls">Allow Participant Controls</Label>
+            <Switch
+              id="participant-controls"
+              checked={settings.allowParticipantControls}
+              onCheckedChange={(checked) => 
+                setSettings(prev => ({ ...prev, allowParticipantControls: checked }))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="fullscreen">Show Fullscreen Button</Label>
+            <Switch
+              id="fullscreen"
+              checked={settings.showFullscreenButton}
+              onCheckedChange={(checked) => 
+                setSettings(prev => ({ ...prev, showFullscreenButton: checked }))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="leave">Show Leave Button</Label>
+            <Switch
+              id="leave"
+              checked={settings.showLeaveButton}
+              onCheckedChange={(checked) => 
+                setSettings(prev => ({ ...prev, showLeaveButton: checked }))
+              }
+            />
+          </div>
+        </div>
+        <Button 
+          onClick={joinMeeting}
+          className="w-full mt-6"
+        >
+          Join Meeting
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div ref={callWrapperRef} className="w-full h-full relative" style={{ minHeight: '400px' }} />

@@ -83,7 +83,7 @@ const ScreeningRoom = () => {
           <VideoControls onCopyLink={copyRoomUrl} />
         </CardHeader>
         <CardContent className="flex flex-col space-y-4">
-          <div className="w-full bg-muted rounded-lg overflow-hidden relative" style={{ height: 'calc(100vh - 300px)' }}>
+          <div className="w-full bg-muted rounded-lg overflow-hidden relative" style={{ height: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)' }}>
             <VideoCallFrame
               onJoinMeeting={handleJoinMeeting}
               onParticipantJoined={handleParticipantJoined}

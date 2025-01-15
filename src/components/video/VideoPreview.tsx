@@ -33,8 +33,8 @@ export const VideoPreview = ({ onCallFrameReady, settings }: VideoPreviewProps) 
           backgroundColor: 'white',
         },
         inputSettings: {
-          audio: { isEnabled: true },
-          video: { isEnabled: true },
+          audio: { enable: true },
+          video: { enable: true },
           userName: { 
             isRequired: true
           }

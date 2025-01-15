@@ -8,6 +8,8 @@ interface TranscriptionProcessorProps {
 export const TranscriptionProcessor = () => {
   const processRecording = async (recordingId: string): Promise<string> => {
     try {
+      console.log('Starting video processing for recording:', recordingId);
+      
       // Start the video processing pipeline
       const { data: processingData, error: processingError } = await supabase.functions.invoke(
         'process-video-recording',

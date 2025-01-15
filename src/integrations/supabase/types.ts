@@ -122,6 +122,33 @@ export type Database = {
         }
         Relationships: []
       }
+      meeting_analyses: {
+        Row: {
+          analysis: string
+          created_at: string | null
+          id: number
+          processed_at: string
+          recording_id: string
+          video_url: string
+        }
+        Insert: {
+          analysis: string
+          created_at?: string | null
+          id?: never
+          processed_at?: string
+          recording_id: string
+          video_url: string
+        }
+        Update: {
+          analysis?: string
+          created_at?: string | null
+          id?: never
+          processed_at?: string
+          recording_id?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
       meetings: {
         Row: {
           created_at: string | null

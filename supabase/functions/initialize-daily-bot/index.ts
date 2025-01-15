@@ -1,9 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
-const DAILY_API_KEY = Deno.env.get('DAILY_API_KEY')
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -16,18 +13,23 @@ serve(async (req) => {
   }
 
   try {
+    const DAILY_API_KEY = Deno.env.get('DAILY_API_KEY')
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
+
     // Validate API keys
-    if (!DAILY_API_KEY || !GEMINI_API_KEY) {
-      console.error('Missing required API keys:', {
-        hasDaily: !!DAILY_API_KEY,
-        hasGemini: !!GEMINI_API_KEY
-      });
-      throw new Error('API keys not configured')
+    if (!DAILY_API_KEY) {
+      console.error('DAILY_API_KEY is not configured')
+      throw new Error('DAILY_API_KEY not configured')
     }
 
-    console.log('Creating Daily room...');
+    if (!GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY is not configured')
+      throw new Error('GEMINI_API_KEY not configured')
+    }
+
+    console.log('Creating Daily room...')
     
-    // Create a Daily room first
+    // Create Daily room
     const roomResponse = await fetch('https://api.daily.co/v1/rooms', {
       method: 'POST',
       headers: {
@@ -36,7 +38,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         properties: {
-          exp: Math.round(Date.now() / 1000) + 3600, // Room expires in 1 hour
+          exp: Math.round(Date.now() / 1000) + 3600,
           enable_chat: true,
           enable_knocking: false,
           start_video_off: true,
@@ -46,16 +48,16 @@ serve(async (req) => {
     });
 
     if (!roomResponse.ok) {
-      const error = await roomResponse.text();
-      console.error('Daily room creation failed:', error);
-      throw new Error('Failed to create Daily room');
+      const error = await roomResponse.text()
+      console.error('Daily room creation failed:', error)
+      throw new Error(`Failed to create Daily room: ${error}`)
     }
 
-    const roomData = await roomResponse.json();
-    console.log('Daily room created:', roomData);
+    const roomData = await roomResponse.json()
+    console.log('Daily room created:', roomData)
 
-    // Then start the bot in this room
-    console.log('Starting bot in room:', roomData.url);
+    // Start bot in room
+    console.log('Starting bot in room:', roomData.url)
     
     const botResponse = await fetch('https://api.daily.co/v1/bots/start', {
       method: 'POST',
@@ -102,19 +104,19 @@ serve(async (req) => {
     });
 
     if (!botResponse.ok) {
-      const error = await botResponse.text();
-      console.error('Daily bot creation failed:', error);
-      throw new Error('Failed to create Daily bot');
+      const error = await botResponse.text()
+      console.error('Daily bot creation failed:', error)
+      throw new Error(`Failed to create Daily bot: ${error}`)
     }
 
-    const botData = await botResponse.json();
-    console.log('Daily bot initialized:', botData);
+    const botData = await botResponse.json()
+    console.log('Daily bot initialized:', botData)
 
     return new Response(JSON.stringify(botData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    console.error('Error in initialize-daily-bot:', error);
+    console.error('Error in initialize-daily-bot:', error)
     return new Response(
       JSON.stringify({ 
         error: error.message,

@@ -34,7 +34,7 @@ export const VideoPreview = ({ onCallFrameReady, settings }: VideoPreviewProps) 
         },
         inputSettings: {
           // This ensures the name input prompt appears
-          userName: { 
+          user_name: { 
             hidden: false,
             required: true
           }

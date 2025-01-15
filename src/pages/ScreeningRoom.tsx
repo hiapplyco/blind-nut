@@ -11,7 +11,7 @@ const ROOM_URL = "https://hiapplyco.daily.co/lovable";
 
 interface TranscriptionMessage {
   text: string;
-  timestamp: string;
+  timestamp: string;  // Explicitly define as string since Daily.co provides ISO string
   participantId: string;
 }
 

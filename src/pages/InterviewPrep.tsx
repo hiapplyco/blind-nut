@@ -65,7 +65,7 @@ const InterviewPrep = () => {
           toast.error("Error connecting to interview assistant");
           setIsConnected(false);
         },
-        onDisconnect: () => {
+        onDisconnected: () => {
           console.log("Bot disconnected");
           toast.info("Interview assistant disconnected");
           setIsConnected(false);
@@ -76,7 +76,7 @@ const InterviewPrep = () => {
     setVoiceClient(client);
 
     try {
-      await client.start();
+      await client.connect();
     } catch (e) {
       console.error(e);
       toast.error("Failed to start interview assistant");
@@ -86,14 +86,14 @@ const InterviewPrep = () => {
 
   const toggleMic = () => {
     if (voiceClient) {
-      voiceClient.setMicEnabled(!isMicEnabled);
+      voiceClient.enableMic(!isMicEnabled);
       setIsMicEnabled(!isMicEnabled);
     }
   };
 
   const toggleCam = () => {
     if (voiceClient) {
-      voiceClient.setCamEnabled(!isCamEnabled);
+      voiceClient.enableCam(!isCamEnabled);
       setIsCamEnabled(!isCamEnabled);
     }
   };

@@ -18,6 +18,21 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
           showLeaveButton: true,
           showFullscreenButton: true,
           url: roomUrl,
+          theme: {
+            colors: {
+              // Primary purple theme
+              accent: '#9b87f5',        // Primary purple
+              accentText: '#FFFFFF',    // White text on purple
+              background: '#F8F5FF',    // Light purple background
+              backgroundAccent: '#EDE9FF', // Slightly darker purple background
+              baseText: '#4A2B1C',      // Dark brown text
+              border: '#7E69AB',        // Secondary purple
+              mainAreaBg: '#2C1810',    // Dark brown main area
+              mainAreaBgAccent: '#4A2B1C', // Medium brown tiles
+              mainAreaText: '#FFFFFF',   // White text in main area
+              supportiveText: '#8B6B5C', // Light brown supportive text
+            },
+          },
           iframeStyle: {
             position: 'absolute',
             top: '0',

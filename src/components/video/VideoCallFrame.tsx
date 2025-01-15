@@ -7,6 +7,7 @@ import { MeetingTokenManager } from "./MeetingTokenManager";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Card } from "@/components/ui/card";
 
 interface VideoCallFrameProps {
   onJoinMeeting: () => void;
@@ -126,46 +127,51 @@ export const VideoCallFrame = ({
 
   if (showSettings) {
     return (
-      <div className="w-full h-full bg-white rounded-lg p-6 space-y-6">
-        <h3 className="text-lg font-semibold">Room Settings</h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="participant-controls">Allow Participant Controls</Label>
-            <Switch
-              id="participant-controls"
-              checked={settings.allowParticipantControls}
-              onCheckedChange={(checked) => 
-                setSettings(prev => ({ ...prev, allowParticipantControls: checked }))
-              }
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="fullscreen">Show Fullscreen Button</Label>
-            <Switch
-              id="fullscreen"
-              checked={settings.showFullscreenButton}
-              onCheckedChange={(checked) => 
-                setSettings(prev => ({ ...prev, showFullscreenButton: checked }))
-              }
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="leave">Show Leave Button</Label>
-            <Switch
-              id="leave"
-              checked={settings.showLeaveButton}
-              onCheckedChange={(checked) => 
-                setSettings(prev => ({ ...prev, showLeaveButton: checked }))
-              }
-            />
-          </div>
+      <div className="flex gap-6 w-full h-full">
+        <div className="flex-1 relative min-h-[400px] bg-muted rounded-lg overflow-hidden">
+          <div ref={callWrapperRef} className="w-full h-full" />
         </div>
-        <Button 
-          onClick={joinMeeting}
-          className="w-full mt-6"
-        >
-          Join Meeting
-        </Button>
+        <Card className="w-80 p-6 space-y-6 h-fit">
+          <h3 className="text-lg font-semibold">Room Settings</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="participant-controls">Allow Participant Controls</Label>
+              <Switch
+                id="participant-controls"
+                checked={settings.allowParticipantControls}
+                onCheckedChange={(checked) => 
+                  setSettings(prev => ({ ...prev, allowParticipantControls: checked }))
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="fullscreen">Show Fullscreen Button</Label>
+              <Switch
+                id="fullscreen"
+                checked={settings.showFullscreenButton}
+                onCheckedChange={(checked) => 
+                  setSettings(prev => ({ ...prev, showFullscreenButton: checked }))
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="leave">Show Leave Button</Label>
+              <Switch
+                id="leave"
+                checked={settings.showLeaveButton}
+                onCheckedChange={(checked) => 
+                  setSettings(prev => ({ ...prev, showLeaveButton: checked }))
+                }
+              />
+            </div>
+          </div>
+          <Button 
+            onClick={joinMeeting}
+            className="w-full mt-6"
+          >
+            Join Meeting
+          </Button>
+        </Card>
       </div>
     );
   }

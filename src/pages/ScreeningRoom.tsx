@@ -31,17 +31,38 @@ const ScreeningRoom = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [meetingId, setMeetingId] = useState<number | null>(null);
   const startTimeRef = useRef<Date>(new Date());
+  const [whisperTranscript, setWhisperTranscript] = useState<string>("");
 
   const processRecording = async (recordingId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('process-daily-recording', {
-        body: { recordingId }
+      // Get recording URL from Daily
+      const { data: { secret: dailyApiKey } } = await supabase.functions.invoke('get-daily-key');
+      const response = await fetch(`https://api.daily.co/v1/recordings/${recordingId}`, {
+        headers: {
+          'Authorization': `Bearer ${dailyApiKey}`,
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch recording details');
+      }
+      
+      const recordingData = await response.json();
+      const recordingUrl = recordingData.download_url;
+
+      // Process with Whisper
+      const { data: whisperData, error: whisperError } = await supabase.functions.invoke('transcribe-whisper', {
+        body: { recordingUrl }
       });
 
-      if (error) throw error;
-      console.log('Recording processing started:', data);
-      
-      toast.success('Recording is being processed for transcription');
+      if (whisperError) throw whisperError;
+      if (whisperData?.text) {
+        setWhisperTranscript(whisperData.text);
+        // Use this transcript for Gemini summary
+        generateMeetingSummary(whisperData.text);
+      }
+
+      toast.success('Recording processed successfully');
     } catch (error) {
       console.error('Error processing recording:', error);
       toast.error('Failed to process recording');
@@ -103,7 +124,8 @@ const ScreeningRoom = () => {
         return;
       }
 
-      const transcriptText = transcripts.map(t => `[${t.timestamp}] ${t.text}`).join('\n');
+      // Use Whisper transcript if available, otherwise use Daily transcripts
+      const transcriptText = whisperTranscript || transcripts.map(t => `[${t.timestamp}] ${t.text}`).join('\n');
       const summary = await generateMeetingSummary(transcriptText);
 
       const { data, error } = await supabase

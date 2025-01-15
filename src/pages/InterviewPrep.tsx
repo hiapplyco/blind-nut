@@ -13,7 +13,7 @@ const InterviewPrep = () => {
 
   const initializeClient = async () => {
     const client = new RTVIClient({
-      baseUrl: "https://api.pipecat.ai",
+      endpoint: "https://api.pipecat.ai",
       enableMic: isMicEnabled,
       enableCam: isCamEnabled,
       services: {

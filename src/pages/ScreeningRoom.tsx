@@ -5,7 +5,7 @@ import { MeetingDataManager } from "@/components/video/MeetingDataManager";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, History } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface TranscriptionMessage {
   text: string;
@@ -19,6 +19,7 @@ interface Participant {
 }
 
 const ScreeningRoom = () => {
+  const navigate = useNavigate();
   const [transcripts, setTranscripts] = useState<TranscriptionMessage[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [meetingId, setMeetingId] = useState<number | null>(null);
@@ -30,20 +31,40 @@ const ScreeningRoom = () => {
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
+        toast.error('Please sign in to access the screening room');
+        navigate('/');
+        return;
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
+  useEffect(() => {
     const initializeChat = async () => {
       try {
-        // Create a new chat session
-        const { data: session, error: sessionError } = await supabase
+        // Get current user session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+          throw new Error('Authentication required');
+        }
+
+        // Create a new chat session with user_id
+        const { data: chatSession, error: chatError } = await supabase
           .from('chat_sessions')
           .insert({
             title: `Interview Session ${new Date().toLocaleString()}`,
-            status: 'active'
+            status: 'active',
+            user_id: session.user.id // Important: Set the user_id
           })
           .select()
           .single();
 
-        if (sessionError) throw sessionError;
-        setSessionId(session.id);
+        if (chatError) throw chatError;
+        setSessionId(chatSession.id);
 
         // Initialize WebSocket connection
         const { data: wsData, error: wsError } = await supabase.functions.invoke('initialize-daily-bot');
@@ -67,7 +88,7 @@ const ScreeningRoom = () => {
           if (response.text) {
             // Store message in Supabase
             await supabase.from('chat_messages').insert({
-              session_id: session.id,
+              session_id: chatSession.id,
               role: 'assistant',
               content: response.text
             });

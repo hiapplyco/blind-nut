@@ -15,7 +15,7 @@ const InterviewPrep = () => {
   const initializeClient = async () => {
     const client = new RTVIClient({
       transport: new DailyTransport({
-        dailyConfig: {
+        dailyOptions: {
           userName: "Interview Prep User",
           initialPrompt: "You are an interview preparation agent called 'The Old Grasshopper', assisting in a real-time setting. " +
             "I will ask you questions to understand how best to help you with your interview preparation *now*. " +

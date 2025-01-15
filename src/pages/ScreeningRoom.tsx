@@ -85,21 +85,6 @@ const ScreeningRoom = () => {
     }
   };
 
-  const toggleTranscription = async () => {
-    if (!callFrameRef.current) return;
-
-    try {
-      if (!isTranscribing) {
-        await callFrameRef.current.startTranscription();
-      } else {
-        await callFrameRef.current.stopTranscription();
-      }
-    } catch (error) {
-      console.error('Error toggling transcription:', error);
-      toast.error("Failed to toggle transcription");
-    }
-  };
-
   const saveTranscriptsToSupabase = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -134,8 +119,6 @@ const ScreeningRoom = () => {
             The Screening Room
           </CardTitle>
           <VideoControls 
-            isTranscribing={isTranscribing}
-            onToggleTranscription={toggleTranscription}
             onCopyLink={copyRoomUrl}
           />
         </CardHeader>

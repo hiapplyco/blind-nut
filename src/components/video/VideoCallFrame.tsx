@@ -34,8 +34,7 @@ export const VideoCallFrame = ({
 
       await callFrameRef.current.startRecording({
         layout: {
-          preset: "active-participant",
-          max_cam_streams: 9
+          preset: "active-participant"
         },
         width: 1920,
         height: 1080,
@@ -97,12 +96,30 @@ export const VideoCallFrame = ({
 
         callFrameRef.current.on('left-meeting', onLeaveMeeting);
 
+        // Get the Daily.co API key from Supabase
+        const { data: { secret: dailyApiKey } } = await supabase.functions.invoke('get-daily-key');
+        
+        // Create a meeting token with recording permissions
+        const response = await fetch('https://api.daily.co/v1/meeting-tokens', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${dailyApiKey}`
+          },
+          body: JSON.stringify({
+            properties: {
+              room_name: 'lovable',
+              enable_recording: 'cloud',
+              start_cloud_recording: true
+            }
+          })
+        });
+
+        const { token } = await response.json();
+
         await callFrameRef.current.join({ 
           url: ROOM_URL,
-          token: {
-            enable_recording: "cloud",
-            start_cloud_recording: true
-          }
+          token
         });
 
       } catch (error) {

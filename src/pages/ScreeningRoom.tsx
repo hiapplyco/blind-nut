@@ -20,6 +20,7 @@ interface TranscriptionMessage {
 interface Participant {
   id: string;
   name?: string;
+  [key: string]: string | undefined; // Add index signature to make it compatible with Json type
 }
 
 const ScreeningRoom = () => {
@@ -68,7 +69,7 @@ const ScreeningRoom = () => {
           user_id: user.id,
           start_time: startTimeRef.current.toISOString(),
           end_time: endTime.toISOString(),
-          participants: participants,
+          participants: participants as unknown as Json, // Type assertion to match expected Json type
           transcription: transcriptText,
           summary: summary,
           meeting_date: new Date().toISOString().split('T')[0]

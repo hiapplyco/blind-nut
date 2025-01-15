@@ -84,6 +84,7 @@ export const useInterviewBot = () => {
   };
 
   const connectWebSocket = (url: string) => {
+    console.log("Connecting to WebSocket:", url);
     wsRef.current = new WebSocket(url);
 
     wsRef.current.onopen = () => {

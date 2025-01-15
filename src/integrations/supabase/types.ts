@@ -54,6 +54,65 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: number
+          media_url: string | null
+          role: string
+          session_id: number | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: number
+          media_url?: string | null
+          role: string
+          session_id?: number | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: number
+          media_url?: string | null
+          role?: string
+          session_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          created_at: string
+          id: number
+          status: string | null
+          title: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          status?: string | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          status?: string | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       daily_transcriptions: {
         Row: {
           created_at: string | null

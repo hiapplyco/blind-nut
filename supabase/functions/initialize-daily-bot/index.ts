@@ -45,15 +45,16 @@ serve(async (req) => {
               console.log("Gemini API Connected");
               socket.send(JSON.stringify({ text: "Gemini API connected" }));
             } catch (e) {
-              console.error("Gemini connection error:", e);
-              socket.send(JSON.stringify({ error: "Failed to connect to Gemini API" }));
+              console.error(e);
+              socket.send(JSON.stringify({ error: "Failed to connect to Gemini" }));
+              return;
             }
             return;
           }
 
           if (data.realtime_input) {
             const { media_chunks } = data.realtime_input;
-            
+
             for (const chunk of media_chunks) {
               try {
                 await session?.send(chunk);
@@ -66,7 +67,7 @@ serve(async (req) => {
 
             try {
               for await (const response of session?.receive() || []) {
-                console.log("Gemini response:", response);
+                console.log("Response:", response);
                 if (!response.server_content) {
                   console.log("Empty server content");
                   continue;
@@ -86,8 +87,8 @@ serve(async (req) => {
                 }
               }
             } catch (e) {
-              console.error("Error receiving from Gemini:", e);
-              socket.send(JSON.stringify({ error: "Error receiving from Gemini API" }));
+              console.error("Error receiving response:", e);
+              socket.send(JSON.stringify({ error: "Error receiving from Gemini" }));
             }
           }
         } catch (error) {

@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { VideoCallFrame } from "@/components/video/VideoCallFrame";
 import { TranscriptionProcessor } from "@/components/video/TranscriptionProcessor";
 import { MeetingDataManager } from "@/components/video/MeetingDataManager";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, History } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -21,10 +22,86 @@ const ScreeningRoom = () => {
   const [transcripts, setTranscripts] = useState<TranscriptionMessage[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [meetingId, setMeetingId] = useState<number | null>(null);
+  const [sessionId, setSessionId] = useState<number | null>(null);
   const startTimeRef = useRef<Date>(new Date());
   const [whisperTranscript, setWhisperTranscript] = useState<string>("");
   const transcriptionProcessor = TranscriptionProcessor();
   const meetingDataManager = MeetingDataManager();
+  const wsRef = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    const initializeChat = async () => {
+      try {
+        // Create a new chat session
+        const { data: session, error: sessionError } = await supabase
+          .from('chat_sessions')
+          .insert({
+            title: `Interview Session ${new Date().toLocaleString()}`,
+            status: 'active'
+          })
+          .select()
+          .single();
+
+        if (sessionError) throw sessionError;
+        setSessionId(session.id);
+
+        // Initialize WebSocket connection
+        const { data: wsData, error: wsError } = await supabase.functions.invoke('initialize-daily-bot');
+        if (wsError) throw wsError;
+
+        const ws = new WebSocket(wsData.websocket_url);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          console.log('WebSocket Connected');
+          ws.send(JSON.stringify({
+            setup: {
+              generation_config: { response_modalities: ["TEXT"] }
+            }
+          }));
+        };
+
+        ws.onmessage = async (event) => {
+          const response = JSON.parse(event.data);
+          
+          if (response.text) {
+            // Store message in Supabase
+            await supabase.from('chat_messages').insert({
+              session_id: session.id,
+              role: 'assistant',
+              content: response.text
+            });
+
+            toast.success('Received response from assistant');
+          }
+
+          if (response.error) {
+            toast.error(response.error);
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          toast.error('Connection error occurred');
+        };
+
+        ws.onclose = () => {
+          console.log('WebSocket connection closed');
+        };
+      } catch (error) {
+        console.error('Error initializing chat:', error);
+        toast.error('Failed to initialize chat session');
+      }
+    };
+
+    initializeChat();
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, []);
 
   const handleJoinMeeting = () => {
     console.log('Joined meeting');
@@ -49,6 +126,15 @@ const ScreeningRoom = () => {
         participants,
         transcription: whisperTranscript
       });
+
+      // Update chat session status
+      if (sessionId) {
+        await supabase
+          .from('chat_sessions')
+          .update({ status: 'completed' })
+          .eq('id', sessionId);
+      }
+
       toast.success('Meeting data saved successfully');
     } catch (error) {
       console.error('Error saving meeting data:', error);
@@ -69,7 +155,6 @@ const ScreeningRoom = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Navigation Header */}
       <header className="bg-[#F8F5FF] border-b border-[#7E69AB] p-4 flex justify-between items-center">
         <Link 
           to="/" 
@@ -87,7 +172,6 @@ const ScreeningRoom = () => {
         </Link>
       </header>
 
-      {/* Video Call Container */}
       <div className="flex-1 relative">
         <VideoCallFrame
           onJoinMeeting={handleJoinMeeting}

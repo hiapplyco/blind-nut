@@ -21,9 +21,6 @@ const InterviewPrep = () => {
       }),
       enableMic: isMicEnabled,
       enableCam: isCamEnabled,
-      services: {
-        llm: "gemini_live"
-      },
       config: [
         {
           service: "llm",

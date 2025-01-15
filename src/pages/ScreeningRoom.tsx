@@ -71,8 +71,8 @@ const ScreeningRoom = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col">
-      <div className="p-4 flex justify-between items-center">
+    <div className="min-h-screen flex flex-col">
+      <div className="p-4 flex justify-between items-center bg-background">
         <h1 className="text-2xl font-bold">The Screening Room</h1>
         <VideoControls onCopyLink={copyRoomUrl} />
       </div>
@@ -85,7 +85,7 @@ const ScreeningRoom = () => {
           onRecordingStarted={handleRecordingStarted}
         />
       </div>
-      <div className="h-[200px] p-4">
+      <div className="h-[200px] p-4 bg-background">
         <TranscriptList transcripts={transcripts} />
       </div>
     </div>

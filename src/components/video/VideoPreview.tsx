@@ -44,7 +44,7 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
   }, [onCallFrameReady, roomUrl]);
 
   return (
-    <div className="w-full h-full">
+    <div className="absolute inset-0">
       <div ref={callWrapperRef} className="w-full h-full" />
     </div>
   );

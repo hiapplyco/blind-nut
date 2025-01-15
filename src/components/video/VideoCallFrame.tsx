@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import DailyIframe from "@daily-co/daily-js";
 import { DailyCall } from "@daily-co/daily-js";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VideoCallFrameProps {
   onJoinMeeting: () => void;

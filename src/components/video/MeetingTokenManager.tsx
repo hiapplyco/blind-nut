@@ -21,8 +21,12 @@ export const MeetingTokenManager = () => {
         })
       });
 
-      const { token } = await response.json();
-      return token;
+      if (!response.ok) {
+        throw new Error(`Failed to create meeting token: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.token;
     } catch (error) {
       console.error('Error creating meeting token:', error);
       throw error;

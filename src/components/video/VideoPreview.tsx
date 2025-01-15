@@ -15,14 +15,17 @@ export const VideoPreview = ({ onCallFrameReady, onJoinMeeting }: VideoPreviewPr
     if (!callWrapperRef.current || callFrameRef.current) return;
 
     const initializeCallFrame = async () => {
-      callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
-        url: "https://hiapplyco.daily.co/lovable",
-        showLeaveButton: true,
-        showFullscreenButton: true,
-      });
+      try {
+        callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
+          showLeaveButton: true,
+          showFullscreenButton: true,
+        });
 
-      await callFrameRef.current.load();
-      onCallFrameReady(callFrameRef.current);
+        await callFrameRef.current.load();
+        onCallFrameReady(callFrameRef.current);
+      } catch (error) {
+        console.error("Error initializing call frame:", error);
+      }
     };
 
     initializeCallFrame();

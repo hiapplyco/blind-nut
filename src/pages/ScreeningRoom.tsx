@@ -32,6 +32,7 @@ const ScreeningRoom = () => {
   const [meetingId, setMeetingId] = useState<number | null>(null);
   const startTimeRef = useRef<Date>(new Date());
   const [whisperTranscript, setWhisperTranscript] = useState<string>("");
+  const [isRecording, setIsRecording] = useState(false);
 
   const processRecording = async (recordingId: string) => {
     try {
@@ -167,6 +168,15 @@ const ScreeningRoom = () => {
         border: '0',
         backgroundColor: 'white',
       },
+    });
+
+    callFrameRef.current.on('joined-meeting', () => {
+      // Start recording automatically when joining
+      if (callFrameRef.current && !isRecording) {
+        callFrameRef.current.startRecording();
+        setIsRecording(true);
+        toast.success('Recording started automatically');
+      }
     });
 
     callFrameRef.current.on('recording-started', (event) => {

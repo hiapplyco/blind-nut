@@ -4,6 +4,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MeetingTokenManager } from "../MeetingTokenManager";
 import { RecordingManager } from "../RecordingManager";
+import { useTranscriptionHandler } from "./useTranscriptionHandler";
+import { useMeetingHandler } from "./useMeetingHandler";
+import { useParticipantHandler } from "./useParticipantHandler";
 
 export const useDaily = (
   onJoinMeeting: () => void,
@@ -15,10 +18,16 @@ export const useDaily = (
   const callFrameRef = useRef<DailyCall | null>(null);
   const [isCallFrameReady, setIsCallFrameReady] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [currentMeetingId, setCurrentMeetingId] = useState<number | null>(null);
 
   const ROOM_URL = "https://hiapplyco.daily.co/lovable";
   const meetingTokenManager = MeetingTokenManager();
+  
+  const { currentMeetingId, createMeeting } = useMeetingHandler();
+  const { startTranscription, handleTranscriptionMessage } = useTranscriptionHandler(currentMeetingId);
+  const { handleParticipantJoined, handleParticipantLeft } = useParticipantHandler(
+    onParticipantJoined,
+    onParticipantLeft
+  );
   
   const recordingManager = RecordingManager({
     callFrame: callFrameRef.current,
@@ -26,17 +35,6 @@ export const useDaily = (
     isRecording,
     setIsRecording,
   });
-
-  const startTranscription = async (callFrame: DailyCall) => {
-    try {
-      await callFrame.startTranscription();
-      console.log("Transcription started");
-      toast.success("Live transcription enabled");
-    } catch (error) {
-      console.error("Error starting transcription:", error);
-      toast.error("Failed to start transcription");
-    }
-  };
 
   const handleCallFrameReady = useCallback(async (callFrame: DailyCall) => {
     console.log("Call frame ready, preparing to join meeting");
@@ -54,24 +52,7 @@ export const useDaily = (
         return;
       }
 
-      const { data: meetingData, error: meetingError } = await supabase
-        .from('meetings')
-        .insert({
-          start_time: new Date().toISOString(),
-          participants: [],
-          user_id: user.id,
-          meeting_date: new Date().toISOString().split('T')[0]
-        })
-        .select()
-        .single();
-
-      if (meetingError) {
-        console.error("Error creating meeting:", meetingError);
-        toast.error("Failed to initialize meeting");
-        return;
-      }
-
-      setCurrentMeetingId(meetingData.id);
+      await createMeeting(user.id);
       
       await callFrame.join({
         url: ROOM_URL,
@@ -101,34 +82,11 @@ export const useDaily = (
       });
 
       callFrame.on("transcription-message", async (event) => {
-        console.log("Transcription message:", event);
-        if (currentMeetingId) {
-          try {
-            await supabase.from('daily_transcriptions').insert({
-              participant_id: event.participantId,
-              text: event.text,
-              timestamp: event.timestamp,
-              meeting_id: currentMeetingId,
-              user_id: user.id
-            });
-          } catch (error) {
-            console.error("Error saving transcription:", error);
-          }
-        }
+        await handleTranscriptionMessage(event, user.id);
       });
 
-      callFrame.on("participant-joined", (event) => {
-        console.log("Participant joined:", event);
-        onParticipantJoined({
-          id: event.participant.user_id,
-          name: event.participant.user_name,
-        });
-      });
-
-      callFrame.on("participant-left", (event) => {
-        console.log("Participant left:", event);
-        onParticipantLeft({ id: event.participant.user_id });
-      });
+      callFrame.on("participant-joined", handleParticipantJoined);
+      callFrame.on("participant-left", handleParticipantLeft);
 
       callFrame.on("left-meeting", () => {
         console.log("Left meeting");

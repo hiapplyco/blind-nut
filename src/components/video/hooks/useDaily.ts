@@ -63,18 +63,31 @@ export const useDaily = (
         console.log("Successfully joined meeting");
         onJoinMeeting();
         setTimeout(async () => {
+          console.log("Starting recording after join...");
           if (!isRecording) {
             await recordingManager.startRecording();
           }
           await startTranscription(callFrame);
-        }, 1000);
+        }, 2000); // Increased delay to ensure call is fully established
       });
 
-      callFrame.on("recording-started", (event) => {
-        console.log("Recording started:", event);
+      callFrame.on("recording-started", (event: { recordingId: string }) => {
+        console.log("Recording started event received:", event);
         if (event.recordingId) {
+          setIsRecording(true);
           onRecordingStarted(event.recordingId);
         }
+      });
+
+      callFrame.on("recording-error", (error: any) => {
+        console.error("Recording error:", error);
+        toast.error("Recording error occurred");
+        setIsRecording(false);
+      });
+
+      callFrame.on("recording-stopped", () => {
+        console.log("Recording stopped");
+        setIsRecording(false);
       });
 
       callFrame.on("transcription-started", (event) => {
@@ -90,14 +103,10 @@ export const useDaily = (
 
       callFrame.on("left-meeting", () => {
         console.log("Left meeting");
-        onLeaveMeeting();
-      });
-
-      callFrame.on("click", (event: { action: string }) => {
-        if (event.action === "leave-meeting") {
-          console.log("Leave button clicked");
-          onLeaveMeeting();
+        if (isRecording) {
+          recordingManager.stopRecording();
         }
+        onLeaveMeeting();
       });
 
     } catch (error) {

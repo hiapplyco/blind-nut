@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { VideoControls } from "@/components/video/VideoControls";
 import { TranscriptList } from "@/components/video/TranscriptList";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Json } from "@/integrations/supabase/types";
 
 const ROOM_URL = "https://hiapplyco.daily.co/lovable";
 
@@ -69,7 +70,7 @@ const ScreeningRoom = () => {
           user_id: user.id,
           start_time: startTimeRef.current.toISOString(),
           end_time: endTime.toISOString(),
-          participants: participants as unknown as Json, // Type assertion to match expected Json type
+          participants: participants as unknown as Json,
           transcription: transcriptText,
           summary: summary,
           meeting_date: new Date().toISOString().split('T')[0]

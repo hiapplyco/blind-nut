@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import { VideoControls } from "@/components/video/VideoControls";
 import { VideoCallFrame } from "@/components/video/VideoCallFrame";
 import { TranscriptionProcessor } from "@/components/video/TranscriptionProcessor";
 import { MeetingDataManager } from "@/components/video/MeetingDataManager";
@@ -66,30 +65,15 @@ const ScreeningRoom = () => {
     }
   };
 
-  const copyRoomUrl = async () => {
-    try {
-      await navigator.clipboard.writeText("https://hiapplyco.daily.co/lovable");
-      toast.success("Meeting link copied to clipboard!");
-    } catch (err) {
-      toast.error("Failed to copy meeting link");
-    }
-  };
-
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="p-4 flex justify-between items-center bg-background">
-        <h1 className="text-2xl font-bold">The Screening Room</h1>
-        <VideoControls onCopyLink={copyRoomUrl} />
-      </div>
-      <div className="flex-1 relative" style={{ minHeight: 'calc(100vh - 80px)' }}>
-        <VideoCallFrame
-          onJoinMeeting={handleJoinMeeting}
-          onParticipantJoined={handleParticipantJoined}
-          onParticipantLeft={handleParticipantLeft}
-          onLeaveMeeting={handleLeaveMeeting}
-          onRecordingStarted={handleRecordingStarted}
-        />
-      </div>
+    <div className="h-screen w-full">
+      <VideoCallFrame
+        onJoinMeeting={handleJoinMeeting}
+        onParticipantJoined={handleParticipantJoined}
+        onParticipantLeft={handleParticipantLeft}
+        onLeaveMeeting={handleLeaveMeeting}
+        onRecordingStarted={handleRecordingStarted}
+      />
     </div>
   );
 };

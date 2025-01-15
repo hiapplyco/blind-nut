@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import DailyIframe, { DailyCall, DailyEvent, DailyEventObjectFatalError } from "@daily-co/daily-js";
+import DailyIframe, { DailyCall, DailyEventObjectFatalError } from "@daily-co/daily-js";
 import { VideoPreviewProps } from "./types";
 import { toast } from "sonner";
 
@@ -20,13 +20,13 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
           url: roomUrl,
           iframeStyle: {
             position: 'absolute',
-            top: 0,
-            left: 0,
+            top: '0',
+            left: '0',
             width: '100%',
             height: '100%',
             border: '0',
             borderRadius: '8px',
-            zIndex: 1,
+            zIndex: '1',
           },
         });
 
@@ -70,11 +70,11 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
   }, [onCallFrameReady, roomUrl]);
 
   return (
-    <div className="absolute inset-0 bg-background">
+    <div className="absolute inset-0">
       <div 
         ref={callWrapperRef} 
-        className="w-full h-full relative"
-        style={{ minHeight: '400px' }}
+        className="w-full h-full"
+        style={{ minHeight: '100vh' }}
       />
     </div>
   );

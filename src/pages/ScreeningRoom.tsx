@@ -11,7 +11,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Json } from "@/integrations/supabase/types";
 
 const ROOM_URL = "https://hiapplyco.daily.co/lovable";
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 interface TranscriptionMessage {
   text: string;
@@ -28,11 +27,26 @@ interface Participant {
 const ScreeningRoom = () => {
   const callWrapperRef = useRef<HTMLDivElement>(null);
   const callFrameRef = useRef<DailyCall | null>(null);
-  const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcripts, setTranscripts] = useState<TranscriptionMessage[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [meetingId, setMeetingId] = useState<number | null>(null);
   const startTimeRef = useRef<Date>(new Date());
+
+  const processRecording = async (recordingId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('process-daily-recording', {
+        body: { recordingId }
+      });
+
+      if (error) throw error;
+      console.log('Recording processing started:', data);
+      
+      toast.success('Recording is being processed for transcription');
+    } catch (error) {
+      console.error('Error processing recording:', error);
+      toast.error('Failed to process recording');
+    }
+  };
 
   const saveTranscription = async (transcript: TranscriptionMessage) => {
     try {
@@ -46,7 +60,7 @@ const ScreeningRoom = () => {
           meeting_id: meetingId,
           participant_id: transcript.participantId,
           text: transcript.text,
-          timestamp: transcript.timestamp // Now using the string timestamp directly
+          timestamp: transcript.timestamp
         });
 
       if (error) throw error;
@@ -57,12 +71,7 @@ const ScreeningRoom = () => {
 
   const generateMeetingSummary = async (transcriptText: string) => {
     try {
-      if (!GEMINI_API_KEY) {
-        console.error('GEMINI_API_KEY not found');
-        return null;
-      }
-
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const prompt = `Please provide a concise summary of this meeting transcript, highlighting:
@@ -133,22 +142,11 @@ const ScreeningRoom = () => {
       },
     });
 
-    callFrameRef.current.on('transcription-started', (event) => {
-      console.log('Transcription started:', event);
-      setIsTranscribing(true);
-      toast.success("Transcription started");
-    });
-
-    callFrameRef.current.on('transcription-message', (event) => {
-      console.log('Transcription message:', event);
-      const newTranscript = {
-        text: event.text,
-        timestamp: new Date(event.timestamp).toISOString(), // Convert to ISO string
-        participantId: event.participantId
-      };
-      
-      setTranscripts(prev => [...prev, newTranscript]);
-      saveTranscription(newTranscript);
+    callFrameRef.current.on('recording-started', (event) => {
+      console.log('Recording started:', event);
+      if (event.recordingId) {
+        processRecording(event.recordingId);
+      }
     });
 
     callFrameRef.current.on('participant-joined', (event) => {
@@ -167,22 +165,6 @@ const ScreeningRoom = () => {
     callFrameRef.current.on('left-meeting', () => {
       const endTime = new Date();
       saveMeetingData(endTime);
-    });
-
-    callFrameRef.current.on('transcription-stopped', () => {
-      setIsTranscribing(false);
-      toast.success("Transcription stopped");
-    });
-
-    callFrameRef.current.on('joined-meeting', async () => {
-      try {
-        if (callFrameRef.current) {
-          await callFrameRef.current.startTranscription();
-        }
-      } catch (error) {
-        console.error('Error starting transcription:', error);
-        toast.error("Failed to start transcription automatically");
-      }
     });
 
     callFrameRef.current.join({ url: ROOM_URL });

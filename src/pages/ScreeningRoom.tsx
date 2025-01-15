@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoControls } from "@/components/video/VideoControls";
 import { TranscriptList } from "@/components/video/TranscriptList";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const ROOM_URL = "https://hiapplyco.daily.co/lovable";
 
@@ -16,13 +17,41 @@ interface TranscriptionMessage {
   participantId: string;
 }
 
+interface Participant {
+  id: string;
+  name?: string;
+}
+
 const ScreeningRoom = () => {
   const callWrapperRef = useRef<HTMLDivElement>(null);
   const callFrameRef = useRef<DailyCall | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcripts, setTranscripts] = useState<TranscriptionMessage[]>([]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const startTimeRef = useRef<Date>(new Date());
 
-  const saveTranscriptsToSupabase = async (newTranscripts: TranscriptionMessage[]) => {
+  const generateMeetingSummary = async (transcriptText: string) => {
+    try {
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const prompt = `Please provide a concise summary of this meeting transcript, highlighting:
+      - Key discussion points
+      - Important decisions made
+      - Action items or next steps
+      - Overall meeting outcome
+      
+      Transcript: ${transcriptText}`;
+
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (error) {
+      console.error('Error generating meeting summary:', error);
+      return null;
+    }
+  };
+
+  const saveMeetingData = async (endTime: Date) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -30,20 +59,26 @@ const ScreeningRoom = () => {
         return;
       }
 
+      const transcriptText = transcripts.map(t => `[${t.timestamp}] ${t.text}`).join('\n');
+      const summary = await generateMeetingSummary(transcriptText);
+
       const { error } = await supabase
-        .from('parsed_documents')
+        .from('meetings')
         .insert({
           user_id: user.id,
-          original_filename: `transcript-${new Date().toISOString()}.txt`,
-          parsed_text: newTranscripts.map(t => `[${t.timestamp}] ${t.text}`).join('\n'),
-          file_path: `transcripts/${user.id}/${new Date().toISOString()}.txt`
+          start_time: startTimeRef.current.toISOString(),
+          end_time: endTime.toISOString(),
+          participants: participants,
+          transcription: transcriptText,
+          summary: summary,
+          meeting_date: new Date().toISOString().split('T')[0]
         });
 
       if (error) throw error;
-      toast.success("Transcripts saved automatically");
+      toast.success("Meeting data saved successfully");
     } catch (error) {
-      console.error('Error saving transcripts:', error);
-      toast.error("Failed to save transcripts");
+      console.error('Error saving meeting data:', error);
+      toast.error("Failed to save meeting data");
     }
   };
 
@@ -75,12 +110,25 @@ const ScreeningRoom = () => {
         participantId: event.participantId
       };
       
-      setTranscripts(prev => {
-        const updatedTranscripts = [...prev, newTranscript];
-        // Save transcripts automatically whenever we receive a new message
-        saveTranscriptsToSupabase(updatedTranscripts);
-        return updatedTranscripts;
-      });
+      setTranscripts(prev => [...prev, newTranscript]);
+    });
+
+    callFrameRef.current.on('participant-joined', (event) => {
+      setParticipants(prev => [...prev, { 
+        id: event.participant.user_id,
+        name: event.participant.user_name 
+      }]);
+    });
+
+    callFrameRef.current.on('participant-left', (event) => {
+      setParticipants(prev => 
+        prev.filter(p => p.id !== event.participant.user_id)
+      );
+    });
+
+    callFrameRef.current.on('left-meeting', () => {
+      const endTime = new Date();
+      saveMeetingData(endTime);
     });
 
     callFrameRef.current.on('transcription-stopped', () => {
@@ -103,7 +151,10 @@ const ScreeningRoom = () => {
 
     return () => {
       if (callFrameRef.current) {
-        callFrameRef.current.destroy();
+        const endTime = new Date();
+        saveMeetingData(endTime).finally(() => {
+          callFrameRef.current?.destroy();
+        });
       }
     };
   }, []);

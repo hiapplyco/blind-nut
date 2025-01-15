@@ -84,6 +84,42 @@ export type Database = {
         }
         Relationships: []
       }
+      meetings: {
+        Row: {
+          created_at: string | null
+          end_time: string | null
+          id: number
+          meeting_date: string
+          participants: Json | null
+          start_time: string
+          summary: string | null
+          transcription: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: number
+          meeting_date?: string
+          participants?: Json | null
+          start_time: string
+          summary?: string | null
+          transcription?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: number
+          meeting_date?: string
+          participants?: Json | null
+          start_time?: string
+          summary?: string | null
+          transcription?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       parsed_documents: {
         Row: {
           created_at: string | null

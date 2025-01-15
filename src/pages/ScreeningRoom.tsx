@@ -135,7 +135,6 @@ const ScreeningRoom = () => {
           </div>
           <TranscriptList 
             transcripts={transcripts}
-            onSave={() => saveTranscriptsToSupabase(transcripts)}
           />
         </CardContent>
       </Card>

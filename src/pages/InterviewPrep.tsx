@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MediaControls } from "@/components/interview/MediaControls";
 import { useInterviewBot } from "@/hooks/useInterviewBot";
+import { useElevenLabs } from "@/hooks/useElevenLabs";
 
 const InterviewPrep = () => {
   const {
@@ -16,6 +17,14 @@ const InterviewPrep = () => {
     toggleCam,
     disconnect
   } = useInterviewBot();
+
+  const { speakText, isSpeaking } = useElevenLabs();
+
+  // Example welcome message with text-to-speech
+  const handleConnect = async () => {
+    await initializeClient();
+    speakText("Welcome to your interview preparation session. I'm here to help you practice. What kind of interview would you like to prepare for?");
+  };
 
   return (
     <div className="container max-w-4xl py-8">
@@ -41,9 +50,9 @@ const InterviewPrep = () => {
         <div className="space-y-4">
           {!isConnected ? (
             <Button 
-              onClick={initializeClient} 
+              onClick={handleConnect}
               className="w-full"
-              disabled={isLoading}
+              disabled={isLoading || isSpeaking}
             >
               {isLoading ? "Connecting..." : "Start Interview Prep"}
             </Button>

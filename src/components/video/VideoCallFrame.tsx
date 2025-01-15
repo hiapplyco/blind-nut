@@ -42,6 +42,10 @@ export const VideoCallFrame = ({
       await callFrame.join({
         url: ROOM_URL,
         token,
+        layout: {
+          fillView: true,
+          fitType: 'fill',
+        },
       });
 
       callFrame.on("joined-meeting", () => {

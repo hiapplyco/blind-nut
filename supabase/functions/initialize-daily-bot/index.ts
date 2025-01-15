@@ -18,7 +18,14 @@ serve(async (req) => {
 
     if (upgradeHeader.toLowerCase() === "websocket") {
       const { socket, response } = Deno.upgradeWebSocket(req);
-      const genAI = new genai.Client();
+      const genAI = new genai.Client({ 
+        apiKey: Deno.env.get('GEMINI_API_KEY'),
+        http_options: {
+          api_version: 'v1alpha'
+        }
+      });
+
+      let session: any = null;
 
       socket.onopen = () => {
         console.log("WebSocket connected");
@@ -29,8 +36,18 @@ serve(async (req) => {
           const data = JSON.parse(event.data);
           
           if (data.setup) {
-            console.log("Received setup message:", data.setup);
-            socket.send(JSON.stringify({ text: "Setup received, ready for interaction" }));
+            console.log("Setup received:", data.setup);
+            try {
+              session = await genAI.live.connect({
+                model: "gemini-2.0-flash-exp",
+                config: data.setup
+              });
+              console.log("Gemini API Connected");
+              socket.send(JSON.stringify({ text: "Gemini API connected" }));
+            } catch (e) {
+              console.error("Gemini connection error:", e);
+              socket.send(JSON.stringify({ error: "Failed to connect to Gemini API" }));
+            }
             return;
           }
 
@@ -38,16 +55,40 @@ serve(async (req) => {
             const { media_chunks } = data.realtime_input;
             
             for (const chunk of media_chunks) {
-              if (chunk.mime_type === "audio/pcm") {
-                console.log("Received audio chunk");
-              } else if (chunk.mime_type === "image/jpeg") {
-                console.log("Received image chunk");
+              try {
+                await session?.send(chunk);
+                console.log("Sent chunk:", chunk.mime_type);
+              } catch (e) {
+                console.error("Error sending chunk:", e);
+                socket.send(JSON.stringify({ error: `Error sending ${chunk.mime_type} chunk` }));
               }
             }
 
-            socket.send(JSON.stringify({
-              text: "I received your input and am processing it.",
-            }));
+            try {
+              for await (const response of session?.receive() || []) {
+                console.log("Gemini response:", response);
+                if (!response.server_content) {
+                  console.log("Empty server content");
+                  continue;
+                }
+
+                const model_turn = response.server_content.model_turn;
+                if (model_turn) {
+                  for (const part of model_turn.parts) {
+                    if (part.text) {
+                      socket.send(JSON.stringify({ text: part.text }));
+                    }
+                    if (part.inline_data) {
+                      const base64_audio = btoa(String.fromCharCode(...part.inline_data.data));
+                      socket.send(JSON.stringify({ audio: base64_audio }));
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+              console.error("Error receiving from Gemini:", e);
+              socket.send(JSON.stringify({ error: "Error receiving from Gemini API" }));
+            }
           }
         } catch (error) {
           console.error("Error processing message:", error);
@@ -61,6 +102,7 @@ serve(async (req) => {
 
       socket.onclose = () => {
         console.log("WebSocket closed");
+        session = null;
       };
 
       return response;

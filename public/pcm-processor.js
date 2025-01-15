@@ -1,29 +1,38 @@
 class PCMProcessor extends AudioWorkletProcessor {
-    constructor() {
-        super();
-        this.buffer = new Float32Array();
+  constructor() {
+    super();
+    this.bufferSize = 4096;
+    this.buffer = new Float32Array(this.bufferSize);
+    this.bufferIndex = 0;
+  }
 
-        this.port.onmessage = (e) => {
-            const newData = e.data;
-            const newBuffer = new Float32Array(this.buffer.length + newData.length);
-            newBuffer.set(this.buffer);
-            newBuffer.set(newData, this.buffer.length);
-            this.buffer = newBuffer;
-        };
-    }
+  process(inputs, outputs, parameters) {
+    const input = inputs[0];
+    if (!input || !input[0]) return true;
 
-    process(inputs, outputs, parameters) {
-        const output = outputs[0];
-        const channelData = output[0];
+    const inputChannel = input[0];
+    
+    for (let i = 0; i < inputChannel.length; i++) {
+      this.buffer[this.bufferIndex] = inputChannel[i];
+      this.bufferIndex++;
 
-        if (this.buffer.length >= channelData.length) {
-            channelData.set(this.buffer.slice(0, channelData.length));
-            this.buffer = this.buffer.slice(channelData.length);
-            return true;
+      if (this.bufferIndex >= this.bufferSize) {
+        const pcm16 = new Int16Array(this.bufferSize);
+        for (let j = 0; j < this.bufferSize; j++) {
+          pcm16[j] = Math.max(-32768, Math.min(32767, this.buffer[j] * 32768));
         }
-
-        return true;
+        
+        this.port.postMessage({
+          type: 'pcm',
+          data: pcm16.buffer
+        }, [pcm16.buffer]);
+        
+        this.bufferIndex = 0;
+      }
     }
+
+    return true;
+  }
 }
 
 registerProcessor('pcm-processor', PCMProcessor);

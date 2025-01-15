@@ -26,9 +26,14 @@ export const useInterviewBot = () => {
     try {
       const { data: botData, error: botError } = await supabase.functions.invoke('initialize-daily-bot');
       
-      if (botError) throw new Error('Failed to initialize interview assistant');
+      if (botError) {
+        console.error('Bot initialization error:', botError);
+        throw new Error('Failed to initialize interview assistant');
+      }
       
-      if (!botData?.websocket_url) throw new Error('Invalid response from interview service');
+      if (!botData?.websocket_url) {
+        throw new Error('Invalid response from interview service');
+      }
 
       await startWebcam();
       connectWebSocket(botData.websocket_url);

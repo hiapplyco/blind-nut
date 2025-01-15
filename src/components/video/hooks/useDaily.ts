@@ -47,12 +47,21 @@ export const useDaily = (
       const token = await meetingTokenManager.createMeetingToken();
       console.log("Meeting token created, joining room");
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error("No authenticated user found");
+        toast.error("Authentication required");
+        return;
+      }
+
       // Create a new meeting record when joining
       const { data: meetingData, error: meetingError } = await supabase
         .from('meetings')
         .insert({
           start_time: new Date().toISOString(),
-          participants: []
+          participants: [],
+          user_id: user.id,
+          meeting_date: new Date().toISOString().split('T')[0]
         })
         .select()
         .single();
@@ -100,7 +109,8 @@ export const useDaily = (
               participant_id: event.participantId,
               text: event.text,
               timestamp: event.timestamp,
-              meeting_id: currentMeetingId
+              meeting_id: currentMeetingId,
+              user_id: user.id
             });
           } catch (error) {
             console.error("Error saving transcription:", error);
@@ -132,6 +142,7 @@ export const useDaily = (
           onLeaveMeeting();
         }
       });
+
     } catch (error) {
       console.error("Error initializing call frame:", error);
       toast.error("Failed to initialize video call");

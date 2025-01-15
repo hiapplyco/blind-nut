@@ -3,7 +3,6 @@ import { genai } from "https://esm.sh/@google/generative-ai@0.2.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -12,7 +11,6 @@ serve(async (req) => {
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -46,16 +44,7 @@ serve(async (req) => {
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (!GEMINI_API_KEY) {
       console.error("Missing GEMINI_API_KEY");
-      return new Response(
-        JSON.stringify({ error: 'GEMINI_API_KEY not configured' }),
-        { 
-          status: 500,
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
     const genAI = new genai.Client({ 
@@ -79,12 +68,11 @@ serve(async (req) => {
         if (data.setup) {
           console.log("Setup received:", data.setup);
           try {
-            // Force using gemini-2.0-flash-exp model
             session = await genAI.live.connect({
               model: "gemini-2.0-flash-exp",
               config: data.setup
             });
-            console.log("Gemini API Connected using model: gemini-2.0-flash-exp");
+            console.log("Gemini API Connected");
             socket.send(JSON.stringify({text:"Gemini API connected"}));
           } catch (e) {
             console.error("Failed to connect to Gemini:", e);
@@ -102,16 +90,12 @@ serve(async (req) => {
               console.log("Sent chunk:", chunk.mime_type);
             } catch (e) {
               console.error("Error sending chunk:", e);
-              socket.send(JSON.stringify({ 
-                error: `Error sending ${chunk.mime_type} chunk` 
-              }));
+              socket.send(JSON.stringify({ error: `Error sending ${chunk.mime_type} chunk` }));
             }
           }
 
           try {
             for await (const response of session?.receive() || []) {
-              console.log("Received response from Gemini");
-              
               if (!response.server_content?.model_turn) {
                 console.log("No model turn in response");
                 continue;
@@ -134,16 +118,12 @@ serve(async (req) => {
             }
           } catch (e) {
             console.error("Error receiving from Gemini:", e);
-            socket.send(JSON.stringify({ 
-              error: "Error receiving response from Gemini" 
-            }));
+            socket.send(JSON.stringify({ error: "Error receiving from Gemini" }));
           }
         }
       } catch (error) {
         console.error("Error processing message:", error);
-        socket.send(JSON.stringify({ 
-          error: "Failed to process message" 
-        }));
+        socket.send(JSON.stringify({ error: "Failed to process message" }));
       }
     };
 

@@ -33,6 +33,7 @@ const ScreeningRoom = () => {
   const startTimeRef = useRef<Date>(new Date());
   const [whisperTranscript, setWhisperTranscript] = useState<string>("");
   const [isRecording, setIsRecording] = useState(false);
+  const [isCallFrameReady, setIsCallFrameReady] = useState(false);
 
   const processRecording = async (recordingId: string) => {
     try {
@@ -156,55 +157,85 @@ const ScreeningRoom = () => {
     }
   };
 
+  const startRecording = async () => {
+    try {
+      if (!callFrameRef.current || !isCallFrameReady) {
+        console.error('Call frame not ready');
+        return;
+      }
+
+      await callFrameRef.current.startRecording();
+      setIsRecording(true);
+      toast.success('Recording started automatically');
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast.error('Failed to start recording');
+    }
+  };
+
   useEffect(() => {
     if (!callWrapperRef.current || callFrameRef.current) return;
 
-    callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
-      showLeaveButton: true,
-      showFullscreenButton: true,
-      iframeStyle: {
-        width: '100%',
-        height: '100%',
-        border: '0',
-        backgroundColor: 'white',
-      },
-    });
+    const initializeCallFrame = async () => {
+      try {
+        callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
+          showLeaveButton: true,
+          showFullscreenButton: true,
+          iframeStyle: {
+            width: '100%',
+            height: '100%',
+            border: '0',
+            backgroundColor: 'white',
+          },
+        });
 
-    callFrameRef.current.on('joined-meeting', () => {
-      // Start recording automatically when joining
-      if (callFrameRef.current && !isRecording) {
-        callFrameRef.current.startRecording();
-        setIsRecording(true);
-        toast.success('Recording started automatically');
+        // Set up event listeners
+        callFrameRef.current.on('joined-meeting', () => {
+          console.log('Joined meeting, call frame ready');
+          setIsCallFrameReady(true);
+          // Start recording after a short delay to ensure everything is initialized
+          setTimeout(() => {
+            if (!isRecording) {
+              startRecording();
+            }
+          }, 1000);
+        });
+
+        callFrameRef.current.on('recording-started', (event) => {
+          console.log('Recording started:', event);
+          if (event.recordingId) {
+            processRecording(event.recordingId);
+          }
+        });
+
+        callFrameRef.current.on('participant-joined', (event) => {
+          setParticipants(prev => [...prev, { 
+            id: event.participant.user_id,
+            name: event.participant.user_name 
+          }]);
+        });
+
+        callFrameRef.current.on('participant-left', (event) => {
+          setParticipants(prev => 
+            prev.filter(p => p.id !== event.participant.user_id)
+          );
+        });
+
+        callFrameRef.current.on('left-meeting', () => {
+          const endTime = new Date();
+          saveMeetingData(endTime);
+        });
+
+        // Join the meeting
+        await callFrameRef.current.join({ url: ROOM_URL });
+
+      } catch (error) {
+        console.error('Error initializing call frame:', error);
+        toast.error('Failed to initialize video call');
       }
-    });
+    };
 
-    callFrameRef.current.on('recording-started', (event) => {
-      console.log('Recording started:', event);
-      if (event.recordingId) {
-        processRecording(event.recordingId);
-      }
-    });
-
-    callFrameRef.current.on('participant-joined', (event) => {
-      setParticipants(prev => [...prev, { 
-        id: event.participant.user_id,
-        name: event.participant.user_name 
-      }]);
-    });
-
-    callFrameRef.current.on('participant-left', (event) => {
-      setParticipants(prev => 
-        prev.filter(p => p.id !== event.participant.user_id)
-      );
-    });
-
-    callFrameRef.current.on('left-meeting', () => {
-      const endTime = new Date();
-      saveMeetingData(endTime);
-    });
-
-    callFrameRef.current.join({ url: ROOM_URL });
+    initializeCallFrame();
 
     return () => {
       if (callFrameRef.current) {

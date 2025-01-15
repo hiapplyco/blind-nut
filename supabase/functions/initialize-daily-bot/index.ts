@@ -8,6 +8,31 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 };
 
+// Types for better type safety
+interface SetupConfig {
+  model?: string;
+  generation_config?: Record<string, unknown>;
+  tools?: Record<string, unknown>[];
+}
+
+interface MediaChunk {
+  mime_type: string;
+  data: Uint8Array;
+}
+
+interface WebSocketMessage {
+  setup?: SetupConfig;
+  realtime_input?: {
+    media_chunks: MediaChunk[];
+  };
+}
+
+interface ServerResponse {
+  text?: string;
+  error?: string;
+  audio?: string;
+}
+
 serve(async (req) => {
   console.log("Received request:", req.method, req.url);
 
@@ -25,7 +50,6 @@ serve(async (req) => {
     const upgradeHeader = headers.get("upgrade") || "";
 
     if (upgradeHeader.toLowerCase() !== "websocket") {
-      // For non-WebSocket requests, return the WebSocket URL
       console.log("Non-WebSocket request, returning WebSocket URL");
       const host = headers.get("host") || "";
       const wsProtocol = host.includes("localhost") ? "ws" : "wss";
@@ -50,7 +74,17 @@ serve(async (req) => {
 
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY not configured');
+      console.error("Missing GEMINI_API_KEY");
+      return new Response(
+        JSON.stringify({ error: 'GEMINI_API_KEY not configured' }),
+        { 
+          status: 500,
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
     }
 
     const genAI = new genai.Client({ 
@@ -68,22 +102,22 @@ serve(async (req) => {
 
     socket.onmessage = async (event) => {
       try {
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data) as WebSocketMessage;
         console.log("Received message type:", data.setup ? "setup" : "realtime_input");
         
         if (data.setup) {
           console.log("Setup received:", data.setup);
           try {
+            const model = data.setup.model || "gemini-2.0-flash-exp";
             session = await genAI.live.connect({
-              model: "gemini-2.0-flash-exp",
+              model,
               config: data.setup
             });
-            console.log("Gemini API Connected");
+            console.log("Gemini API Connected using model:", model);
             socket.send(JSON.stringify({ text: "Gemini API connected" }));
           } catch (e) {
             console.error("Failed to connect to Gemini:", e);
             socket.send(JSON.stringify({ error: "Failed to connect to Gemini" }));
-            return;
           }
           return;
         }
@@ -97,39 +131,48 @@ serve(async (req) => {
               console.log("Sent chunk:", chunk.mime_type);
             } catch (e) {
               console.error("Error sending chunk:", e);
-              socket.send(JSON.stringify({ error: `Error sending ${chunk.mime_type} chunk` }));
+              socket.send(JSON.stringify({ 
+                error: `Error sending ${chunk.mime_type} chunk` 
+              }));
             }
           }
 
           try {
             for await (const response of session?.receive() || []) {
               console.log("Received response from Gemini");
-              if (!response.server_content) {
-                console.log("Empty server content");
+              
+              if (!response.server_content?.model_turn) {
+                console.log("No model turn in response");
                 continue;
               }
 
-              const model_turn = response.server_content.model_turn;
-              if (model_turn) {
-                for (const part of model_turn.parts) {
-                  if (part.text) {
-                    socket.send(JSON.stringify({ text: part.text }));
-                  }
-                  if (part.inline_data) {
-                    const base64_audio = btoa(String.fromCharCode(...part.inline_data.data));
-                    socket.send(JSON.stringify({ audio: base64_audio }));
-                  }
+              const { parts } = response.server_content.model_turn;
+              for (const part of parts) {
+                if (part.text) {
+                  socket.send(JSON.stringify({ text: part.text }));
                 }
+                if (part.inline_data) {
+                  const base64_audio = btoa(String.fromCharCode(...part.inline_data.data));
+                  socket.send(JSON.stringify({ audio: base64_audio }));
+                }
+              }
+
+              if (response.server_content.turn_complete) {
+                console.log("Turn complete");
               }
             }
           } catch (e) {
-            console.error("Error receiving response:", e);
-            socket.send(JSON.stringify({ error: "Error receiving from Gemini" }));
+            console.error("Error receiving from Gemini:", e);
+            socket.send(JSON.stringify({ 
+              error: "Error receiving response from Gemini" 
+            }));
           }
         }
       } catch (error) {
         console.error("Error processing message:", error);
-        socket.send(JSON.stringify({ error: "Failed to process message" }));
+        socket.send(JSON.stringify({ 
+          error: "Failed to process message" 
+        }));
       }
     };
 
@@ -139,7 +182,10 @@ serve(async (req) => {
 
     socket.onclose = () => {
       console.log("WebSocket closed");
-      session = null;
+      if (session) {
+        session.disconnect();
+        session = null;
+      }
     };
 
     return response;

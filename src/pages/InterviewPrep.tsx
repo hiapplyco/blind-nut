@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { RTVIClient } from "@pipecat-ai/client-js";
+import { DailyTransport } from "@pipecat-ai/daily-transport";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -13,14 +14,11 @@ const InterviewPrep = () => {
 
   const initializeClient = async () => {
     const client = new RTVIClient({
-      transport: {
-        type: "daily",
-        options: {
-          dailyConfig: {
-            // Daily transport specific configuration
-          }
+      transport: new DailyTransport({
+        dailyFactoryOptions: {
+          // Daily transport specific configuration
         }
-      },
+      }),
       enableMic: isMicEnabled,
       enableCam: isCamEnabled,
       services: {

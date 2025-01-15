@@ -3,13 +3,21 @@ import { genai } from "https://esm.sh/@google/generative-ai@0.2.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Max-Age': '86400',
 };
 
 serve(async (req) => {
+  console.log("Received request:", req.method, req.url);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    console.log("Handling CORS preflight request");
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 204
+    });
   }
 
   try {
@@ -18,7 +26,8 @@ serve(async (req) => {
 
     if (upgradeHeader.toLowerCase() !== "websocket") {
       // For non-WebSocket requests, return the WebSocket URL
-      const host = req.headers.get("host") || "";
+      console.log("Non-WebSocket request, returning WebSocket URL");
+      const host = headers.get("host") || "";
       const wsProtocol = host.includes("localhost") ? "ws" : "wss";
       const wsUrl = `${wsProtocol}://${host}/functions/v1/initialize-daily-bot`;
       
@@ -36,11 +45,16 @@ serve(async (req) => {
       );
     }
 
-    const { socket, response } = Deno.upgradeWebSocket(req);
     console.log("Upgrading to WebSocket connection");
+    const { socket, response } = Deno.upgradeWebSocket(req);
+
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY not configured');
+    }
 
     const genAI = new genai.Client({ 
-      apiKey: Deno.env.get('GEMINI_API_KEY'),
+      apiKey: GEMINI_API_KEY,
       http_options: {
         api_version: 'v1alpha'
       }
@@ -55,6 +69,7 @@ serve(async (req) => {
     socket.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log("Received message type:", data.setup ? "setup" : "realtime_input");
         
         if (data.setup) {
           console.log("Setup received:", data.setup);
@@ -88,7 +103,7 @@ serve(async (req) => {
 
           try {
             for await (const response of session?.receive() || []) {
-              console.log("Response:", response);
+              console.log("Received response from Gemini");
               if (!response.server_content) {
                 console.log("Empty server content");
                 continue;

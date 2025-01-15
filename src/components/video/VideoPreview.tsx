@@ -7,6 +7,7 @@ interface VideoPreviewProps {
   settings: {
     showLeaveButton: boolean;
     showFullscreenButton: boolean;
+    allowParticipantControls?: boolean;
   };
 }
 
@@ -21,6 +22,7 @@ export const VideoPreview = ({ onCallFrameReady, settings }: VideoPreviewProps) 
       callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
         showLeaveButton: settings.showLeaveButton,
         showFullscreenButton: settings.showFullscreenButton,
+        allowParticipantControls: settings.allowParticipantControls,
         iframeStyle: {
           position: 'absolute',
           top: '0',
@@ -30,6 +32,13 @@ export const VideoPreview = ({ onCallFrameReady, settings }: VideoPreviewProps) 
           border: '0',
           backgroundColor: 'white',
         },
+        inputSettings: {
+          // This ensures the name input prompt appears
+          userName: { 
+            hidden: false,
+            required: true
+          }
+        }
       });
 
       onCallFrameReady(callFrameRef.current);

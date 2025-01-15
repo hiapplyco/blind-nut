@@ -20,6 +20,12 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
           showLeaveButton: true,
           showFullscreenButton: true,
           url: roomUrl,
+          iframeStyle: {
+            width: '100%',
+            height: '100%',
+            border: '0',
+            borderRadius: '8px',
+          },
         });
 
         await callFrameRef.current.load();
@@ -39,7 +45,7 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
   }, [onCallFrameReady, roomUrl]);
 
   return (
-    <div className="flex-1 relative min-h-[400px] bg-muted rounded-lg overflow-hidden">
+    <div className="w-full h-full absolute inset-0 bg-muted rounded-lg overflow-hidden">
       <div ref={callWrapperRef} className="w-full h-full" />
     </div>
   );

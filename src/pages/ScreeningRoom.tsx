@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Video } from "lucide-react";
-import { DailyProvider, DailyRoom } from "@daily-co/daily-react";
+import { DailyProvider, DailyPrebuilt } from "@daily-co/daily-react";
 
 const ROOM_URL = "https://hiapplyco.daily.co/lovable";
 
@@ -17,7 +17,7 @@ const ScreeningRoom = () => {
         <CardContent>
           <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">
             <DailyProvider>
-              <DailyRoom
+              <DailyPrebuilt
                 url={ROOM_URL}
                 showLeaveButton={true}
                 showFullscreenButton={true}

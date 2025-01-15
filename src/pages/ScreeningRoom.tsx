@@ -1,5 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Video } from "lucide-react";
 import { useState, useRef } from "react";
 import { VideoControls } from "@/components/video/VideoControls";
 import { TranscriptList } from "@/components/video/TranscriptList";
@@ -73,30 +71,23 @@ const ScreeningRoom = () => {
   };
 
   return (
-    <div className="container max-w-7xl mx-auto py-8 min-h-screen">
-      <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-[#FFFBF4] h-full">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-7">
-          <CardTitle className="text-3xl font-bold flex items-center gap-3">
-            <Video className="h-8 w-8 text-primary" />
-            The Screening Room
-          </CardTitle>
-          <VideoControls onCopyLink={copyRoomUrl} />
-        </CardHeader>
-        <CardContent className="flex flex-col space-y-8 pb-8">
-          <div className="w-full bg-muted rounded-lg overflow-hidden relative" style={{ height: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)', marginBottom: '2rem' }}>
-            <VideoCallFrame
-              onJoinMeeting={handleJoinMeeting}
-              onParticipantJoined={handleParticipantJoined}
-              onParticipantLeft={handleParticipantLeft}
-              onLeaveMeeting={handleLeaveMeeting}
-              onRecordingStarted={handleRecordingStarted}
-            />
-          </div>
-          <div className="min-h-[200px]">
-            <TranscriptList transcripts={transcripts} />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="h-screen flex flex-col">
+      <div className="p-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">The Screening Room</h1>
+        <VideoControls onCopyLink={copyRoomUrl} />
+      </div>
+      <div className="flex-1 relative">
+        <VideoCallFrame
+          onJoinMeeting={handleJoinMeeting}
+          onParticipantJoined={handleParticipantJoined}
+          onParticipantLeft={handleParticipantLeft}
+          onLeaveMeeting={handleLeaveMeeting}
+          onRecordingStarted={handleRecordingStarted}
+        />
+      </div>
+      <div className="h-[200px] p-4">
+        <TranscriptList transcripts={transcripts} />
+      </div>
     </div>
   );
 };

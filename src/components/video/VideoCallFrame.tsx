@@ -42,10 +42,6 @@ export const VideoCallFrame = ({
       await callFrame.join({
         url: ROOM_URL,
         token,
-        layout: {
-          fillView: true,
-          fitType: 'fill',
-        },
       });
 
       callFrame.on("joined-meeting", () => {
@@ -84,7 +80,7 @@ export const VideoCallFrame = ({
   };
 
   return (
-    <div className="w-full h-full relative flex-1" style={{ height: "calc(100vh - 300px)" }}>
+    <div className="w-full h-full">
       <VideoPreview 
         onCallFrameReady={handleCallFrameReady} 
         roomUrl={ROOM_URL}

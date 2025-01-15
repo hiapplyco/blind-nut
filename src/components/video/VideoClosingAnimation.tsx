@@ -66,9 +66,14 @@ const tvOffAnimation = {
 interface VideoClosingAnimationProps {
   isVisible: boolean;
   onAnimationComplete: () => void;
+  mode?: 'turnOn' | 'turnOff';
 }
 
-export const VideoClosingAnimation = ({ isVisible, onAnimationComplete }: VideoClosingAnimationProps) => {
+export const VideoClosingAnimation = ({ 
+  isVisible, 
+  onAnimationComplete,
+  mode = 'turnOff' 
+}: VideoClosingAnimationProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
@@ -91,6 +96,7 @@ export const VideoClosingAnimation = ({ isVisible, onAnimationComplete }: VideoC
         loop={false}
         onComplete={handleAnimationComplete}
         className="w-full h-full"
+        initialSegment={mode === 'turnOn' ? [29, 0] : undefined}
       />
     </div>
   );

@@ -81,8 +81,8 @@ export const VideoCallFrame = ({
       });
 
       // Add a handler for the leave button click
-      callFrame.on("click", (event) => {
-        if (event.name === "leave-meeting") {
+      callFrame.on("click", (event: { action: string }) => {
+        if (event.action === "leave-meeting") {
           console.log("Leave button clicked");
           setIsClosing(true);
         }
@@ -108,6 +108,7 @@ export const VideoCallFrame = ({
       <VideoClosingAnimation 
         isVisible={isClosing}
         onAnimationComplete={handleClosingAnimationComplete}
+        mode="turnOff"
       />
     </div>
   );

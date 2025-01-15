@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import DailyIframe from "@daily-co/daily-js";
 import { DailyCall } from "@daily-co/daily-js";
+import { VideoClosingAnimation } from "./VideoClosingAnimation";
 
 interface VideoPreviewProps {
   onCallFrameReady: (callFrame: DailyCall) => void;
@@ -10,6 +11,7 @@ interface VideoPreviewProps {
 export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) => {
   const callWrapperRef = useRef<HTMLDivElement>(null);
   const callFrameRef = useRef<DailyCall | null>(null);
+  const [showTurnOnAnimation, setShowTurnOnAnimation] = useState(true);
 
   useEffect(() => {
     if (!callWrapperRef.current || callFrameRef.current) return;
@@ -43,9 +45,18 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
     };
   }, [onCallFrameReady, roomUrl]);
 
+  const handleTurnOnComplete = () => {
+    setShowTurnOnAnimation(false);
+  };
+
   return (
     <div className="absolute inset-0">
       <div ref={callWrapperRef} className="w-full h-full" />
+      <VideoClosingAnimation 
+        isVisible={showTurnOnAnimation}
+        onAnimationComplete={handleTurnOnComplete}
+        mode="turnOn"
+      />
     </div>
   );
 };

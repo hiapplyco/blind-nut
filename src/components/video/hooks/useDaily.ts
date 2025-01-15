@@ -54,7 +54,6 @@ export const useDaily = (
         return;
       }
 
-      // Create a new meeting record when joining
       const { data: meetingData, error: meetingError } = await supabase
         .from('meetings')
         .insert({

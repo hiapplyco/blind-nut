@@ -27,14 +27,36 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY not configured')
     }
 
+    // First verify if bots are enabled for the domain
+    console.log('Verifying Daily account configuration...')
+    const configResponse = await fetch('https://api.daily.co/v1/config', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${DAILY_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!configResponse.ok) {
+      const error = await configResponse.text()
+      console.error('Failed to verify Daily account configuration:', error)
+      throw new Error('Failed to verify Daily account configuration')
+    }
+
+    const configData = await configResponse.json()
+    if (!configData.bots_enabled) {
+      console.error('Daily Bots are not enabled for this account')
+      throw new Error('Daily Bots feature is not enabled for your account. Please contact Daily support to enable this feature.')
+    }
+
     console.log('Creating Daily room...')
     
     // Create Daily room
     const roomResponse = await fetch('https://api.daily.co/v1/rooms', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DAILY_API_KEY}`
+        'Authorization': `Bearer ${DAILY_API_KEY}`,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         properties: {
@@ -62,8 +84,8 @@ serve(async (req) => {
     const botResponse = await fetch('https://api.daily.co/v1/bots/start', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DAILY_API_KEY}`
+        'Authorization': `Bearer ${DAILY_API_KEY}`,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         room_url: roomData.url,
@@ -120,7 +142,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        info: "Please ensure Daily API key and Gemini API key are properly configured"
+        info: "Please ensure Daily API key is configured and Bots feature is enabled for your account"
       }),
       {
         status: 500,

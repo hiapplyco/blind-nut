@@ -100,7 +100,7 @@ export const VideoCallFrame = ({
         // Get the Daily.co API key from Supabase
         const { data: { secret: dailyApiKey } } = await supabase.functions.invoke('get-daily-key');
         
-        // Create a meeting token with recording permissions
+        // Create a meeting token with recording permissions and bucket configuration
         const response = await fetch('https://api.daily.co/v1/meeting-tokens', {
           method: 'POST',
           headers: {
@@ -111,7 +111,8 @@ export const VideoCallFrame = ({
             properties: {
               room_name: 'lovable',
               enable_recording: 'cloud',
-              start_cloud_recording: true
+              start_cloud_recording: true,
+              transcription_bucket: 'recordings'
             }
           })
         });

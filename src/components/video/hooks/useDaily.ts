@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback } from "react";
-import { DailyCall } from "@daily-co/daily-js";
+import { DailyCall, DailyEventObjectRecordingStarted } from "@daily-co/daily-js";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MeetingTokenManager } from "../MeetingTokenManager";
@@ -68,14 +68,17 @@ export const useDaily = (
             await recordingManager.startRecording();
           }
           await startTranscription(callFrame);
-        }, 2000); // Increased delay to ensure call is fully established
+        }, 2000);
       });
 
-      callFrame.on("recording-started", (event: { recordingId: string }) => {
+      callFrame.on("recording-started", (event: DailyEventObjectRecordingStarted) => {
         console.log("Recording started event received:", event);
         if (event.recordingId) {
           setIsRecording(true);
           onRecordingStarted(event.recordingId);
+        } else {
+          console.warn("Recording started but no recordingId received");
+          toast.warning("Recording started but ID not received");
         }
       });
 

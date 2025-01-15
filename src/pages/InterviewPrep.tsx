@@ -18,7 +18,7 @@ const InterviewPrep = () => {
         dailyFactoryOptions: {
           // Daily transport specific configuration
         },
-        systemPrompt: "You are an interview preparation agent called 'The Old Grasshopper', assisting in a real-time setting. " +
+        prompt: "You are an interview preparation agent called 'The Old Grasshopper', assisting in a real-time setting. " +
           "I will ask you questions to understand how best to help you with your interview preparation *now*. " +
           "First, please tell me what kind of interview *you* are preparing for, and how *you* would like to prep *in this session*. " +
           "I can ask *you* practice questions, give *you* feedback on *your* answers *as you speak*, " +
@@ -32,6 +32,7 @@ const InterviewPrep = () => {
       }),
       enableMic: isMicEnabled,
       enableCam: isCamEnabled,
+      params: {}, // Add required params property
       callbacks: {
         onBotReady: () => {
           console.log("Bot is ready!");

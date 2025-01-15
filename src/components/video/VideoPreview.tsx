@@ -37,9 +37,6 @@ export const VideoPreview = ({ onCallFrameReady, onJoinMeeting }: VideoPreviewPr
             processor: {
               type: 'none'
             }
-          },
-          userName: { 
-            isRequired: true
           }
         }
       });

@@ -16,13 +16,50 @@ serve(async (req) => {
   }
 
   try {
-    const response = await fetch('https://api.daily.co/v1/bots/start', {
+    if (!DAILY_API_KEY || !GEMINI_API_KEY) {
+      console.error('Missing required API keys:', {
+        hasDaily: !!DAILY_API_KEY,
+        hasGemini: !!GEMINI_API_KEY
+      });
+      throw new Error('API keys not configured')
+    }
+
+    // Create a Daily room first
+    const roomResponse = await fetch('https://api.daily.co/v1/rooms', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${DAILY_API_KEY}`
       },
       body: JSON.stringify({
+        properties: {
+          exp: Math.round(Date.now() / 1000) + 3600, // Room expires in 1 hour
+          enable_chat: true,
+          enable_knocking: false,
+          start_video_off: true,
+          start_audio_off: false
+        }
+      })
+    });
+
+    if (!roomResponse.ok) {
+      const error = await roomResponse.text();
+      console.error('Daily room creation failed:', error);
+      throw new Error('Failed to create Daily room');
+    }
+
+    const roomData = await roomResponse.json();
+    console.log('Daily room created:', roomData);
+
+    // Then start the bot in this room
+    const botResponse = await fetch('https://api.daily.co/v1/bots/start', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DAILY_API_KEY}`
+      },
+      body: JSON.stringify({
+        room_url: roomData.url,
         bot_profile: "gemini_multimodal_live_2024_12",
         max_duration: 300,
         service_options: {
@@ -42,23 +79,11 @@ serve(async (req) => {
                 value: [
                   {
                     role: "user",
-                    content: "You are an interview preparation agent called 'The Old Grasshopper', assisting in a real-time setting. " +
-                      "I will ask you questions to understand how best to help you with your interview preparation now. " +
-                      "First, please tell me what kind of interview you are preparing for, and how you would like to prep in this session. " +
-                      "I can ask you practice questions, give you feedback on your answers as you speak, " +
-                      "analyze the room you are in, and even describe what you are wearing! " +
-                      "Keep your responses brief and easy to understand. " +
-                      "When you detect I have finished speaking, it is your turn to respond. " +
-                      "If you need more clarity, please ask me a follow-up question. " +
-                      "When you finish speaking, I will wait to detect your pause before replying. " +
-                      "If you notice a gap and I'm not speaking, please prompt me to continue. " +
-                      "Remember, my responses will be converted to audio, so only use ! or ? for special characters!"
+                    content: "You are an interview preparation agent called 'The Old Grasshopper'. " +
+                      "Help candidates prepare for interviews by asking relevant questions and providing feedback. " +
+                      "Keep responses concise and natural. Wait for pauses before responding."
                   }
                 ]
-              },
-              {
-                name: "run_on_config",
-                value: true
               }
             ]
           }
@@ -67,19 +92,31 @@ serve(async (req) => {
           gemini_live: GEMINI_API_KEY
         }
       })
-    })
+    });
 
-    const data = await response.json()
-    console.log('Daily bot initialized:', data)
+    if (!botResponse.ok) {
+      const error = await botResponse.text();
+      console.error('Daily bot creation failed:', error);
+      throw new Error('Failed to create Daily bot');
+    }
 
-    return new Response(JSON.stringify(data), {
+    const botData = await botResponse.json();
+    console.log('Daily bot initialized:', botData);
+
+    return new Response(JSON.stringify(botData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    console.error('Error initializing Daily bot:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    console.error('Error in initialize-daily-bot:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        info: "Please ensure Daily API key and Gemini API key are properly configured"
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
   }
 })

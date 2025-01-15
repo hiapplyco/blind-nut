@@ -105,6 +105,14 @@ const Index = () => {
             <Video className="h-4 w-4" />
             Screening Room
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/interview-prep')}
+            className="flex items-center gap-2"
+          >
+            <Video className="h-4 w-4" />
+            Interview Prep
+          </Button>
         </div>
       </div>
       

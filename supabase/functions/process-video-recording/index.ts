@@ -81,6 +81,20 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '')
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
+    const vanityFairPrompt = `
+      Please analyze this video recording in the style of a Vanity Fair article, focusing on the environment and setting. 
+      Consider the following aspects:
+      
+      - The ambiance and decor of the space, described with the magazine's characteristic attention to detail and subtle wit
+      - The lighting and its effect on the mood, as if capturing a carefully staged photoshoot
+      - Any notable design elements or personal touches that might reveal something about the participants
+      - The overall aesthetic and what it suggests about the meeting's dynamics
+      - How the environment might influence the interaction between participants
+      
+      Write the analysis as if it were a feature piece for Vanity Fair, complete with sophisticated observations and cultural commentary.
+      Include both factual descriptions and interpretive elements that paint a vivid picture of the scene.
+    `
+
     const result = await model.generateContent([
       {
         inlineData: {
@@ -88,7 +102,7 @@ serve(async (req) => {
           data: await videoBlob.arrayBuffer()
         }
       },
-      "Please analyze this video recording and provide a detailed summary including: key discussion points, important decisions made, action items, and overall meeting outcome. Also note any significant visual cues or non-verbal communication."
+      vanityFairPrompt
     ])
 
     const analysis = result.response.text()

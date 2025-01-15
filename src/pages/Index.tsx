@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, Video } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -88,14 +88,24 @@ const Index = () => {
     <div className="container max-w-4xl py-8 space-y-8">
       <div className="flex justify-between items-center">
         <TitleSection />
-        <Button
-          variant="outline"
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2"
-        >
-          <FileText className="h-4 w-4" />
-          View Past Searches
-        </Button>
+        <div className="flex gap-4">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            View Past Searches
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/screening-room')}
+            className="flex items-center gap-2"
+          >
+            <Video className="h-4 w-4" />
+            Screening Room
+          </Button>
+        </div>
       </div>
       
       <NewSearchForm userId={session.user.id} />

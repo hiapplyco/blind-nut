@@ -1,17 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Copy, Video, Mic, MicOff } from "lucide-react";
+import { Video } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import DailyIframe from "@daily-co/daily-js";
 import { DailyCall } from "@daily-co/daily-js";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { VideoControls } from "@/components/video/VideoControls";
+import { TranscriptList } from "@/components/video/TranscriptList";
 
 const ROOM_URL = "https://hiapplyco.daily.co/lovable";
 
 interface TranscriptionMessage {
   text: string;
-  timestamp: string;  // Explicitly define as string since Daily.co provides ISO string
+  timestamp: string;
   participantId: string;
 }
 
@@ -24,7 +25,6 @@ const ScreeningRoom = () => {
   useEffect(() => {
     if (!callWrapperRef.current || callFrameRef.current) return;
 
-    // Create the callframe
     callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
       showLeaveButton: true,
       showFullscreenButton: true,
@@ -36,7 +36,6 @@ const ScreeningRoom = () => {
       },
     });
 
-    // Set up event listeners
     callFrameRef.current.on('transcription-started', (event) => {
       console.log('Transcription started:', event);
       setIsTranscribing(true);
@@ -47,7 +46,7 @@ const ScreeningRoom = () => {
       console.log('Transcription message:', event);
       setTranscripts(prev => [...prev, {
         text: event.text,
-        timestamp: event.timestamp,  // Daily.co provides this as an ISO string
+        timestamp: new Date(event.timestamp).toISOString(),
         participantId: event.participantId
       }]);
     });
@@ -68,10 +67,8 @@ const ScreeningRoom = () => {
       }
     });
 
-    // Join the call
     callFrameRef.current.join({ url: ROOM_URL });
 
-    // Cleanup
     return () => {
       if (callFrameRef.current) {
         callFrameRef.current.destroy();
@@ -136,47 +133,20 @@ const ScreeningRoom = () => {
             <Video className="h-8 w-8 text-primary" />
             The Screening Room
           </CardTitle>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              onClick={toggleTranscription}
-            >
-              {isTranscribing ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              {isTranscribing ? 'Stop Transcription' : 'Start Transcription'}
-            </Button>
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              onClick={copyRoomUrl}
-            >
-              <Copy className="h-4 w-4" />
-              Copy Meeting Link
-            </Button>
-          </div>
+          <VideoControls 
+            isTranscribing={isTranscribing}
+            onToggleTranscription={toggleTranscription}
+            onCopyLink={copyRoomUrl}
+          />
         </CardHeader>
         <CardContent>
           <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">
             <div ref={callWrapperRef} style={{ width: '100%', height: '100%' }} />
           </div>
-          {transcripts.length > 0 && (
-            <div className="mt-4">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold">Live Transcript</h3>
-                <Button onClick={saveTranscriptsToSupabase}>Save Transcript</Button>
-              </div>
-              <div className="max-h-40 overflow-y-auto bg-white rounded-lg p-4 border">
-                {transcripts.map((t, i) => (
-                  <div key={i} className="mb-2">
-                    <span className="text-sm text-gray-500">
-                      {new Date(t.timestamp).toLocaleTimeString()}
-                    </span>
-                    <p>{t.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <TranscriptList 
+            transcripts={transcripts}
+            onSave={saveTranscriptsToSupabase}
+          />
         </CardContent>
       </Card>
     </div>

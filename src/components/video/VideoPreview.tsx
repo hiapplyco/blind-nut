@@ -4,14 +4,10 @@ import { DailyCall } from "@daily-co/daily-js";
 
 interface VideoPreviewProps {
   onCallFrameReady: (callFrame: DailyCall) => void;
-  settings: {
-    showLeaveButton: boolean;
-    showFullscreenButton: boolean;
-    allowParticipantControls?: boolean;
-  };
+  onJoinMeeting: () => void;
 }
 
-export const VideoPreview = ({ onCallFrameReady, settings }: VideoPreviewProps) => {
+export const VideoPreview = ({ onCallFrameReady, onJoinMeeting }: VideoPreviewProps) => {
   const callWrapperRef = useRef<HTMLDivElement>(null);
   const callFrameRef = useRef<DailyCall | null>(null);
 
@@ -20,8 +16,8 @@ export const VideoPreview = ({ onCallFrameReady, settings }: VideoPreviewProps) 
 
     const initializeCallFrame = async () => {
       callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
-        showLeaveButton: settings.showLeaveButton,
-        showFullscreenButton: settings.showFullscreenButton,
+        showLeaveButton: true,
+        showFullscreenButton: true,
         iframeStyle: {
           position: 'absolute',
           top: '0',
@@ -32,8 +28,8 @@ export const VideoPreview = ({ onCallFrameReady, settings }: VideoPreviewProps) 
           backgroundColor: 'white',
         },
         inputSettings: {
-          audio: true,
-          video: true,
+          audio: { isEnabled: true },
+          video: { isEnabled: true },
           userName: { 
             isRequired: true
           }
@@ -50,11 +46,17 @@ export const VideoPreview = ({ onCallFrameReady, settings }: VideoPreviewProps) 
         callFrameRef.current.destroy();
       }
     };
-  }, [onCallFrameReady, settings]);
+  }, [onCallFrameReady]);
 
   return (
     <div className="flex-1 relative min-h-[400px] bg-muted rounded-lg overflow-hidden">
       <div ref={callWrapperRef} className="w-full h-full" />
+      <button 
+        onClick={onJoinMeeting}
+        className="absolute bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90"
+      >
+        Join Meeting
+      </button>
     </div>
   );
 };

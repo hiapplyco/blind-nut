@@ -12,77 +12,91 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const { headers } = req;
-  const upgradeHeader = headers.get("upgrade") || "";
+  try {
+    const { headers } = req;
+    const upgradeHeader = headers.get("upgrade") || "";
 
-  if (upgradeHeader.toLowerCase() === "websocket") {
-    const { socket, response } = Deno.upgradeWebSocket(req);
-    const genAI = new genai.Client();
+    if (upgradeHeader.toLowerCase() === "websocket") {
+      const { socket, response } = Deno.upgradeWebSocket(req);
+      const genAI = new genai.Client();
 
-    socket.onopen = () => {
-      console.log("WebSocket connected");
-    };
+      socket.onopen = () => {
+        console.log("WebSocket connected");
+      };
 
-    socket.onmessage = async (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        if (data.setup) {
-          // Handle initial setup message
-          console.log("Received setup message:", data.setup);
-          return;
-        }
-
-        if (data.realtime_input) {
-          // Process media chunks
-          const { media_chunks } = data.realtime_input;
+      socket.onmessage = async (event) => {
+        try {
+          const data = JSON.parse(event.data);
           
-          // Process audio and image data
-          for (const chunk of media_chunks) {
-            if (chunk.mime_type === "audio/pcm") {
-              // Process audio chunk
-              console.log("Received audio chunk");
-            } else if (chunk.mime_type === "image/jpeg") {
-              // Process image chunk
-              console.log("Received image chunk");
-            }
+          if (data.setup) {
+            console.log("Received setup message:", data.setup);
+            socket.send(JSON.stringify({ text: "Setup received, ready for interaction" }));
+            return;
           }
 
-          // Send response back to client
-          socket.send(JSON.stringify({
-            text: "I received your input and am processing it.",
-          }));
+          if (data.realtime_input) {
+            const { media_chunks } = data.realtime_input;
+            
+            for (const chunk of media_chunks) {
+              if (chunk.mime_type === "audio/pcm") {
+                console.log("Received audio chunk");
+              } else if (chunk.mime_type === "image/jpeg") {
+                console.log("Received image chunk");
+              }
+            }
+
+            socket.send(JSON.stringify({
+              text: "I received your input and am processing it.",
+            }));
+          }
+        } catch (error) {
+          console.error("Error processing message:", error);
+          socket.send(JSON.stringify({ error: "Failed to process message" }));
         }
-      } catch (error) {
-        console.error("Error processing message:", error);
-        socket.send(JSON.stringify({ error: "Failed to process message" }));
-      }
-    };
+      };
 
-    socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
 
-    socket.onclose = () => {
-      console.log("WebSocket closed");
-    };
+      socket.onclose = () => {
+        console.log("WebSocket closed");
+      };
 
-    return response;
-  }
-
-  // For non-WebSocket requests, return the WebSocket URL
-  const wsUrl = `wss://${req.headers.get("host")}/functions/v1/initialize-daily-bot`;
-  
-  return new Response(
-    JSON.stringify({ 
-      success: true,
-      websocket_url: wsUrl
-    }),
-    { 
-      headers: { 
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      } 
+      return response;
     }
-  );
+
+    // For non-WebSocket requests, return the WebSocket URL
+    const host = req.headers.get("host") || "";
+    const wsProtocol = host.includes("localhost") ? "ws" : "wss";
+    const wsUrl = `${wsProtocol}://${host}/functions/v1/initialize-daily-bot`;
+    
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        websocket_url: wsUrl
+      }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        } 
+      }
+    );
+  } catch (error) {
+    console.error('Error in initialize-daily-bot:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Failed to initialize interview assistant',
+        details: error.message 
+      }),
+      { 
+        status: 500,
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+  }
 });

@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import { VideoControls } from "@/components/video/VideoControls";
-import { TranscriptList } from "@/components/video/TranscriptList";
 import { VideoCallFrame } from "@/components/video/VideoCallFrame";
 import { TranscriptionProcessor } from "@/components/video/TranscriptionProcessor";
 import { MeetingDataManager } from "@/components/video/MeetingDataManager";
@@ -84,9 +83,6 @@ const ScreeningRoom = () => {
           onLeaveMeeting={handleLeaveMeeting}
           onRecordingStarted={handleRecordingStarted}
         />
-      </div>
-      <div className="h-[200px] p-4 bg-background">
-        <TranscriptList transcripts={transcripts} />
       </div>
     </div>
   );

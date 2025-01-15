@@ -28,8 +28,16 @@ export const VideoPreview = ({ onCallFrameReady, onJoinMeeting }: VideoPreviewPr
           backgroundColor: 'white',
         },
         inputSettings: {
-          audio: { isEnabled: true },
-          video: { isEnabled: true },
+          audio: {
+            processor: {
+              type: 'none'
+            }
+          },
+          video: {
+            processor: {
+              type: 'none'
+            }
+          },
           userName: { 
             isRequired: true
           }

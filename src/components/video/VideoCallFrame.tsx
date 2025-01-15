@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import DailyIframe from "@daily-co/daily-js";
 import { DailyCall } from "@daily-co/daily-js";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { RecordingManager } from "./RecordingManager";
+import { MeetingTokenManager } from "./MeetingTokenManager";
 
 interface VideoCallFrameProps {
   onJoinMeeting: () => void;
@@ -25,30 +26,13 @@ export const VideoCallFrame = ({
   const [isRecording, setIsRecording] = useState(false);
 
   const ROOM_URL = "https://hiapplyco.daily.co/lovable";
-
-  const startRecording = async () => {
-    try {
-      if (!callFrameRef.current || !isCallFrameReady) {
-        console.error('Call frame not ready');
-        return;
-      }
-
-      await callFrameRef.current.startRecording({
-        layout: {
-          preset: "active-participant"
-        },
-        width: 1920,
-        height: 1080,
-        backgroundColor: "#000000"
-      });
-      
-      setIsRecording(true);
-      toast.success('Recording started automatically');
-    } catch (error) {
-      console.error('Error starting recording:', error);
-      toast.error('Failed to start recording');
-    }
-  };
+  const meetingTokenManager = MeetingTokenManager();
+  const recordingManager = RecordingManager({
+    callFrame: callFrameRef.current,
+    isCallFrameReady,
+    isRecording,
+    setIsRecording
+  });
 
   useEffect(() => {
     if (!callWrapperRef.current || callFrameRef.current) return;
@@ -72,7 +56,7 @@ export const VideoCallFrame = ({
           onJoinMeeting();
           setTimeout(() => {
             if (!isRecording) {
-              startRecording();
+              recordingManager.startRecording();
             }
           }, 1000);
         });
@@ -97,28 +81,7 @@ export const VideoCallFrame = ({
 
         callFrameRef.current.on('left-meeting', onLeaveMeeting);
 
-        // Get the Daily.co API key from Supabase
-        const { data: { secret: dailyApiKey } } = await supabase.functions.invoke('get-daily-key');
-        
-        // Create a meeting token with recording permissions and bucket configuration
-        const response = await fetch('https://api.daily.co/v1/meeting-tokens', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${dailyApiKey}`
-          },
-          body: JSON.stringify({
-            properties: {
-              room_name: 'lovable',
-              enable_recording: 'cloud',
-              start_cloud_recording: true,
-              transcription_bucket: 'recordings'
-            }
-          })
-        });
-
-        const { token } = await response.json();
-
+        const token = await meetingTokenManager.createMeetingToken();
         await callFrameRef.current.join({ 
           url: ROOM_URL,
           token

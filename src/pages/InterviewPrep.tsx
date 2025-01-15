@@ -15,8 +15,8 @@ const InterviewPrep = () => {
   const initializeClient = async () => {
     const client = new RTVIClient({
       transport: new DailyTransport({
-        dailyFactoryOptions: {
-          // Daily transport specific configuration
+        dailyConfig: {
+          userName: "Interview Prep User",
           initialPrompt: "You are an interview preparation agent called 'The Old Grasshopper', assisting in a real-time setting. " +
             "I will ask you questions to understand how best to help you with your interview preparation *now*. " +
             "First, please tell me what kind of interview *you* are preparing for, and how *you* would like to prep *in this session*. " +
@@ -28,11 +28,11 @@ const InterviewPrep = () => {
             "When you finish speaking, I will wait to detect your pause before replying. " +
             "If you notice a gap and I'm not speaking, please prompt me to continue. " +
             "Remember, my responses will be converted to audio, so only use '!' or '?' for special characters!"
-        },
+        }
       }),
       enableMic: isMicEnabled,
       enableCam: isCamEnabled,
-      params: {}, // Add required params property
+      params: {}, // Required empty object for RTVIClientOptions
       callbacks: {
         onBotReady: () => {
           console.log("Bot is ready!");

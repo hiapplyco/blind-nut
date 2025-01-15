@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import DailyIframe, { DailyCall, DailyEvent, DailyEventObjectFatalError } from "@daily-co/daily-js";
-import { VideoClosingAnimation } from "./VideoClosingAnimation";
 import { VideoPreviewProps } from "./types";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -8,7 +7,6 @@ import { Loader2 } from "lucide-react";
 export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) => {
   const callWrapperRef = useRef<HTMLDivElement>(null);
   const callFrameRef = useRef<DailyCall | null>(null);
-  const [showTurnOnAnimation, setShowTurnOnAnimation] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -87,11 +85,6 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
     };
   }, [onCallFrameReady, roomUrl]);
 
-  const handleTurnOnComplete = () => {
-    console.log("Turn on animation complete");
-    setShowTurnOnAnimation(false);
-  };
-
   return (
     <div className="absolute inset-0">
       <div ref={callWrapperRef} className="w-full h-full relative">
@@ -106,11 +99,6 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
           </div>
         )}
       </div>
-      <VideoClosingAnimation 
-        isVisible={showTurnOnAnimation}
-        onAnimationComplete={handleTurnOnComplete}
-        mode="turnOn"
-      />
     </div>
   );
 };

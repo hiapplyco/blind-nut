@@ -1,5 +1,4 @@
 import { VideoPreview } from "./VideoPreview";
-import { VideoClosingAnimation } from "./VideoClosingAnimation";
 import { useDaily } from "./hooks/useDaily";
 import { VideoCallFrameProps } from "./types";
 
@@ -12,21 +11,14 @@ export const VideoCallFrame = ({
 }: VideoCallFrameProps) => {
   const {
     handleCallFrameReady,
-    isClosing,
-    setIsClosing,
     ROOM_URL,
   } = useDaily(
     onJoinMeeting,
     onParticipantJoined,
     onParticipantLeft,
-    onRecordingStarted
+    onRecordingStarted,
+    onLeaveMeeting
   );
-
-  const handleClosingAnimationComplete = () => {
-    console.log("Animation complete, calling onLeaveMeeting");
-    setIsClosing(false);
-    onLeaveMeeting();
-  };
 
   console.log("VideoCallFrame rendering with room URL:", ROOM_URL);
 
@@ -35,11 +27,6 @@ export const VideoCallFrame = ({
       <VideoPreview 
         onCallFrameReady={handleCallFrameReady} 
         roomUrl={ROOM_URL}
-      />
-      <VideoClosingAnimation 
-        isVisible={isClosing}
-        onAnimationComplete={handleClosingAnimationComplete}
-        mode="turnOff"
       />
     </div>
   );

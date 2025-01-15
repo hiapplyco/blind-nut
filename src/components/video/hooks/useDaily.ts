@@ -9,11 +9,11 @@ export const useDaily = (
   onParticipantJoined: (participant: { id: string; name?: string }) => void,
   onParticipantLeft: (participant: { id: string }) => void,
   onRecordingStarted: (recordingId: string) => void,
+  onLeaveMeeting: () => void,
 ) => {
   const callFrameRef = useRef<DailyCall | null>(null);
   const [isCallFrameReady, setIsCallFrameReady] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
 
   const ROOM_URL = "https://hiapplyco.daily.co/lovable";
   const meetingTokenManager = MeetingTokenManager();
@@ -70,27 +70,25 @@ export const useDaily = (
       });
 
       callFrame.on("left-meeting", () => {
-        console.log("Left meeting, triggering closing animation");
-        setIsClosing(true);
+        console.log("Left meeting");
+        onLeaveMeeting();
       });
 
       callFrame.on("click", (event: { action: string }) => {
         if (event.action === "leave-meeting") {
           console.log("Leave button clicked");
-          setIsClosing(true);
+          onLeaveMeeting();
         }
       });
     } catch (error) {
       console.error("Error initializing call frame:", error);
       toast.error("Failed to initialize video call");
     }
-  }, [onJoinMeeting, onParticipantJoined, onParticipantLeft, onRecordingStarted, isRecording]);
+  }, [onJoinMeeting, onParticipantJoined, onParticipantLeft, onRecordingStarted, onLeaveMeeting, isRecording]);
 
   return {
     callFrameRef,
     isCallFrameReady,
-    isClosing,
-    setIsClosing,
     handleCallFrameReady,
     ROOM_URL,
   };

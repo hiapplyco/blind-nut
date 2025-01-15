@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Mic, MicOff, Video, VideoOff } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const InterviewPrep = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -13,55 +14,55 @@ const InterviewPrep = () => {
   const [voiceClient, setVoiceClient] = useState<RTVIClient | null>(null);
 
   const initializeClient = async () => {
-    const transport = new DailyTransport();
-    
-    // Configure the transport with the initial prompt
-    transport.setSystemPrompt(
-      "You are an interview preparation agent called 'The Old Grasshopper', assisting in a real-time setting. " +
-      "I will ask you questions to understand how best to help you with your interview preparation *now*. " +
-      "First, please tell me what kind of interview *you* are preparing for, and how *you* would like to prep *in this session*. " +
-      "I can ask *you* practice questions, give *you* feedback on *your* answers *as you speak*, " +
-      "analyze the room *you* are in, and even describe what *you* are wearing! " +
-      "Keep *your* responses brief and easy to understand. " +
-      "When you detect I have finished speaking, it is your turn to respond. " +
-      "If you need more clarity, please ask me a follow-up question. " +
-      "When you finish speaking, I will wait to detect your pause before replying. " +
-      "If you notice a gap and I'm not speaking, please prompt me to continue. " +
-      "Remember, my responses will be converted to audio, so only use '!' or '?' for special characters!"
-    );
-
-    const client = new RTVIClient({
-      transport,
-      enableMic: isMicEnabled,
-      enableCam: isCamEnabled,
-      params: {}, // Required empty object for RTVIClientOptions
-      callbacks: {
-        onBotReady: () => {
-          console.log("Bot is ready!");
-          toast.success("Interview assistant is ready!");
-          setIsConnected(true);
-        },
-        onError: (error) => {
-          console.error("Bot error:", error);
-          toast.error("Error connecting to interview assistant");
-          setIsConnected(false);
-        },
-        onDisconnected: () => {
-          console.log("Bot disconnected");
-          toast.info("Interview assistant disconnected");
-          setIsConnected(false);
-        }
-      }
-    });
-
-    setVoiceClient(client);
-
     try {
-      await client.connect();
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to start interview assistant");
-      client.disconnect();
+      // Initialize Daily bot through edge function
+      const { data: botData, error: botError } = await supabase.functions.invoke('initialize-daily-bot')
+      
+      if (botError) {
+        console.error('Error initializing bot:', botError)
+        toast.error('Failed to initialize interview assistant')
+        return
+      }
+
+      console.log('Bot initialized:', botData)
+
+      const transport = new DailyTransport()
+      const client = new RTVIClient({
+        transport,
+        enableMic: isMicEnabled,
+        enableCam: isCamEnabled,
+        params: {}, // Required empty object for RTVIClientOptions
+        callbacks: {
+          onBotReady: () => {
+            console.log("Bot is ready!");
+            toast.success("Interview assistant is ready!");
+            setIsConnected(true);
+          },
+          onError: (error) => {
+            console.error("Bot error:", error);
+            toast.error("Error connecting to interview assistant");
+            setIsConnected(false);
+          },
+          onDisconnected: () => {
+            console.log("Bot disconnected");
+            toast.info("Interview assistant disconnected");
+            setIsConnected(false);
+          }
+        }
+      });
+
+      setVoiceClient(client);
+
+      try {
+        await client.connect();
+      } catch (e) {
+        console.error(e);
+        toast.error("Failed to start interview assistant");
+        client.disconnect();
+      }
+    } catch (error) {
+      console.error('Error in initializeClient:', error);
+      toast.error("Failed to initialize interview assistant");
     }
   };
 

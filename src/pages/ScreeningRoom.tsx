@@ -22,6 +22,31 @@ const ScreeningRoom = () => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcripts, setTranscripts] = useState<TranscriptionMessage[]>([]);
 
+  const saveTranscriptsToSupabase = async (newTranscripts: TranscriptionMessage[]) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error("User not authenticated");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('parsed_documents')
+        .insert({
+          user_id: user.id,
+          original_filename: `transcript-${new Date().toISOString()}.txt`,
+          parsed_text: newTranscripts.map(t => `[${t.timestamp}] ${t.text}`).join('\n'),
+          file_path: `transcripts/${user.id}/${new Date().toISOString()}.txt`
+        });
+
+      if (error) throw error;
+      toast.success("Transcripts saved automatically");
+    } catch (error) {
+      console.error('Error saving transcripts:', error);
+      toast.error("Failed to save transcripts");
+    }
+  };
+
   useEffect(() => {
     if (!callWrapperRef.current || callFrameRef.current) return;
 
@@ -44,11 +69,18 @@ const ScreeningRoom = () => {
 
     callFrameRef.current.on('transcription-message', (event) => {
       console.log('Transcription message:', event);
-      setTranscripts(prev => [...prev, {
+      const newTranscript = {
         text: event.text,
         timestamp: new Date(event.timestamp).toISOString(),
         participantId: event.participantId
-      }]);
+      };
+      
+      setTranscripts(prev => {
+        const updatedTranscripts = [...prev, newTranscript];
+        // Save transcripts automatically whenever we receive a new message
+        saveTranscriptsToSupabase(updatedTranscripts);
+        return updatedTranscripts;
+      });
     });
 
     callFrameRef.current.on('transcription-stopped', () => {
@@ -85,31 +117,6 @@ const ScreeningRoom = () => {
     }
   };
 
-  const saveTranscriptsToSupabase = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Please login to save transcripts");
-        return;
-      }
-
-      const { error } = await supabase
-        .from('parsed_documents')
-        .insert({
-          user_id: user.id,
-          original_filename: `transcript-${new Date().toISOString()}.txt`,
-          parsed_text: transcripts.map(t => `[${t.timestamp}] ${t.text}`).join('\n'),
-          file_path: `transcripts/${user.id}/${new Date().toISOString()}.txt`
-        });
-
-      if (error) throw error;
-      toast.success("Transcripts saved successfully!");
-    } catch (error) {
-      console.error('Error saving transcripts:', error);
-      toast.error("Failed to save transcripts");
-    }
-  };
-
   return (
     <div className="container max-w-7xl mx-auto py-8">
       <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-[#FFFBF4]">
@@ -128,7 +135,7 @@ const ScreeningRoom = () => {
           </div>
           <TranscriptList 
             transcripts={transcripts}
-            onSave={saveTranscriptsToSupabase}
+            onSave={() => saveTranscriptsToSupabase(transcripts)}
           />
         </CardContent>
       </Card>

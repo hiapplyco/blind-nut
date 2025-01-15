@@ -50,7 +50,6 @@ export const VideoCallFrame = ({
             height: '100%',
             border: '0',
             backgroundColor: 'white',
-            minHeight: '600px', // Ensure minimum height for controls
           },
         });
 
@@ -107,6 +106,6 @@ export const VideoCallFrame = ({
   }, [onJoinMeeting, onParticipantJoined, onParticipantLeft, onLeaveMeeting, onRecordingStarted]);
 
   return (
-    <div ref={callWrapperRef} className="w-full h-full relative min-h-[600px]" />
+    <div ref={callWrapperRef} className="w-full h-full relative" style={{ minHeight: '400px' }} />
   );
 };

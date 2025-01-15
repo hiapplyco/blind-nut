@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import DailyIframe, { DailyCall, DailyEventObjectCameraError, DailyEventObjectFatalError } from "@daily-co/daily-js";
+import DailyIframe, { DailyCall, DailyEvent, DailyEventObjectFatalError } from "@daily-co/daily-js";
 import { VideoClosingAnimation } from "./VideoClosingAnimation";
 import { VideoPreviewProps } from "./types";
 import { toast } from "sonner";
@@ -34,14 +34,15 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
         await callFrameRef.current.load();
         console.log("Daily frame loaded, calling onCallFrameReady");
         
-        // Add event listeners for device permissions
-        callFrameRef.current.on('camera-error', (event: DailyEventObjectCameraError) => {
+        // Add event listeners for device permissions and connection states
+        callFrameRef.current.on('camera-error', () => {
           toast.error('Unable to access camera. Please check your permissions.');
           setIsLoading(false);
         });
 
-        callFrameRef.current.on('mic-error', (event: DailyEventObjectFatalError) => {
-          toast.error('Unable to access microphone. Please check your permissions.');
+        callFrameRef.current.on('error', (event: DailyEventObjectFatalError) => {
+          console.error('Daily.co error:', event);
+          toast.error('An error occurred while connecting to the video call.');
           setIsLoading(false);
         });
 
@@ -52,6 +53,20 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
         callFrameRef.current.on('joined-meeting', () => {
           setIsLoading(false);
           toast.success('Successfully joined meeting!');
+        });
+
+        callFrameRef.current.on('left-meeting', () => {
+          setIsLoading(false);
+        });
+
+        callFrameRef.current.on('loading', () => {
+          setIsLoading(true);
+          toast.info('Loading video call...');
+        });
+
+        callFrameRef.current.on('load-attempt-failed', () => {
+          setIsLoading(false);
+          toast.error('Failed to load video call. Please check your connection and try again.');
         });
 
         onCallFrameReady(callFrameRef.current);

@@ -83,7 +83,7 @@ const ScreeningRoom = () => {
           <VideoControls onCopyLink={copyRoomUrl} />
         </CardHeader>
         <CardContent>
-          <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">
+          <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden relative">
             <VideoCallFrame
               onJoinMeeting={handleJoinMeeting}
               onParticipantJoined={handleParticipantJoined}

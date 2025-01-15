@@ -253,6 +253,39 @@ export type Database = {
           },
         ]
       }
+      user_video_analyses: {
+        Row: {
+          analysis_prompt: string
+          analysis_result: string | null
+          created_at: string | null
+          id: number
+          status: string | null
+          user_id: string | null
+          video_name: string
+          video_url: string
+        }
+        Insert: {
+          analysis_prompt: string
+          analysis_result?: string | null
+          created_at?: string | null
+          id?: number
+          status?: string | null
+          user_id?: string | null
+          video_name: string
+          video_url: string
+        }
+        Update: {
+          analysis_prompt?: string
+          analysis_result?: string | null
+          created_at?: string | null
+          id?: number
+          status?: string | null
+          user_id?: string | null
+          video_name?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

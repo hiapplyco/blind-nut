@@ -79,6 +79,11 @@ export const VideoCallFrame = ({
           },
         });
 
+        // Create a local preview before joining
+        await callFrameRef.current.load({
+          url: ROOM_URL
+        });
+        
         callFrameRef.current.on('joined-meeting', () => {
           console.log('Joined meeting, call frame ready');
           setIsCallFrameReady(true);

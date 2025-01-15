@@ -31,7 +31,9 @@ const InterviewPrep = () => {
         transport,
         enableMic: isMicEnabled,
         enableCam: isCamEnabled,
-        params: {}, // Required empty object for RTVIClientOptions
+        params: {
+          baseUrl: "https://api.pipecat.ai", // Add the base URL parameter
+        },
         callbacks: {
           onBotReady: () => {
             console.log("Bot is ready!");

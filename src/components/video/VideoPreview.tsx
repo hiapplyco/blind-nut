@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import DailyIframe from "@daily-co/daily-js";
-import { DailyCall } from "@daily-co/daily-js";
 import { VideoClosingAnimation } from "./VideoClosingAnimation";
-
-interface VideoPreviewProps {
-  onCallFrameReady: (callFrame: DailyCall) => void;
-  roomUrl: string;
-}
+import { VideoPreviewProps } from "./types";
 
 export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) => {
   const callWrapperRef = useRef<HTMLDivElement>(null);

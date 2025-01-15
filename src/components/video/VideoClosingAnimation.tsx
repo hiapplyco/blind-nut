@@ -1,7 +1,7 @@
 import Lottie from "lottie-react";
 import { useEffect, useState } from "react";
+import { VideoClosingAnimationProps } from "./types";
 
-// Animation JSON from https://lottiefiles.com/animations/tv-turn-off-MYozWyaK52
 const tvOffAnimation = {
   "v": "5.5.7",
   "meta": { "g": "LottieFiles AE 0.1.20", "a": "", "k": "", "d": "", "tc": "" },
@@ -62,12 +62,6 @@ const tvOffAnimation = {
   }],
   "markers": []
 };
-
-interface VideoClosingAnimationProps {
-  isVisible: boolean;
-  onAnimationComplete: () => void;
-  mode?: 'turnOn' | 'turnOff';
-}
 
 export const VideoClosingAnimation = ({ 
   isVisible, 

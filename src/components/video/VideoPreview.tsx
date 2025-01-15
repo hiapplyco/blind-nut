@@ -19,10 +19,14 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
           showFullscreenButton: true,
           url: roomUrl,
           iframeStyle: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
             width: '100%',
             height: '100%',
             border: '0',
             borderRadius: '8px',
+            zIndex: 1,
           },
         });
 
@@ -30,7 +34,6 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
         await callFrameRef.current.load();
         console.log("Daily frame loaded, calling onCallFrameReady");
         
-        // Add event listeners for device permissions and connection states
         callFrameRef.current.on('camera-error', () => {
           toast.error('Unable to access camera. Please check your permissions.');
         });
@@ -67,8 +70,12 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
   }, [onCallFrameReady, roomUrl]);
 
   return (
-    <div className="absolute inset-0">
-      <div ref={callWrapperRef} className="w-full h-full relative" />
+    <div className="absolute inset-0 bg-background">
+      <div 
+        ref={callWrapperRef} 
+        className="w-full h-full relative"
+        style={{ minHeight: '400px' }}
+      />
     </div>
   );
 };

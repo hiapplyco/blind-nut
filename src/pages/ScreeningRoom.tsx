@@ -81,7 +81,7 @@ const ScreeningRoom = () => {
         <h1 className="text-2xl font-bold">The Screening Room</h1>
         <VideoControls onCopyLink={copyRoomUrl} />
       </div>
-      <div className="flex-1 relative">
+      <div className="flex-1 relative" style={{ minHeight: 'calc(100vh - 80px)' }}>
         <VideoCallFrame
           onJoinMeeting={handleJoinMeeting}
           onParticipantJoined={handleParticipantJoined}

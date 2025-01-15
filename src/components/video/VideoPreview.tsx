@@ -20,7 +20,6 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
           url: roomUrl,
           theme: {
             colors: {
-              // Primary purple theme
               accent: '#9b87f5',        // Primary purple
               accentText: '#FFFFFF',    // White text on purple
               background: '#F8F5FF',    // Light purple background

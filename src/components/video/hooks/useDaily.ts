@@ -25,6 +25,17 @@ export const useDaily = (
     setIsRecording,
   });
 
+  const startTranscription = async (callFrame: DailyCall) => {
+    try {
+      await callFrame.startTranscription();
+      console.log("Transcription started");
+      toast.success("Live transcription enabled");
+    } catch (error) {
+      console.error("Error starting transcription:", error);
+      toast.error("Failed to start transcription");
+    }
+  };
+
   const handleCallFrameReady = useCallback(async (callFrame: DailyCall) => {
     console.log("Call frame ready, preparing to join meeting");
     callFrameRef.current = callFrame;
@@ -42,10 +53,11 @@ export const useDaily = (
       callFrame.on("joined-meeting", () => {
         console.log("Successfully joined meeting");
         onJoinMeeting();
-        setTimeout(() => {
+        setTimeout(async () => {
           if (!isRecording) {
-            recordingManager.startRecording();
+            await recordingManager.startRecording();
           }
+          await startTranscription(callFrame);
         }, 1000);
       });
 
@@ -53,6 +65,24 @@ export const useDaily = (
         console.log("Recording started:", event);
         if (event.recordingId) {
           onRecordingStarted(event.recordingId);
+        }
+      });
+
+      callFrame.on("transcription-started", (event) => {
+        console.log("Transcription started:", event);
+      });
+
+      callFrame.on("transcription-message", async (event) => {
+        console.log("Transcription message:", event);
+        try {
+          await supabase.from('daily_transcriptions').insert({
+            participant_id: event.participantId,
+            text: event.text,
+            timestamp: event.timestamp,
+            meeting_id: meetingId // You'll need to track this when creating the meeting
+          });
+        } catch (error) {
+          console.error("Error saving transcription:", error);
         }
       });
 

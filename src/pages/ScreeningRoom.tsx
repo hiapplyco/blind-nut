@@ -46,7 +46,7 @@ const ScreeningRoom = () => {
           meeting_id: meetingId,
           participant_id: transcript.participantId,
           text: transcript.text,
-          timestamp: new Date(transcript.timestamp)
+          timestamp: transcript.timestamp // Now using the string timestamp directly
         });
 
       if (error) throw error;
@@ -143,7 +143,7 @@ const ScreeningRoom = () => {
       console.log('Transcription message:', event);
       const newTranscript = {
         text: event.text,
-        timestamp: new Date(event.timestamp).toISOString(),
+        timestamp: new Date(event.timestamp).toISOString(), // Convert to ISO string
         participantId: event.participantId
       };
       

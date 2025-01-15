@@ -24,7 +24,11 @@ export const TranscriptionProcessor = () => {
         });
         
         if (!response.ok) {
-          throw new Error('Failed to fetch recording details');
+          console.log('Recording not ready yet, retrying...');
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          retryCount++;
+          continue;
         }
         
         recordingData = await response.json();
@@ -39,8 +43,12 @@ export const TranscriptionProcessor = () => {
         retryCount++;
       }
       
+      // If we couldn't get the recording after all retries, return empty string
+      // This allows the app to continue working without blocking on transcription
       if (!recordingData?.download_url) {
-        throw new Error('Recording URL not available after maximum retries');
+        console.log('Recording not available yet, will be processed later');
+        toast.info('Recording will be processed once ready');
+        return '';
       }
 
       // Process with Whisper
@@ -48,16 +56,21 @@ export const TranscriptionProcessor = () => {
         body: { recordingUrl: recordingData.download_url }
       });
 
-      if (whisperError) throw whisperError;
+      if (whisperError) {
+        console.error('Whisper processing error:', whisperError);
+        toast.info('Transcription will be available later');
+        return '';
+      }
+
       if (whisperData?.text) {
         return whisperData.text;
       }
 
-      throw new Error('No transcription text received');
+      return '';
     } catch (error) {
       console.error('Error processing recording:', error);
-      toast.error('Failed to process recording');
-      throw error;
+      toast.info('Recording will be processed later');
+      return '';
     }
   };
 

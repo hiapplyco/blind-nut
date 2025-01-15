@@ -1,7 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Video } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Copy, Video } from "lucide-react";
 import { useEffect, useRef } from "react";
-import DailyIframe, { DailyCall } from "@daily-co/daily-js";
+import DailyIframe from "@daily-co/daily-js";
+import { DailyCall } from "@daily-co/daily-js";
+import { toast } from "sonner";
 
 const ROOM_URL = "https://hiapplyco.daily.co/lovable";
 
@@ -35,6 +38,15 @@ const ScreeningRoom = () => {
     };
   }, []);
 
+  const copyRoomUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(ROOM_URL);
+      toast.success("Meeting link copied to clipboard!");
+    } catch (err) {
+      toast.error("Failed to copy meeting link");
+    }
+  };
+
   return (
     <div className="container max-w-7xl mx-auto py-8">
       <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-[#FFFBF4]">
@@ -43,6 +55,14 @@ const ScreeningRoom = () => {
             <Video className="h-8 w-8 text-primary" />
             The Screening Room
           </CardTitle>
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={copyRoomUrl}
+          >
+            <Copy className="h-4 w-4" />
+            Copy Meeting Link
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">

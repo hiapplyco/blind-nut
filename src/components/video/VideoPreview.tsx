@@ -4,10 +4,10 @@ import { DailyCall } from "@daily-co/daily-js";
 
 interface VideoPreviewProps {
   onCallFrameReady: (callFrame: DailyCall) => void;
-  onJoinMeeting: () => void;
+  roomUrl: string;
 }
 
-export const VideoPreview = ({ onCallFrameReady, onJoinMeeting }: VideoPreviewProps) => {
+export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) => {
   const callWrapperRef = useRef<HTMLDivElement>(null);
   const callFrameRef = useRef<DailyCall | null>(null);
 
@@ -19,6 +19,7 @@ export const VideoPreview = ({ onCallFrameReady, onJoinMeeting }: VideoPreviewPr
         callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
           showLeaveButton: true,
           showFullscreenButton: true,
+          url: roomUrl,
         });
 
         await callFrameRef.current.load();
@@ -35,7 +36,7 @@ export const VideoPreview = ({ onCallFrameReady, onJoinMeeting }: VideoPreviewPr
         callFrameRef.current.destroy();
       }
     };
-  }, [onCallFrameReady]);
+  }, [onCallFrameReady, roomUrl]);
 
   return (
     <div className="flex-1 relative min-h-[400px] bg-muted rounded-lg overflow-hidden">

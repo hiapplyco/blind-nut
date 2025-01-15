@@ -38,6 +38,12 @@ export const VideoCallFrame = ({
     setIsCallFrameReady(true);
 
     try {
+      const token = await meetingTokenManager.createMeetingToken();
+      await callFrame.join({
+        url: ROOM_URL,
+        token,
+      });
+
       callFrame.on("joined-meeting", () => {
         console.log("Joined meeting");
         onJoinMeeting();
@@ -73,24 +79,12 @@ export const VideoCallFrame = ({
     }
   };
 
-  const joinMeeting = async () => {
-    try {
-      if (!callFrameRef.current) return;
-
-      const token = await meetingTokenManager.createMeetingToken();
-      await callFrameRef.current.join({
-        url: ROOM_URL,
-        token,
-      });
-    } catch (error) {
-      console.error("Error joining meeting:", error);
-      toast.error("Failed to join meeting");
-    }
-  };
-
   return (
     <div className="w-full h-full relative" style={{ minHeight: "400px" }}>
-      <VideoPreview onCallFrameReady={handleCallFrameReady} onJoinMeeting={joinMeeting} />
+      <VideoPreview 
+        onCallFrameReady={handleCallFrameReady} 
+        roomUrl={ROOM_URL}
+      />
     </div>
   );
 };

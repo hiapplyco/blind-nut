@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MediaControls } from "@/components/interview/MediaControls";
 import { useInterviewBot } from "@/hooks/useInterviewBot";
-import { useElevenLabs } from "@/hooks/useElevenLabs";
 
 const InterviewPrep = () => {
   const {
@@ -15,16 +14,10 @@ const InterviewPrep = () => {
     initializeClient,
     toggleMic,
     toggleCam,
-    disconnect
+    disconnect,
+    videoRef,
+    canvasRef
   } = useInterviewBot();
-
-  const { speakText, isSpeaking } = useElevenLabs();
-
-  // Example welcome message with text-to-speech
-  const handleConnect = async () => {
-    await initializeClient();
-    speakText("Welcome to your interview preparation session. I'm here to help you practice. What kind of interview would you like to prepare for?");
-  };
 
   return (
     <div className="container max-w-4xl py-8">
@@ -48,11 +41,22 @@ const InterviewPrep = () => {
         )}
 
         <div className="space-y-4">
+          <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <canvas ref={canvasRef} className="hidden" />
+          </div>
+
           {!isConnected ? (
             <Button 
-              onClick={handleConnect}
+              onClick={initializeClient}
               className="w-full"
-              disabled={isLoading || isSpeaking}
+              disabled={isLoading}
             >
               {isLoading ? "Connecting..." : "Start Interview Prep"}
             </Button>
@@ -66,7 +70,7 @@ const InterviewPrep = () => {
         {isConnected && (
           <div className="bg-muted p-4 rounded-lg">
             <p className="text-sm text-muted-foreground">
-              Speaking with: The Old Grasshopper
+              Connected to Gemini AI Assistant
               <br />
               Start by telling me what kind of interview you're preparing for!
             </p>

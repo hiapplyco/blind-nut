@@ -16,6 +16,7 @@ serve(async (req) => {
   }
 
   try {
+    // Validate API keys
     if (!DAILY_API_KEY || !GEMINI_API_KEY) {
       console.error('Missing required API keys:', {
         hasDaily: !!DAILY_API_KEY,
@@ -24,6 +25,8 @@ serve(async (req) => {
       throw new Error('API keys not configured')
     }
 
+    console.log('Creating Daily room...');
+    
     // Create a Daily room first
     const roomResponse = await fetch('https://api.daily.co/v1/rooms', {
       method: 'POST',
@@ -52,6 +55,8 @@ serve(async (req) => {
     console.log('Daily room created:', roomData);
 
     // Then start the bot in this room
+    console.log('Starting bot in room:', roomData.url);
+    
     const botResponse = await fetch('https://api.daily.co/v1/bots/start', {
       method: 'POST',
       headers: {

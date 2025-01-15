@@ -29,6 +29,10 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
             border: '0',
             borderRadius: '8px',
           },
+          layout: {
+            fillView: true,
+            fitType: 'fill',
+          },
         });
 
         await callFrameRef.current.load();

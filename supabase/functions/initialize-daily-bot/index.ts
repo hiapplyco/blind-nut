@@ -16,116 +16,118 @@ serve(async (req) => {
     const { headers } = req;
     const upgradeHeader = headers.get("upgrade") || "";
 
-    if (upgradeHeader.toLowerCase() === "websocket") {
-      const { socket, response } = Deno.upgradeWebSocket(req);
-      const genAI = new genai.Client({ 
-        apiKey: Deno.env.get('GEMINI_API_KEY'),
-        http_options: {
-          api_version: 'v1alpha'
+    if (upgradeHeader.toLowerCase() !== "websocket") {
+      // For non-WebSocket requests, return the WebSocket URL
+      const host = req.headers.get("host") || "";
+      const wsProtocol = host.includes("localhost") ? "ws" : "wss";
+      const wsUrl = `${wsProtocol}://${host}/functions/v1/initialize-daily-bot`;
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          websocket_url: wsUrl
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          } 
         }
-      });
+      );
+    }
 
-      let session: any = null;
+    const { socket, response } = Deno.upgradeWebSocket(req);
+    console.log("Upgrading to WebSocket connection");
 
-      socket.onopen = () => {
-        console.log("WebSocket connected");
-      };
+    const genAI = new genai.Client({ 
+      apiKey: Deno.env.get('GEMINI_API_KEY'),
+      http_options: {
+        api_version: 'v1alpha'
+      }
+    });
 
-      socket.onmessage = async (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          if (data.setup) {
-            console.log("Setup received:", data.setup);
-            try {
-              session = await genAI.live.connect({
-                model: "gemini-2.0-flash-exp",
-                config: data.setup
-              });
-              console.log("Gemini API Connected");
-              socket.send(JSON.stringify({ text: "Gemini API connected" }));
-            } catch (e) {
-              console.error(e);
-              socket.send(JSON.stringify({ error: "Failed to connect to Gemini" }));
-              return;
-            }
+    let session: any = null;
+
+    socket.onopen = () => {
+      console.log("WebSocket connected");
+    };
+
+    socket.onmessage = async (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.setup) {
+          console.log("Setup received:", data.setup);
+          try {
+            session = await genAI.live.connect({
+              model: "gemini-2.0-flash-exp",
+              config: data.setup
+            });
+            console.log("Gemini API Connected");
+            socket.send(JSON.stringify({ text: "Gemini API connected" }));
+          } catch (e) {
+            console.error("Failed to connect to Gemini:", e);
+            socket.send(JSON.stringify({ error: "Failed to connect to Gemini" }));
             return;
           }
+          return;
+        }
 
-          if (data.realtime_input) {
-            const { media_chunks } = data.realtime_input;
+        if (data.realtime_input) {
+          const { media_chunks } = data.realtime_input;
 
-            for (const chunk of media_chunks) {
-              try {
-                await session?.send(chunk);
-                console.log("Sent chunk:", chunk.mime_type);
-              } catch (e) {
-                console.error("Error sending chunk:", e);
-                socket.send(JSON.stringify({ error: `Error sending ${chunk.mime_type} chunk` }));
-              }
-            }
-
+          for (const chunk of media_chunks) {
             try {
-              for await (const response of session?.receive() || []) {
-                console.log("Response:", response);
-                if (!response.server_content) {
-                  console.log("Empty server content");
-                  continue;
-                }
+              await session?.send(chunk);
+              console.log("Sent chunk:", chunk.mime_type);
+            } catch (e) {
+              console.error("Error sending chunk:", e);
+              socket.send(JSON.stringify({ error: `Error sending ${chunk.mime_type} chunk` }));
+            }
+          }
 
-                const model_turn = response.server_content.model_turn;
-                if (model_turn) {
-                  for (const part of model_turn.parts) {
-                    if (part.text) {
-                      socket.send(JSON.stringify({ text: part.text }));
-                    }
-                    if (part.inline_data) {
-                      const base64_audio = btoa(String.fromCharCode(...part.inline_data.data));
-                      socket.send(JSON.stringify({ audio: base64_audio }));
-                    }
+          try {
+            for await (const response of session?.receive() || []) {
+              console.log("Response:", response);
+              if (!response.server_content) {
+                console.log("Empty server content");
+                continue;
+              }
+
+              const model_turn = response.server_content.model_turn;
+              if (model_turn) {
+                for (const part of model_turn.parts) {
+                  if (part.text) {
+                    socket.send(JSON.stringify({ text: part.text }));
+                  }
+                  if (part.inline_data) {
+                    const base64_audio = btoa(String.fromCharCode(...part.inline_data.data));
+                    socket.send(JSON.stringify({ audio: base64_audio }));
                   }
                 }
               }
-            } catch (e) {
-              console.error("Error receiving response:", e);
-              socket.send(JSON.stringify({ error: "Error receiving from Gemini" }));
             }
+          } catch (e) {
+            console.error("Error receiving response:", e);
+            socket.send(JSON.stringify({ error: "Error receiving from Gemini" }));
           }
-        } catch (error) {
-          console.error("Error processing message:", error);
-          socket.send(JSON.stringify({ error: "Failed to process message" }));
         }
-      };
-
-      socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-      };
-
-      socket.onclose = () => {
-        console.log("WebSocket closed");
-        session = null;
-      };
-
-      return response;
-    }
-
-    // For non-WebSocket requests, return the WebSocket URL
-    const host = req.headers.get("host") || "";
-    const wsProtocol = host.includes("localhost") ? "ws" : "wss";
-    const wsUrl = `${wsProtocol}://${host}/functions/v1/initialize-daily-bot`;
-    
-    return new Response(
-      JSON.stringify({ 
-        success: true,
-        websocket_url: wsUrl
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
+      } catch (error) {
+        console.error("Error processing message:", error);
+        socket.send(JSON.stringify({ error: "Failed to process message" }));
       }
-    );
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    socket.onclose = () => {
+      console.log("WebSocket closed");
+      session = null;
+    };
+
+    return response;
   } catch (error) {
     console.error('Error in initialize-daily-bot:', error);
     return new Response(

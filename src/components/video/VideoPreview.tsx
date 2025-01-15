@@ -16,6 +16,7 @@ export const VideoPreview = ({ onCallFrameReady, onJoinMeeting }: VideoPreviewPr
 
     const initializeCallFrame = async () => {
       callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
+        url: "https://hiapplyco.daily.co/lovable",
         showLeaveButton: true,
         showFullscreenButton: true,
       });

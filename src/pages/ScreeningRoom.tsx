@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Video } from "lucide-react";
-import { DailyProvider } from "@daily-co/daily-react";
 import { useEffect, useRef } from "react";
 import DailyIframe, { DailyCall } from "@daily-co/daily-js";
 
@@ -47,9 +46,7 @@ const ScreeningRoom = () => {
         </CardHeader>
         <CardContent>
           <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">
-            <DailyProvider>
-              <div ref={callWrapperRef} style={{ width: '100%', height: '100%' }} />
-            </DailyProvider>
+            <div ref={callWrapperRef} style={{ width: '100%', height: '100%' }} />
           </div>
         </CardContent>
       </Card>

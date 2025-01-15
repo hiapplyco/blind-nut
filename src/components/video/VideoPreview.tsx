@@ -21,6 +21,9 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
           showFullscreenButton: true,
           url: roomUrl,
           iframeStyle: {
+            position: 'absolute',
+            top: '0',
+            left: '0',
             width: '100%',
             height: '100%',
             border: '0',
@@ -46,7 +49,7 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
 
   return (
     <div className="w-full h-full absolute inset-0 bg-muted rounded-lg overflow-hidden">
-      <div ref={callWrapperRef} className="w-full h-full" />
+      <div ref={callWrapperRef} className="w-full h-full absolute inset-0" />
     </div>
   );
 };

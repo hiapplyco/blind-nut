@@ -80,7 +80,7 @@ export const VideoCallFrame = ({
   };
 
   return (
-    <div className="w-full h-full relative flex-1" style={{ minHeight: "600px", height: "calc(100vh - 300px)" }}>
+    <div className="w-full h-full relative flex-1" style={{ height: "100%" }}>
       <VideoPreview 
         onCallFrameReady={handleCallFrameReady} 
         roomUrl={ROOM_URL}

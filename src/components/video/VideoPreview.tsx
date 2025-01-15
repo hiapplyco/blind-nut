@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import DailyIframe, { DailyCall } from "@daily-co/daily-js";
+import DailyIframe, { DailyCall, DailyEventObjectCameraError, DailyEventObjectFatalError } from "@daily-co/daily-js";
 import { VideoClosingAnimation } from "./VideoClosingAnimation";
 import { VideoPreviewProps } from "./types";
 import { toast } from "sonner";
@@ -35,12 +35,12 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
         console.log("Daily frame loaded, calling onCallFrameReady");
         
         // Add event listeners for device permissions
-        callFrameRef.current.on('camera-error', () => {
+        callFrameRef.current.on('camera-error', (event: DailyEventObjectCameraError) => {
           toast.error('Unable to access camera. Please check your permissions.');
           setIsLoading(false);
         });
 
-        callFrameRef.current.on('mic-error', () => {
+        callFrameRef.current.on('mic-error', (event: DailyEventObjectFatalError) => {
           toast.error('Unable to access microphone. Please check your permissions.');
           setIsLoading(false);
         });

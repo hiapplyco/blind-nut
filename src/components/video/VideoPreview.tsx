@@ -22,7 +22,7 @@ export const VideoPreview = ({ onCallFrameReady, settings }: VideoPreviewProps) 
       callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
         showLeaveButton: settings.showLeaveButton,
         showFullscreenButton: settings.showFullscreenButton,
-        showParticipantControls: settings.allowParticipantControls,
+        enableParticipantControls: settings.allowParticipantControls,
         iframeStyle: {
           position: 'absolute',
           top: '0',
@@ -33,7 +33,7 @@ export const VideoPreview = ({ onCallFrameReady, settings }: VideoPreviewProps) 
           backgroundColor: 'white',
         },
         inputSettings: {
-          userName: { 
+          display_name: { 
             hidden: false,
             required: true
           }

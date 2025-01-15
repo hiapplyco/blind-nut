@@ -35,15 +35,11 @@ export const VideoCallFrame = ({
 
   const handleCallFrameReady = async (callFrame: DailyCall) => {
     callFrameRef.current = callFrame;
+    setIsCallFrameReady(true);
 
     try {
-      await callFrame.load({
-        url: ROOM_URL,
-      });
-
       callFrame.on("joined-meeting", () => {
-        console.log("Joined meeting, call frame ready");
-        setIsCallFrameReady(true);
+        console.log("Joined meeting");
         onJoinMeeting();
         setTimeout(() => {
           if (!isRecording) {

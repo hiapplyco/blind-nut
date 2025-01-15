@@ -26,21 +26,10 @@ export const VideoPreview = ({ onCallFrameReady, onJoinMeeting }: VideoPreviewPr
           height: '100%',
           border: '0',
           backgroundColor: 'white',
-        },
-        inputSettings: {
-          audio: {
-            processor: {
-              type: 'none'
-            }
-          },
-          video: {
-            processor: {
-              type: 'none'
-            }
-          }
         }
       });
 
+      await callFrameRef.current.load();
       onCallFrameReady(callFrameRef.current);
     };
 

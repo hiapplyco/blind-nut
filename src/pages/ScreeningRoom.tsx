@@ -47,7 +47,7 @@ const ScreeningRoom = () => {
       console.log('Transcription message:', event);
       setTranscripts(prev => [...prev, {
         text: event.text,
-        timestamp: event.timestamp,
+        timestamp: event.timestamp,  // Daily.co provides this as an ISO string
         participantId: event.participantId
       }]);
     });

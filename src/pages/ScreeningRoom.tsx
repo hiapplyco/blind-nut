@@ -1,5 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Video } from "lucide-react";
+import { DailyProvider, DailyRoom } from "@daily-co/daily-react";
+
+const ROOM_URL = "https://hiapplyco.daily.co/lovable";
 
 const ScreeningRoom = () => {
   return (
@@ -12,10 +15,20 @@ const ScreeningRoom = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">
-              Welcome to The Screening Room - Your virtual meeting space
-            </p>
+          <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">
+            <DailyProvider>
+              <DailyRoom
+                url={ROOM_URL}
+                showLeaveButton={true}
+                showFullscreenButton={true}
+                iframeStyle={{
+                  width: "100%",
+                  height: "100%",
+                  border: "0",
+                  backgroundColor: "white",
+                }}
+              />
+            </DailyProvider>
           </div>
         </CardContent>
       </Card>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import DailyIframe from "@daily-co/daily-js";
+import DailyIframe, { DailyCall } from "@daily-co/daily-js";
 import { VideoClosingAnimation } from "./VideoClosingAnimation";
 import { VideoPreviewProps } from "./types";
 

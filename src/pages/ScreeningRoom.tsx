@@ -73,8 +73,8 @@ const ScreeningRoom = () => {
   };
 
   return (
-    <div className="container max-w-7xl mx-auto py-8">
-      <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-[#FFFBF4]">
+    <div className="container max-w-7xl mx-auto py-8 min-h-screen">
+      <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-[#FFFBF4] h-full">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-7">
           <CardTitle className="text-3xl font-bold flex items-center gap-3">
             <Video className="h-8 w-8 text-primary" />
@@ -82,8 +82,8 @@ const ScreeningRoom = () => {
           </CardTitle>
           <VideoControls onCopyLink={copyRoomUrl} />
         </CardHeader>
-        <CardContent>
-          <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden relative">
+        <CardContent className="h-[calc(100vh-16rem)] flex flex-col">
+          <div className="w-full h-full bg-muted rounded-lg overflow-hidden relative mb-4">
             <VideoCallFrame
               onJoinMeeting={handleJoinMeeting}
               onParticipantJoined={handleParticipantJoined}

@@ -11,6 +11,8 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
   useEffect(() => {
     if (!callWrapperRef.current || callFrameRef.current) return;
 
+    console.log("Initializing Daily call frame with URL:", roomUrl);
+
     const initializeCallFrame = async () => {
       try {
         callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
@@ -21,10 +23,13 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
             width: '100%',
             height: '100%',
             border: '0',
+            borderRadius: '8px',
           },
         });
 
+        console.log("Daily frame created, loading...");
         await callFrameRef.current.load();
+        console.log("Daily frame loaded, calling onCallFrameReady");
         onCallFrameReady(callFrameRef.current);
       } catch (error) {
         console.error("Error initializing call frame:", error);
@@ -35,12 +40,14 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
 
     return () => {
       if (callFrameRef.current) {
+        console.log("Cleaning up Daily frame");
         callFrameRef.current.destroy();
       }
     };
   }, [onCallFrameReady, roomUrl]);
 
   const handleTurnOnComplete = () => {
+    console.log("Turn on animation complete");
     setShowTurnOnAnimation(false);
   };
 

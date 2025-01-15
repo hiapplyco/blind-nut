@@ -26,18 +26,21 @@ export const useDaily = (
   });
 
   const handleCallFrameReady = useCallback(async (callFrame: DailyCall) => {
+    console.log("Call frame ready, preparing to join meeting");
     callFrameRef.current = callFrame;
     setIsCallFrameReady(true);
 
     try {
       const token = await meetingTokenManager.createMeetingToken();
+      console.log("Meeting token created, joining room");
+      
       await callFrame.join({
         url: ROOM_URL,
         token,
       });
 
       callFrame.on("joined-meeting", () => {
-        console.log("Joined meeting");
+        console.log("Successfully joined meeting");
         onJoinMeeting();
         setTimeout(() => {
           if (!isRecording) {
@@ -54,6 +57,7 @@ export const useDaily = (
       });
 
       callFrame.on("participant-joined", (event) => {
+        console.log("Participant joined:", event);
         onParticipantJoined({
           id: event.participant.user_id,
           name: event.participant.user_name,
@@ -61,6 +65,7 @@ export const useDaily = (
       });
 
       callFrame.on("participant-left", (event) => {
+        console.log("Participant left:", event);
         onParticipantLeft({ id: event.participant.user_id });
       });
 

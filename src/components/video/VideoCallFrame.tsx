@@ -28,6 +28,8 @@ export const VideoCallFrame = ({
     onLeaveMeeting();
   };
 
+  console.log("VideoCallFrame rendering with room URL:", ROOM_URL);
+
   return (
     <div className="w-full h-full relative">
       <VideoPreview 

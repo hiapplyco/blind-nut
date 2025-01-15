@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import { DailyCall } from "@daily-co/daily-js";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { MeetingTokenManager } from "../MeetingTokenManager";
 import { RecordingManager } from "../RecordingManager";
 
@@ -14,6 +15,7 @@ export const useDaily = (
   const callFrameRef = useRef<DailyCall | null>(null);
   const [isCallFrameReady, setIsCallFrameReady] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [currentMeetingId, setCurrentMeetingId] = useState<number | null>(null);
 
   const ROOM_URL = "https://hiapplyco.daily.co/lovable";
   const meetingTokenManager = MeetingTokenManager();
@@ -45,6 +47,24 @@ export const useDaily = (
       const token = await meetingTokenManager.createMeetingToken();
       console.log("Meeting token created, joining room");
       
+      // Create a new meeting record when joining
+      const { data: meetingData, error: meetingError } = await supabase
+        .from('meetings')
+        .insert({
+          start_time: new Date().toISOString(),
+          participants: []
+        })
+        .select()
+        .single();
+
+      if (meetingError) {
+        console.error("Error creating meeting:", meetingError);
+        toast.error("Failed to initialize meeting");
+        return;
+      }
+
+      setCurrentMeetingId(meetingData.id);
+      
       await callFrame.join({
         url: ROOM_URL,
         token,
@@ -74,15 +94,17 @@ export const useDaily = (
 
       callFrame.on("transcription-message", async (event) => {
         console.log("Transcription message:", event);
-        try {
-          await supabase.from('daily_transcriptions').insert({
-            participant_id: event.participantId,
-            text: event.text,
-            timestamp: event.timestamp,
-            meeting_id: meetingId // You'll need to track this when creating the meeting
-          });
-        } catch (error) {
-          console.error("Error saving transcription:", error);
+        if (currentMeetingId) {
+          try {
+            await supabase.from('daily_transcriptions').insert({
+              participant_id: event.participantId,
+              text: event.text,
+              timestamp: event.timestamp,
+              meeting_id: currentMeetingId
+            });
+          } catch (error) {
+            console.error("Error saving transcription:", error);
+          }
         }
       });
 

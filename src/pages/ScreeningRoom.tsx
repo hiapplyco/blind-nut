@@ -82,8 +82,8 @@ const ScreeningRoom = () => {
           </CardTitle>
           <VideoControls onCopyLink={copyRoomUrl} />
         </CardHeader>
-        <CardContent className="flex flex-col space-y-4">
-          <div className="w-full bg-muted rounded-lg overflow-hidden relative" style={{ height: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)' }}>
+        <CardContent className="flex flex-col space-y-8 pb-8">
+          <div className="w-full bg-muted rounded-lg overflow-hidden relative" style={{ height: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)', marginBottom: '2rem' }}>
             <VideoCallFrame
               onJoinMeeting={handleJoinMeeting}
               onParticipantJoined={handleParticipantJoined}
@@ -92,7 +92,9 @@ const ScreeningRoom = () => {
               onRecordingStarted={handleRecordingStarted}
             />
           </div>
-          <TranscriptList transcripts={transcripts} />
+          <div className="min-h-[200px]">
+            <TranscriptList transcripts={transcripts} />
+          </div>
         </CardContent>
       </Card>
     </div>

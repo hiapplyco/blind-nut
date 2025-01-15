@@ -3,6 +3,8 @@ import { VideoCallFrame } from "@/components/video/VideoCallFrame";
 import { TranscriptionProcessor } from "@/components/video/TranscriptionProcessor";
 import { MeetingDataManager } from "@/components/video/MeetingDataManager";
 import { toast } from "sonner";
+import { ArrowLeft, History } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface TranscriptionMessage {
   text: string;
@@ -66,14 +68,35 @@ const ScreeningRoom = () => {
   };
 
   return (
-    <div className="h-screen w-full">
-      <VideoCallFrame
-        onJoinMeeting={handleJoinMeeting}
-        onParticipantJoined={handleParticipantJoined}
-        onParticipantLeft={handleParticipantLeft}
-        onLeaveMeeting={handleLeaveMeeting}
-        onRecordingStarted={handleRecordingStarted}
-      />
+    <div className="flex flex-col h-screen">
+      {/* Navigation Header */}
+      <header className="bg-[#F8F5FF] border-b border-[#7E69AB] p-4 flex justify-between items-center">
+        <Link 
+          to="/" 
+          className="flex items-center text-[#4A2B1C] hover:text-[#9b87f5] transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          <span>Back to Search</span>
+        </Link>
+        <Link 
+          to="/dashboard" 
+          className="flex items-center text-[#4A2B1C] hover:text-[#9b87f5] transition-colors"
+        >
+          <History className="w-5 h-5 mr-2" />
+          <span>View History</span>
+        </Link>
+      </header>
+
+      {/* Video Call Container */}
+      <div className="flex-1 relative">
+        <VideoCallFrame
+          onJoinMeeting={handleJoinMeeting}
+          onParticipantJoined={handleParticipantJoined}
+          onParticipantLeft={handleParticipantLeft}
+          onLeaveMeeting={handleLeaveMeeting}
+          onRecordingStarted={handleRecordingStarted}
+        />
+      </div>
     </div>
   );
 };

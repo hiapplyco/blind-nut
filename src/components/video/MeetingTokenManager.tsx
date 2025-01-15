@@ -15,14 +15,14 @@ export const MeetingTokenManager = () => {
           properties: {
             room_name: 'lovable',
             enable_recording: 'cloud',
-            start_cloud_recording: true,
-            transcription_bucket: 'recordings'
+            start_cloud_recording: true
           }
         })
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create meeting token: ${response.statusText}`);
+        const errorData = await response.text();
+        throw new Error(`Failed to create meeting token: ${errorData}`);
       }
 
       const data = await response.json();

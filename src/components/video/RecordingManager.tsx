@@ -23,15 +23,23 @@ export const RecordingManager = ({
 
       await callFrame.startRecording({
         layout: {
-          preset: "active-participant"
+          preset: "active-participant",
+          max_cam_streams: 25,
+          screen_share_mode: "crop"
         },
         width: 1920,
         height: 1080,
-        backgroundColor: "#000000"
+        backgroundColor: "#2C1810", // Match our dark brown theme
+        cloudMode: "cloud", // Enable cloud recording
+        streamMode: "automatic",
+        recordOnStart: true,
+        startAudioOnly: false,
+        maxRecordingDuration: 14400, // 4 hours max
       });
       
       setIsRecording(true);
       toast.success('Recording started automatically');
+      console.log('Recording started with cloud storage enabled');
     } catch (error) {
       console.error('Error starting recording:', error);
       toast.error('Failed to start recording');

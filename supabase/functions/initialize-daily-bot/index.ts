@@ -5,33 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Max-Age': '86400',
 };
-
-// Types for better type safety
-interface SetupConfig {
-  model?: string;
-  generation_config?: Record<string, unknown>;
-  tools?: Record<string, unknown>[];
-}
-
-interface MediaChunk {
-  mime_type: string;
-  data: Uint8Array;
-}
-
-interface WebSocketMessage {
-  setup?: SetupConfig;
-  realtime_input?: {
-    media_chunks: MediaChunk[];
-  };
-}
-
-interface ServerResponse {
-  text?: string;
-  error?: string;
-  audio?: string;
-}
 
 serve(async (req) => {
   console.log("Received request:", req.method, req.url);
@@ -39,10 +13,7 @@ serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log("Handling CORS preflight request");
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 204
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -102,22 +73,22 @@ serve(async (req) => {
 
     socket.onmessage = async (event) => {
       try {
-        const data = JSON.parse(event.data) as WebSocketMessage;
+        const data = JSON.parse(event.data);
         console.log("Received message type:", data.setup ? "setup" : "realtime_input");
         
         if (data.setup) {
           console.log("Setup received:", data.setup);
           try {
-            const model = data.setup.model || "gemini-2.0-flash-exp";
+            // Force using gemini-2.0-flash-exp model
             session = await genAI.live.connect({
-              model,
+              model: "gemini-2.0-flash-exp",
               config: data.setup
             });
-            console.log("Gemini API Connected using model:", model);
-            socket.send(JSON.stringify({ text: "Gemini API connected" }));
+            console.log("Gemini API Connected using model: gemini-2.0-flash-exp");
+            socket.send(JSON.stringify({text:"Gemini API connected"}));
           } catch (e) {
             console.error("Failed to connect to Gemini:", e);
-            socket.send(JSON.stringify({ error: "Failed to connect to Gemini" }));
+            socket.send(JSON.stringify({error: "Failed to connect to Gemini"}));
           }
           return;
         }
@@ -158,7 +129,7 @@ serve(async (req) => {
               }
 
               if (response.server_content.turn_complete) {
-                console.log("Turn complete");
+                console.log('\n<Turn complete>');
               }
             }
           } catch (e) {

@@ -57,6 +57,17 @@ const ScreeningRoom = () => {
       toast.success("Transcription stopped");
     });
 
+    callFrameRef.current.on('joined-meeting', async () => {
+      try {
+        if (callFrameRef.current) {
+          await callFrameRef.current.startTranscription();
+        }
+      } catch (error) {
+        console.error('Error starting transcription:', error);
+        toast.error("Failed to start transcription automatically");
+      }
+    });
+
     // Join the call
     callFrameRef.current.join({ url: ROOM_URL });
 

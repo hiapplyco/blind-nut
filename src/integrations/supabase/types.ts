@@ -54,6 +54,44 @@ export type Database = {
           },
         ]
       }
+      daily_transcriptions: {
+        Row: {
+          created_at: string | null
+          id: number
+          meeting_id: number | null
+          participant_id: string
+          text: string
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          meeting_id?: number | null
+          participant_id: string
+          text: string
+          timestamp: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          meeting_id?: number | null
+          participant_id?: string
+          text?: string
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_transcriptions_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           content: string | null

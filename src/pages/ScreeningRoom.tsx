@@ -11,6 +11,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Json } from "@/integrations/supabase/types";
 
 const ROOM_URL = "https://hiapplyco.daily.co/lovable";
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 interface TranscriptionMessage {
   text: string;
@@ -21,7 +22,7 @@ interface TranscriptionMessage {
 interface Participant {
   id: string;
   name?: string;
-  [key: string]: string | undefined; // Add index signature to make it compatible with Json type
+  [key: string]: string | undefined;
 }
 
 const ScreeningRoom = () => {
@@ -30,11 +31,38 @@ const ScreeningRoom = () => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcripts, setTranscripts] = useState<TranscriptionMessage[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [meetingId, setMeetingId] = useState<number | null>(null);
   const startTimeRef = useRef<Date>(new Date());
+
+  const saveTranscription = async (transcript: TranscriptionMessage) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !meetingId) return;
+
+      const { error } = await supabase
+        .from('daily_transcriptions')
+        .insert({
+          user_id: user.id,
+          meeting_id: meetingId,
+          participant_id: transcript.participantId,
+          text: transcript.text,
+          timestamp: new Date(transcript.timestamp)
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving transcription:', error);
+    }
+  };
 
   const generateMeetingSummary = async (transcriptText: string) => {
     try {
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+      if (!GEMINI_API_KEY) {
+        console.error('GEMINI_API_KEY not found');
+        return null;
+      }
+
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const prompt = `Please provide a concise summary of this meeting transcript, highlighting:
@@ -64,7 +92,7 @@ const ScreeningRoom = () => {
       const transcriptText = transcripts.map(t => `[${t.timestamp}] ${t.text}`).join('\n');
       const summary = await generateMeetingSummary(transcriptText);
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('meetings')
         .insert({
           user_id: user.id,
@@ -74,9 +102,16 @@ const ScreeningRoom = () => {
           transcription: transcriptText,
           summary: summary,
           meeting_date: new Date().toISOString().split('T')[0]
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+      
+      if (data) {
+        setMeetingId(data.id);
+      }
+
       toast.success("Meeting data saved successfully");
     } catch (error) {
       console.error('Error saving meeting data:', error);
@@ -113,6 +148,7 @@ const ScreeningRoom = () => {
       };
       
       setTranscripts(prev => [...prev, newTranscript]);
+      saveTranscription(newTranscript);
     });
 
     callFrameRef.current.on('participant-joined', (event) => {

@@ -20,6 +20,7 @@ serve(async (req) => {
   try {
     const { headers } = req;
     const upgradeHeader = headers.get("upgrade") || "";
+    console.log("Request headers:", headers);
 
     // Check for WebSocket upgrade
     if (upgradeHeader.toLowerCase() !== "websocket") {
@@ -81,6 +82,12 @@ serve(async (req) => {
             socket.send(JSON.stringify({error: "Failed to connect to Gemini"}));
             return;
           }
+          return;
+        }
+
+        if (!session) {
+          console.error("No active Gemini session");
+          socket.send(JSON.stringify({error: "No active Gemini session"}));
           return;
         }
 

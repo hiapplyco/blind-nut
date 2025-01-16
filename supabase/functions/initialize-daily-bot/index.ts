@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { genai } from "https://esm.sh/@google/generative-ai@0.2.0";
+import { genai } from "https://esm.sh/@google/generative-ai@0.1.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,8 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log("Received request:", req.method, req.url);
-
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -19,7 +17,6 @@ serve(async (req) => {
     const upgradeHeader = headers.get("upgrade") || "";
 
     if (upgradeHeader.toLowerCase() !== "websocket") {
-      console.log("Non-WebSocket request, returning WebSocket URL");
       const host = headers.get("host") || "";
       const wsProtocol = host.includes("localhost") ? "ws" : "wss";
       const wsUrl = `${wsProtocol}://${host}/functions/v1/initialize-daily-bot`;
@@ -38,9 +35,6 @@ serve(async (req) => {
       );
     }
 
-    console.log("Upgrading to WebSocket connection");
-    const { socket, response } = Deno.upgradeWebSocket(req);
-
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (!GEMINI_API_KEY) {
       console.error("Missing GEMINI_API_KEY");
@@ -54,6 +48,7 @@ serve(async (req) => {
       }
     });
 
+    const { socket, response } = Deno.upgradeWebSocket(req);
     let session: any = null;
 
     socket.onopen = () => {
@@ -63,8 +58,7 @@ serve(async (req) => {
     socket.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log("Received message type:", data.setup ? "setup" : "realtime_input");
-        
+
         if (data.setup) {
           console.log("Setup received:", data.setup);
           try {
@@ -76,14 +70,15 @@ serve(async (req) => {
             socket.send(JSON.stringify({text:"Gemini API connected"}));
           } catch (e) {
             console.error("Failed to connect to Gemini:", e);
-            socket.send(JSON.stringify({error: "Failed to connect to Gemini"}));
+            socket.send(JSON.stringify({error: "failed to connect to gemini"}));
+            return;
           }
           return;
         }
 
         if (data.realtime_input) {
           const { media_chunks } = data.realtime_input;
-
+          
           for (const chunk of media_chunks) {
             try {
               await session?.send(chunk);
@@ -143,9 +138,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in initialize-daily-bot:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Failed to initialize interview assistant',
-        details: error.message 
+        details: error.message
       }),
       { 
         status: 500,

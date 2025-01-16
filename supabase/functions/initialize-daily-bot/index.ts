@@ -27,6 +27,7 @@ serve(async (req) => {
       const wsProtocol = host.includes("localhost") ? "ws" : "wss";
       const wsUrl = `${wsProtocol}://${host}/functions/v1/initialize-daily-bot`;
       
+      console.log("Returning WebSocket URL:", wsUrl);
       return new Response(
         JSON.stringify({
           success: true,
@@ -41,7 +42,7 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Gemini client first
+    // Initialize Gemini client
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (!GEMINI_API_KEY) {
       throw new Error("Missing GEMINI_API_KEY");
@@ -54,7 +55,7 @@ serve(async (req) => {
       }
     });
 
-    // Then upgrade to WebSocket
+    // Upgrade to WebSocket
     const { socket, response } = Deno.upgradeWebSocket(req);
     let session: any = null;
 
@@ -65,6 +66,7 @@ serve(async (req) => {
     socket.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log("Received message:", data);
 
         if (data.setup) {
           try {
@@ -76,7 +78,7 @@ serve(async (req) => {
             socket.send(JSON.stringify({text: "Gemini API connected"}));
           } catch (e) {
             console.error("Failed to connect to Gemini:", e);
-            socket.send(JSON.stringify({error: "failed to connect to gemini"}));
+            socket.send(JSON.stringify({error: "Failed to connect to Gemini"}));
             return;
           }
           return;

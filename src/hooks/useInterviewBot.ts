@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useInterviewBot = () => {
   const [isConnected, setIsConnected] = useState(false);
-  const [isMicEnabled, setIsMicEnabled] = useState(true);
-  const [isCamEnabled, setIsCamEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -50,15 +48,14 @@ export const useInterviewBot = () => {
 
   const startWebcam = async () => {
     try {
-      const constraints = {
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { max: 640 },
           height: { max: 480 },
         },
         audio: true
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      });
+      
       streamRef.current = stream;
       
       if (videoRef.current) {
@@ -177,26 +174,6 @@ export const useInterviewBot = () => {
     }
   };
 
-  const toggleMic = () => {
-    if (streamRef.current) {
-      const audioTracks = streamRef.current.getAudioTracks();
-      audioTracks.forEach(track => {
-        track.enabled = !isMicEnabled;
-      });
-      setIsMicEnabled(!isMicEnabled);
-    }
-  };
-
-  const toggleCam = () => {
-    if (streamRef.current) {
-      const videoTracks = streamRef.current.getVideoTracks();
-      videoTracks.forEach(track => {
-        track.enabled = !isCamEnabled;
-      });
-      setIsCamEnabled(!isCamEnabled);
-    }
-  };
-
   const disconnect = () => {
     if (wsRef.current) {
       wsRef.current.close();
@@ -225,13 +202,9 @@ export const useInterviewBot = () => {
 
   return {
     isConnected,
-    isMicEnabled,
-    isCamEnabled,
     isLoading,
     error,
     initializeClient,
-    toggleMic,
-    toggleCam,
     disconnect,
     videoRef,
     canvasRef

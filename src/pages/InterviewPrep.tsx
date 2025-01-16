@@ -7,13 +7,9 @@ import { useInterviewBot } from "@/hooks/useInterviewBot";
 const InterviewPrep = () => {
   const {
     isConnected,
-    isMicEnabled,
-    isCamEnabled,
     isLoading,
     error,
     initializeClient,
-    toggleMic,
-    toggleCam,
     disconnect,
     videoRef,
     canvasRef
@@ -25,11 +21,8 @@ const InterviewPrep = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Interview Preparation</h1>
           <MediaControls
-            isMicEnabled={isMicEnabled}
-            isCamEnabled={isCamEnabled}
             isConnected={isConnected}
-            onToggleMic={toggleMic}
-            onToggleCam={toggleCam}
+            onEndCall={disconnect}
           />
         </div>
 
@@ -61,21 +54,15 @@ const InterviewPrep = () => {
               {isLoading ? "Connecting..." : "Start Interview Prep"}
             </Button>
           ) : (
-            <Button onClick={disconnect} variant="destructive" className="w-full">
-              End Session
-            </Button>
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                Connected to Gemini AI Assistant
+                <br />
+                Start by telling me what kind of interview you're preparing for!
+              </p>
+            </div>
           )}
         </div>
-
-        {isConnected && (
-          <div className="bg-muted p-4 rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              Connected to Gemini AI Assistant
-              <br />
-              Start by telling me what kind of interview you're preparing for!
-            </p>
-          </div>
-        )}
       </Card>
     </div>
   );

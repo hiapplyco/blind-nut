@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import NewSearchForm from "@/components/NewSearchForm";
 import { useNavigate } from "react-router-dom";
@@ -5,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Button } from "@/components/ui/button";
-import { FileText, Video, Theater } from "lucide-react";
+import { FileText, Video, Theater, PhoneCall } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -112,6 +113,14 @@ const Index = () => {
           >
             <Theater className="h-4 w-4" />
             Interview Prep
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/kickoff-call')}
+            className="flex items-center gap-2"
+          >
+            <PhoneCall className="h-4 w-4" />
+            Kickoff Call
           </Button>
         </div>
       </div>

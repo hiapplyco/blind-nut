@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +27,16 @@ const KickOffCall = () => {
     ];
 
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        throw new Error("Authentication required");
+      }
+
+      if (!session?.user?.id) {
+        throw new Error("No authenticated user found");
+      }
+
       for (const file of Array.from(files)) {
         if (!acceptedTypes.includes(file.type)) {
           toast.error(`Invalid file type: ${file.name}. Only PDF, DOC, DOCX, and TXT files are accepted.`);
@@ -41,6 +50,7 @@ const KickOffCall = () => {
 
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('userId', session.user.id);
 
         const { data, error } = await supabase.functions.invoke('parse-document', {
           body: formData,

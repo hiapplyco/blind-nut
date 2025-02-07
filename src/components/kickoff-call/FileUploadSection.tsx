@@ -96,15 +96,27 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
         />
         <label
           htmlFor="file-upload"
-          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-black rounded font-bold 
+          className={`flex items-center gap-2 px-4 py-2 bg-white border-2 border-black rounded font-bold 
             shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:translate-x-0.5 
-            hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer"
+            hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer
+            ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          <FileText className="h-4 w-4" />
-          Upload Files
+          <FileText className={`h-4 w-4 ${isProcessing ? 'animate-bounce' : ''}`} />
+          {isProcessing ? 'Processing...' : 'Upload Files'}
         </label>
         <span className="text-sm text-gray-500">
-          Accepts PDF, DOC, DOCX, TXT (max 10MB each)
+          {isProcessing ? (
+            <div className="flex items-center gap-2">
+              <span className="animate-pulse">Processing your files</span>
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+              </div>
+            </div>
+          ) : (
+            'Accepts PDF, DOC, DOCX, TXT (max 10MB each)'
+          )}
         </span>
       </div>
     </div>

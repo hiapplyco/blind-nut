@@ -56,6 +56,20 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
         }
 
         if (data?.text) {
+          // Store the file summary
+          const { error: summaryError } = await supabase
+            .from('kickoff_summaries')
+            .insert({
+              content: data.text,
+              source: `file:${file.name}`,
+              user_id: session.user.id
+            });
+
+          if (summaryError) {
+            console.error('Error storing summary:', summaryError);
+            toast.error(`Failed to store summary for ${file.name}`);
+          }
+
           onFileUpload(data.filePath, file.name, data.text);
           toast.success(`Successfully processed ${file.name}`);
         }

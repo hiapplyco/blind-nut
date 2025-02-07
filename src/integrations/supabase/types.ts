@@ -217,6 +217,30 @@ export type Database = {
         }
         Relationships: []
       }
+      kickoff_summaries: {
+        Row: {
+          content: string
+          created_at: string
+          id: number
+          source: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: number
+          source: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: number
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meeting_analyses: {
         Row: {
           analysis: string

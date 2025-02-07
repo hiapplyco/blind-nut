@@ -45,9 +45,17 @@ export class FirecrawlService {
         return { success: false, error: errorMessage };
       }
 
-      if (!data.text) {
-        console.warn('No content found in crawl response');
-        return { success: false, error: 'No content found from the website' };
+      // Store the crawl summary
+      const { error: summaryError } = await supabase
+        .from('kickoff_summaries')
+        .insert({
+          content: data.text,
+          source: `url:${url}`,
+          user_id: session.user.id
+        });
+
+      if (summaryError) {
+        console.error('Error storing summary:', summaryError);
       }
 
       return { success: true, data: data.text };

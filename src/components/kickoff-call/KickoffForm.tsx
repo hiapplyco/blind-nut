@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,26 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [isCrawling, setIsCrawling] = useState(false);
+  const [summaries, setSummaries] = useState<Array<{ content: string; source: string; created_at: string }>>([]);
+
+  useEffect(() => {
+    // Load existing summaries
+    const loadSummaries = async () => {
+      const { data, error } = await supabase
+        .from('kickoff_summaries')
+        .select('content, source, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading summaries:', error);
+        toast.error("Failed to load summaries");
+      } else {
+        setSummaries(data || []);
+      }
+    };
+
+    loadSummaries();
+  }, []);
 
   const handleCrawl = async () => {
     if (!url.trim()) {
@@ -31,6 +51,14 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
       if (result.success && result.data) {
         setTextInput(prev => prev + (prev ? '\n\n' : '') + result.data);
         toast.success("Successfully crawled website content!");
+        
+        // Refresh summaries after crawl
+        const { data } = await supabase
+          .from('kickoff_summaries')
+          .select('content, source, created_at')
+          .order('created_at', { ascending: false });
+        
+        setSummaries(data || []);
         setUrl('');
       } else {
         toast.error(result.error || "Failed to crawl website");
@@ -114,6 +142,22 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
           </Button>
         </div>
       </div>
+
+      {summaries.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-bold">Notes and Summaries</h3>
+          <div className="space-y-4 max-h-60 overflow-y-auto p-4 border-4 border-black rounded bg-white">
+            {summaries.map((summary, index) => (
+              <div key={index} className="p-4 bg-gray-50 rounded border border-gray-200">
+                <div className="text-sm text-gray-500 mb-1">
+                  Source: {summary.source} | {new Date(summary.created_at).toLocaleString()}
+                </div>
+                <p className="text-gray-700">{summary.content}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2">
         <label htmlFor="content" className="text-lg font-bold block">

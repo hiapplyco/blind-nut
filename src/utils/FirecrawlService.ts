@@ -19,8 +19,6 @@ interface CrawlStatusResponse {
 type CrawlResponse = CrawlStatusResponse | ErrorResponse;
 
 export class FirecrawlService {
-  private static firecrawlApp: FirecrawlApp | null = null;
-
   static async crawlWebsite(url: string): Promise<{ success: boolean; error?: string; data?: any }> {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();

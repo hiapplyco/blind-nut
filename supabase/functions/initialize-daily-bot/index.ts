@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { genai } from "https://esm.sh/@google/generative-ai@0.1.0";
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,13 +51,8 @@ serve(async (req) => {
       throw new Error("Missing GEMINI_API_KEY");
     }
 
-    const genAI = new genai.Client({
-      apiKey: GEMINI_API_KEY,
-      http_options: {
-        api_version: 'v1alpha'
-      }
-    });
-
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    
     // Upgrade to WebSocket
     const { socket, response } = Deno.upgradeWebSocket(req);
     let session: any = null;
@@ -74,9 +69,9 @@ serve(async (req) => {
 
         if (data.setup) {
           try {
-            session = await genAI.live.connect({
-              model: "gemini-2.0-flash-exp",
-              config: data.setup
+            session = await genAI.startChat({
+              model: "gemini-pro",
+              generationConfig: data.setup
             });
             console.log("Gemini API Connected");
             socket.send(JSON.stringify({text: "Gemini API connected"}));
@@ -99,7 +94,7 @@ serve(async (req) => {
           
           for (const chunk of media_chunks) {
             try {
-              await session.send(chunk);
+              await session.sendMessage(chunk);
               console.log("Sent chunk:", chunk.mime_type);
             } catch (e) {
               console.error("Error sending chunk:", e);
@@ -108,27 +103,8 @@ serve(async (req) => {
           }
 
           try {
-            for await (const response of session.receive()) {
-              if (!response.server_content?.model_turn) {
-                console.log("No model turn in response");
-                continue;
-              }
-
-              const { parts } = response.server_content.model_turn;
-              for (const part of parts) {
-                if (part.text) {
-                  socket.send(JSON.stringify({text: part.text}));
-                }
-                if (part.inline_data) {
-                  const base64_audio = btoa(String.fromCharCode(...part.inline_data.data));
-                  socket.send(JSON.stringify({audio: base64_audio}));
-                }
-              }
-
-              if (response.server_content.turn_complete) {
-                console.log('\n<Turn complete>');
-              }
-            }
+            const response = await session.getResponse();
+            socket.send(JSON.stringify({text: response.text()}));
           } catch (e) {
             console.error("Error receiving from Gemini:", e);
             socket.send(JSON.stringify({error: "Error receiving from Gemini"}));
@@ -147,7 +123,6 @@ serve(async (req) => {
     socket.onclose = () => {
       console.log("WebSocket closed");
       if (session) {
-        session.disconnect();
         session = null;
       }
     };

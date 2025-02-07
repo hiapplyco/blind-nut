@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { FileText, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const KickOffCall = () => {
+  const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [textInput, setTextInput] = useState("");
   const [title, setTitle] = useState("");

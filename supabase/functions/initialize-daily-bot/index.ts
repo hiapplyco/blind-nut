@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { genai } from "https://esm.sh/@google/generative-ai@0.1.0";
 
@@ -21,6 +22,7 @@ serve(async (req) => {
     const { headers } = req;
     const upgradeHeader = headers.get("upgrade") || "";
     console.log("Request headers:", headers);
+    console.log("Processing request with upgrade header:", upgradeHeader);
 
     // Check for WebSocket upgrade
     if (upgradeHeader.toLowerCase() !== "websocket") {
@@ -62,6 +64,7 @@ serve(async (req) => {
 
     socket.onopen = () => {
       console.log("WebSocket connected");
+      socket.send(JSON.stringify({text: "WebSocket connection established"}));
     };
 
     socket.onmessage = async (event) => {

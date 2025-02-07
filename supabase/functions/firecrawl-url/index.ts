@@ -31,29 +31,28 @@ serve(async (req) => {
 
     console.log('Starting scrape for URL:', url);
     const response = await firecrawl.scrapeUrl(url, {
-      formats: ['markdown'],
-      onlyMainContent: true,
-      blockAds: true,
-      removeBase64Images: true
+      formats: ['markdown']
     });
 
     console.log('Raw scrape response:', response);
 
-    if (!response.success) {
+    if (!response || response.error) {
+      console.error('Error in scrape response:', response.error || 'Unknown error');
       throw new Error(response.error || 'Failed to scrape URL');
     }
 
-    if (!response.content) {
-      console.error('Invalid response data format:', response);
-      throw new Error('No content found in the response');
+    const content = response.text || response.content || response.markdown;
+    if (!content) {
+      console.error('No content found in response. Full response:', JSON.stringify(response));
+      throw new Error('No parseable content found in the response');
     }
 
-    console.log('Processed content:', response.content);
+    console.log('Successfully extracted content');
 
     return new Response(
       JSON.stringify({
         success: true,
-        text: response.content
+        text: content
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

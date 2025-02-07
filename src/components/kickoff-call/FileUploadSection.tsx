@@ -1,5 +1,5 @@
 
-import { FileText } from "lucide-react";
+import { Loader } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -101,7 +101,7 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
             hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer
             ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          <FileText className={`h-4 w-4 ${isProcessing ? 'animate-bounce' : ''}`} />
+          <Loader className={`h-4 w-4 ${isProcessing ? 'animate-spin' : ''}`} />
           {isProcessing ? 'Processing...' : 'Upload Files'}
         </label>
         <span className="text-sm text-gray-500">

@@ -37,26 +37,11 @@ serve(async (req) => {
     // Get file data as ArrayBuffer
     const arrayBuffer = await (file as File).arrayBuffer()
 
-    // If it's a text file, try to process it directly
+    // If it's a text file, process it directly
     if ((file as File).type === 'text/plain') {
       const text = new TextDecoder().decode(arrayBuffer)
       console.log('Processing text file directly')
       
-      // Store text content in database
-      const { error: dbError } = await supabase
-        .from('parsed_documents')
-        .insert({
-          user_id: userId,
-          original_filename: (file as File).name,
-          parsed_text: text,
-          file_path: filePath
-        })
-
-      if (dbError) {
-        console.error('Database error:', dbError)
-        throw new Error(`Failed to store parsed document: ${dbError.message}`)
-      }
-
       return new Response(
         JSON.stringify({ 
           success: true,
@@ -113,21 +98,6 @@ serve(async (req) => {
 
       const extractedText = result.response.text();
       console.log('Gemini processing completed successfully');
-
-      // Store parsed document in database
-      const { error: dbError } = await supabase
-        .from('parsed_documents')
-        .insert({
-          user_id: userId,
-          original_filename: (file as File).name,
-          parsed_text: extractedText,
-          file_path: filePath
-        })
-
-      if (dbError) {
-        console.error('Database error:', dbError)
-        throw new Error(`Failed to store parsed document: ${dbError.message}`)
-      }
 
       return new Response(
         JSON.stringify({ 

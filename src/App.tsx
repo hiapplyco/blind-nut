@@ -1,9 +1,11 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Report from "./pages/Report";
 import ScreeningRoom from "./pages/ScreeningRoom";
 import InterviewPrep from "./pages/InterviewPrep";
+import KickOffCall from "./pages/KickOffCall";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -20,6 +22,7 @@ function App() {
           <Route path="/report/:jobId" element={<Report />} />
           <Route path="/screening-room" element={<ScreeningRoom />} />
           <Route path="/interview-prep" element={<InterviewPrep />} />
+          <Route path="/kickoff-call" element={<KickOffCall />} />
         </Routes>
         <Toaster />
       </Router>

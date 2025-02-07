@@ -181,6 +181,42 @@ export type Database = {
         }
         Relationships: []
       }
+      kickoff_calls: {
+        Row: {
+          action_items: string[] | null
+          content: string | null
+          created_at: string
+          file_paths: string[] | null
+          id: number
+          key_points: string[] | null
+          summary: string | null
+          title: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_items?: string[] | null
+          content?: string | null
+          created_at?: string
+          file_paths?: string[] | null
+          id?: number
+          key_points?: string[] | null
+          summary?: string | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_items?: string[] | null
+          content?: string | null
+          created_at?: string
+          file_paths?: string[] | null
+          id?: number
+          key_points?: string[] | null
+          summary?: string | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       meeting_analyses: {
         Row: {
           analysis: string

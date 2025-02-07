@@ -29,36 +29,31 @@ serve(async (req) => {
     console.log('Initializing Firecrawl with API key');
     const firecrawl = new FirecrawlApp({ apiKey });
 
-    console.log('Starting crawl for URL:', url);
-    const response = await firecrawl.crawlUrl(url, {
-      limit: 10,
-      scrapeOptions: {
-        formats: ['markdown'],
-      }
+    console.log('Starting scrape for URL:', url);
+    const response = await firecrawl.scrapeUrl(url, {
+      formats: ['markdown'],
+      onlyMainContent: true,
+      blockAds: true,
+      removeBase64Images: true
     });
 
-    console.log('Raw crawl response:', response);
+    console.log('Raw scrape response:', response);
 
     if (!response.success) {
-      throw new Error(response.error || 'Failed to crawl URL');
+      throw new Error(response.error || 'Failed to scrape URL');
     }
 
-    if (!response.data || !Array.isArray(response.data)) {
+    if (!response.content) {
       console.error('Invalid response data format:', response);
-      throw new Error('Invalid response data format from Firecrawl');
+      throw new Error('No content found in the response');
     }
 
-    const text = response.data
-      .filter(item => item && typeof item.text === 'string')
-      .map(item => item.text)
-      .join('\n\n');
-
-    console.log('Processed text:', text);
+    console.log('Processed content:', response.content);
 
     return new Response(
       JSON.stringify({
         success: true,
-        text: text || 'No content found'
+        text: response.content
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

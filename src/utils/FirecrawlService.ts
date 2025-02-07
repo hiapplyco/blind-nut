@@ -26,10 +26,12 @@ export class FirecrawlService {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session) {
+        console.error('Authentication error:', sessionError);
         return { success: false, error: 'Authentication required' };
       }
 
-      const { data: { text }, error: functionError } = await supabase.functions.invoke('firecrawl-url', {
+      console.log('Making request to firecrawl-url function with URL:', url);
+      const { data, error: functionError } = await supabase.functions.invoke('firecrawl-url', {
         body: { url }
       });
 
@@ -38,7 +40,13 @@ export class FirecrawlService {
         return { success: false, error: functionError.message };
       }
 
-      return { success: true, data: text };
+      console.log('Received response from firecrawl-url function:', data);
+
+      if (!data.success) {
+        return { success: false, error: data.error || 'Failed to crawl website' };
+      }
+
+      return { success: true, data: data.text };
     } catch (error) {
       console.error('Error during crawl:', error);
       return { 

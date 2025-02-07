@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { GoogleGenerativeAI } from "npm:@google/generative-ai"
@@ -36,6 +37,42 @@ serve(async (req) => {
     // Get file data as ArrayBuffer
     const arrayBuffer = await (file as File).arrayBuffer()
 
+    // If it's a text file, try to process it directly
+    if ((file as File).type === 'text/plain') {
+      const text = new TextDecoder().decode(arrayBuffer)
+      console.log('Processing text file directly')
+      
+      // Store text content in database
+      const { error: dbError } = await supabase
+        .from('parsed_documents')
+        .insert({
+          user_id: userId,
+          original_filename: (file as File).name,
+          parsed_text: text,
+          file_path: filePath
+        })
+
+      if (dbError) {
+        console.error('Database error:', dbError)
+        throw new Error(`Failed to store parsed document: ${dbError.message}`)
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          text,
+          filePath,
+          message: 'Text file processed successfully'
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    }
+
     // Upload file to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from('docs')
@@ -59,15 +96,19 @@ serve(async (req) => {
       // Convert array buffer to base64 for Gemini processing
       const base64Data = base64Encode(new Uint8Array(arrayBuffer));
       
-      // Process with Gemini using direct PDF handling
+      // Process with Gemini using file type-specific handling
+      const prompt = (file as File).type.includes('pdf') 
+        ? 'Please extract and format all the text content from this PDF document, maintaining proper structure and formatting. Focus on preserving all important information including skills, experience, job requirements, and other relevant details.'
+        : 'Please extract all text content from this document, maintaining proper structure and formatting.';
+
       const result = await model.generateContent([
         {
           inlineData: {
             data: base64Data,
-            mimeType: "application/pdf",
+            mimeType: (file as File).type,
           },
         },
-        'Please extract and format all the text content from this document, maintaining proper structure and formatting. Focus on preserving all important information including skills, experience, job requirements, and other relevant details. Remove any artifacts or unnecessary formatting.'
+        prompt
       ]);
 
       const extractedText = result.response.text();

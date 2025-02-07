@@ -1,5 +1,4 @@
 
-import FirecrawlApp from '@mendable/firecrawl-js';
 import { supabase } from "@/integrations/supabase/client";
 
 interface ErrorResponse {
@@ -42,8 +41,15 @@ export class FirecrawlService {
 
       console.log('Received response from firecrawl-url function:', data);
 
-      if (!data.success) {
-        return { success: false, error: data.error || 'Failed to crawl website' };
+      if (!data || !data.success) {
+        const errorMessage = data?.error || 'Failed to crawl website';
+        console.error('Crawl failed:', errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      if (!data.text) {
+        console.warn('No content found in crawl response');
+        return { success: false, error: 'No content found from the website' };
       }
 
       return { success: true, data: data.text };

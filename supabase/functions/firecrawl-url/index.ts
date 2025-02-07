@@ -37,16 +37,28 @@ serve(async (req) => {
       }
     });
 
-    console.log('Crawl response:', response);
+    console.log('Raw crawl response:', response);
 
     if (!response.success) {
       throw new Error(response.error || 'Failed to crawl URL');
     }
 
+    if (!response.data || !Array.isArray(response.data)) {
+      console.error('Invalid response data format:', response);
+      throw new Error('Invalid response data format from Firecrawl');
+    }
+
+    const text = response.data
+      .filter(item => item && typeof item.text === 'string')
+      .map(item => item.text)
+      .join('\n\n');
+
+    console.log('Processed text:', text);
+
     return new Response(
       JSON.stringify({
         success: true,
-        text: response.data.map((item: any) => item.text).join('\n\n')
+        text: text || 'No content found'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

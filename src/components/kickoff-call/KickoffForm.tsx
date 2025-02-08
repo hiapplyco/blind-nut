@@ -1,11 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FirecrawlService } from "@/utils/FirecrawlService";
+import { Loader } from "lucide-react";
 
 interface KickoffFormProps {
   isProcessing: boolean;
@@ -19,6 +20,7 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
   const [url, setUrl] = useState("");
   const [isCrawling, setIsCrawling] = useState(false);
   const [summaries] = useState<Array<{ content: string; source: string; created_at: string }>>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCrawl = async () => {
     if (!url.trim()) {
@@ -51,6 +53,7 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const { data: result, error: processingError } = await supabase.functions.invoke('process-kickoff-call', {
         body: {
@@ -63,11 +66,14 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
       if (processingError) throw processingError;
 
       toast.success("Successfully processed kickoff call information!");
-      navigate(`/dashboard?callId=${result.id}`);
+      // Navigate to the chat interface instead of the dashboard
+      navigate(`/chat?callId=${result.id}&mode=kickoff`);
 
     } catch (error) {
       console.error('Error processing kickoff call:', error);
       toast.error("Failed to process kickoff call. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -84,7 +90,9 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Enter a title for this kickoff call"
           className="w-full p-4 border-4 border-black rounded bg-white 
-            shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black"
+            shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black
+            transition-all duration-200 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+            hover:translate-x-[2px] hover:translate-y-[2px]"
         />
       </div>
 
@@ -100,7 +108,9 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
             onChange={(e) => setUrl(e.target.value)}
             placeholder="Enter a website URL to scrape content"
             className="flex-1 p-4 border-4 border-black rounded bg-white 
-              shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black"
+              shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black
+              transition-all duration-200 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+              hover:translate-x-[2px] hover:translate-y-[2px]"
           />
           <Button
             type="button"
@@ -109,9 +119,17 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
             className="bg-[#8B5CF6] text-white py-4 px-6 rounded font-bold text-lg border-4 
               border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 
               hover:translate-x-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all
-              disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap
+              animate-in fade-in duration-200"
           >
-            {isCrawling ? 'Crawling...' : 'Crawl URL'}
+            {isCrawling ? (
+              <div className="flex items-center gap-2">
+                <Loader className="h-4 w-4 animate-spin" />
+                Crawling...
+              </div>
+            ) : (
+              'Crawl URL'
+            )}
           </Button>
         </div>
       </div>
@@ -126,7 +144,9 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
           onChange={(e) => setTextInput(e.target.value)}
           placeholder="Enter notes, requirements, or paste content here"
           className="w-full min-h-[200px] p-4 border-4 border-black rounded bg-white resize-none 
-            shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black"
+            shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black
+            transition-all duration-200 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+            hover:translate-x-[2px] hover:translate-y-[2px]"
         />
       </div>
 
@@ -135,12 +155,18 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
         className="w-full bg-[#8B5CF6] text-white py-4 rounded font-bold text-lg border-4 
           border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 
           hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all
-          disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={isProcessing || !textInput.trim() || !title.trim()}
+          disabled:opacity-50 disabled:cursor-not-allowed animate-in fade-in duration-200"
+        disabled={isSubmitting || !textInput.trim() || !title.trim()}
       >
-        {isProcessing ? 'Processing...' : 'Process Kickoff Call'}
+        {isSubmitting ? (
+          <div className="flex items-center justify-center gap-2">
+            <Loader className="h-4 w-4 animate-spin" />
+            Processing...
+          </div>
+        ) : (
+          'Process Kickoff Call'
+        )}
       </Button>
     </form>
   );
 };
-

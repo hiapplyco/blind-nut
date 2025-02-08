@@ -7,12 +7,10 @@ import { FileList } from "@/components/kickoff-call/FileList";
 
 const KickOffCall = () => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [textInput, setTextInput] = useState("");
   const [filePaths, setFilePaths] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; path: string }[]>([]);
 
   const handleFileUpload = (filePath: string, fileName: string, text: string) => {
-    setTextInput(prev => prev + (prev ? '\n\n' : '') + text);
     setUploadedFiles(prev => [...prev, { name: fileName, path: filePath }]);
     setFilePaths(prev => [...prev, filePath]);
   };

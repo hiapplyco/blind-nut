@@ -386,6 +386,36 @@ export type Database = {
           },
         ]
       }
+      sourcing_searches: {
+        Row: {
+          company_name: string | null
+          created_at: string | null
+          id: number
+          search_string: string | null
+          search_text: string | null
+          search_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string | null
+          id?: number
+          search_string?: string | null
+          search_text?: string | null
+          search_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string | null
+          id?: number
+          search_string?: string | null
+          search_text?: string | null
+          search_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_video_analyses: {
         Row: {
           analysis_prompt: string

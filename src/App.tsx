@@ -7,6 +7,7 @@ import ScreeningRoom from "./pages/ScreeningRoom";
 import InterviewPrep from "./pages/InterviewPrep";
 import KickOffCall from "./pages/KickOffCall";
 import Chat from "./pages/Chat";
+import Sourcing from "./pages/Sourcing";
 import MainLayout from "./components/layout/MainLayout";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -32,6 +33,14 @@ function App() {
             element={
               <MainLayout>
                 <Report />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/sourcing"
+            element={
+              <MainLayout>
+                <Sourcing />
               </MainLayout>
             }
           />

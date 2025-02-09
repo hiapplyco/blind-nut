@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { Home, FileText, Video, Theater, PhoneCall, MessageSquare } from "lucide-react";
+import { Home, FileText, Video, Theater, PhoneCall, MessageSquare, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -26,8 +26,8 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
   
   const menuItems = [
-    { title: 'Home', path: '/dashboard', icon: Home },
-    { title: 'Dashboard', path: '/dashboard', icon: FileText },
+    { title: 'Dashboard', path: '/dashboard', icon: Home },
+    { title: 'Sourcing', path: '/sourcing', icon: Search },
     { title: 'Screening Room', path: '/screening-room', icon: Video },
     { title: 'Interview Prep', path: '/interview-prep', icon: Theater },
     { title: 'Kickoff Call', path: '/kickoff-call', icon: PhoneCall },

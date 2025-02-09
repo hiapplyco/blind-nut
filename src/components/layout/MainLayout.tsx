@@ -26,7 +26,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
   
   const menuItems = [
-    { title: 'Home', path: '/', icon: Home },
+    { title: 'Home', path: '/dashboard', icon: Home },
     { title: 'Dashboard', path: '/dashboard', icon: FileText },
     { title: 'Screening Room', path: '/screening-room', icon: Video },
     { title: 'Interview Prep', path: '/interview-prep', icon: Theater },

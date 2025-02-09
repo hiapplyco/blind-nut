@@ -9,6 +9,7 @@ const defaultProps = {
   userId: 'test-user-id',
   onJobCreated: mockOnJobCreated,
   currentJobId: null,
+  isProcessingComplete: false
 };
 
 describe('SearchForm', () => {

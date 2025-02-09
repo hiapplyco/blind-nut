@@ -2,13 +2,14 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { SearchFormContent } from '../SearchFormContent';
 import { vi } from 'vitest';
+import { SearchType } from '../types';
 
 const mockProps = {
   searchText: '',
   companyName: '',
   isProcessing: false,
   isScrapingProfiles: false,
-  searchType: 'candidates',
+  searchType: 'candidates' as SearchType,
   searchString: '',
   onSearchTypeChange: vi.fn(),
   onSearchTextChange: vi.fn(),

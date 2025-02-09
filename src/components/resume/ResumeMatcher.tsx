@@ -1,12 +1,13 @@
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Upload, FileText } from "lucide-react";
+import { Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { MatchCard } from "./MatchCard";
 
 interface ResumeMatcherProps {
   jobId: number;
@@ -40,20 +41,36 @@ export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("resume_matches")
-        .select("*")
+        .select(`
+          id,
+          similarity_score,
+          matching_keywords,
+          matching_entities,
+          created_at,
+          parsed_resume,
+          parsed_job
+        `)
         .eq("job_id", jobId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching matches:", error);
+        throw error;
+      }
       return data as ResumeMatch[];
-    }
+    },
+    retry: 1
   });
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.includes('pdf') && !file.type.includes('doc') && !file.type.includes('plain')) {
+    // Check file extension
+    const allowedExtensions = ['pdf', 'doc', 'docx', 'txt'];
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    
+    if (!extension || !allowedExtensions.includes(extension)) {
       toast.error("Please upload a PDF, DOC, DOCX, or TXT file");
       return;
     }
@@ -71,21 +88,21 @@ export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
 
       if (error) throw error;
 
-      // After successful analysis, refetch the matches
       await refetch();
       toast.success("Resume analyzed successfully!");
 
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error occurred";
       console.error('Error analyzing resume:', error);
-      toast.error("Failed to analyze resume. Please try again.");
+      toast.error(`Failed to analyze resume: ${message}`);
     } finally {
       setIsUploading(false);
     }
-  };
+  }, [jobId, userId, refetch]);
 
-  const handleViewReport = (matchId: number) => {
+  const handleViewReport = useCallback((matchId: number) => {
     navigate(`/resume-report/${matchId}`);
-  };
+  }, [navigate]);
 
   return (
     <Card className="p-6">
@@ -97,13 +114,15 @@ export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
             className="relative"
             disabled={isUploading}
           >
-            <input
-              type="file"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              accept=".pdf,.doc,.docx,.txt"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-            />
+            <label className="absolute inset-0 w-full h-full cursor-pointer">
+              <input
+                type="file"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                accept=".pdf,.doc,.docx,.txt"
+                onChange={handleFileUpload}
+                disabled={isUploading}
+              />
+            </label>
             <Upload className="w-4 h-4 mr-2" />
             {isUploading ? "Analyzing..." : "Upload Resume"}
           </Button>
@@ -121,80 +140,11 @@ export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
         ) : matches?.length ? (
           <div className="space-y-4 mt-6">
             {matches.map((match) => (
-              <Card key={match.id} className="p-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-sm text-gray-600">Similarity Score:</span>
-                      <span className="ml-2 text-lg font-semibold">
-                        {match.similarity_score}%
-                      </span>
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {new Date(match.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-
-                  <div className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
-                    <p>Based on the analysis:</p>
-                    <ul className="list-disc ml-4 mt-2 space-y-1">
-                      {match.parsed_resume?.skills && (
-                        <li>Your resume shows expertise in {match.parsed_resume.skills.slice(0, 3).join(', ')}</li>
-                      )}
-                      {match.parsed_job?.required_skills && (
-                        <li>The job requires skills in {match.parsed_job.required_skills.slice(0, 3).join(', ')}</li>
-                      )}
-                      <li>The {match.similarity_score}% match indicates {
-                        match.similarity_score >= 80 ? 'a strong alignment' :
-                        match.similarity_score >= 60 ? 'a good alignment' :
-                        'some alignment'
-                      } between your qualifications and the job requirements</li>
-                    </ul>
-                  </div>
-
-                  <div className="flex justify-end mt-4">
-                    <Button
-                      onClick={() => handleViewReport(match.id)}
-                      className="bg-purple-600 text-white hover:bg-purple-700"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      View Full Report
-                    </Button>
-                  </div>
-
-                  {match.matching_keywords && match.matching_keywords.length > 0 && (
-                    <div>
-                      <span className="text-sm text-gray-600">Matching Keywords:</span>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {match.matching_keywords.map((keyword, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"
-                          >
-                            {keyword}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {match.matching_entities && match.matching_entities.length > 0 && (
-                    <div>
-                      <span className="text-sm text-gray-600">Matching Entities:</span>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {match.matching_entities.map((entity, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                          >
-                            {entity}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </Card>
+              <MatchCard 
+                key={match.id} 
+                match={match} 
+                onViewReport={handleViewReport}
+              />
             ))}
           </div>
         ) : (

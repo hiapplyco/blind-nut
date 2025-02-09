@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { SearchForm } from '../SearchForm';
 import { vi } from 'vitest';
+import '@testing-library/jest-dom';
 
 const mockOnJobCreated = vi.fn();
 const defaultProps = {

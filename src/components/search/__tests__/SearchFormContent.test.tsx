@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { SearchFormContent } from '../SearchFormContent';
 import { vi } from 'vitest';
 import { SearchType } from '../types';
+import '@testing-library/jest-dom';
 
 const mockProps = {
   searchText: '',

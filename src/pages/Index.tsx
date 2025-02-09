@@ -5,8 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { Button } from "@/components/ui/button";
-import { FileText, Video, Theater, PhoneCall } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -14,7 +12,6 @@ const Index = () => {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
@@ -22,7 +19,6 @@ const Index = () => {
       }
     });
 
-    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -87,51 +83,8 @@ const Index = () => {
 
   return (
     <div className="container max-w-4xl py-8 space-y-8">
-      <div className="flex justify-between items-center">
-        <TitleSection />
-        <div className="flex gap-4">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2"
-          >
-            <FileText className="h-4 w-4" />
-            View Past Searches
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/screening-room')}
-            className="flex items-center gap-2"
-          >
-            <Video className="h-4 w-4" />
-            Screening Room
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/interview-prep')}
-            className="flex items-center gap-2"
-          >
-            <Theater className="h-4 w-4" />
-            Interview Prep
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/kickoff-call')}
-            className="flex items-center gap-2"
-          >
-            <PhoneCall className="h-4 w-4" />
-            Kickoff Call
-          </Button>
-        </div>
-      </div>
-      
+      <TitleSection />
       <NewSearchForm userId={session.user.id} />
-      <button
-        onClick={() => supabase.auth.signOut()}
-        className="block mx-auto text-sm text-gray-600 hover:text-gray-900 font-medium"
-      >
-        Sign Out
-      </button>
     </div>
   );
 };

@@ -7,10 +7,10 @@ import ScreeningRoom from "./pages/ScreeningRoom";
 import InterviewPrep from "./pages/InterviewPrep";
 import KickOffCall from "./pages/KickOffCall";
 import Chat from "./pages/Chat";
+import MainLayout from "./components/layout/MainLayout";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-// Create a client
 const queryClient = new QueryClient();
 
 function App() {
@@ -18,13 +18,62 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/report/:jobId" element={<Report />} />
-          <Route path="/screening-room" element={<ScreeningRoom />} />
-          <Route path="/interview-prep" element={<InterviewPrep />} />
-          <Route path="/kickoff-call" element={<KickOffCall />} />
-          <Route path="/chat" element={<Chat />} />
+          <Route
+            path="/"
+            element={
+              <MainLayout>
+                <Index />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <MainLayout>
+                <Dashboard />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/report/:jobId"
+            element={
+              <MainLayout>
+                <Report />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/screening-room"
+            element={
+              <MainLayout>
+                <ScreeningRoom />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/interview-prep"
+            element={
+              <MainLayout>
+                <InterviewPrep />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/kickoff-call"
+            element={
+              <MainLayout>
+                <KickOffCall />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <MainLayout>
+                <Chat />
+              </MainLayout>
+            }
+          />
         </Routes>
         <Toaster />
       </Router>

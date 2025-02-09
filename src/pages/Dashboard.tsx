@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -93,6 +92,7 @@ const Dashboard = () => {
         .single();
 
       if (jobData?.content) {
+        // Navigate with state and force a reload to ensure clean state
         navigate('/', { 
           state: { 
             content: jobData.content, 

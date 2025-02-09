@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -38,12 +39,17 @@ export const SearchForm = ({
   useEffect(() => {
     // Handle auto-run from location state
     const state = location.state as { content?: string; autoRun?: boolean } | null;
-    if (state?.content && state?.autoRun) {
+    if (state?.content) {
       setSearchText(state.content);
-      // Clear the state to prevent re-running
-      window.history.replaceState({}, document.title);
-      // Trigger the search
-      handleSubmit(new Event('submit') as any);
+      // Only auto-submit if autoRun is true
+      if (state?.autoRun) {
+        // Clear the state to prevent re-running
+        window.history.replaceState({}, document.title);
+        // Use setTimeout to ensure state is updated before submitting
+        setTimeout(() => {
+          handleSubmit(new Event('submit') as any);
+        }, 0);
+      }
     }
   }, [location.state]);
 

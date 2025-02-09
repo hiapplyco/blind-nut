@@ -1,10 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SearchType } from "../types";
 import { toast } from "sonner";
 import { processJobRequirements } from "@/utils/jobRequirements";
+import { useDebouncedCallback } from "use-debounce";
 
 export const useSearchForm = (
   userId: string,
@@ -19,16 +20,22 @@ export const useSearchForm = (
   const [searchType, setSearchType] = useState<SearchType>("candidates");
   const [searchString, setSearchString] = useState("");
 
+  const debouncedSetSearchText = useDebouncedCallback(
+    (value: string) => setSearchText(value),
+    300
+  );
+
+  const debouncedSetCompanyName = useDebouncedCallback(
+    (value: string) => setCompanyName(value),
+    300
+  );
+
   useEffect(() => {
-    // Handle auto-run from location state
     const state = location.state as { content?: string; autoRun?: boolean } | null;
     if (state?.content) {
       setSearchText(state.content);
-      // Only auto-submit if autoRun is true
       if (state?.autoRun) {
-        // Clear the state to prevent re-running
         window.history.replaceState({}, document.title);
-        // Use setTimeout to ensure state is updated before submitting
         setTimeout(() => {
           handleSubmit(new Event('submit') as any);
         }, 0);
@@ -37,7 +44,6 @@ export const useSearchForm = (
   }, [location.state]);
 
   useEffect(() => {
-    // Fetch search string when job is created
     const fetchSearchString = async () => {
       if (currentJobId) {
         const { data, error } = await supabase
@@ -82,10 +88,9 @@ export const useSearchForm = (
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
     if (!searchText?.trim()) {
       toast.error("Please enter some content before submitting");
       return;
@@ -99,7 +104,6 @@ export const useSearchForm = (
     setIsProcessing(true);
 
     try {
-      // Generate title and summary first
       const { title, summary } = await generateSummary(searchText);
 
       const { data: jobData, error: jobError } = await supabase
@@ -140,9 +144,9 @@ export const useSearchForm = (
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [searchText, searchType, companyName, userId, onJobCreated]);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -173,13 +177,13 @@ export const useSearchForm = (
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [userId]);
 
   return {
     searchText,
-    setSearchText,
+    setSearchText: debouncedSetSearchText,
     companyName,
-    setCompanyName,
+    setCompanyName: debouncedSetCompanyName,
     isProcessing,
     isScrapingProfiles,
     searchType,

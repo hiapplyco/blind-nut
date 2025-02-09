@@ -1,10 +1,11 @@
 
+import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { SearchFormProps } from "./types";
 import { useSearchForm } from "./hooks/useSearchForm";
 import { SearchFormContent } from "./SearchFormContent";
 
-export const SearchForm = ({ 
+export const SearchForm = memo(({ 
   userId, 
   onJobCreated, 
   currentJobId,
@@ -40,6 +41,8 @@ export const SearchForm = ({
       />
     </Card>
   );
-};
+});
+
+SearchForm.displayName = 'SearchForm';
 
 export default SearchForm;

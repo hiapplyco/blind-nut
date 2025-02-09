@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { SearchType } from "./types";
 import { SearchTypeToggle } from "./SearchTypeToggle";
 import { FormHeader } from "./FormHeader";
@@ -22,7 +23,14 @@ interface SearchFormContentProps {
   onSubmit: (e: React.FormEvent) => Promise<void>;
 }
 
-export const SearchFormContent = ({
+const MemoizedSearchTypeToggle = memo(SearchTypeToggle);
+const MemoizedFormHeader = memo(FormHeader);
+const MemoizedContentTextarea = memo(ContentTextarea);
+const MemoizedCompanyNameInput = memo(CompanyNameInput);
+const MemoizedSubmitButton = memo(SubmitButton);
+const MemoizedGoogleSearchWindow = memo(GoogleSearchWindow);
+
+export const SearchFormContent = memo(({
   searchText,
   companyName,
   isProcessing,
@@ -38,14 +46,14 @@ export const SearchFormContent = ({
   return (
     <>
       <form onSubmit={onSubmit} className="space-y-6">
-        <SearchTypeToggle 
+        <MemoizedSearchTypeToggle 
           value={searchType} 
           onValueChange={onSearchTypeChange} 
         />
         
-        <FormHeader />
+        <MemoizedFormHeader />
         
-        <ContentTextarea
+        <MemoizedContentTextarea
           searchText={searchText}
           isProcessing={isProcessing}
           onTextChange={onSearchTextChange}
@@ -54,7 +62,7 @@ export const SearchFormContent = ({
         />
 
         {searchType === "candidates-at-company" && (
-          <CompanyNameInput
+          <MemoizedCompanyNameInput
             companyName={companyName}
             isProcessing={isProcessing}
             onChange={onCompanyNameChange}
@@ -62,7 +70,7 @@ export const SearchFormContent = ({
         )}
 
         <div className="space-y-4">
-          <SubmitButton 
+          <MemoizedSubmitButton 
             isProcessing={isProcessing || isScrapingProfiles}
             isDisabled={
               isProcessing || 
@@ -83,9 +91,11 @@ export const SearchFormContent = ({
 
       {searchString && (
         <div className="mt-6">
-          <GoogleSearchWindow searchString={searchString} />
+          <MemoizedGoogleSearchWindow searchString={searchString} />
         </div>
       )}
     </>
   );
-};
+});
+
+SearchFormContent.displayName = 'SearchFormContent';

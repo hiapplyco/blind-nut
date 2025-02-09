@@ -345,6 +345,56 @@ export type Database = {
         }
         Relationships: []
       }
+      resume_matches: {
+        Row: {
+          created_at: string | null
+          id: number
+          job_id: number | null
+          matching_entities: Json | null
+          matching_keywords: Json | null
+          parsed_job: Json | null
+          parsed_resume: Json | null
+          resume_file_path: string | null
+          resume_text: string | null
+          similarity_score: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          job_id?: number | null
+          matching_entities?: Json | null
+          matching_keywords?: Json | null
+          parsed_job?: Json | null
+          parsed_resume?: Json | null
+          resume_file_path?: string | null
+          resume_text?: string | null
+          similarity_score?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          job_id?: number | null
+          matching_entities?: Json | null
+          matching_keywords?: Json | null
+          parsed_job?: Json | null
+          parsed_resume?: Json | null
+          resume_file_path?: string | null
+          resume_text?: string | null
+          similarity_score?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_matches_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       search_results: {
         Row: {
           created_at: string | null

@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { PDFGenerator } from "@/components/search/pdf/PDFGenerator";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import { ResumeMatcher } from "@/components/resume/ResumeMatcher";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -134,52 +136,57 @@ const Dashboard = () => {
 
       <div className="grid gap-4">
         {searches?.map((search) => (
-          <Card key={search.id} className="p-6 hover:shadow-lg transition-shadow">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Search className="h-4 w-4" />
-                    <span className="font-medium">
-                      {format(new Date(search.created_at), 'MMM d, yyyy')}
-                    </span>
+          <div key={search.id} className="space-y-4">
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Search className="h-4 w-4" />
+                      <span className="font-medium">
+                        {format(new Date(search.created_at), 'MMM d, yyyy')}
+                      </span>
+                    </div>
+                    
+                    <h2 className="text-lg font-semibold">
+                      {search.title || "Untitled Search"}
+                    </h2>
+                    
+                    {search.summary && (
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {search.summary}
+                      </p>
+                    )}
                   </div>
-                  
-                  <h2 className="text-lg font-semibold">
-                    {search.title || "Untitled Search"}
-                  </h2>
-                  
-                  {search.summary && (
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {search.summary}
-                    </p>
-                  )}
-                </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                    onClick={() => handleDownloadReport(search.id)}
-                  >
-                    <FileText className="h-4 w-4" />
-                    Download Report
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() => handleDownloadReport(search.id)}
+                    >
+                      <FileText className="h-4 w-4" />
+                      Download Report
+                    </Button>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                    onClick={() => handleRunAgain(search.id)}
-                  >
-                    <RotateCw className="h-4 w-4" />
-                    Run Again
-                  </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() => handleRunAgain(search.id)}
+                    >
+                      <RotateCw className="h-4 w-4" />
+                      Run Again
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+            
+            {/* Add ResumeMatcher component */}
+            <ResumeMatcher jobId={search.id} userId={search.user_id} />
+          </div>
         ))}
 
         {searches?.length === 0 && (

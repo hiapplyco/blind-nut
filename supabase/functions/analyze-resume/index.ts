@@ -53,9 +53,17 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '')
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
 
-    // Convert resume to text
+    // Convert resume to text and clean it
     const arrayBuffer = await (file as File).arrayBuffer()
-    const resumeText = new TextDecoder().decode(arrayBuffer)
+    const decoder = new TextDecoder('utf-8')
+    let resumeText = decoder.decode(arrayBuffer)
+    
+    // Clean the text by removing null bytes and invalid characters
+    resumeText = resumeText
+      .replace(/\0/g, '') // Remove null bytes
+      .replace(/[\uFFFD\uFFFE\uFFFF]/g, '') // Remove specific Unicode replacement characters
+      .replace(/[^\x20-\x7E\x0A\x0D\u00A0-\u024F\u1E00-\u1EFF]/g, '') // Keep basic Latin, Latin-1 Supplement, and Latin Extended
+      .trim()
 
     // Analyze with Gemini
     const prompt = `You are a resume analyzer. Compare this resume against the job description and return a JSON object (do not include markdown backticks) with the following fields:
@@ -84,6 +92,23 @@ serve(async (req) => {
     
     try {
       const analysis = JSON.parse(cleanJson)
+
+      // Store the analysis results
+      const { error: dbError } = await supabase
+        .from('resume_matches')
+        .insert({
+          job_id: jobId,
+          user_id: userId,
+          resume_file_path: filePath,
+          resume_text: resumeText,
+          similarity_score: analysis.similarityScore,
+          parsed_resume: analysis.parsedResume,
+          parsed_job: analysis.parsedJob,
+          matching_keywords: analysis.matchingKeywords,
+          matching_entities: analysis.matchingEntities
+        })
+
+      if (dbError) throw dbError
 
       return new Response(
         JSON.stringify({

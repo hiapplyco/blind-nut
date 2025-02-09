@@ -1,7 +1,8 @@
 
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface FileUploadSectionProps {
   onFileUpload: (filePath: string, fileName: string, text: string) => void;
@@ -71,7 +72,9 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
           }
 
           onFileUpload(data.filePath, file.name, data.text);
-          toast.success(`Successfully processed ${file.name}`);
+          toast.success(`Successfully processed ${file.name}`, {
+            className: "animate-fade-in",
+          });
         }
       }
     } catch (error) {
@@ -96,15 +99,18 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
         />
         <label
           htmlFor="file-upload"
-          className={`flex items-center gap-2 px-4 py-2 bg-white border-2 border-black rounded font-bold 
-            shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:translate-x-0.5 
-            hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer
-            ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 bg-white border-2 border-black rounded font-bold",
+            "shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:translate-x-0.5",
+            "hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer",
+            "animate-in fade-in duration-300",
+            isProcessing && "opacity-50 cursor-not-allowed"
+          )}
         >
           {isProcessing ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Loader2 className="h-4 w-4" />
+            <Upload className="h-4 w-4" />
           )}
           {isProcessing ? 'Processing...' : 'Upload Files'}
         </label>

@@ -58,8 +58,7 @@ serve(async (req) => {
     const resumeText = new TextDecoder().decode(arrayBuffer)
 
     // Analyze with Gemini
-    const prompt = `Analyze this resume against the following job description.
-    Return a JSON object with the following fields:
+    const prompt = `You are a resume analyzer. Compare this resume against the job description and return a JSON object (do not include markdown backticks) with the following fields:
     - similarityScore (0-100)
     - parsedResume (extracted skills, experience, education)
     - parsedJob (required skills, qualifications, responsibilities)
@@ -71,19 +70,34 @@ serve(async (req) => {
 
     Resume:
     ${resumeText}
+
+    Return ONLY the JSON object, no other text.
     `
 
     const result = await model.generateContent(prompt)
-    const analysis = JSON.parse(result.response.text())
+    const responseText = result.response.text()
+    
+    // Remove any markdown formatting if present
+    const cleanJson = responseText.replace(/```json\n?|\n?```/g, '').trim()
+    
+    console.log('Cleaned JSON:', cleanJson)
+    
+    try {
+      const analysis = JSON.parse(cleanJson)
 
-    return new Response(
-      JSON.stringify({
-        filePath,
-        resumeText,
-        ...analysis
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      return new Response(
+        JSON.stringify({
+          filePath,
+          resumeText,
+          ...analysis
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    } catch (parseError) {
+      console.error('Error parsing JSON:', parseError)
+      console.error('Raw response:', responseText)
+      throw new Error('Failed to parse analysis results')
+    }
 
   } catch (error) {
     console.error('Error:', error)

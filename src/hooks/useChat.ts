@@ -20,62 +20,63 @@ export const useChat = (callId: number | null, mode: string | null) => {
       if (!callId) return;
 
       try {
-        const { data, error } = await supabase
-          .from('kickoff_summaries')
+        const { data: kickoffCall, error: kickoffError } = await supabase
+          .from('kickoff_calls')
           .select('*')
-          .eq('call_id', callId)
-          .maybeSingle();
+          .eq('id', callId)
+          .single();
 
-        if (error) throw error;
+        if (kickoffError) throw kickoffError;
 
-        if (data) {
-          setMessages([{
-            role: 'system',
-            content: data.content,
-            sources: data.sources
-          }]);
+        // If the kickoff call exists but there's no summary yet, generate one
+        if (kickoffCall && mode === 'kickoff') {
+          setIsGenerating(true);
+          const { data: summaryData, error: summaryError } = await supabase.functions.invoke('process-kickoff-call', {
+            body: { 
+              text: kickoffCall.content,
+              title: kickoffCall.title,
+              filePaths: kickoffCall.file_paths || []
+            }
+          });
+
+          if (summaryError) throw summaryError;
+
+          if (summaryData) {
+            setMessages([{
+              role: 'system',
+              content: summaryData.summary,
+              sources: summaryData.sources
+            }]);
+          }
+          setIsGenerating(false);
+        } else {
+          // For non-kickoff mode, fetch existing summary
+          const { data: summaryData, error: summaryError } = await supabase
+            .from('kickoff_summaries')
+            .select('*')
+            .eq('call_id', callId)
+            .maybeSingle();
+
+          if (summaryError) throw summaryError;
+
+          if (summaryData) {
+            setMessages([{
+              role: 'system',
+              content: summaryData.content,
+              sources: summaryData.sources
+            }]);
+          }
         }
       } catch (error) {
-        console.error('Error fetching summary:', error);
-        toast.error('Failed to load summary');
+        console.error('Error fetching/generating summary:', error);
+        toast.error('Failed to load or generate summary');
       } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const generateInitialSummary = async () => {
-      if (!callId) return;
-      
-      setIsGenerating(true);
-      try {
-        const { data: summaryData, error: summaryError } = await supabase.functions.invoke('process-kickoff-call', {
-          body: { callId }
-        });
-
-        if (summaryError) throw summaryError;
-
-        if (summaryData) {
-          setMessages([{
-            role: 'system',
-            content: summaryData.summary,
-            sources: summaryData.sources
-          }]);
-        }
-      } catch (error) {
-        console.error('Error generating summary:', error);
-        toast.error('Failed to generate summary');
-      } finally {
-        setIsGenerating(false);
         setIsLoading(false);
       }
     };
 
     if (callId) {
-      if (mode === 'kickoff') {
-        generateInitialSummary();
-      } else {
-        fetchSummary();
-      }
+      fetchSummary();
     } else {
       setIsLoading(false);
     }

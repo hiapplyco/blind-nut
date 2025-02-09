@@ -94,9 +94,16 @@ export const useChat = (callId: number | null, mode: string | null) => {
     try {
       setIsLoading(true);
 
+      // Get the current session to get the user ID
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+
       const { data: sessionData, error: sessionError } = await supabase
         .from('chat_sessions')
-        .insert([{ title: input.slice(0, 50), user_id: null }])
+        .insert([{ 
+          title: input.slice(0, 50), 
+          user_id: userId // Set the user_id from the session
+        }])
         .select()
         .single();
 

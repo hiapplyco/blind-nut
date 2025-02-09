@@ -18,14 +18,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          <Route
-            path="/"
-            element={
-              <MainLayout>
-                <Index />
-              </MainLayout>
-            }
-          />
+          <Route path="/" element={<Index />} />
           <Route
             path="/dashboard"
             element={

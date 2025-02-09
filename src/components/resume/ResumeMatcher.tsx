@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,7 +35,7 @@ export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const navigate = useNavigate();
 
-  const { data: matches, isLoading } = useQuery({
+  const { data: matches, isLoading, refetch } = useQuery({
     queryKey: ["resume-matches", jobId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -70,6 +71,8 @@ export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
 
       if (error) throw error;
 
+      // After successful analysis, refetch the matches
+      await refetch();
       toast.success("Resume analyzed successfully!");
 
     } catch (error) {

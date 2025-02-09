@@ -17,7 +17,8 @@ interface ChatMessage {
 
 const Chat = () => {
   const [searchParams] = useSearchParams();
-  const callId = searchParams.get('callId');
+  const callIdParam = searchParams.get('callId');
+  const callId = callIdParam ? parseInt(callIdParam, 10) : null;
   const mode = searchParams.get('mode');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');

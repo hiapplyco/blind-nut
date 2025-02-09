@@ -12,6 +12,15 @@ interface ResumeMatcherProps {
   userId: string;
 }
 
+// Define type for resume match
+interface ResumeMatch {
+  id: number;
+  similarity_score: number;
+  matching_keywords: string[] | null;
+  matching_entities: string[] | null;
+  created_at: string;
+}
+
 export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
   const [isUploading, setIsUploading] = useState(false);
 
@@ -25,7 +34,7 @@ export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as ResumeMatch[];
     }
   });
 
@@ -109,11 +118,11 @@ export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
                     </span>
                   </div>
 
-                  {match.matching_keywords?.length > 0 && (
+                  {match.matching_keywords && match.matching_keywords.length > 0 && (
                     <div>
                       <span className="text-sm text-gray-600">Matching Keywords:</span>
                       <div className="flex flex-wrap gap-2 mt-1">
-                        {match.matching_keywords.map((keyword: string, i: number) => (
+                        {match.matching_keywords.map((keyword, i) => (
                           <span
                             key={i}
                             className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"
@@ -125,11 +134,11 @@ export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
                     </div>
                   )}
 
-                  {match.matching_entities?.length > 0 && (
+                  {match.matching_entities && match.matching_entities.length > 0 && (
                     <div>
                       <span className="text-sm text-gray-600">Matching Entities:</span>
                       <div className="flex flex-wrap gap-2 mt-1">
-                        {match.matching_entities.map((entity: string, i: number) => (
+                        {match.matching_entities.map((entity, i) => (
                           <span
                             key={i}
                             className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"

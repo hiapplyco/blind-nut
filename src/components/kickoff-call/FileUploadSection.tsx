@@ -3,6 +3,7 @@ import { Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface FileUploadSectionProps {
   onFileUpload: (filePath: string, fileName: string, text: string) => void;
@@ -10,9 +11,13 @@ interface FileUploadSectionProps {
 }
 
 export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSectionProps) => {
+  const [isUploading, setIsUploading] = useState(false);
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
+
+    setIsUploading(true);
 
     const acceptedTypes = [
       'application/pdf',
@@ -69,21 +74,27 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
           if (summaryError) {
             console.error('Error storing summary:', summaryError);
             toast.error(`Failed to store summary for ${file.name}`);
+            continue;
           }
 
           onFileUpload(data.filePath, file.name, data.text);
           toast.success(`Successfully processed ${file.name}`, {
             className: "animate-fade-in",
           });
+        } else {
+          toast.error(`No text content extracted from ${file.name}`);
         }
       }
     } catch (error) {
       console.error('Error processing files:', error);
       toast.error("Failed to process files. Please try again.");
     } finally {
+      setIsUploading(false);
       if (event.target) event.target.value = '';
     }
   };
+
+  const showProcessing = isProcessing || isUploading;
 
   return (
     <div className="space-y-4">
@@ -95,7 +106,7 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
           id="file-upload"
           multiple
           accept=".pdf,.doc,.docx,.txt"
-          disabled={isProcessing}
+          disabled={showProcessing}
         />
         <label
           htmlFor="file-upload"
@@ -104,18 +115,18 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
             "shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:translate-x-0.5",
             "hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer",
             "animate-in fade-in duration-300",
-            isProcessing && "opacity-50 cursor-not-allowed"
+            showProcessing && "opacity-50 cursor-not-allowed"
           )}
         >
-          {isProcessing ? (
+          {showProcessing ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Upload className="h-4 w-4" />
           )}
-          {isProcessing ? 'Processing...' : 'Upload Files'}
+          {showProcessing ? 'Processing...' : 'Upload Files'}
         </label>
         <span className="text-sm text-gray-500">
-          {isProcessing ? (
+          {showProcessing ? (
             <div className="flex items-center gap-2">
               <span className="animate-pulse">Processing your files</span>
               <div className="flex space-x-1">

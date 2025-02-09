@@ -219,27 +219,41 @@ export type Database = {
       }
       kickoff_summaries: {
         Row: {
+          call_id: number | null
           content: string
           created_at: string
           id: number
           source: string
+          sources: string[] | null
           user_id: string
         }
         Insert: {
+          call_id?: number | null
           content: string
           created_at?: string
           id?: number
           source: string
+          sources?: string[] | null
           user_id: string
         }
         Update: {
+          call_id?: number | null
           content?: string
           created_at?: string
           id?: number
           source?: string
+          sources?: string[] | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "kickoff_summaries_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "kickoff_calls"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meeting_analyses: {
         Row: {

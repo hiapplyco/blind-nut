@@ -1,18 +1,17 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { Upload, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 interface ResumeMatcherProps {
   jobId: number;
   userId: string;
 }
 
-// Define type for resume match
 interface ResumeMatch {
   id: number;
   similarity_score: number;
@@ -33,6 +32,7 @@ interface ResumeMatch {
 
 export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
   const [isUploading, setIsUploading] = useState(false);
+  const navigate = useNavigate();
 
   const { data: matches, isLoading } = useQuery({
     queryKey: ["resume-matches", jobId],
@@ -78,6 +78,10 @@ export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleViewReport = (matchId: number) => {
+    navigate(`/resume-report/${matchId}`);
   };
 
   return (
@@ -143,6 +147,16 @@ export const ResumeMatcher = ({ jobId, userId }: ResumeMatcherProps) => {
                         'some alignment'
                       } between your qualifications and the job requirements</li>
                     </ul>
+                  </div>
+
+                  <div className="flex justify-end mt-4">
+                    <Button
+                      onClick={() => handleViewReport(match.id)}
+                      className="bg-purple-600 text-white hover:bg-purple-700"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      View Full Report
+                    </Button>
                   </div>
 
                   {match.matching_keywords && match.matching_keywords.length > 0 && (

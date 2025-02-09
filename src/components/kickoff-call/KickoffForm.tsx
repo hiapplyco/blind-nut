@@ -11,15 +11,15 @@ import { Loader } from "lucide-react";
 interface KickoffFormProps {
   isProcessing: boolean;
   filePaths: string[];
+  title: string;
+  onTitleChange: (title: string) => void;
 }
 
-export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
+export const KickoffForm = ({ isProcessing, filePaths, title, onTitleChange }: KickoffFormProps) => {
   const navigate = useNavigate();
   const [textInput, setTextInput] = useState("");
-  const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [isCrawling, setIsCrawling] = useState(false);
-  const [summaries] = useState<Array<{ content: string; source: string; created_at: string }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCrawl = async () => {
@@ -66,7 +66,6 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
       if (processingError) throw processingError;
 
       toast.success("Successfully processed kickoff call information!");
-      // Navigate to the chat interface instead of the dashboard
       navigate(`/chat?callId=${result.id}&mode=kickoff`);
 
     } catch (error) {
@@ -79,23 +78,6 @@ export const KickoffForm = ({ isProcessing, filePaths }: KickoffFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <label htmlFor="title" className="text-lg font-bold block">
-          Title
-        </label>
-        <input
-          id="title"
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter a title for this kickoff call"
-          className="w-full p-4 border-4 border-black rounded bg-white 
-            shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black
-            transition-all duration-200 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-            hover:translate-x-[2px] hover:translate-y-[2px]"
-        />
-      </div>
-
       <div className="space-y-2">
         <label htmlFor="url" className="text-lg font-bold block">
           Website URL (optional)

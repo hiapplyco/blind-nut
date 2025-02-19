@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Globe } from "lucide-react";
+import { Globe, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,11 @@ const LinkedInPostGenerator = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleShareOnLinkedIn = () => {
+    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&summary=${encodeURIComponent(generatedPost)}`;
+    window.open(shareUrl, '_blank', 'width=570,height=450');
   };
 
   return (
@@ -116,15 +121,23 @@ const LinkedInPostGenerator = () => {
             <div className="bg-muted p-4 rounded-lg">
               <p className="whitespace-pre-wrap">{generatedPost}</p>
             </div>
-            <Button 
-              className="mt-4"
-              onClick={() => {
-                navigator.clipboard.writeText(generatedPost);
-                toast.success("Post copied to clipboard!");
-              }}
-            >
-              Copy to Clipboard
-            </Button>
+            <div className="flex gap-4 mt-4">
+              <Button 
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedPost);
+                  toast.success("Post copied to clipboard!");
+                }}
+              >
+                Copy to Clipboard
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleShareOnLinkedIn}
+              >
+                <Linkedin className="mr-2 h-4 w-4" />
+                Share on LinkedIn
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

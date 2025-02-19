@@ -44,35 +44,47 @@ const LinkedInPostGenerator = () => {
   const handleShareOnLinkedIn = async () => {
     setIsPosting(true);
     try {
-      console.log("Initiating LinkedIn OAuth...");
+      console.log("Starting LinkedIn OAuth flow...");
+      
+      // Initiate 3-legged OAuth flow with LinkedIn
       const { data: authData, error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          scopes: 'w_member_social r_liteprofile r_emailaddress',
+          scopes: 'w_member_social r_liteprofile r_emailaddress openid profile email',
+          queryParams: {
+            prompt: 'consent', // Force consent screen to ensure fresh tokens
+            access_type: 'offline'
+          }
         }
       });
 
       if (authError) {
         console.error("LinkedIn OAuth error:", authError);
-        throw authError;
+        throw new Error(`LinkedIn authorization failed: ${authError.message}`);
       }
 
-      console.log("LinkedIn OAuth response:", authData);
+      if (!authData) {
+        throw new Error("No authentication data received from LinkedIn");
+      }
 
-      // Once authenticated, create the post
+      console.log("LinkedIn OAuth successful, creating post...");
+
+      // Create the post using the edge function
       const { data, error } = await supabase.functions.invoke('create-linkedin-post', {
-        body: { text: generatedPost }
+        body: { 
+          text: generatedPost,
+        }
       });
       
       if (error) {
-        console.error("Error creating post:", error);
-        throw error;
+        console.error("Error creating LinkedIn post:", error);
+        throw new Error(`Failed to create LinkedIn post: ${error.message}`);
       }
 
-      toast.success("Posted to LinkedIn successfully!");
+      toast.success("Successfully posted to LinkedIn!");
     } catch (error: any) {
-      console.error("Detailed error:", error);
+      console.error("LinkedIn integration error:", error);
       toast.error(error.message || "Failed to post to LinkedIn. Please try again.");
     } finally {
       setIsPosting(false);

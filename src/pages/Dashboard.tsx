@@ -1,186 +1,100 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
+import { 
+  FileSearch, 
+  Video, 
+  UserCheck, 
+  PhoneCall, 
+  MessageSquare,
+  PlusCircle
+} from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { useRef, useState } from "react";
-import { PDFGenerator } from "@/components/search/pdf/PDFGenerator";
-import { useAgentOutputs } from "@/stores/useAgentOutputs";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
-import { SearchCard } from "@/components/dashboard/SearchCard";
-import { RunAgainDialog } from "@/components/dashboard/RunAgainDialog";
-import type { SearchCardData } from "@/components/dashboard/types";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [isExporting, setIsExporting] = useState(false);
-  const [showRunAgainDialog, setShowRunAgainDialog] = useState(false);
-  const [selectedJobContent, setSelectedJobContent] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const pdfRef = useRef<HTMLDivElement>(null);
-  
-  const { data: searches, isLoading } = useQuery({
-    queryKey: ["searches"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("jobs")
-        .select(`
-          *,
-          agent_outputs!agent_outputs_job_id_fkey (
-            job_summary,
-            compensation_analysis,
-            enhanced_description,
-            terms,
-            created_at
-          )
-        `)
-        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as SearchCardData[];
+  const toolCards = [
+    {
+      title: "Create LinkedIn Post",
+      description: "Generate engaging content for your recruitment campaigns",
+      icon: PlusCircle,
+      path: "/linkedin-post",
+      color: "bg-purple-100"
     },
-  });
-
-  const handleDownloadReport = async (jobId: number) => {
-    const { data: agentOutput } = useAgentOutputs(jobId);
-    if (!agentOutput || !pdfRef.current) {
-      toast.error("No report data available");
-      return;
+    {
+      title: "Sourcing Assistant",
+      description: "AI-powered candidate sourcing and job description analysis",
+      icon: FileSearch,
+      path: "/sourcing",
+      color: "bg-blue-100"
+    },
+    {
+      title: "Screening Room",
+      description: "Conduct and analyze candidate screening interviews",
+      icon: Video,
+      path: "/screening-room",
+      color: "bg-green-100"
+    },
+    {
+      title: "Interview Prep",
+      description: "Prepare structured interviews and evaluation criteria",
+      icon: UserCheck,
+      path: "/interview-prep",
+      color: "bg-yellow-100"
+    },
+    {
+      title: "Kickoff Call",
+      description: "Generate meeting summaries and action items",
+      icon: PhoneCall,
+      path: "/kickoff-call",
+      color: "bg-orange-100"
+    },
+    {
+      title: "Chat Assistant",
+      description: "Get real-time help with recruitment tasks",
+      icon: MessageSquare,
+      path: "/chat",
+      color: "bg-pink-100"
     }
-
-    setIsExporting(true);
-    try {
-      const { data: jobData } = await supabase
-        .from('jobs')
-        .select('search_string')
-        .eq('id', jobId)
-        .single();
-
-      const canvas = await html2canvas(pdfRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const imgWidth = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      pdf.save(`job-analysis-${jobId}.pdf`);
-
-      toast.success("Report downloaded successfully");
-    } catch (error) {
-      console.error('Error downloading report:', error);
-      toast.error("Failed to download report");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const handleRunAgain = async (jobId: number) => {
-    try {
-      const { data: jobData } = await supabase
-        .from('jobs')
-        .select('content')
-        .eq('id', jobId)
-        .single();
-
-      if (jobData?.content) {
-        setSelectedJobContent(jobData.content);
-        setShowRunAgainDialog(true);
-      } else {
-        toast.error("No search content found");
-      }
-    } catch (error) {
-      console.error('Error getting job content:', error);
-      toast.error("Failed to get job content");
-    }
-  };
-
-  const handleConfirmRunAgain = () => {
-    setIsProcessing(true);
-    setShowRunAgainDialog(false);
-    
-    navigate('/', { 
-      state: { 
-        content: selectedJobContent, 
-        autoRun: true 
-      },
-      replace: true
-    });
-    
-    toast.success("Generating new report...");
-  };
-
-  if (isLoading) {
-    return (
-      <div className="container max-w-4xl py-8">
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="p-6 animate-pulse bg-gray-100" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  ];
 
   return (
-    <div className="container max-w-4xl py-8 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Past Searches</h1>
-        <Button 
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2"
-        >
-          <PlusCircle className="h-4 w-4" />
-          New Search
-        </Button>
+    <div className="container py-8 space-y-8">
+      {/* Hero Section */}
+      <div className="space-y-4">
+        <h1 className="text-4xl font-bold">Recruitment Intelligence Hub</h1>
+        <p className="text-muted-foreground text-lg">
+          Streamline your recruitment process with AI-powered tools and analytics
+        </p>
       </div>
 
-      <div className="grid gap-4">
-        {searches?.map((search) => (
-          <SearchCard
-            key={search.id}
-            search={search}
-            onDownloadReport={handleDownloadReport}
-            onRunAgain={handleRunAgain}
-            isProcessing={isProcessing}
-          />
-        ))}
-
-        {searches?.length === 0 && (
-          <Card className="p-6 text-center">
-            <p className="text-gray-600">No searches yet. Create your first search to get started.</p>
+      {/* Tools Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {toolCards.map((tool) => (
+          <Card 
+            key={tool.path}
+            className={`group hover:shadow-lg transition-all ${tool.color} border-transparent aspect-square`}
+          >
+            <CardHeader className="h-full flex flex-col">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <tool.icon className="h-6 w-6" />
+                {tool.title}
+              </CardTitle>
+              <CardDescription className="flex-grow flex items-center text-base">
+                {tool.description}
+              </CardDescription>
+              <Button 
+                variant="ghost" 
+                className="w-full mt-auto group-hover:bg-white/50"
+                onClick={() => navigate(tool.path)}
+              >
+                Open Tool
+              </Button>
+            </CardHeader>
           </Card>
-        )}
+        ))}
       </div>
-
-      <RunAgainDialog
-        open={showRunAgainDialog}
-        onOpenChange={setShowRunAgainDialog}
-        selectedJobContent={selectedJobContent}
-        onSelectedJobContentChange={setSelectedJobContent}
-        onConfirm={handleConfirmRunAgain}
-        isProcessing={isProcessing}
-      />
-
-      <PDFGenerator
-        ref={pdfRef}
-        agentOutput={null}
-        pdfContent=""
-        isExporting={isExporting}
-      />
     </div>
   );
 };

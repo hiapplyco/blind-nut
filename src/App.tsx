@@ -15,8 +15,8 @@ const App = () => {
     <Router>
       <MainLayout>
         <Routes>
-          <Route path="/" element={<LinkedInPostGenerator />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/linkedin-post" element={<LinkedInPostGenerator />} />
           <Route path="/sourcing" element={<Sourcing />} />
           <Route path="/screening-room" element={<ScreeningRoom />} />
           <Route path="/interview-prep" element={<InterviewPrep />} />

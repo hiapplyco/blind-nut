@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Globe, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,6 +58,7 @@ const LinkedInPostGenerator = () => {
 
   const handleShareOnLinkedIn = async () => {
     setIsPosting(true);
+    
     try {
       console.log("Starting LinkedIn OAuth flow...");
       
@@ -66,7 +66,7 @@ const LinkedInPostGenerator = () => {
       const { data: authData, error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/linkedin-post`, // Return to current page
           scopes: 'w_member_social r_liteprofile r_emailaddress openid profile email',
           queryParams: {
             prompt: 'consent'
@@ -74,20 +74,18 @@ const LinkedInPostGenerator = () => {
         }
       });
 
-      if (authError) {
+      // Only show error if the OAuth popup was not opened successfully
+      if (authError && !authData?.url) {
         console.error("LinkedIn OAuth error:", authError);
         throw new Error(`LinkedIn authorization failed: ${authError.message}`);
       }
 
-      if (!authData) {
-        throw new Error("No authentication data received from LinkedIn");
-      }
+      // Don't set isPosting to false here - let the redirect happen
+      return;
 
-      // The rest of the posting logic will happen after redirect
     } catch (error: any) {
       console.error("LinkedIn integration error:", error);
       toast.error(error.message || "Failed to connect to LinkedIn. Please try again.");
-    } finally {
       setIsPosting(false);
     }
   };

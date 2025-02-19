@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from "react";
-import { Globe, Linkedin } from "lucide-react";
+import { useState } from "react";
+import { Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -15,23 +15,6 @@ const LinkedInPostGenerator = () => {
   const [file, setFile] = useState<File | null>(null);
   const [generatedPost, setGeneratedPost] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isPosting, setIsPosting] = useState(false);
-
-  useEffect(() => {
-    // Handle the OAuth redirect
-    const handleAuthRedirect = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Auth redirect error:", error);
-        toast.error("Authentication failed. Please try again.");
-      } else if (session) {
-        // Successfully authenticated
-        toast.success("Successfully connected to LinkedIn!");
-      }
-    };
-
-    handleAuthRedirect();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,38 +37,6 @@ const LinkedInPostGenerator = () => {
       toast.error("Failed to generate post. Please try again.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleShareOnLinkedIn = async () => {
-    try {
-      setIsPosting(true);
-      console.log("Starting LinkedIn OAuth flow...");
-      
-      // Force localhost:5173 for development
-      const redirectURL = "http://localhost:5173/linkedin-post";
-      console.log("Redirect URL:", redirectURL);
-
-      const { error: authError } = await supabase.auth.signInWithOAuth({
-        provider: 'linkedin_oidc',
-        options: {
-          redirectTo: redirectURL,
-          scopes: 'w_member_social r_liteprofile r_emailaddress openid profile email',
-          queryParams: {
-            prompt: 'consent'
-          }
-        }
-      });
-
-      if (authError) {
-        console.error("LinkedIn OAuth error:", authError);
-        throw authError;
-      }
-
-    } catch (error: any) {
-      console.error("LinkedIn integration error:", error);
-      toast.error("Failed to connect to LinkedIn. Please try again.");
-      setIsPosting(false);
     }
   };
 
@@ -173,14 +124,6 @@ const LinkedInPostGenerator = () => {
                 }}
               >
                 Copy to Clipboard
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleShareOnLinkedIn}
-                disabled={isPosting}
-              >
-                <Linkedin className="mr-2 h-4 w-4" />
-                {isPosting ? "Connecting to LinkedIn..." : "Share on LinkedIn"}
               </Button>
             </div>
           </CardContent>

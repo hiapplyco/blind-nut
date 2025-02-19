@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Globe, Paperclip, Image, Share2, Copy, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,18 +15,47 @@ const LinkedInPostGenerator = () => {
   const [generatedPost, setGeneratedPost] = useState("");
   const [imageDescription, setImageDescription] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // This would normally call your backend, but for demo purposes:
-    setGeneratedPost(
-      `This is a generated post based on: "${postContent}"\n\n${
-        link ? `Check out this article: ${link}` : ""
-      }`
-    );
-    setImageDescription(
-      "Professional business person sharing insights about industry trends with a warm, engaging smile. The background features a modern office setting with soft natural lighting."
-    );
-    setCurrentView("result");
+    
+    try {
+      // Generate analysis
+      const analysisResponse = await fetch('/api/generate-linkedin-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: postContent })
+      });
+      
+      if (!analysisResponse.ok) throw new Error('Analysis generation failed');
+      const { analysis } = await analysisResponse.json();
+      
+      // Generate post
+      const postResponse = await fetch('/api/generate-linkedin-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analysis })
+      });
+      
+      if (!postResponse.ok) throw new Error('Post generation failed');
+      const { post } = await postResponse.json();
+      
+      // Generate image description
+      const imageResponse = await fetch('/api/generate-linkedin-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analysis })
+      });
+      
+      if (!imageResponse.ok) throw new Error('Image description generation failed');
+      const { imageDescription: description } = await imageResponse.json();
+      
+      setGeneratedPost(post);
+      setImageDescription(description);
+      setCurrentView("result");
+    } catch (error) {
+      console.error('Error generating content:', error);
+      toast.error('Failed to generate content. Please try again.');
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -62,10 +62,11 @@ const LinkedInPostGenerator = () => {
     try {
       console.log("Starting LinkedIn OAuth flow...");
       
+      // Use a dedicated callback route for OAuth
       const { data: authData, error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: window.location.href,
+          redirectTo: `${window.location.origin}/auth/callback`,
           scopes: 'w_member_social r_liteprofile r_emailaddress openid profile email',
           queryParams: {
             prompt: 'consent'

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Globe, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ const LinkedInPostGenerator = () => {
   const [file, setFile] = useState<File | null>(null);
   const [generatedPost, setGeneratedPost] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,9 +41,26 @@ const LinkedInPostGenerator = () => {
     }
   };
 
-  const handleShareOnLinkedIn = () => {
-    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://linkedin.com")}&summary=${encodeURIComponent(generatedPost)}`;
-    window.open(shareUrl, '_blank', 'width=570,height=450');
+  const handleShareOnLinkedIn = async () => {
+    setIsPosting(true);
+    try {
+      // For now, we'll still open the share dialog since we need OAuth setup
+      const shareUrl = `https://www.linkedin.com/feed/post/new?postText=${encodeURIComponent(generatedPost)}`;
+      window.open(shareUrl, '_blank', 'width=570,height=450');
+      
+      // TODO: Once OAuth is set up, we'll use this:
+      // const { data, error } = await supabase.functions.invoke('create-linkedin-post', {
+      //   body: { text: generatedPost }
+      // });
+      // if (error) throw error;
+      // toast.success("Posted to LinkedIn successfully!");
+      
+    } catch (error) {
+      console.error("Error posting to LinkedIn:", error);
+      toast.error("Failed to post to LinkedIn. Please try again.");
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -132,9 +151,10 @@ const LinkedInPostGenerator = () => {
               <Button
                 variant="outline"
                 onClick={handleShareOnLinkedIn}
+                disabled={isPosting}
               >
                 <Linkedin className="mr-2 h-4 w-4" />
-                Share on LinkedIn
+                {isPosting ? "Posting..." : "Share on LinkedIn"}
               </Button>
             </div>
           </CardContent>

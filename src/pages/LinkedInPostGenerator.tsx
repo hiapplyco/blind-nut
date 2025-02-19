@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Globe, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,12 +40,7 @@ const LinkedInPostGenerator = () => {
   };
 
   const handleShareOnLinkedIn = () => {
-    // If there's a link in the post content, try to use it as the URL
-    const urlMatch = link || generatedPost.match(/https?:\/\/[^\s]+/);
-    const shareUrl = urlMatch 
-      ? `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(urlMatch instanceof Array ? urlMatch[0] : link)}&summary=${encodeURIComponent(generatedPost)}`
-      : `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://linkedin.com")}&summary=${encodeURIComponent(generatedPost)}`;
-    
+    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://linkedin.com")}&summary=${encodeURIComponent(generatedPost)}`;
     window.open(shareUrl, '_blank', 'width=570,height=450');
   };
 

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Globe, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,22 @@ const LinkedInPostGenerator = () => {
   const [generatedPost, setGeneratedPost] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+
+  useEffect(() => {
+    // Handle the OAuth redirect
+    const handleAuthRedirect = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Auth redirect error:", error);
+        toast.error("Authentication failed. Please try again.");
+      } else if (session) {
+        // Successfully authenticated
+        toast.success("Successfully connected to LinkedIn!");
+      }
+    };
+
+    handleAuthRedirect();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,15 +62,13 @@ const LinkedInPostGenerator = () => {
     try {
       console.log("Starting LinkedIn OAuth flow...");
       
-      // Initiate 3-legged OAuth flow with LinkedIn
       const { data: authData, error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/linkedin-post`,
           scopes: 'w_member_social r_liteprofile r_emailaddress openid profile email',
           queryParams: {
-            prompt: 'consent', // Force consent screen to ensure fresh tokens
-            access_type: 'offline'
+            prompt: 'consent'
           }
         }
       });
@@ -68,24 +82,10 @@ const LinkedInPostGenerator = () => {
         throw new Error("No authentication data received from LinkedIn");
       }
 
-      console.log("LinkedIn OAuth successful, creating post...");
-
-      // Create the post using the edge function
-      const { data, error } = await supabase.functions.invoke('create-linkedin-post', {
-        body: { 
-          text: generatedPost,
-        }
-      });
-      
-      if (error) {
-        console.error("Error creating LinkedIn post:", error);
-        throw new Error(`Failed to create LinkedIn post: ${error.message}`);
-      }
-
-      toast.success("Successfully posted to LinkedIn!");
+      // The rest of the posting logic will happen after redirect
     } catch (error: any) {
       console.error("LinkedIn integration error:", error);
-      toast.error(error.message || "Failed to post to LinkedIn. Please try again.");
+      toast.error(error.message || "Failed to connect to LinkedIn. Please try again.");
     } finally {
       setIsPosting(false);
     }

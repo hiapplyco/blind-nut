@@ -44,17 +44,23 @@ const LinkedInPostGenerator = () => {
   const handleShareOnLinkedIn = async () => {
     setIsPosting(true);
     try {
-      // For now, we'll still open the share dialog since we need OAuth setup
-      const shareUrl = `https://www.linkedin.com/feed/post/new?postText=${encodeURIComponent(generatedPost)}`;
-      window.open(shareUrl, '_blank', 'width=570,height=450');
+      // Sign in with LinkedIn
+      const { data: authData, error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'linkedin_oidc',
+        options: {
+          scopes: 'w_member_social' // Required scope for posting
+        }
+      });
+
+      if (authError) throw authError;
+
+      // Once authenticated, create the post
+      const { data, error } = await supabase.functions.invoke('create-linkedin-post', {
+        body: { text: generatedPost }
+      });
       
-      // TODO: Once OAuth is set up, we'll use this:
-      // const { data, error } = await supabase.functions.invoke('create-linkedin-post', {
-      //   body: { text: generatedPost }
-      // });
-      // if (error) throw error;
-      // toast.success("Posted to LinkedIn successfully!");
-      
+      if (error) throw error;
+      toast.success("Posted to LinkedIn successfully!");
     } catch (error) {
       console.error("Error posting to LinkedIn:", error);
       toast.error("Failed to post to LinkedIn. Please try again.");

@@ -13,7 +13,39 @@ const LinkedInPostGenerator = () => {
   const [link, setLink] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [generatedPost, setGeneratedPost] = useState("");
-  const [imageDescription, setImageDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/generate-linkedin-post", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: postContent,
+          link,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate post");
+      }
+
+      setGeneratedPost(data.post);
+      toast.success("Post generated successfully!");
+    } catch (error) {
+      toast.error("Failed to generate post. Please try again.");
+      console.error("Error generating post:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="container py-8 space-y-8 max-w-2xl mx-auto">
@@ -32,7 +64,7 @@ const LinkedInPostGenerator = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="post-content">What do you want to post about?</Label>
               <Textarea
@@ -70,14 +102,39 @@ const LinkedInPostGenerator = () => {
                   <Globe className="h-6 w-6 text-muted-foreground hover:text-foreground" />
                 </Label>
 
-                <Button type="submit">
-                  Generate Post
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Generating..." : "Generate Post"}
                 </Button>
               </div>
             </div>
           </form>
         </CardContent>
       </Card>
+
+      {generatedPost && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Generated Post</CardTitle>
+            <CardDescription>
+              Here's your generated LinkedIn post
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="whitespace-pre-wrap">{generatedPost}</p>
+            </div>
+            <Button 
+              className="mt-4"
+              onClick={() => {
+                navigator.clipboard.writeText(generatedPost);
+                toast.success("Post copied to clipboard!");
+              }}
+            >
+              Copy to Clipboard
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

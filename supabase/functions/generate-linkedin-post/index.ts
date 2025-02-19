@@ -14,10 +14,10 @@ serve(async (req) => {
   }
 
   try {
-    const { analysis } = await req.json();
+    const { content, link } = await req.json();
     
-    if (!analysis) {
-      throw new Error('Analysis is required');
+    if (!content) {
+      throw new Error('Content is required');
     }
 
     const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -36,7 +36,7 @@ serve(async (req) => {
       }
     });
 
-    const prompt = `Generate final LinkedIn post FROM THIS CONTEXT:\n${analysis}\n
+    const prompt = `Generate a compelling LinkedIn post FROM THIS CONTEXT:\n${content}\n${link ? `\nInclude this link: ${link}` : ''}\n
     STRICT REQUIREMENTS:
     - Natural voice matching a professional tone
     - No markdown/formatting

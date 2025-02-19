@@ -44,26 +44,36 @@ const LinkedInPostGenerator = () => {
   const handleShareOnLinkedIn = async () => {
     setIsPosting(true);
     try {
-      // Sign in with LinkedIn
+      console.log("Initiating LinkedIn OAuth...");
       const { data: authData, error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          scopes: 'w_member_social' // Required scope for posting
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'w_member_social r_liteprofile r_emailaddress',
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error("LinkedIn OAuth error:", authError);
+        throw authError;
+      }
+
+      console.log("LinkedIn OAuth response:", authData);
 
       // Once authenticated, create the post
       const { data, error } = await supabase.functions.invoke('create-linkedin-post', {
         body: { text: generatedPost }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating post:", error);
+        throw error;
+      }
+
       toast.success("Posted to LinkedIn successfully!");
-    } catch (error) {
-      console.error("Error posting to LinkedIn:", error);
-      toast.error("Failed to post to LinkedIn. Please try again.");
+    } catch (error: any) {
+      console.error("Detailed error:", error);
+      toast.error(error.message || "Failed to post to LinkedIn. Please try again.");
     } finally {
       setIsPosting(false);
     }

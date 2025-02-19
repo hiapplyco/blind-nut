@@ -62,7 +62,8 @@ const LinkedInPostGenerator = () => {
       setIsPosting(true);
       console.log("Starting LinkedIn OAuth flow...");
       
-      const redirectURL = new URL('/linkedin-post', window.location.origin).toString();
+      // Force localhost:5173 for development
+      const redirectURL = "http://localhost:5173/linkedin-post";
       console.log("Redirect URL:", redirectURL);
 
       const { error: authError } = await supabase.auth.signInWithOAuth({

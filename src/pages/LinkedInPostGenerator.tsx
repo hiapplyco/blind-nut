@@ -65,7 +65,7 @@ const LinkedInPostGenerator = () => {
       const { data: authData, error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: `${window.location.origin}/linkedin-post`,
+          redirectTo: window.location.href,
           scopes: 'w_member_social r_liteprofile r_emailaddress openid profile email',
           queryParams: {
             prompt: 'consent'

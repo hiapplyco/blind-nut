@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { Home, FileText, Video, Theater, PhoneCall, MessageSquare, Search } from "lucide-react";
+import { Home, FileText, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   
   const menuItems = [
     { title: 'Dashboard', path: '/dashboard', icon: Home },
+    { title: 'Create LinkedIn Post', path: '/linkedin-post', icon: PlusCircle },
     { title: 'Sourcing', path: '/sourcing', icon: Search },
     { title: 'Screening Room', path: '/screening-room', icon: Video },
     { title: 'Interview Prep', path: '/interview-prep', icon: Theater },

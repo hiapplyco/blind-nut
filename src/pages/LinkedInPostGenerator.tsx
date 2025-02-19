@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Globe, Paperclip, Image, Share2, Copy, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -70,7 +71,6 @@ const LinkedInPostGenerator = () => {
   };
 
   const handleShare = () => {
-    // This would integrate with LinkedIn's API
     toast.info("LinkedIn sharing coming soon!");
   };
 
@@ -100,6 +100,7 @@ const LinkedInPostGenerator = () => {
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <Input
+                id="linkInput"
                 type="text"
                 placeholder="Add a link (optional)"
                 value={link}

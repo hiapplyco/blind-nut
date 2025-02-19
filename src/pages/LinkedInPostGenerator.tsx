@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Globe, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,16 +58,17 @@ const LinkedInPostGenerator = () => {
   };
 
   const handleShareOnLinkedIn = async () => {
-    setIsPosting(true);
-    
     try {
+      setIsPosting(true);
       console.log("Starting LinkedIn OAuth flow...");
       
-      // Use a dedicated callback route for OAuth
-      const { data: authData, error: authError } = await supabase.auth.signInWithOAuth({
+      const redirectURL = new URL('/linkedin-post', window.location.origin).toString();
+      console.log("Redirect URL:", redirectURL);
+
+      const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: `${window.location.origin}/linkedin-post`, // Return to current page
+          redirectTo: redirectURL,
           scopes: 'w_member_social r_liteprofile r_emailaddress openid profile email',
           queryParams: {
             prompt: 'consent'
@@ -74,18 +76,14 @@ const LinkedInPostGenerator = () => {
         }
       });
 
-      // Only show error if the OAuth popup was not opened successfully
-      if (authError && !authData?.url) {
+      if (authError) {
         console.error("LinkedIn OAuth error:", authError);
-        throw new Error(`LinkedIn authorization failed: ${authError.message}`);
+        throw authError;
       }
-
-      // Don't set isPosting to false here - let the redirect happen
-      return;
 
     } catch (error: any) {
       console.error("LinkedIn integration error:", error);
-      toast.error(error.message || "Failed to connect to LinkedIn. Please try again.");
+      toast.error("Failed to connect to LinkedIn. Please try again.");
       setIsPosting(false);
     }
   };
@@ -181,7 +179,7 @@ const LinkedInPostGenerator = () => {
                 disabled={isPosting}
               >
                 <Linkedin className="mr-2 h-4 w-4" />
-                {isPosting ? "Posting..." : "Share on LinkedIn"}
+                {isPosting ? "Connecting to LinkedIn..." : "Share on LinkedIn"}
               </Button>
             </div>
           </CardContent>

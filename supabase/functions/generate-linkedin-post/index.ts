@@ -1,7 +1,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "npm:@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,27 +29,29 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-pro",
       generationConfig: {
-        temperature: 1,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
+        temperature: 0.7,
+        maxOutputTokens: 1024,
       }
     });
 
-    const prompt = `Generate a compelling LinkedIn post FROM THIS CONTEXT:\n${content}\n${link ? `\nInclude this link: ${link}` : ''}\n
-    STRICT REQUIREMENTS:
-    - Natural voice matching a professional tone
-    - No markdown/formatting
-    - Preserve ending hashtags
-    - Max 5 sentences/paragraph
-    - Include:\n   * Personal anecdote\n   * Devil's Advocate thought\n   * Actionable tip\n   * Humble conclusion`;
+    const prompt = `Generate a compelling LinkedIn post about: ${content}${link ? `\nInclude this link: ${link}` : ''}\n
+    Follow these requirements:
+    - Write in a professional yet conversational tone
+    - Include 1-2 relevant hashtags at the end
+    - Keep paragraphs short (2-3 sentences maximum)
+    - Include a thought-provoking question or call to action
+    - Total length should be 200-300 words
+    - Focus on recruitment and hiring perspective if relevant`;
 
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent([
+      {
+        text: prompt,
+      }
+    ]);
+
     const post = result.response.text()
-      .replace(/```[\s\S]*?```|`|\*|_/g, "")
-      .replace(/^(Sure,? |Certainly,? |Of course,? |Here('?s| is) the post:\s?)/i, "")
-      .replace(/<[^>]+>/g, "")
-      .replace(/\n{3,}/g, "\n\n");
+      .replace(/^(Sure|Here's|I'll|Let me|Certainly|Of course)[^]*?(?=\n|$)/i, '')
+      .trim();
     
     return new Response(JSON.stringify({ post }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

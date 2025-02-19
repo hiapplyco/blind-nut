@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const LinkedInPostGenerator = () => {
   const [postContent, setPostContent] = useState("");
@@ -20,28 +21,20 @@ const LinkedInPostGenerator = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/generate-linkedin-post", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('generate-linkedin-post', {
+        body: {
           content: postContent,
           link,
-        }),
+        },
       });
 
-      const data = await response.json();
+      if (error) throw error;
       
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to generate post");
-      }
-
       setGeneratedPost(data.post);
       toast.success("Post generated successfully!");
     } catch (error) {
-      toast.error("Failed to generate post. Please try again.");
       console.error("Error generating post:", error);
+      toast.error("Failed to generate post. Please try again.");
     } finally {
       setIsLoading(false);
     }

@@ -41,7 +41,7 @@ const LinkedInPostGenerator = () => {
   };
 
   const handleShareOnLinkedIn = () => {
-    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&summary=${encodeURIComponent(generatedPost)}`;
+    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://linkedin.com")}&summary=${encodeURIComponent(generatedPost)}`;
     window.open(shareUrl, '_blank', 'width=570,height=450');
   };
 

@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import FirecrawlApp from 'npm:@mendable/firecrawl-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from 'npm:@google/generative-ai';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

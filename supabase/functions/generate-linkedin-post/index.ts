@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "npm:@google/generative-ai";
@@ -7,14 +8,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function buildAnalysisPrompt(input) {
-  return `Act as 5 experts + Devil's Advocate analyzing "${input}":
+function buildAnalysisPrompt(input: string, hasUrl: boolean) {
+  const baseExperts = [
+    '- Technical Architect: "Core components/implementation challenges..."',
+    '- Industry Analyst: "Adoption trends/success-failure case studies..."',
+    '- Ethics Specialist: "Regulatory risks/ethical failure points..."',
+    '- Solutions Engineer: "Technical specifications/architecture..."',
+    '- UX Strategist: "User adoption barriers/engagement strategies..."'
+  ];
+
+  // Add Website LinkedIn Agent if URL is provided
+  if (hasUrl) {
+    baseExperts.unshift('- Website LinkedIn Agent: "Analyzing website content alignment with LinkedIn audience expectations, identifying key themes and messaging opportunities, suggesting content optimization strategies for maximum LinkedIn engagement..."');
+  }
+
+  return `Act as ${hasUrl ? '6' : '5'} experts + Devil's Advocate analyzing "${input}":
 1. [MoE Phase]
-- Technical Architect: "Core components/implementation challenges..."
-- Industry Analyst: "Adoption trends/success-failure case studies..."
-- Ethics Specialist: "Regulatory risks/ethical failure points..."
-- Solutions Engineer: "Technical specifications/architecture..."
-- UX Strategist: "User adoption barriers/engagement strategies..."
+${baseExperts.join('\n')}
 2. [Devil's Advocate Phase]
 - Critic: "Fundamental flaws in these approaches... Overlooked threats..."
 3. [CoT Resolution]
@@ -24,7 +34,7 @@ function buildAnalysisPrompt(input) {
 - Tone Engineer: "Natural communication using:\\n- Relatable analogies\\n- Personal anecdotes\\n- 'You've probably noticed...' phrasing\\n- Humble expertise presentation"`;
 }
 
-function buildPostPrompt(analysis) {
+function buildPostPrompt(analysis: string) {
   return `Generate final LinkedIn post FROM THIS CONTEXT:\n${analysis}\n
   STRICT REQUIREMENTS:
   - Natural voice matching James's style
@@ -43,11 +53,10 @@ serve(async (req) => {
   try {
     const { content, link } = await req.json();
     
-    // Validate required input
-    if (!content) {
+    if (!content?.trim()) {
       throw new Error('Content is required');
     }
-    
+
     // Get API key from environment variables
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!apiKey) {
@@ -57,23 +66,28 @@ serve(async (req) => {
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash",
+      model: "gemini-1.5-pro",
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 1024,
       }
     });
     
-    // Step 1: Generate expert analysis
-    const analysisPrompt = buildAnalysisPrompt(content);
+    console.log('Generating expert analysis...');
+    
+    // Step 1: Generate expert analysis with dynamic prompt based on URL presence
+    const analysisPrompt = buildAnalysisPrompt(content, Boolean(link));
     const analysisResult = await model.generateContent([
       {
         text: analysisPrompt,
       }
     ]);
-    const analysis = analysisResult.response.text();
     
-    // Step 2: Generate LinkedIn post based on analysis
+    const analysis = analysisResult.response.text();
+    console.log('Analysis generated successfully');
+    
+    // Step 2: Generate LinkedIn post
+    console.log('Generating final LinkedIn post...');
     const postPrompt = buildPostPrompt(analysis);
     let finalPrompt = postPrompt;
     
@@ -93,12 +107,13 @@ serve(async (req) => {
       .replace(/^(Sure|Here's|I'll|Let me|Certainly|Of course)[^]*?(?=\n|$)/i, '')
       .trim();
     
-    // Return response
+    console.log('LinkedIn post generated successfully');
+    
     return new Response(JSON.stringify({ post, analysis }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('Error in generate-linkedin-post:', error);
+    console.error('Error in LinkedIn post generator:', error);
     return new Response(
       JSON.stringify({ error: error.message }), 
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }}

@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import FirecrawlApp from 'npm:@mendable/firecrawl-js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,33 +55,45 @@ serve(async (req) => {
       throw new Error(response?.error || 'Failed to scrape URL');
     }
 
-    // Use Gemini to analyze and organize the content
-    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY')!);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    try {
+      // Use Gemini to analyze and organize the content
+      const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY')!);
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    const result = await model.generateContent({
-      contents: [{ 
-        role: 'user',
-        parts: [{ text: `${systemPrompt}\n\nWebpage content:\n${response.text}` }]
-      }],
-      generationConfig: {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.8,
-        maxOutputTokens: 1000,
-      }
-    });
+      const result = await model.generateContent({
+        contents: [{ 
+          role: 'user',
+          parts: [{ text: `${systemPrompt}\n\nWebpage content:\n${response.text}` }]
+        }],
+        generationConfig: {
+          temperature: 0.2,
+          topK: 40,
+          topP: 0.8,
+          maxOutputTokens: 1000,
+        }
+      });
 
-    const analyzedText = result.response.text();
-    console.log('Successfully analyzed content');
+      const analyzedText = result.response.text();
+      console.log('Successfully analyzed content');
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        text: analyzedText
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      return new Response(
+        JSON.stringify({
+          success: true,
+          text: analyzedText
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (aiError) {
+      console.error('Error analyzing content with AI:', aiError);
+      // Fallback to raw scraped content if AI analysis fails
+      return new Response(
+        JSON.stringify({
+          success: true,
+          text: response.text
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
   } catch (error) {
     console.error('Error in firecrawl-url function:', error);

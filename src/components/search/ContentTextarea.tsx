@@ -1,11 +1,15 @@
+
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Upload, Mic } from "lucide-react";
+import { MoreVertical, Upload, Mic, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CaptureWindow } from "./CaptureWindow";
 import { useState } from "react";
+import { FirecrawlService } from "@/utils/FirecrawlService";
+import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ContentTextareaProps {
   searchText: string;
@@ -24,6 +28,46 @@ export const ContentTextarea = ({
 }: ContentTextareaProps) => {
   const isMobile = useIsMobile();
   const [showCaptureWindow, setShowCaptureWindow] = useState(false);
+  const [isScrapingUrl, setIsScrapingUrl] = useState(false);
+
+  const handleUrlPaste = async () => {
+    try {
+      const clipboard = await navigator.clipboard.readText();
+      if (!clipboard.trim()) {
+        toast.error("No URL found in clipboard");
+        return;
+      }
+
+      // Basic URL validation
+      try {
+        new URL(clipboard);
+      } catch {
+        toast.error("Invalid URL format");
+        return;
+      }
+
+      setIsScrapingUrl(true);
+      toast.info("Scraping website content...");
+
+      const result = await FirecrawlService.crawlWebsite(clipboard);
+      
+      if (!result.success) {
+        throw new Error(result.error || "Failed to scrape website");
+      }
+      
+      if (result.data?.text) {
+        onTextUpdate(result.data.text);
+        toast.success("Website content scraped successfully!");
+      } else {
+        throw new Error("No content found on the webpage");
+      }
+    } catch (error) {
+      console.error("URL scraping error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to scrape website");
+    } finally {
+      setIsScrapingUrl(false);
+    }
+  };
 
   if (isProcessing) {
     return (
@@ -56,6 +100,13 @@ export const ContentTextarea = ({
               onClick={() => setShowCaptureWindow(true)}
             >
               Record Audio
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={handleUrlPaste}
+              disabled={isScrapingUrl}
+            >
+              Paste URL
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -91,6 +142,14 @@ export const ContentTextarea = ({
           <Mic className="h-4 w-4 mr-2" />
           Record Audio
         </Button>
+        <Button
+          onClick={handleUrlPaste}
+          className={buttonBaseClasses}
+          disabled={isProcessing || isScrapingUrl}
+        >
+          <Globe className="h-4 w-4 mr-2" />
+          {isScrapingUrl ? 'Scraping...' : 'Paste URL'}
+        </Button>
       </div>
     );
   };
@@ -109,6 +168,12 @@ export const ContentTextarea = ({
         className="w-full min-h-[100px] p-4 border-4 border-black rounded bg-white resize-none 
           shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black"
       />
+      <Alert className="bg-muted/50">
+        <AlertDescription>
+          Note: The URL scraping feature may not work on all websites due to their structure or access restrictions.
+          Best results are achieved with public web pages that don't require authentication.
+        </AlertDescription>
+      </Alert>
       <input
         type="file"
         id="file-upload"

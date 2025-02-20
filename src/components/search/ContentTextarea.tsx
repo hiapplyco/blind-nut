@@ -52,7 +52,7 @@ export const ContentTextarea = ({
 
     setIsScrapingUrl(true);
     setShowUrlDialog(false);
-    toast.info("Scraping website content...");
+    toast.info("Analyzing website content...");
 
     try {
       const result = await FirecrawlService.crawlWebsite(urlInput);
@@ -66,13 +66,13 @@ export const ContentTextarea = ({
         // Small delay for smooth animation
         await new Promise(resolve => setTimeout(resolve, 300));
         onTextUpdate(result.data.text);
-        toast.success("Website content scraped successfully!");
+        toast.success("Website content analyzed successfully!");
       } else {
         throw new Error("No content found on the webpage");
       }
     } catch (error) {
       console.error("URL scraping error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to scrape website");
+      toast.error(error instanceof Error ? error.message : "Failed to analyze website");
     } finally {
       setIsScrapingUrl(false);
       setUrlInput("");

@@ -7,6 +7,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const systemPrompt = `You are an expert content analyzer. When given webpage content:
+1. Extract and organize the key information into clear sections
+2. Remove any irrelevant content like navigation menus, footers, and ads
+3. Provide a concise analysis focusing on:
+   - Main content summary
+   - Key details and requirements
+   - Important data points
+Format the response in clear markdown sections.`;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -45,19 +54,30 @@ serve(async (req) => {
       throw new Error(response?.error || 'Failed to scrape URL');
     }
 
-    // Try multiple possible response formats
-    const content = response.text || response.content || response.markdown;
-    if (!content) {
-      console.error('No content found in response. Full response:', JSON.stringify(response));
-      throw new Error('No parseable content found in the response');
-    }
+    // Use Gemini to analyze and organize the content
+    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY')!);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    console.log('Successfully extracted content length:', content.length);
+    const result = await model.generateContent({
+      contents: [{ 
+        role: 'user',
+        parts: [{ text: `${systemPrompt}\n\nWebpage content:\n${response.text}` }]
+      }],
+      generationConfig: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.8,
+        maxOutputTokens: 1000,
+      }
+    });
+
+    const analyzedText = result.response.text();
+    console.log('Successfully analyzed content');
 
     return new Response(
       JSON.stringify({
         success: true,
-        text: content
+        text: analyzedText
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

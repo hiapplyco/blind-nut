@@ -40,19 +40,29 @@ serve(async (req) => {
     const firecrawl = new FirecrawlApp({ apiKey });
 
     console.log('Starting scrape for URL:', url);
-    const response = await firecrawl.scrapeUrl(url, {
-      formats: ['markdown'],
-      onlyMainContent: true,
-      blockAds: true,
-      removeBase64Images: true,
-      timeout: 60000
+    const response = await firecrawl.crawlUrl(url, {
+      limit: 1,
+      scrapeOptions: {
+        formats: ['markdown'],
+        selectors: ['main', 'article', '.content', '#content'],
+        removeSelectors: ['nav', 'header', 'footer', '.advertisement', '#advertisement'],
+        blockAds: true,
+        removeBase64Images: true,
+        timeout: 60000
+      }
     });
 
     console.log('Raw scrape response:', JSON.stringify(response));
 
-    if (!response || response.error) {
-      console.error('Error in scrape response:', response?.error || 'Unknown error');
-      throw new Error(response?.error || 'Failed to scrape URL');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to scrape URL');
+    }
+
+    // Extract the content from the crawl result
+    const scrapedContent = response.data?.[0]?.content || '';
+    
+    if (!scrapedContent) {
+      throw new Error('No content found on the webpage');
     }
 
     try {
@@ -63,7 +73,7 @@ serve(async (req) => {
       const result = await model.generateContent({
         contents: [{ 
           role: 'user',
-          parts: [{ text: `${systemPrompt}\n\nWebpage content:\n${response.text}` }]
+          parts: [{ text: `${systemPrompt}\n\nWebpage content:\n${scrapedContent}` }]
         }],
         generationConfig: {
           temperature: 0.2,
@@ -89,7 +99,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
-          text: response.text
+          text: scrapedContent
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

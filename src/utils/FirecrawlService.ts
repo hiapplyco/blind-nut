@@ -58,7 +58,10 @@ export class FirecrawlService {
         console.error('Error storing summary:', summaryError);
       }
 
-      return { success: true, data: data.text };
+      return { 
+        success: true, 
+        data: { text: data.text } 
+      };
     } catch (error) {
       console.error('Error during crawl:', error);
       return { 

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Globe, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { FirecrawlService } from "@/utils/FirecrawlService";
 
 const LinkedInPostGenerator = () => {
   const [postContent, setPostContent] = useState("");
@@ -19,15 +21,37 @@ const LinkedInPostGenerator = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("post");
+  const [isScrapingUrl, setIsScrapingUrl] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    let websiteContent = "";
 
     try {
+      // If there's a link, try to scrape it first
+      if (link) {
+        setIsScrapingUrl(true);
+        toast.info("Scraping website content...");
+        
+        const result = await FirecrawlService.crawlWebsite(link);
+        
+        if (!result.success) {
+          throw new Error(result.error || "Failed to scrape website");
+        }
+        
+        websiteContent = result.data?.text || "";
+        toast.success("Website content scraped successfully!");
+      }
+
+      // Combine user input with scraped content if available
+      const finalContent = websiteContent 
+        ? `${postContent}\n\nWebsite Content:\n${websiteContent}`
+        : postContent;
+
       const { data, error } = await supabase.functions.invoke('generate-linkedin-post', {
         body: {
-          content: postContent,
+          content: finalContent,
           link,
         },
       });
@@ -41,9 +65,10 @@ const LinkedInPostGenerator = () => {
       toast.success("Post generated successfully!");
     } catch (error) {
       console.error("Error generating post:", error);
-      toast.error("Failed to generate post. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to generate post. Please try again.");
     } finally {
       setIsLoading(false);
+      setIsScrapingUrl(false);
     }
   };
 
@@ -84,8 +109,8 @@ const LinkedInPostGenerator = () => {
               <div className="flex-1">
                 <Input
                   id="linkInput"
-                  type="text"
-                  placeholder="Add a link (optional)"
+                  type="url"
+                  placeholder="Add a website URL to analyze (optional)"
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
                 />
@@ -105,8 +130,8 @@ const LinkedInPostGenerator = () => {
                   <Globe className="h-6 w-6 text-muted-foreground hover:text-foreground" />
                 </Label>
 
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Analyzing & Generating..." : "Generate Post"}
+                <Button type="submit" disabled={isLoading || isScrapingUrl}>
+                  {isScrapingUrl ? "Scraping Website..." : isLoading ? "Analyzing & Generating..." : "Generate Post"}
                 </Button>
               </div>
             </div>
@@ -166,15 +191,6 @@ const LinkedInPostGenerator = () => {
                           </pre>
                         </CollapsibleContent>
                       </Collapsible>
-                    </div>
-                    <div className="bg-muted/50 p-4 rounded border border-muted-foreground/20">
-                      <h3 className="text-sm font-medium mb-2">How This Works</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Your content is analyzed by multiple expert perspectives including a Technical Architect, 
-                        Industry Analyst, Ethics Specialist, Solutions Engineer, and UX Strategist. A Devil's 
-                        Advocate then critiques these views before a Lead Architect synthesizes a final solution. 
-                        The post is crafted in a natural voice with personal anecdotes and actionable tips.
-                      </p>
                     </div>
                   </div>
                 ) : (

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { SearchForm } from "./search/SearchForm";
 import { AgentProcessor } from "./search/AgentProcessor";
@@ -16,7 +17,9 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
-  const { data: agentOutput, isLoading } = useAgentOutputs(currentJobId);
+  
+  // Only call useAgentOutputs if we have a currentJobId
+  const { data: agentOutput, isLoading } = useAgentOutputs(currentJobId || 0);
 
   const handleSearchSubmit = (text: string, jobId: number) => {
     console.log("Search submitted:", { text, jobId });

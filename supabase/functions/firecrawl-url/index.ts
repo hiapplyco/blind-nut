@@ -40,7 +40,7 @@ serve(async (req) => {
     const firecrawl = new FirecrawlApp({ apiKey });
 
     console.log('Starting scrape for URL:', url);
-    const response = await firecrawl.crawlUrl(url, {
+    const crawlResponse = await firecrawl.crawlUrl(url, {
       limit: 1,
       scrapeOptions: {
         formats: ['markdown'],
@@ -52,14 +52,14 @@ serve(async (req) => {
       }
     });
 
-    console.log('Raw scrape response:', JSON.stringify(response));
+    console.log('Raw scrape response:', crawlResponse);
 
-    if (!response.success) {
-      throw new Error(response.error || 'Failed to scrape URL');
+    if (!crawlResponse.success) {
+      throw new Error(crawlResponse.error || 'Failed to scrape URL');
     }
 
     // Extract the content from the crawl result
-    const scrapedContent = response.data?.[0]?.content || '';
+    const scrapedContent = crawlResponse.data?.[0]?.content || '';
     
     if (!scrapedContent) {
       throw new Error('No content found on the webpage');
@@ -84,22 +84,23 @@ serve(async (req) => {
       });
 
       const analyzedText = result.response.text();
-      console.log('Successfully analyzed content');
+      console.log('Successfully analyzed content. Returning analyzed text.');
 
       return new Response(
         JSON.stringify({
           success: true,
-          text: analyzedText
+          text: analyzedText // This will be the text that gets displayed
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } catch (aiError) {
       console.error('Error analyzing content with AI:', aiError);
       // Fallback to raw scraped content if AI analysis fails
+      console.log('Falling back to raw scraped content');
       return new Response(
         JSON.stringify({
           success: true,
-          text: scrapedContent
+          text: scrapedContent // Fallback to raw content if AI fails
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

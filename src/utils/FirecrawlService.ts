@@ -8,12 +8,7 @@ interface ErrorResponse {
 
 interface CrawlStatusResponse {
   success: true;
-  status: string;
-  completed: number;
-  total: number;
-  creditsUsed: number;
-  expiresAt: string;
-  data: any[];
+  text: string;
 }
 
 type CrawlResponse = CrawlStatusResponse | ErrorResponse;
@@ -28,7 +23,7 @@ export class FirecrawlService {
       }
 
       console.log('Making request to firecrawl-url function with URL:', url);
-      const { data: response, error: functionError } = await supabase.functions.invoke('firecrawl-url', {
+      const { data: response, error: functionError } = await supabase.functions.invoke<CrawlResponse>('firecrawl-url', {
         body: { url }
       });
 

@@ -38,8 +38,8 @@ export class FirecrawlService {
         return { success: false, error: 'No response received from server' };
       }
 
-      if (!response.success) {
-        // Now TypeScript knows this is an ErrorResponse due to discriminated union
+      // Type guard to handle the error case
+      if ('error' in response && !response.success) {
         return { success: false, error: response.error };
       }
 

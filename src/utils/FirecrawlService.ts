@@ -34,12 +34,16 @@ export class FirecrawlService {
 
       console.log('Received response from firecrawl-url function:', response);
 
-      if (!response || !response.success) {
-        const errorMessage = response?.error || 'Failed to crawl website';
-        console.error('Crawl failed:', errorMessage);
-        return { success: false, error: errorMessage };
+      if (!response) {
+        return { success: false, error: 'No response received from server' };
       }
 
+      if (!response.success) {
+        // Now TypeScript knows this is an ErrorResponse due to discriminated union
+        return { success: false, error: response.error };
+      }
+
+      // At this point, TypeScript knows response is CrawlStatusResponse
       // Store the crawl summary
       const { error: summaryError } = await supabase
         .from('kickoff_summaries')

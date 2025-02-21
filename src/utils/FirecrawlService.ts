@@ -9,6 +9,7 @@ interface ErrorResponse {
 interface CrawlStatusResponse {
   success: true;
   text: string;
+  rawContent?: string;
 }
 
 type CrawlResponse = CrawlStatusResponse | ErrorResponse;
@@ -43,7 +44,6 @@ export class FirecrawlService {
         return { success: false, error: response.error };
       }
 
-      // At this point, TypeScript knows response is CrawlStatusResponse
       // Store the crawl summary
       const { error: summaryError } = await supabase
         .from('kickoff_summaries')
@@ -59,7 +59,10 @@ export class FirecrawlService {
 
       return { 
         success: true, 
-        data: { text: response.text } 
+        data: { 
+          text: response.text,
+          rawContent: response.rawContent 
+        } 
       };
     } catch (error) {
       console.error('Error during crawl:', error);

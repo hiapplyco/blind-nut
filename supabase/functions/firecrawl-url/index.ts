@@ -8,14 +8,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const systemPrompt = `You are an expert content analyzer. When given webpage content:
-1. Extract and organize the key information into clear sections
-2. Remove any irrelevant content like navigation menus, footers, and ads
-3. Provide a concise analysis focusing on:
-   - Main content summary
-   - Key details and requirements
-   - Important data points
-Format the response in clear markdown sections.`;
+const systemPrompt = `You are a professional content analyzer. Given webpage content, create a clear summary focusing on:
+
+1. Key Information:
+   - Main points and takeaways
+   - Important dates or deadlines
+   - Requirements or qualifications
+   - Responsibilities or expectations
+   
+2. Content Organization:
+   - Break down into clear sections
+   - Highlight important details
+   - Remove any irrelevant content
+   
+Format the response as a clear, professional summary that would be appropriate for business use.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -24,87 +30,68 @@ serve(async (req) => {
 
   try {
     const { url } = await req.json();
-    console.log('Received URL to crawl:', url);
-
-    if (!url) {
-      throw new Error('URL is required');
-    }
+    console.log('Starting crawl for URL:', url);
 
     const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
     if (!apiKey) {
-      console.error('FIRECRAWL_API_KEY not found in environment variables');
       throw new Error('Firecrawl API key not configured');
     }
 
-    console.log('Initializing Firecrawl with API key');
     const firecrawl = new FirecrawlApp({ apiKey });
-
-    console.log('Starting scrape for URL:', url);
     const crawlResponse = await firecrawl.crawlUrl(url, {
       limit: 1,
       scrapeOptions: {
-        formats: ['markdown'],
-        selectors: ['main', 'article', '.content', '#content'],
-        removeSelectors: ['nav', 'header', 'footer', '.advertisement', '#advertisement'],
+        formats: ['json', 'markdown'],
+        selectors: ['main', 'article', '.content', '#content', '.job-description'],
+        removeSelectors: ['nav', 'header', 'footer', '.advertisement'],
         blockAds: true,
         removeBase64Images: true,
-        timeout: 60000
+        timeout: 60000,
+        waitUntil: 'networkidle0'
       }
     });
 
-    console.log('Raw scrape response:', crawlResponse);
+    console.log('Crawl response received:', crawlResponse);
 
-    if (!crawlResponse.success) {
-      throw new Error(crawlResponse.error || 'Failed to scrape URL');
+    if (!crawlResponse.success || !crawlResponse.data?.[0]) {
+      throw new Error('Failed to crawl URL');
     }
 
-    // Extract the content from the crawl result
-    const scrapedContent = crawlResponse.data?.[0]?.content || '';
+    const scrapedContent = crawlResponse.data[0].content;
     
     if (!scrapedContent) {
-      throw new Error('No content found on the webpage');
+      throw new Error('No content found on webpage');
     }
 
-    try {
-      // Use Gemini to analyze and organize the content
-      const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY')!);
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Use Gemini to analyze and summarize the content
+    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY')!);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-      const result = await model.generateContent({
-        contents: [{ 
-          role: 'user',
-          parts: [{ text: `${systemPrompt}\n\nWebpage content:\n${scrapedContent}` }]
-        }],
-        generationConfig: {
-          temperature: 0.2,
-          topK: 40,
-          topP: 0.8,
-          maxOutputTokens: 1000,
-        }
-      });
+    console.log('Processing content with Gemini...');
+    const result = await model.generateContent({
+      contents: [{ 
+        role: 'user',
+        parts: [{ text: `${systemPrompt}\n\nWebpage content:\n${scrapedContent}` }]
+      }],
+      generationConfig: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.8,
+        maxOutputTokens: 1000,
+      }
+    });
 
-      const analyzedText = result.response.text();
-      console.log('Successfully analyzed content. Returning analyzed text.');
+    const summarizedText = result.response.text();
+    console.log('Content successfully summarized');
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          text: analyzedText // This will be the text that gets displayed
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } catch (aiError) {
-      console.error('Error analyzing content with AI:', aiError);
-      // Fallback to raw scraped content if AI analysis fails
-      console.log('Falling back to raw scraped content');
-      return new Response(
-        JSON.stringify({
-          success: true,
-          text: scrapedContent // Fallback to raw content if AI fails
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    return new Response(
+      JSON.stringify({
+        success: true,
+        text: summarizedText,
+        rawContent: scrapedContent
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('Error in firecrawl-url function:', error);

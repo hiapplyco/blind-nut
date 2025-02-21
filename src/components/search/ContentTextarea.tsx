@@ -56,6 +56,7 @@ export const ContentTextarea = ({
 
     try {
       const result = await FirecrawlService.crawlWebsite(urlInput);
+      console.log('Crawl result:', result); // Debug log
       
       if (!result.success) {
         throw new Error(result.error || "Failed to scrape website");

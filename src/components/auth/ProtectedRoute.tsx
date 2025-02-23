@@ -1,7 +1,8 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Outlet, memo } from "react-router-dom";
+import { Outlet } from "react-router-dom";
+import { memo } from "react"; // Changed import location for memo
 
 const ProtectedRouteComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();

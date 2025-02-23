@@ -44,7 +44,7 @@ function App() {
         <Route path="/" element={!isAuthenticated ? <LandingPage /> : <Navigate to="/dashboard" />} />
 
         {/* Protected routes */}
-        <Route element={isAuthenticated ? <MainLayout /> : <Navigate to="/" />}>
+        <Route element={<MainLayout>{/* Outlet will render child routes */}</MainLayout>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/linkedin-post" element={<LinkedInPostGenerator />} />
           <Route path="/sourcing" element={<Sourcing />} />

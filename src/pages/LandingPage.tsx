@@ -14,18 +14,18 @@ const LandingPage = () => {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <div className="w-16 h-16 mx-auto mb-8 bg-[#8B5CF6] rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">H</span>
+            <span className="text-2xl font-bold text-white">A</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-[#8B6E5B] via-[#9B87F5] to-[#A18472] bg-clip-text text-transparent">
-            Hiring Horizon Hub
+            Hi, welcome to Apply...
           </h1>
           <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
-            Streamline your hiring process with AI-powered tools and insights
+            Revolutionize your recruiting with AI-powered sourcing, screening, and candidate qualification
           </p>
         </div>
 
         {/* Auth Section */}
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md mb-16">
           <div className="bg-white p-8 rounded-lg border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <Auth
               supabaseClient={supabase}
@@ -61,6 +61,33 @@ const LandingPage = () => {
               redirectTo={window.location.origin}
               onlyThirdPartyProviders={false}
             />
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full">
+          <div className="bg-white p-6 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="text-[#8B5CF6] mb-4">
+              <span className="material-symbols-outlined text-3xl">search</span>
+            </div>
+            <h3 className="font-bold text-lg mb-2">Smart Sourcing</h3>
+            <p className="text-gray-600">AI-powered candidate search and LinkedIn post generation to attract top talent</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="text-[#8B5CF6] mb-4">
+              <span className="material-symbols-outlined text-3xl">document_scanner</span>
+            </div>
+            <h3 className="font-bold text-lg mb-2">Intelligent Screening</h3>
+            <p className="text-gray-600">Automated resume analysis and candidate qualification with AI assistance</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="text-[#8B5CF6] mb-4">
+              <span className="material-symbols-outlined text-3xl">video_camera_front</span>
+            </div>
+            <h3 className="font-bold text-lg mb-2">Video Interviews</h3>
+            <p className="text-gray-600">Seamless video interviews with real-time AI analysis and insights</p>
           </div>
         </div>
       </div>

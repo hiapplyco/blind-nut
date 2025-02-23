@@ -1,7 +1,7 @@
 
 import * as React from "react"
 
-type SidebarContext = {
+type SidebarContextType = {
   state: "expanded" | "collapsed"
   open: boolean
   setOpen: (open: boolean) => void
@@ -11,7 +11,7 @@ type SidebarContext = {
   toggleSidebar: () => void
 }
 
-const SidebarContext = React.createContext<SidebarContext | null>(null)
+const SidebarContext = React.createContext<SidebarContextType | null>(null)
 
 export function useSidebar() {
   const context = React.useContext(SidebarContext)
@@ -21,6 +21,5 @@ export function useSidebar() {
   return context
 }
 
-export type { SidebarContext }
-export { SidebarContext as SidebarContextProvider }
+export { SidebarContext, type SidebarContextType }
 

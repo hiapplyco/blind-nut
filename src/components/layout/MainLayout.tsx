@@ -62,7 +62,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
                       key={item.title}
                       item={item}
                       pathname={location.pathname}
-                      onClick={() => navigate(item.path)}
+                      navigate={navigate}
                     />
                   ))}
                 </SidebarMenu>
@@ -92,4 +92,3 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
 
 const MainLayout = memo(MainLayoutComponent);
 export default MainLayout;
-

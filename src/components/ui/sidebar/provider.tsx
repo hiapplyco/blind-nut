@@ -50,7 +50,7 @@ export const SidebarProvider = React.forwardRef<HTMLDivElement, SidebarProviderP
     const state = open ? "expanded" : "collapsed"
     const contextValue = React.useMemo(
       () => ({
-        state,
+        state: state as "expanded" | "collapsed",
         open,
         setOpen,
         isMobile,

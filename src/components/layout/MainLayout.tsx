@@ -1,5 +1,5 @@
 
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   SidebarProvider,
@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface MainLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const MainLayout = ({ children }: MainLayoutProps) => {

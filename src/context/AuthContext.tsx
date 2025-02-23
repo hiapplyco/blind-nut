@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,19 +36,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initializeAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setIsLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      // Only update if the session has actually changed
+      if (JSON.stringify(newSession) !== JSON.stringify(session)) {
+        setSession(newSession);
+        setIsLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const value = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     session,
     isAuthenticated: !!session,
     isLoading,
-  };
+  }), [session, isLoading]);
 
   return (
     <AuthContext.Provider value={value}>
@@ -64,4 +68,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

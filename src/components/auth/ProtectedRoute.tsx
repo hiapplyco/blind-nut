@@ -1,9 +1,9 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Outlet } from "react-router-dom";
+import { Outlet, memo } from "react-router-dom";
 
-export const ProtectedRoute = () => {
+const ProtectedRouteComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
@@ -23,3 +23,5 @@ export const ProtectedRoute = () => {
   return <Outlet />;
 };
 
+// Memoize the ProtectedRoute component
+export const ProtectedRoute = memo(ProtectedRouteComponent);

@@ -20,11 +20,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      setIsLoading(false);
-    });
+    // Create a single promise that resolves when the initial session is fetched
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+      } catch (error) {
+        console.error('Error fetching session:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Initialize auth state
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -35,14 +44,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const value = {
+    session,
+    isAuthenticated: !!session,
+    isLoading,
+  };
+
   return (
-    <AuthContext.Provider 
-      value={{ 
-        session, 
-        isAuthenticated: !!session, 
-        isLoading 
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -55,3 +64,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

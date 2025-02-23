@@ -7,6 +7,7 @@ export const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
+  // Only show loading state on initial auth check
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FFFBF4]">
@@ -21,3 +22,4 @@ export const ProtectedRoute = () => {
 
   return <Outlet />;
 };
+

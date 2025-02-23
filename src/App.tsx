@@ -18,22 +18,25 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
+    });
 
-      // Set up auth state listener
-      supabase.auth.onAuthStateChange((_event, session) => {
-        setIsAuthenticated(!!session);
-      });
-    };
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
 
-    checkAuth();
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Show nothing while checking authentication
+  // Show loading state while checking authentication
   if (isAuthenticated === null) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FFFBF4]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-800" />
+      </div>
+    );
   }
 
   return (

@@ -16,7 +16,6 @@ import { Home, FileText, Video, Theater, PhoneCall, MessageSquare, Search, PlusC
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useEffect } from "react";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -24,7 +23,6 @@ interface MainLayoutProps {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   const navigate = useNavigate();
-  const location = useLocation();
   
   const menuItems = [
     { title: 'Dashboard', path: '/dashboard', icon: Home },
@@ -35,18 +33,6 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     { title: 'Kickoff Call', path: '/kickoff-call', icon: PhoneCall },
     { title: 'Chat', path: '/chat', icon: MessageSquare },
   ];
-
-  // Check if user is authenticated on component mount and route changes
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (!session || error) {
-        navigate('/');
-      }
-    };
-
-    checkUser();
-  }, [location.pathname, navigate]);
 
   const handleSignOut = async () => {
     try {
@@ -110,4 +96,3 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 };
 
 export default MainLayout;
-

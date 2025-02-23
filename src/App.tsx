@@ -4,6 +4,8 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
+
+// Import components directly to avoid any potential lazy loading issues
 import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import LinkedInPostGenerator from "@/pages/LinkedInPostGenerator";
@@ -33,7 +35,7 @@ function App() {
               <Route path="/interview-prep" element={<InterviewPrep />} />
               <Route path="/kickoff-call" element={<KickoffCall />} />
               <Route path="/chat" element={<Chat />} />
-              <Route path="/report/:id" element={<Report />} />
+              <Route path="/report/:jobId" element={<Report />} />
             </Route>
           </Route>
 
@@ -46,4 +48,3 @@ function App() {
 }
 
 export default App;
-

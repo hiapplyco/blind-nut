@@ -17,7 +17,7 @@ import { Home, FileText, Video, Theater, PhoneCall, MessageSquare, Search, PlusC
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { memo } from "react";
+import { memo, useMemo, useCallback } from "react";
 
 interface MainLayoutProps {
   children?: React.ReactNode;
@@ -27,7 +27,8 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const menuItems = [
+  // Memoize menuItems array to prevent recreation on every render
+  const menuItems = useMemo(() => [
     { title: 'Dashboard', path: '/dashboard', icon: Home },
     { title: 'Create LinkedIn Post', path: '/linkedin-post', icon: PlusCircle },
     { title: 'Sourcing', path: '/sourcing', icon: Search },
@@ -35,9 +36,10 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
     { title: 'Interview Prep', path: '/interview-prep', icon: Theater },
     { title: 'Kickoff Call', path: '/kickoff-call', icon: PhoneCall },
     { title: 'Chat', path: '/chat', icon: MessageSquare },
-  ];
+  ], []); // Empty dependency array since these values never change
 
-  const handleSignOut = async () => {
+  // Memoize handleSignOut to prevent recreation on every render
+  const handleSignOut = useCallback(async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -47,7 +49,9 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');
     }
-  };
+  }, [navigate]); // Only depends on navigate function
+
+  console.log('MainLayout render', { pathname: location.pathname });
 
   return (
     <SidebarProvider>

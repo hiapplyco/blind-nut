@@ -1,10 +1,7 @@
 
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { VariantProps, cva } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-import { useSidebar } from "./context"
-import { TooltipContent, Tooltip, TooltipTrigger } from "@/components/ui/tooltip"
+import { VariantProps, cva } from "class-variance-authority"
 
 export const SidebarMenu = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(
   ({ className, ...props }, ref) => (
@@ -52,32 +49,35 @@ interface SidebarMenuItemProps extends React.ComponentProps<"li"> {
   navigate: (path: string) => void;
 }
 
-const SidebarMenuItemComponent = React.forwardRef<HTMLLIElement, SidebarMenuItemProps>(
-  ({ className, item, pathname, navigate, ...props }, ref) => {
-    const isActive = React.useMemo(() => pathname === item.path, [pathname, item.path]);
-    const handleClick = React.useCallback(() => navigate(item.path), [navigate, item.path]);
+const SidebarMenuItemComponent = React.memo(({ className, item, pathname, navigate, ...props }: SidebarMenuItemProps) => {
+  const handleClick = React.useCallback(() => {
+    if (pathname !== item.path) {
+      navigate(item.path);
+    }
+  }, [navigate, item.path, pathname]);
 
-    return (
-      <li
-        ref={ref}
-        data-sidebar="menu-item"
-        className={cn("group/menu-item relative", className)}
-        {...props}
+  const ButtonIcon = item.icon;
+  const isActive = pathname === item.path;
+
+  return (
+    <li
+      data-sidebar="menu-item"
+      className={cn("group/menu-item relative", className)}
+      {...props}
+    >
+      <button
+        onClick={handleClick}
+        className={cn(
+          sidebarMenuButtonVariants({ variant: "default" }),
+          isActive && "bg-purple-100 text-purple-900"
+        )}
       >
-        <button
-          onClick={handleClick}
-          className={cn(
-            sidebarMenuButtonVariants({ variant: "default" }),
-            isActive && "bg-purple-100 text-purple-900"
-          )}
-        >
-          <item.icon className="h-4 w-4" />
-          <span>{item.title}</span>
-        </button>
-      </li>
-    );
-  }
-);
+        <ButtonIcon className="h-4 w-4" />
+        <span>{item.title}</span>
+      </button>
+    </li>
+  );
+});
 
 SidebarMenuItemComponent.displayName = "SidebarMenuItem";
-export const SidebarMenuItem = React.memo(SidebarMenuItemComponent);
+export const SidebarMenuItem = SidebarMenuItemComponent;

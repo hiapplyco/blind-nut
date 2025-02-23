@@ -1,7 +1,6 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { Outlet } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import {
   SidebarProvider,
   Sidebar,
@@ -16,7 +15,18 @@ import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle } fr
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { memo, useMemo, useCallback } from "react";
+import { memo, useCallback } from "react";
+
+// Move menuItems outside component to prevent recreation
+const menuItems = [
+  { title: 'Dashboard', path: '/dashboard', icon: Home },
+  { title: 'Create LinkedIn Post', path: '/linkedin-post', icon: PlusCircle },
+  { title: 'Sourcing', path: '/sourcing', icon: Search },
+  { title: 'Screening Room', path: '/screening-room', icon: Video },
+  { title: 'Interview Prep', path: '/interview-prep', icon: Theater },
+  { title: 'Kickoff Call', path: '/kickoff-call', icon: PhoneCall },
+  { title: 'Chat', path: '/chat', icon: MessageSquare },
+] as const;
 
 interface MainLayoutProps {
   children?: React.ReactNode;
@@ -26,18 +36,6 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Memoize menuItems array to prevent recreation on every render
-  const menuItems = useMemo(() => [
-    { title: 'Dashboard', path: '/dashboard', icon: Home },
-    { title: 'Create LinkedIn Post', path: '/linkedin-post', icon: PlusCircle },
-    { title: 'Sourcing', path: '/sourcing', icon: Search },
-    { title: 'Screening Room', path: '/screening-room', icon: Video },
-    { title: 'Interview Prep', path: '/interview-prep', icon: Theater },
-    { title: 'Kickoff Call', path: '/kickoff-call', icon: PhoneCall },
-    { title: 'Chat', path: '/chat', icon: MessageSquare },
-  ], []); // Empty dependency array since these values never change
-
-  // Memoize handleSignOut to prevent recreation on every render
   const handleSignOut = useCallback(async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -48,7 +46,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');
     }
-  }, [navigate]); // Only depends on navigate function
+  }, [navigate]);
 
   console.log('MainLayout render', { pathname: location.pathname });
 
@@ -62,7 +60,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
                 <SidebarMenu>
                   {menuItems.map((item) => (
                     <SidebarMenuItem
-                      key={item.title}
+                      key={item.path}
                       item={item}
                       pathname={location.pathname}
                       navigate={navigate}

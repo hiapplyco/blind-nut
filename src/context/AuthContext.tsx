@@ -1,7 +1,7 @@
 
-import { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
+import { createContext, useContext } from "react";
 import { Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface AuthContextType {
   session: Session | null;
@@ -16,53 +16,12 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const auth = useAuthSession();
 
-  // Memoize setSession to prevent recreation
-  const handleSessionChange = useCallback((newSession: Session | null) => {
-    console.log('Session change detected:', !!newSession);
-    setSession(newSession);
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    // Create a single promise that resolves when the initial session is fetched
-    const initializeAuth = async () => {
-      try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        handleSessionChange(initialSession);
-      } catch (error) {
-        console.error('Error fetching session:', error);
-        setIsLoading(false);
-      }
-    };
-
-    // Initialize auth state
-    initializeAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      // Only update if the session has actually changed
-      if (JSON.stringify(newSession) !== JSON.stringify(session)) {
-        handleSessionChange(newSession);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [handleSessionChange, session]); // Add session to detect actual changes
-
-  // Memoize the context value to prevent unnecessary re-renders
-  const value = useMemo(() => ({
-    session,
-    isAuthenticated: !!session,
-    isLoading,
-  }), [session, isLoading]);
-
-  console.log('AuthProvider render:', { isAuthenticated: !!session, isLoading });
+  console.log('AuthProvider render:', { isAuthenticated: auth.isAuthenticated, isLoading: auth.isLoading });
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={auth}>
       {children}
     </AuthContext.Provider>
   );

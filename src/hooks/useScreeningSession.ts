@@ -1,16 +1,17 @@
 
 import { useState, useEffect } from 'react';
-import { createChatSession, getUserSession } from '@/utils/sessionUtils';
+import { createChatSession } from '@/utils/sessionUtils';
 import { toast } from "sonner";
+import { useAuth } from '@/context/AuthContext';
 
 export const useScreeningSession = () => {
   const [sessionId, setSessionId] = useState<number | null>(null);
+  const { session } = useAuth();
 
   useEffect(() => {
     const initializeChat = async () => {
       try {
-        const session = await getUserSession();
-        const chatSession = await createChatSession(session.user.id);
+        const chatSession = await createChatSession(session!.user.id);
         setSessionId(chatSession.id);
       } catch (error) {
         console.error('Error initializing chat:', error);
@@ -18,8 +19,11 @@ export const useScreeningSession = () => {
       }
     };
 
-    initializeChat();
-  }, []);
+    if (session?.user) {
+      initializeChat();
+    }
+  }, [session]);
 
   return { sessionId, setSessionId };
 };
+

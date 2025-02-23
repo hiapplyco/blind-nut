@@ -16,10 +16,3 @@ export const createChatSession = async (userId: string) => {
   return chatSession;
 };
 
-export const getUserSession = async () => {
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError || !session) {
-    throw new Error('Authentication required');
-  }
-  return session;
-};

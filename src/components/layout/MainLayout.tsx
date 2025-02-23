@@ -15,7 +15,8 @@ import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle } fr
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
+import { Progress } from "@/components/ui/progress";
 
 // Memoize menu items array to prevent recreation on each render
 const menuItems = [
@@ -35,6 +36,8 @@ interface MainLayoutProps {
 const MainLayoutComponent = ({ children }: MainLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [progress, setProgress] = useState(0);
   
   const handleSignOut = useCallback(async () => {
     try {
@@ -48,6 +51,33 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
     }
   }, [navigate]);
 
+  const handleNavigation = useCallback((path: string) => {
+    setIsNavigating(true);
+    setProgress(0);
+    
+    // Simulate progress
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 50);
+
+    // Navigate and cleanup
+    navigate(path);
+    setTimeout(() => {
+      clearInterval(interval);
+      setProgress(100);
+      setTimeout(() => {
+        setIsNavigating(false);
+        setProgress(0);
+      }, 200);
+    }, 500);
+  }, [navigate]);
+
   // Memoize the menu rendering to prevent unnecessary re-renders
   const menuContent = useMemo(() => (
     <SidebarMenu>
@@ -56,11 +86,11 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
           key={item.path}
           item={item}
           pathname={location.pathname}
-          navigate={navigate}
+          navigate={handleNavigation}
         />
       ))}
     </SidebarMenu>
-  ), [location.pathname, navigate]);
+  ), [location.pathname, handleNavigation]);
 
   return (
     <SidebarProvider>
@@ -85,8 +115,21 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
         </Sidebar>
         <div className="flex-1">
           <div className="container p-4">
-            <SidebarTrigger />
-            <Outlet />
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <SidebarTrigger />
+                {isNavigating && (
+                  <div className="fixed top-0 left-0 w-full z-50">
+                    <Progress 
+                      value={progress} 
+                      className="h-1 rounded-none bg-transparent"
+                      indicatorClassName="bg-primary transition-all duration-300 ease-in-out"
+                    />
+                  </div>
+                )}
+              </div>
+              <Outlet />
+            </div>
           </div>
         </div>
       </div>

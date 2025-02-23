@@ -3,16 +3,13 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { VariantProps, cva } from "class-variance-authority"
 
-export const SidebarMenu = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(
-  ({ className, ...props }, ref) => (
-    <ul
-      ref={ref}
-      data-sidebar="menu"
-      className={cn("flex w-full min-w-0 flex-col gap-1", className)}
-      {...props}
-    />
-  )
-)
+export const SidebarMenu = React.memo(({ className, ...props }: React.ComponentProps<"ul">) => (
+  <ul
+    data-sidebar="menu"
+    className={cn("flex w-full min-w-0 flex-col gap-1", className)}
+    {...props}
+  />
+));
 SidebarMenu.displayName = "SidebarMenu"
 
 const sidebarMenuButtonVariants = cva(
@@ -50,7 +47,8 @@ interface SidebarMenuItemProps extends React.ComponentProps<"li"> {
 }
 
 const SidebarMenuItemComponent = React.memo(({ className, item, pathname, navigate, ...props }: SidebarMenuItemProps) => {
-  const handleClick = React.useCallback(() => {
+  const handleClick = React.useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
     if (pathname !== item.path) {
       navigate(item.path);
     }
@@ -77,6 +75,9 @@ const SidebarMenuItemComponent = React.memo(({ className, item, pathname, naviga
       </button>
     </li>
   );
+}, (prevProps, nextProps) => {
+  return prevProps.pathname === nextProps.pathname && 
+         prevProps.item.path === nextProps.item.path;
 });
 
 SidebarMenuItemComponent.displayName = "SidebarMenuItem";

@@ -15,9 +15,9 @@ import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle } fr
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 
-// Move menuItems outside component to prevent recreation
+// Memoize menu items array to prevent recreation on each render
 const menuItems = [
   { title: 'Dashboard', path: '/dashboard', icon: Home },
   { title: 'Create LinkedIn Post', path: '/linkedin-post', icon: PlusCircle },
@@ -48,7 +48,19 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
     }
   }, [navigate]);
 
-  console.log('MainLayout render', { pathname: location.pathname });
+  // Memoize the menu rendering to prevent unnecessary re-renders
+  const menuContent = useMemo(() => (
+    <SidebarMenu>
+      {menuItems.map((item) => (
+        <SidebarMenuItem
+          key={item.path}
+          item={item}
+          pathname={location.pathname}
+          navigate={navigate}
+        />
+      ))}
+    </SidebarMenu>
+  ), [location.pathname, navigate]);
 
   return (
     <SidebarProvider>
@@ -57,16 +69,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.map((item) => (
-                    <SidebarMenuItem
-                      key={item.path}
-                      item={item}
-                      pathname={location.pathname}
-                      navigate={navigate}
-                    />
-                  ))}
-                </SidebarMenu>
+                {menuContent}
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>

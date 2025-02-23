@@ -15,7 +15,7 @@ import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle } fr
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { memo, useCallback, useMemo, useState, useEffect, useLayoutEffect } from "react";
+import { memo, useCallback, useMemo, useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/context/AuthContext";
 
@@ -69,34 +69,16 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
       });
     }, 50);
 
-    // Use preventDefault to stop any default navigation behavior
-    const preventDefaultNavigation = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      return false;
-    };
-
-    // Add the event listener before navigation
-    window.addEventListener('beforeunload', preventDefaultNavigation);
-
-    // Navigate with state
+    // Navigate with state to prevent full page reload
     navigate(path, { 
       replace: true,
       state: { preventReload: true }
     });
     
-    // Remove the event listener after a short delay
-    setTimeout(() => {
-      window.removeEventListener('beforeunload', preventDefaultNavigation);
-    }, 100);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('beforeunload', preventDefaultNavigation);
-    };
+    return () => clearInterval(interval);
   }, [navigate, location.pathname]);
 
-  // Use useLayoutEffect to handle navigation state changes before render
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (isNavigating) {
       const timer = setTimeout(() => {
         setIsNavigating(false);

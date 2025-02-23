@@ -15,8 +15,9 @@ import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle } fr
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { memo, useCallback, useMemo, useState, useEffect } from "react";
+import { memo, useCallback, useMemo, useState, useEffect, useLayoutEffect } from "react";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/context/AuthContext";
 
 // Memoize menu items array to prevent recreation on each render
 const menuItems = [
@@ -38,6 +39,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
   const location = useLocation();
   const [isNavigating, setIsNavigating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const { isAuthenticated } = useAuth();
   
   const handleSignOut = useCallback(async () => {
     try {
@@ -67,16 +69,34 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
       });
     }, 50);
 
-    // Use navigate with state to prevent full page reload
+    // Use preventDefault to stop any default navigation behavior
+    const preventDefaultNavigation = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Add the event listener before navigation
+    window.addEventListener('beforeunload', preventDefaultNavigation);
+
+    // Navigate with state
     navigate(path, { 
       replace: true,
       state: { preventReload: true }
     });
     
-    return () => clearInterval(interval);
+    // Remove the event listener after a short delay
+    setTimeout(() => {
+      window.removeEventListener('beforeunload', preventDefaultNavigation);
+    }, 100);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('beforeunload', preventDefaultNavigation);
+    };
   }, [navigate, location.pathname]);
 
-  useEffect(() => {
+  // Use useLayoutEffect to handle navigation state changes before render
+  useLayoutEffect(() => {
     if (isNavigating) {
       const timer = setTimeout(() => {
         setIsNavigating(false);
@@ -86,6 +106,13 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
       return () => clearTimeout(timer);
     }
   }, [isNavigating]);
+
+  // Check auth state changes and prevent unnecessary reloads
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   // Memoize the menu rendering to prevent unnecessary re-renders
   const menuContent = useMemo(() => (

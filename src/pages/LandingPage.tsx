@@ -5,9 +5,19 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Search, FileScan, Video, Workflow } from "lucide-react";
+import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { session } = useAuth();
+
+  useEffect(() => {
+    // Redirect to dashboard if user is already authenticated
+    if (session) {
+      navigate('/dashboard');
+    }
+  }, [session, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FFFBF4] to-[#F5F0ED]">

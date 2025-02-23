@@ -44,7 +44,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success('Successfully signed out!');
-      navigate('/');
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');
@@ -67,11 +67,13 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
       });
     }, 50);
 
-    navigate(path, { replace: true });
+    // Use navigate with state to prevent full page reload
+    navigate(path, { 
+      replace: true,
+      state: { preventReload: true }
+    });
     
-    return () => {
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [navigate, location.pathname]);
 
   useEffect(() => {
@@ -81,9 +83,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
         setProgress(0);
       }, 500);
 
-      return () => {
-        clearTimeout(timer);
-      };
+      return () => clearTimeout(timer);
     }
   }, [isNavigating]);
 
@@ -137,7 +137,11 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
                   </div>
                 )}
               </div>
-              <div className={`transition-opacity duration-300 ${isNavigating ? 'opacity-50' : 'opacity-100'}`}>
+              <div 
+                className={`transition-opacity duration-300 ${
+                  isNavigating ? 'opacity-50' : 'opacity-100'
+                }`}
+              >
                 <Outlet />
               </div>
             </div>
@@ -150,3 +154,4 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
 
 const MainLayout = memo(MainLayoutComponent);
 export default MainLayout;
+

@@ -1,5 +1,5 @@
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -17,13 +17,15 @@ import { Home, FileText, Video, Theater, PhoneCall, MessageSquare, Search, PlusC
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { memo } from "react";
 
 interface MainLayoutProps {
   children?: React.ReactNode;
 }
 
-const MainLayout = ({ children }: MainLayoutProps) => {
+const MainLayoutComponent = ({ children }: MainLayoutProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const menuItems = [
     { title: 'Dashboard', path: '/dashboard', icon: Home },
@@ -38,9 +40,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const handleSignOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       toast.success('Successfully signed out!');
       navigate('/');
     } catch (error) {
@@ -58,18 +58,12 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        className={cn(
-                          "w-full",
-                          location.pathname === item.path && "bg-purple-100 text-purple-900"
-                        )}
-                        onClick={() => navigate(item.path)}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <SidebarMenuItem
+                      key={item.title}
+                      item={item}
+                      pathname={location.pathname}
+                      onClick={() => navigate(item.path)}
+                    />
                   ))}
                 </SidebarMenu>
               </SidebarGroupContent>
@@ -96,5 +90,6 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   );
 };
 
+const MainLayout = memo(MainLayoutComponent);
 export default MainLayout;
 

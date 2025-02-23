@@ -4,6 +4,7 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { Search, FileScan, Video, Workflow } from "lucide-react";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -65,10 +66,10 @@ const LandingPage = () => {
         </div>
 
         {/* Features Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-6xl w-full">
           <div className="bg-white p-6 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="text-[#8B5CF6] mb-4">
-              <span className="material-symbols-outlined text-3xl">search</span>
+              <Search className="w-8 h-8" />
             </div>
             <h3 className="font-bold text-lg mb-2">Smart Sourcing</h3>
             <p className="text-gray-600">AI-powered candidate search and LinkedIn post generation to attract top talent</p>
@@ -76,7 +77,7 @@ const LandingPage = () => {
           
           <div className="bg-white p-6 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="text-[#8B5CF6] mb-4">
-              <span className="material-symbols-outlined text-3xl">document_scanner</span>
+              <FileScan className="w-8 h-8" />
             </div>
             <h3 className="font-bold text-lg mb-2">Intelligent Screening</h3>
             <p className="text-gray-600">Automated resume analysis and candidate qualification with AI assistance</p>
@@ -84,10 +85,18 @@ const LandingPage = () => {
           
           <div className="bg-white p-6 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="text-[#8B5CF6] mb-4">
-              <span className="material-symbols-outlined text-3xl">video_camera_front</span>
+              <Video className="w-8 h-8" />
             </div>
             <h3 className="font-bold text-lg mb-2">Video Interviews</h3>
             <p className="text-gray-600">Seamless video interviews with real-time AI analysis and insights</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="text-[#8B5CF6] mb-4">
+              <Workflow className="w-8 h-8" />
+            </div>
+            <h3 className="font-bold text-lg mb-2">Agentic Workflows</h3>
+            <p className="text-gray-600">Automate and streamline your recruiting process with AI-powered workflows that adapt to your needs</p>
           </div>
         </div>
       </div>

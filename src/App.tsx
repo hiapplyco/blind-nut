@@ -1,8 +1,9 @@
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Toaster } from "sonner";
 import MainLayout from "@/components/layout/MainLayout";
+import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import LinkedInPostGenerator from "@/pages/LinkedInPostGenerator";
 import Sourcing from "@/pages/Sourcing";
@@ -10,37 +11,52 @@ import ScreeningRoom from "@/pages/ScreeningRoom";
 import InterviewPrep from "@/pages/InterviewPrep";
 import KickoffCall from "@/pages/KickoffCall";
 import Chat from "@/pages/Chat";
+import Report from "@/pages/Report";
+import { supabase } from "@/integrations/supabase/client";
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60000, // 1 minute
-      retry: 1,
-    },
-  },
-});
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-const App = () => {
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+
+      // Set up auth state listener
+      supabase.auth.onAuthStateChange((_event, session) => {
+        setIsAuthenticated(!!session);
+      });
+    };
+
+    checkAuth();
+  }, []);
+
+  // Show nothing while checking authentication
+  if (isAuthenticated === null) {
+    return null;
+  }
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <MainLayout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/linkedin-post" element={<LinkedInPostGenerator />} />
-            <Route path="/sourcing" element={<Sourcing />} />
-            <Route path="/screening-room" element={<ScreeningRoom />} />
-            <Route path="/interview-prep" element={<InterviewPrep />} />
-            <Route path="/kickoff-call" element={<KickoffCall />} />
-            <Route path="/chat" element={<Chat />} />
-          </Routes>
-        </MainLayout>
-        <Toaster />
-      </Router>
-    </QueryClientProvider>
+    <Router>
+      <Toaster position="top-center" />
+      <Routes>
+        {/* Public route */}
+        <Route path="/" element={!isAuthenticated ? <LandingPage /> : <Navigate to="/dashboard" />} />
+
+        {/* Protected routes */}
+        <Route element={isAuthenticated ? <MainLayout /> : <Navigate to="/" />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/linkedin-post" element={<LinkedInPostGenerator />} />
+          <Route path="/sourcing" element={<Sourcing />} />
+          <Route path="/screening-room" element={<ScreeningRoom />} />
+          <Route path="/interview-prep" element={<InterviewPrep />} />
+          <Route path="/kickoff-call" element={<KickoffCall />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/report/:id" element={<Report />} />
+        </Route>
+      </Routes>
+    </Router>
   );
-};
+}
 
 export default App;

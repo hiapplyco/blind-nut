@@ -1,7 +1,11 @@
 
 import NewSearchForm from "@/components/NewSearchForm";
+import { useAuth } from "@/context/AuthContext";
+import { memo } from "react";
 
-const Sourcing = () => {
+const SourcingComponent = () => {
+  const { session } = useAuth();
+
   return (
     <div className="container max-w-4xl py-8 space-y-8">
       <div className="flex flex-col items-start">
@@ -10,10 +14,10 @@ const Sourcing = () => {
           Search for candidates, companies, or candidates at specific companies
         </p>
       </div>
-      <NewSearchForm userId={null} />
+      <NewSearchForm userId={session?.user?.id ?? null} />
     </div>
   );
 };
 
+const Sourcing = memo(SourcingComponent);
 export default Sourcing;
-

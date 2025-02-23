@@ -11,9 +11,8 @@ import {
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { Home, FileText, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle } from "lucide-react";
+import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

@@ -18,37 +18,6 @@ export const SidebarMenu = React.forwardRef<HTMLUListElement, React.ComponentPro
 )
 SidebarMenu.displayName = "SidebarMenu"
 
-const SidebarMenuItemComponent = React.forwardRef<
-  HTMLLIElement,
-  React.ComponentProps<"li"> & {
-    item: { title: string; path: string; icon: React.ComponentType<any> };
-    pathname: string;
-    navigate: (path: string) => void;
-  }
->(({ className, item, pathname, navigate, ...props }, ref) => {
-  return (
-    <li
-      ref={ref}
-      data-sidebar="menu-item"
-      className={cn("group/menu-item relative", className)}
-      {...props}
-    >
-      <SidebarMenuButton
-        onClick={() => navigate(item.path)}
-        className={cn(
-          pathname === item.path && "bg-purple-100 text-purple-900"
-        )}
-      >
-        <item.icon className="h-4 w-4" />
-        <span>{item.title}</span>
-      </SidebarMenuButton>
-    </li>
-  )
-})
-
-export const SidebarMenuItem = React.memo(SidebarMenuItemComponent)
-SidebarMenuItem.displayName = "SidebarMenuItem"
-
 const sidebarMenuButtonVariants = cva(
   "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
@@ -71,26 +40,44 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-const SidebarMenuButtonComponent = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<"button"> & {
-    asChild?: boolean;
-    isActive?: boolean;
-    tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-  } & VariantProps<typeof sidebarMenuButtonVariants>
->(({ children, className, ...props }, ref) => {
-  return (
-    <button
-      ref={ref}
-      data-sidebar="menu-button"
-      className={cn(sidebarMenuButtonVariants({ variant: "default" }), className)}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-})
+interface MenuItem {
+  title: string;
+  path: string;
+  icon: React.ComponentType<any>;
+}
 
-export const SidebarMenuButton = React.memo(SidebarMenuButtonComponent)
-SidebarMenuButton.displayName = "SidebarMenuButton"
+interface SidebarMenuItemProps extends React.ComponentProps<"li"> {
+  item: MenuItem;
+  pathname: string;
+  navigate: (path: string) => void;
+}
 
+const SidebarMenuItemComponent = React.forwardRef<HTMLLIElement, SidebarMenuItemProps>(
+  ({ className, item, pathname, navigate, ...props }, ref) => {
+    const isActive = React.useMemo(() => pathname === item.path, [pathname, item.path]);
+    const handleClick = React.useCallback(() => navigate(item.path), [navigate, item.path]);
+
+    return (
+      <li
+        ref={ref}
+        data-sidebar="menu-item"
+        className={cn("group/menu-item relative", className)}
+        {...props}
+      >
+        <button
+          onClick={handleClick}
+          className={cn(
+            sidebarMenuButtonVariants({ variant: "default" }),
+            isActive && "bg-purple-100 text-purple-900"
+          )}
+        >
+          <item.icon className="h-4 w-4" />
+          <span>{item.title}</span>
+        </button>
+      </li>
+    );
+  }
+);
+
+SidebarMenuItemComponent.displayName = "SidebarMenuItem";
+export const SidebarMenuItem = React.memo(SidebarMenuItemComponent);

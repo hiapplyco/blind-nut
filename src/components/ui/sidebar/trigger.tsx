@@ -18,7 +18,7 @@ export const SidebarTrigger = React.forwardRef<
       )}
       {...props}
     >
-      <span className="sr-only">Open sidebar</span>
+      <span className="sr-only">Toggle sidebar</span>
       <svg
         className="h-6 w-6"
         fill="none"
@@ -36,3 +36,4 @@ export const SidebarTrigger = React.forwardRef<
   )
 })
 SidebarTrigger.displayName = "SidebarTrigger"
+

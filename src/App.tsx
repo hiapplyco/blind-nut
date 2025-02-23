@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import MainLayout from "@/components/layout/MainLayout";
@@ -44,7 +44,7 @@ function App() {
         <Route path="/" element={!isAuthenticated ? <LandingPage /> : <Navigate to="/dashboard" />} />
 
         {/* Protected routes */}
-        <Route element={<MainLayout>{/* Outlet will render child routes */}</MainLayout>}>
+        <Route element={<MainLayout><Outlet /></MainLayout>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/linkedin-post" element={<LinkedInPostGenerator />} />
           <Route path="/sourcing" element={<Sourcing />} />

@@ -1,11 +1,9 @@
 
 import { memo } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { toast } from "sonner";
+import PostContent from "./results/PostContent";
+import AnalysisContent from "./results/AnalysisContent";
 
 interface LinkedInPostResultsProps {
   generatedPost: string;
@@ -39,50 +37,14 @@ const LinkedInPostResults = memo(({
             <TabsTrigger value="analysis">Expert Analysis</TabsTrigger>
           </TabsList>
           <TabsContent value="post" className="mt-4">
-            <div className="bg-muted p-4 rounded-lg">
-              <p className="whitespace-pre-wrap">{generatedPost}</p>
-            </div>
-            <div className="flex gap-4 mt-4">
-              <Button 
-                onClick={() => {
-                  navigator.clipboard.writeText(generatedPost);
-                  toast.success("Post copied to clipboard!");
-                }}
-              >
-                Copy to Clipboard
-              </Button>
-            </div>
+            <PostContent content={generatedPost} />
           </TabsContent>
           <TabsContent value="analysis" className="mt-4">
-            {analysis ? (
-              <div className="space-y-4">
-                <div className="bg-muted p-4 rounded-lg">
-                  <Collapsible open={isAnalysisOpen} onOpenChange={onAnalysisOpenChange}>
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-medium">Expert Analysis Details</h3>
-                      <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          {isAnalysisOpen ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </CollapsibleTrigger>
-                    </div>
-                    <CollapsibleContent>
-                      <pre className="whitespace-pre-wrap text-xs font-mono overflow-auto max-h-96">
-                        {analysis}
-                      </pre>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 text-center text-muted-foreground">
-                Analysis not available
-              </div>
-            )}
+            <AnalysisContent 
+              analysis={analysis}
+              isAnalysisOpen={isAnalysisOpen}
+              onAnalysisOpenChange={onAnalysisOpenChange}
+            />
           </TabsContent>
         </Tabs>
       </CardContent>

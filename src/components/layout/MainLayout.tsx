@@ -1,5 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   SidebarProvider,
@@ -87,7 +88,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         <div className="flex-1">
           <div className="container p-4">
             <SidebarTrigger />
-            {children}
+            <Outlet />
           </div>
         </div>
       </div>
@@ -96,3 +97,4 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 };
 
 export default MainLayout;
+

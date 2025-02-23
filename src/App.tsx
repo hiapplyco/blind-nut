@@ -23,7 +23,7 @@ function App() {
           {/* Public route */}
           <Route path="/" element={<LandingPage />} />
 
-          {/* Protected routes */}
+          {/* Protected routes wrapped in MainLayout */}
           <Route element={<ProtectedRoute />}>
             <Route element={<MainLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
@@ -46,3 +46,4 @@ function App() {
 }
 
 export default App;
+

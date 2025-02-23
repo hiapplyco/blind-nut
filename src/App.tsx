@@ -15,23 +15,27 @@ import Report from "@/pages/Report";
 import { supabase } from "@/integrations/supabase/client";
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-    });
-
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
+      setIsLoading(false);
+    });
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // Show loading state while checking authentication
-  if (isAuthenticated === null) {
+  // Only show loading state on initial load
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FFFBF4]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-800" />
@@ -57,6 +61,9 @@ function App() {
           <Route path="/chat" element={<Chat />} />
           <Route path="/report/:id" element={<Report />} />
         </Route>
+
+        {/* Catch unauthorized access to protected routes */}
+        <Route path="*" element={!isAuthenticated ? <Navigate to="/" /> : <Navigate to="/dashboard" />} />
       </Routes>
     </Router>
   );

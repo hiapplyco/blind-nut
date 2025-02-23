@@ -1,62 +1,26 @@
 
 import { useRef, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import { setupWebSocketEventHandlers, initializeWebSocketConnection } from '@/utils/websocketUtils';
 import { toast } from "sonner";
 
 export const useWebSocket = (sessionId: number | null) => {
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const initializeWebSocket = async () => {
+    const setupConnection = async () => {
       try {
-        const { data: wsData, error: wsError } = await supabase.functions.invoke('initialize-daily-bot');
-        if (wsError) throw wsError;
-
-        const ws = new WebSocket(wsData.websocket_url);
+        const websocketUrl = await initializeWebSocketConnection();
+        const ws = new WebSocket(websocketUrl);
         wsRef.current = ws;
 
-        ws.onopen = () => {
-          console.log('WebSocket Connected');
-          ws.send(JSON.stringify({
-            setup: {
-              generation_config: { response_modalities: ["TEXT"] }
-            }
-          }));
-        };
-
-        ws.onmessage = async (event) => {
-          const response = JSON.parse(event.data);
-          
-          if (response.text && sessionId) {
-            await supabase.from('chat_messages').insert({
-              session_id: sessionId,
-              role: 'assistant',
-              content: response.text
-            });
-
-            toast.success('Received response from assistant');
-          }
-
-          if (response.error) {
-            toast.error(response.error);
-          }
-        };
-
-        ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          toast.error('Connection error occurred');
-        };
-
-        ws.onclose = () => {
-          console.log('WebSocket connection closed');
-        };
+        setupWebSocketEventHandlers(ws, sessionId);
       } catch (error) {
         console.error('Error initializing WebSocket:', error);
         toast.error('Failed to initialize WebSocket connection');
       }
     };
 
-    initializeWebSocket();
+    setupConnection();
 
     return () => {
       if (wsRef.current) {

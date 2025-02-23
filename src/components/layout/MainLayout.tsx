@@ -15,7 +15,7 @@ import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle } fr
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 
 // Memoize menu items array to prevent recreation on each render
@@ -52,10 +52,11 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
   }, [navigate]);
 
   const handleNavigation = useCallback((path: string) => {
+    if (path === location.pathname) return;
+    
     setIsNavigating(true);
     setProgress(0);
     
-    // Simulate progress
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
@@ -66,17 +67,25 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
       });
     }, 50);
 
-    // Navigate and cleanup
-    navigate(path);
-    setTimeout(() => {
+    navigate(path, { replace: true });
+    
+    return () => {
       clearInterval(interval);
-      setProgress(100);
-      setTimeout(() => {
+    };
+  }, [navigate, location.pathname]);
+
+  useEffect(() => {
+    if (isNavigating) {
+      const timer = setTimeout(() => {
         setIsNavigating(false);
         setProgress(0);
-      }, 200);
-    }, 500);
-  }, [navigate]);
+      }, 500);
+
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [isNavigating]);
 
   // Memoize the menu rendering to prevent unnecessary re-renders
   const menuContent = useMemo(() => (
@@ -128,7 +137,9 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
                   </div>
                 )}
               </div>
-              <Outlet />
+              <div className={`transition-opacity duration-300 ${isNavigating ? 'opacity-50' : 'opacity-100'}`}>
+                <Outlet />
+              </div>
             </div>
           </div>
         </div>

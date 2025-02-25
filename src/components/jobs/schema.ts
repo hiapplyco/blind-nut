@@ -15,7 +15,11 @@ export const jobFormSchema = z.object({
     .min(20, { message: 'Description must be at least 20 characters' })
     .max(10000, { message: 'Description cannot exceed 10000 characters' }),
   location: z.string().superRefine((val, ctx) => {
-    const remote = ctx.parent.remote_allowed;
+    // Get remote_allowed from the data object
+    const remote = (ctx.path as string[]).length > 0 ? 
+      (ctx.getData() as any).remote_allowed : 
+      false;
+      
     if (!remote && val.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -23,12 +27,20 @@ export const jobFormSchema = z.object({
       });
     }
   }),
-  salary_min: z.number().nullable()
-    .refine((val) => val === null || val >= 0, {
+  salary_min: z.union([z.string(), z.number(), z.null()])
+    .transform((val) => val === '' ? null : val === null ? null : Number(val))
+    .refine((val) => val === null || !isNaN(val as number), {
+      message: 'Invalid salary value',
+    })
+    .refine((val) => val === null || (val as number) >= 0, {
       message: 'Minimum salary cannot be negative',
     }),
-  salary_max: z.number().nullable()
-    .refine((val) => val === null || val >= 0, {
+  salary_max: z.union([z.string(), z.number(), z.null()])
+    .transform((val) => val === '' ? null : val === null ? null : Number(val))
+    .refine((val) => val === null || !isNaN(val as number), {
+      message: 'Invalid salary value',
+    })
+    .refine((val) => val === null || (val as number) >= 0, {
       message: 'Maximum salary cannot be negative',
     }),
   job_type: z.enum(jobTypes, {
@@ -50,7 +62,7 @@ export const jobFormSchema = z.object({
 }).refine(
   (data) => {
     if (data.salary_min && data.salary_max) {
-      return data.salary_min <= data.salary_max;
+      return Number(data.salary_min) <= Number(data.salary_max);
     }
     return true;
   },

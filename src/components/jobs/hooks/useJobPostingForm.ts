@@ -51,19 +51,15 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         }
 
         if (job) {
-          // Convert salary values from string to number or null
-          const salaryMin = job.salary_min ? Number(job.salary_min) : null;
-          const salaryMax = job.salary_max ? Number(job.salary_max) : null;
-          
-          // Ensure numbers are valid
-          const processedFormData: JobFormValues = {
+          // Process form data
+          const processedFormData = {
             ...job,
-            salary_min: isNaN(salaryMin as number) ? null : salaryMin,
-            salary_max: isNaN(salaryMax as number) ? null : salaryMax,
+            salary_min: job.salary_min ?? null,
+            salary_max: job.salary_max ?? null,
             application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
             skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : job.skills_required || "",
-            job_type: job.job_type as JobFormValues['job_type'] ?? "full-time",
-            experience_level: job.experience_level as JobFormValues['experience_level'] ?? "entry"
+            job_type: job.job_type || "full-time",
+            experience_level: job.experience_level || "entry"
           };
 
           form.reset(processedFormData);
@@ -90,8 +86,6 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         ...formData,
         skills_required: formData.skills_required ? formData.skills_required.split(",").map(skill => skill.trim()) : [],
         application_deadline: formData.application_deadline ? formData.application_deadline.toISOString() : null,
-        salary_min: formData.salary_min !== null ? Number(formData.salary_min) : null,
-        salary_max: formData.salary_max !== null ? Number(formData.salary_max) : null,
         updated_at: new Date().toISOString()
       };
 

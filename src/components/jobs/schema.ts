@@ -6,8 +6,8 @@ export const jobFormSchema = z.object({
   client_id: z.string().min(1, { message: 'Client is required' }),
   description: z.string().min(20, { message: 'Description must be at least 20 characters' }),
   location: z.string().min(1, { message: 'Location is required' }),
-  salary_min: z.string().optional().transform(val => val === '' ? null : Number(val)),
-  salary_max: z.string().optional().transform(val => val === '' ? null : Number(val)),
+  salary_min: z.string().transform(val => val === '' ? null : Number(val)),
+  salary_max: z.string().transform(val => val === '' ? null : Number(val)),
   job_type: z.enum(['full-time', 'part-time', 'contract', 'temporary', 'internship']),
   experience_level: z.enum(['entry', 'mid', 'senior', 'executive']),
   skills_required: z.string().optional(),
@@ -25,3 +25,4 @@ export const jobFormSchema = z.object({
 });
 
 export type JobFormValues = z.infer<typeof jobFormSchema>;
+

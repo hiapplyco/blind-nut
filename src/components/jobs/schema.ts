@@ -14,8 +14,8 @@ export const jobFormSchema = z.object({
   client_id: z.string().min(1, { message: 'Client is required' }),
   description: z.string().min(20, { message: 'Description must be at least 20 characters' }),
   location: z.string().min(1, { message: 'Location is required' }),
-  salary_min: z.string(),
-  salary_max: z.string(),
+  salary_min: z.number().nullable(),
+  salary_max: z.number().nullable(),
   job_type: z.enum(jobTypes),
   experience_level: z.enum(experienceLevels),
   skills_required: z.string(),
@@ -24,7 +24,7 @@ export const jobFormSchema = z.object({
   is_active: z.boolean().default(true)
 }).refine(data => {
   if (data.salary_min && data.salary_max) {
-    return Number(data.salary_min) <= Number(data.salary_max);
+    return data.salary_min <= data.salary_max;
   }
   return true;
 }, {
@@ -33,4 +33,3 @@ export const jobFormSchema = z.object({
 });
 
 export type JobFormValues = z.infer<typeof jobFormSchema>;
-

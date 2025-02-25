@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,8 +24,8 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
       client_id: "",
       description: "",
       location: "",
-      salary_min: "",
-      salary_max: "",
+      salary_min: null,
+      salary_max: null,
       job_type: "full-time",
       experience_level: "entry",
       skills_required: "",
@@ -54,8 +53,8 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
       if (job) {
         const formData = {
           ...job,
-          salary_min: job.salary_min?.toString() ?? "",
-          salary_max: job.salary_max?.toString() ?? "",
+          salary_min: job.salary_min ? Number(job.salary_min) : null,
+          salary_max: job.salary_max ? Number(job.salary_max) : null,
           application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
           skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : "",
           job_type: job.job_type as JobFormValues['job_type'] ?? "full-time",
@@ -74,8 +73,8 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
         ...data,
         skills_required: data.skills_required ? data.skills_required.split(",").map(skill => skill.trim()) : [],
         application_deadline: data.application_deadline ? data.application_deadline.toISOString() : null,
-        salary_min: data.salary_min ? Number(data.salary_min) : null,
-        salary_max: data.salary_max ? Number(data.salary_max) : null,
+        salary_min: data.salary_min,
+        salary_max: data.salary_max,
         updated_at: new Date().toISOString()
       };
 
@@ -168,11 +167,17 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
           <FormField
             control={form.control}
             name="salary_min"
-            render={({ field }) => (
+            render={({ field: { value, onChange, ...field } }) => (
               <FormItem>
                 <FormLabel>Minimum Salary</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="Minimum salary" {...field} />
+                  <Input 
+                    type="number"
+                    placeholder="Minimum salary"
+                    {...field}
+                    value={value ?? ""}
+                    onChange={e => onChange(e.target.value ? Number(e.target.value) : null)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -182,11 +187,17 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
           <FormField
             control={form.control}
             name="salary_max"
-            render={({ field }) => (
+            render={({ field: { value, onChange, ...field } }) => (
               <FormItem>
                 <FormLabel>Maximum Salary</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="Maximum salary" {...field} />
+                  <Input
+                    type="number"
+                    placeholder="Maximum salary"
+                    {...field}
+                    value={value ?? ""}
+                    onChange={e => onChange(e.target.value ? Number(e.target.value) : null)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -328,4 +339,3 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
     </Form>
   );
 }
-

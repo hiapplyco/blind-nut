@@ -54,6 +54,41 @@ export type Database = {
           },
         ]
       }
+      applications: {
+        Row: {
+          candidate_email: string | null
+          candidate_name: string | null
+          id: string
+          job_id: number | null
+          resume_url: string | null
+          submitted_at: string | null
+        }
+        Insert: {
+          candidate_email?: string | null
+          candidate_name?: string | null
+          id?: string
+          job_id?: number | null
+          resume_url?: string | null
+          submitted_at?: string | null
+        }
+        Update: {
+          candidate_email?: string | null
+          candidate_name?: string | null
+          id?: string
+          job_id?: number | null
+          resume_url?: string | null
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           content: string | null
@@ -113,6 +148,30 @@ export type Database = {
         }
         Relationships: []
       }
+      clients: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
       daily_transcriptions: {
         Row: {
           created_at: string | null
@@ -153,33 +212,65 @@ export type Database = {
       }
       jobs: {
         Row: {
+          category: string | null
+          client_id: string | null
           content: string | null
           created_at: string
           id: number
+          is_active: boolean | null
+          job_type: string | null
+          location: string | null
+          posted_at: string | null
+          salary_range: string | null
           search_string: string | null
           summary: string | null
+          tags: string[] | null
           title: string | null
           user_id: string | null
         }
         Insert: {
+          category?: string | null
+          client_id?: string | null
           content?: string | null
           created_at?: string
           id?: number
+          is_active?: boolean | null
+          job_type?: string | null
+          location?: string | null
+          posted_at?: string | null
+          salary_range?: string | null
           search_string?: string | null
           summary?: string | null
+          tags?: string[] | null
           title?: string | null
           user_id?: string | null
         }
         Update: {
+          category?: string | null
+          client_id?: string | null
           content?: string | null
           created_at?: string
           id?: number
+          is_active?: boolean | null
+          job_type?: string | null
+          location?: string | null
+          posted_at?: string | null
+          salary_range?: string | null
           search_string?: string | null
           summary?: string | null
+          tags?: string[] | null
           title?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "jobs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kickoff_calls: {
         Row: {

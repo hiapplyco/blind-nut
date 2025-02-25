@@ -19,8 +19,8 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
       client_id: "",
       description: "",
       location: "",
-      salary_min: null,
-      salary_max: null,
+      salary_min: null as number | null, // Explicitly type as number | null
+      salary_max: null as number | null, // Explicitly type as number | null
       job_type: "full-time",
       experience_level: "entry",
       skills_required: "",

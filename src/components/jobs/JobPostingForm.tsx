@@ -51,15 +51,26 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
       }
 
       if (job) {
+        const salary_min = typeof job.salary_min === 'string' ? 
+          parseFloat(job.salary_min) : 
+          typeof job.salary_min === 'number' ? 
+            job.salary_min : null;
+            
+        const salary_max = typeof job.salary_max === 'string' ? 
+          parseFloat(job.salary_max) : 
+          typeof job.salary_max === 'number' ? 
+            job.salary_max : null;
+
         const formData = {
           ...job,
-          salary_min: job.salary_min ? Number(job.salary_min) : null,
-          salary_max: job.salary_max ? Number(job.salary_max) : null,
+          salary_min,
+          salary_max,
           application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
           skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : "",
           job_type: job.job_type as JobFormValues['job_type'] ?? "full-time",
           experience_level: job.experience_level as JobFormValues['experience_level'] ?? "entry"
         };
+        
         form.reset(formData);
       }
     }

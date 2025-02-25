@@ -56,8 +56,8 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
             client_id: job.client_id || "",
             description: job.content || "",
             location: job.location || "",
-            salary_min: job.salary_min,
-            salary_max: job.salary_max,
+            salary_min: typeof job.salary_min === 'number' ? job.salary_min : null,
+            salary_max: typeof job.salary_max === 'number' ? job.salary_max : null,
             application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
             skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : job.skills_required || "",
             job_type: (job.job_type as JobType) || "full-time",
@@ -88,8 +88,8 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         content: formData.description,
         skills_required: formData.skills_required ? formData.skills_required.split(",").map(skill => skill.trim()) : [],
         application_deadline: formData.application_deadline ? formData.application_deadline.toISOString() : null,
-        salary_min: formData.salary_min,
-        salary_max: formData.salary_max,
+        salary_min: typeof formData.salary_min === 'number' ? formData.salary_min : null,
+        salary_max: typeof formData.salary_max === 'number' ? formData.salary_max : null,
         updated_at: new Date().toISOString()
       };
 

@@ -4,28 +4,20 @@ import { Input } from "@/components/ui/input";
 import { Control } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { JobFormValues } from "../schema";
+import { useWatch } from "react-hook-form";
 
 interface LocationFieldsProps {
   control: Control<JobFormValues>;
 }
 
 export function LocationFields({ control }: LocationFieldsProps) {
+  const remoteAllowed = useWatch({
+    control,
+    name: "remote_allowed",
+  });
+
   return (
     <div className="space-y-4">
-      <FormField
-        control={control}
-        name="location"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Location</FormLabel>
-            <FormControl>
-              <Input placeholder="Location" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
       <FormField
         control={control}
         name="remote_allowed"
@@ -38,6 +30,23 @@ export function LocationFields({ control }: LocationFieldsProps) {
               />
             </FormControl>
             <FormLabel>Remote Allowed</FormLabel>
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="location"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{remoteAllowed ? 'Location (Optional)' : 'Location'}</FormLabel>
+            <FormControl>
+              <Input 
+                placeholder={remoteAllowed ? "Remote or specific location" : "Location"} 
+                {...field} 
+              />
+            </FormControl>
+            <FormMessage />
           </FormItem>
         )}
       />

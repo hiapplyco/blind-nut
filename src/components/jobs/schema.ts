@@ -14,14 +14,15 @@ export const jobFormSchema = z.object({
   description: z.string()
     .min(20, { message: 'Description must be at least 20 characters' })
     .max(10000, { message: 'Description cannot exceed 10000 characters' }),
-  location: z.string().refine(
-    (val, ctx) => {
-      const remote = ctx.parent.remote_allowed;
-      if (remote) return true; // Location not required if remote is allowed
-      return val.length > 0;
-    },
-    { message: 'Location is required for non-remote positions' }
-  ),
+  location: z.string().superRefine((val, ctx) => {
+    const remote = ctx.parent.remote_allowed;
+    if (!remote && val.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Location is required for non-remote positions',
+      });
+    }
+  }),
   salary_min: z.number().nullable()
     .refine((val) => val === null || val >= 0, {
       message: 'Minimum salary cannot be negative',

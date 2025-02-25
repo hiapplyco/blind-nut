@@ -19,8 +19,8 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
       client_id: "",
       description: "",
       location: "",
-      salary_min: null as number | null, // Explicitly type as number | null
-      salary_max: null as number | null, // Explicitly type as number | null
+      salary_min: null,
+      salary_max: null,
       job_type: "full-time",
       experience_level: "entry",
       skills_required: "",
@@ -51,21 +51,22 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         }
 
         if (job) {
-          // Convert salary values from Supabase to numbers explicitly
+          // Convert salary values from string to number or null
           const salaryMin = job.salary_min ? Number(job.salary_min) : null;
           const salaryMax = job.salary_max ? Number(job.salary_max) : null;
-
-          const formData: JobFormValues = {
+          
+          // Ensure numbers are valid
+          const processedFormData: JobFormValues = {
             ...job,
-            salary_min: salaryMin,
-            salary_max: salaryMax,
+            salary_min: isNaN(salaryMin as number) ? null : salaryMin,
+            salary_max: isNaN(salaryMax as number) ? null : salaryMax,
             application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
-            skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : "",
+            skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : job.skills_required || "",
             job_type: job.job_type as JobFormValues['job_type'] ?? "full-time",
             experience_level: job.experience_level as JobFormValues['experience_level'] ?? "entry"
           };
 
-          form.reset(formData);
+          form.reset(processedFormData);
         }
       } catch (error) {
         console.error("Error fetching job:", error);
@@ -84,7 +85,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     try {
       form.clearErrors();
       
-      // Convert salary values to numbers explicitly
+      // Process the form data
       const processedData = {
         ...formData,
         skills_required: formData.skills_required ? formData.skills_required.split(",").map(skill => skill.trim()) : [],

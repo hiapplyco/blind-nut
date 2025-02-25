@@ -52,14 +52,13 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
 
         if (job) {
           // Convert salary values from Supabase to numbers explicitly
-          const salaryMin = job.salary_min ? Number(job.salary_min) : null;
-          const salaryMax = job.salary_max ? Number(job.salary_max) : null;
+          const salaryMin = job.salary_min ? parseFloat(String(job.salary_min)) : null;
+          const salaryMax = job.salary_max ? parseFloat(String(job.salary_max)) : null;
 
-          // Type assertion to ensure TypeScript knows these are numbers
           const formData: JobFormValues = {
             ...job,
-            salary_min: salaryMin as number | null,
-            salary_max: salaryMax as number | null,
+            salary_min: salaryMin,
+            salary_max: salaryMax,
             application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
             skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : "",
             job_type: job.job_type as JobFormValues['job_type'] ?? "full-time",
@@ -85,14 +84,13 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     try {
       form.clearErrors();
       
-      // Ensure salary values are numbers for Supabase
+      // Convert salary values to numbers using parseFloat
       const processedData = {
         ...formData,
         skills_required: formData.skills_required ? formData.skills_required.split(",").map(skill => skill.trim()) : [],
         application_deadline: formData.application_deadline ? formData.application_deadline.toISOString() : null,
-        // Explicitly convert salary values to numbers
-        salary_min: formData.salary_min !== null ? Number(formData.salary_min) : null,
-        salary_max: formData.salary_max !== null ? Number(formData.salary_max) : null,
+        salary_min: formData.salary_min !== null ? parseFloat(String(formData.salary_min)) : null,
+        salary_max: formData.salary_max !== null ? parseFloat(String(formData.salary_max)) : null,
         updated_at: new Date().toISOString()
       };
 

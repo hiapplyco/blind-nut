@@ -14,32 +14,30 @@ export const jobFormSchema = z.object({
   description: z.string()
     .min(20, { message: 'Description must be at least 20 characters' })
     .max(10000, { message: 'Description cannot exceed 10000 characters' }),
-  location: z.string().refine((val, ctx) => {
-    // Using type assertion to access data safely
-    const data = ctx.getData();
-    if (!data.remote_allowed && !val) {
+  location: z.string().superRefine((val, ctx) => {
+    if (!ctx.parent.remote_allowed && !val) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Location is required for non-remote positions',
       });
-      return false;
     }
-    return true;
   }),
   salary_min: z.union([z.string(), z.number(), z.null()])
-    .transform((val) => val === '' ? null : val === null ? null : Number(val))
-    .refine((val) => val === null || !isNaN(val as number), {
-      message: 'Invalid salary value',
+    .transform((val) => {
+      if (val === '' || val === null) return null;
+      const num = Number(val);
+      return isNaN(num) ? null : num;
     })
-    .refine((val) => val === null || (val as number) >= 0, {
+    .refine((val) => val === null || val >= 0, {
       message: 'Minimum salary cannot be negative',
     }),
   salary_max: z.union([z.string(), z.number(), z.null()])
-    .transform((val) => val === '' ? null : val === null ? null : Number(val))
-    .refine((val) => val === null || !isNaN(val as number), {
-      message: 'Invalid salary value',
+    .transform((val) => {
+      if (val === '' || val === null) return null;
+      const num = Number(val);
+      return isNaN(num) ? null : num;
     })
-    .refine((val) => val === null || (val as number) >= 0, {
+    .refine((val) => val === null || val >= 0, {
       message: 'Maximum salary cannot be negative',
     }),
   job_type: z.enum(jobTypes, {
@@ -60,8 +58,8 @@ export const jobFormSchema = z.object({
   is_active: z.boolean().default(true)
 }).refine(
   (data) => {
-    if (data.salary_min && data.salary_max) {
-      return Number(data.salary_min) <= Number(data.salary_max);
+    if (data.salary_min !== null && data.salary_max !== null) {
+      return data.salary_min <= data.salary_max;
     }
     return true;
   },

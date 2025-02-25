@@ -8,7 +8,7 @@ import MainLayout from "@/components/layout/MainLayout";
 // Import components directly to avoid any potential lazy loading issues
 import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
-import JobPostingPage from "@/components/jobs/JobPostingPage";
+import { JobPostingPage } from "@/components/jobs/JobPostingPage";
 import LinkedInPostGenerator from "@/pages/LinkedInPostGenerator";
 import Sourcing from "@/pages/Sourcing";
 import ScreeningRoom from "@/pages/ScreeningRoom";

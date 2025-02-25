@@ -52,8 +52,8 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
 
         if (job) {
           // Convert salary values from Supabase to numbers explicitly
-          const salaryMin = job.salary_min ? parseFloat(String(job.salary_min)) : null;
-          const salaryMax = job.salary_max ? parseFloat(String(job.salary_max)) : null;
+          const salaryMin = job.salary_min ? Number(job.salary_min) : null;
+          const salaryMax = job.salary_max ? Number(job.salary_max) : null;
 
           const formData: JobFormValues = {
             ...job,
@@ -84,13 +84,13 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     try {
       form.clearErrors();
       
-      // Convert salary values to numbers using parseFloat
+      // Convert salary values to numbers explicitly
       const processedData = {
         ...formData,
         skills_required: formData.skills_required ? formData.skills_required.split(",").map(skill => skill.trim()) : [],
         application_deadline: formData.application_deadline ? formData.application_deadline.toISOString() : null,
-        salary_min: formData.salary_min !== null ? parseFloat(String(formData.salary_min)) : null,
-        salary_max: formData.salary_max !== null ? parseFloat(String(formData.salary_max)) : null,
+        salary_min: formData.salary_min !== null ? Number(formData.salary_min) : null,
+        salary_max: formData.salary_max !== null ? Number(formData.salary_max) : null,
         updated_at: new Date().toISOString()
       };
 

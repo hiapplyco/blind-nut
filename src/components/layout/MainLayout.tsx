@@ -1,4 +1,3 @@
-
 import { useNavigate, useLocation } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import {
@@ -11,7 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle } from "lucide-react";
+import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,7 +20,8 @@ import { useAuth } from "@/context/AuthContext";
 
 // Memoize menu items array to prevent recreation on each render
 const menuItems = [
-  { title: 'Dashboard', path: '/dashboard', icon: Home },
+  { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { title: 'Create Job Post', path: '/job-post', icon: PlusCircle },
   { title: 'Create LinkedIn Post', path: '/linkedin-post', icon: PlusCircle },
   { title: 'Sourcing', path: '/sourcing', icon: Search },
   { title: 'Screening Room', path: '/screening-room', icon: Video },
@@ -89,14 +89,12 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
     }
   }, [isNavigating]);
 
-  // Check auth state changes and prevent unnecessary reloads
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
-  // Memoize the menu rendering to prevent unnecessary re-renders
   const menuContent = useMemo(() => (
     <SidebarMenu>
       {menuItems.map((item) => (
@@ -163,4 +161,3 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
 
 const MainLayout = memo(MainLayoutComponent);
 export default MainLayout;
-

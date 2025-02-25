@@ -54,7 +54,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
           const processedFormData: JobFormValues = {
             title: job.title || "",
             client_id: job.client_id || "",
-            description: job.description || "",
+            description: job.content || "", // Map content to description
             location: job.location || "",
             salary_min: job.salary_min !== null ? Number(job.salary_min) : null,
             salary_max: job.salary_max !== null ? Number(job.salary_max) : null,
@@ -87,8 +87,11 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
       
       const processedData = {
         ...formData,
+        content: formData.description, // Map description to content for database
         skills_required: formData.skills_required ? formData.skills_required.split(",").map(skill => skill.trim()) : [],
         application_deadline: formData.application_deadline ? formData.application_deadline.toISOString() : null,
+        salary_min: formData.salary_min,
+        salary_max: formData.salary_max,
         updated_at: new Date().toISOString()
       };
 

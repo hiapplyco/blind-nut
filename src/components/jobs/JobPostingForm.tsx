@@ -1,7 +1,8 @@
+
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,14 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { jobFormSchema, type JobFormValues } from "./schema";
-import { format } from "date-fns";
 
 interface JobPostingFormProps {
   jobId?: string;
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function JobPostingForm({ jobId, onSuccess }: JobPostingFormProps) {
+export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormProps) {
   const form = useForm<JobFormValues>({
     resolver: zodResolver(jobFormSchema),
     defaultValues: {
@@ -51,13 +52,12 @@ export function JobPostingForm({ jobId, onSuccess }: JobPostingFormProps) {
       }
 
       if (job) {
-        // Transform the data to match the form's expected format
         const formData = {
           ...job,
           salary_min: job.salary_min?.toString() ?? "",
           salary_max: job.salary_max?.toString() ?? "",
           application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
-          skills_required: job.skills_required?.join(", ") ?? ""
+          skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : ""
         };
         form.reset(formData);
       }
@@ -72,7 +72,8 @@ export function JobPostingForm({ jobId, onSuccess }: JobPostingFormProps) {
         ...data,
         skills_required: data.skills_required ? data.skills_required.split(",").map(skill => skill.trim()) : [],
         application_deadline: data.application_deadline ? data.application_deadline.toISOString() : null,
-        // salary fields are already transformed by Zod schema
+        salary_min: data.salary_min ? Number(data.salary_min) : null,
+        salary_max: data.salary_max ? Number(data.salary_max) : null,
         updated_at: new Date().toISOString()
       };
 
@@ -101,76 +102,109 @@ export function JobPostingForm({ jobId, onSuccess }: JobPostingFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Form.Item>
-              <Form.Label>Job Title</Form.Label>
-              <Form.Control>
-                <Input placeholder="Job Title" {...form.register("title")} />
-              </Form.Control>
-              <Form.Message />
-            </Form.Item>
-          </div>
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Job Title</FormLabel>
+                <FormControl>
+                  <Input placeholder="Job Title" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <div className="space-y-2">
-            <Form.Item>
-              <Form.Label>Client</Form.Label>
-              <Form.Control>
-                <Input placeholder="Client" {...form.register("client_id")} />
-              </Form.Control>
-              <Form.Message />
-            </Form.Item>
-          </div>
+          <FormField
+            control={form.control}
+            name="client_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Client</FormLabel>
+                <FormControl>
+                  <Input placeholder="Client" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
-        <div className="space-y-2">
-          <Form.Item>
-            <Form.Label>Description</Form.Label>
-            <Form.Control>
-              <Textarea
-                placeholder="Job description"
-                {...form.register("description")}
-              />
-            </Form.Control>
-            <Form.Message />
-          </Form.Item>
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Job description"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location</FormLabel>
+                <FormControl>
+                  <Input placeholder="Location" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="salary_min"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Minimum Salary</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="Minimum salary" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="salary_max"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Maximum Salary</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="Maximum salary" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Form.Item>
-              <Form.Label>Location</Form.Label>
-              <Form.Control>
-                <Input placeholder="Location" {...form.register("location")} />
-              </Form.Control>
-              <Form.Message />
-            </Form.Item>
-          </div>
-
-          <div className="space-y-2">
-            <Form.Item>
-              <Form.Label>Salary Range</Form.Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Form.Control>
-                  <Input type="number" placeholder="Min" {...form.register("salary_min")} />
-                </Form.Control>
-                <Form.Control>
-                  <Input type="number" placeholder="Max" {...form.register("salary_max")} />
-                </Form.Control>
-              </div>
-              <Form.Message />
-            </Form.Item>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Form.Item>
-              <Form.Label>Job Type</Form.Label>
-              <Form.Control>
-                <Select onValueChange={form.setValue("job_type")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
+          <FormField
+            control={form.control}
+            name="job_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Job Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select job type" />
+                    </SelectTrigger>
+                  </FormControl>
                   <SelectContent>
                     <SelectItem value="full-time">Full-time</SelectItem>
                     <SelectItem value="part-time">Part-time</SelectItem>
@@ -179,19 +213,23 @@ export function JobPostingForm({ jobId, onSuccess }: JobPostingFormProps) {
                     <SelectItem value="internship">Internship</SelectItem>
                   </SelectContent>
                 </Select>
-              </Form.Control>
-              <Form.Message />
-            </Form.Item>
-          </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <div className="space-y-2">
-            <Form.Item>
-              <Form.Label>Experience Level</Form.Label>
-              <Form.Control>
-                <Select onValueChange={form.setValue("experience_level")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
+          <FormField
+            control={form.control}
+            name="experience_level"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Experience Level</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select experience level" />
+                    </SelectTrigger>
+                  </FormControl>
                   <SelectContent>
                     <SelectItem value="entry">Entry</SelectItem>
                     <SelectItem value="mid">Mid</SelectItem>
@@ -199,67 +237,90 @@ export function JobPostingForm({ jobId, onSuccess }: JobPostingFormProps) {
                     <SelectItem value="executive">Executive</SelectItem>
                   </SelectContent>
                 </Select>
-              </Form.Control>
-              <Form.Message />
-            </Form.Item>
-          </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
-        <div className="space-y-2">
-          <Form.Item>
-            <Form.Label>Skills Required</Form.Label>
-            <Form.Control>
-              <Input
-                placeholder="e.g., React, Node.js, TypeScript"
-                {...form.register("skills_required")}
-              />
-            </Form.Control>
-            <Form.Message />
-          </Form.Item>
-        </div>
+        <FormField
+          control={form.control}
+          name="skills_required"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Skills Required</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="e.g., React, Node.js, TypeScript"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Form.Item>
-              <Form.Label>Application Deadline</Form.Label>
-              <Form.Control>
-                <Input
-                  type="date"
-                  {...form.register("application_deadline", {
-                    valueAsDate: true,
-                  })}
-                />
-              </Form.Control>
-              <Form.Message />
-            </Form.Item>
-          </div>
+          <FormField
+            control={form.control}
+            name="application_deadline"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Application Deadline</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    {...field}
+                    value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                    onChange={e => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <div className="space-y-2 flex items-center">
-            <Form.Item className="flex flex-row items-center space-x-2 space-y-0">
-              <Form.Control>
+          <FormField
+            control={form.control}
+            name="remote_allowed"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormLabel>Remote Allowed</FormLabel>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="is_active"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4">
+              <FormControl>
                 <Checkbox
-                  defaultChecked={false}
-                  onCheckedChange={form.setValue("remote_allowed")}
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
                 />
-              </Form.Control>
-              <Form.Label>Remote Allowed</Form.Label>
-            </Form.Item>
-          </div>
-        </div>
+              </FormControl>
+              <FormLabel>Is Active</FormLabel>
+            </FormItem>
+          )}
+        />
 
-        <div className="space-y-2 flex items-center">
-          <Form.Item className="flex flex-row items-center space-x-2 space-y-0">
-            <Form.Control>
-              <Checkbox
-                defaultChecked={true}
-                onCheckedChange={form.setValue("is_active")}
-              />
-            </Form.Control>
-            <Form.Label>Is Active</Form.Label>
-          </Form.Item>
+        <div className="flex gap-4">
+          <Button type="submit">Submit</Button>
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
         </div>
-
-        <Button type="submit">Submit</Button>
       </form>
     </Form>
   );

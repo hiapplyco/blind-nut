@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { jobFormSchema, JobFormValues } from "../schema";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface UseJobPostingFormProps {
   jobId?: string;
@@ -33,39 +34,52 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     async function fetchJob() {
       if (!jobId) return;
 
-      const { data: job, error } = await supabase
-        .from("jobs")
-        .select("*")
-        .eq("id", jobId)
-        .single();
+      try {
+        const { data: job, error } = await supabase
+          .from("jobs")
+          .select("*")
+          .eq("id", jobId)
+          .maybeSingle();
 
-      if (error) {
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to fetch job details",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (job) {
+          const salary_min = typeof job.salary_min === 'number' ? 
+            job.salary_min : 
+            typeof job.salary_min === 'string' ? 
+              parseFloat(job.salary_min) : null;
+              
+          const salary_max = typeof job.salary_max === 'number' ? 
+            job.salary_max : 
+            typeof job.salary_max === 'string' ? 
+              parseFloat(job.salary_max) : null;
+
+          const formData = {
+            ...job,
+            salary_min,
+            salary_max,
+            application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
+            skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : "",
+            job_type: job.job_type as JobFormValues['job_type'] ?? "full-time",
+            experience_level: job.experience_level as JobFormValues['experience_level'] ?? "entry"
+          };
+          
+          form.reset(formData);
+        }
+      } catch (error) {
         console.error("Error fetching job:", error);
-        return;
-      }
-
-      if (job) {
-        const salary_min = typeof job.salary_min === 'string' ? 
-          parseFloat(job.salary_min) : 
-          typeof job.salary_min === 'number' ? 
-            job.salary_min : null;
-            
-        const salary_max = typeof job.salary_max === 'string' ? 
-          parseFloat(job.salary_max) : 
-          typeof job.salary_max === 'number' ? 
-            job.salary_max : null;
-
-        const formData = {
-          ...job,
-          salary_min,
-          salary_max,
-          application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
-          skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : "",
-          job_type: job.job_type as JobFormValues['job_type'] ?? "full-time",
-          experience_level: job.experience_level as JobFormValues['experience_level'] ?? "entry"
-        };
-        
-        form.reset(formData);
+        toast({
+          title: "Error",
+          description: "Failed to fetch job details",
+          variant: "destructive",
+        });
       }
     }
 
@@ -74,6 +88,8 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
 
   async function onSubmit(data: JobFormValues) {
     try {
+      form.clearErrors();
+      
       const formattedData = {
         ...data,
         skills_required: data.skills_required ? data.skills_required.split(",").map(skill => skill.trim()) : [],
@@ -90,22 +106,38 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
           .eq("id", jobId);
 
         if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Job posting updated successfully",
+        });
       } else {
         const { error } = await supabase
           .from("jobs")
           .insert(formattedData);
 
         if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Job posting created successfully",
+        });
       }
 
       onSuccess?.();
     } catch (error) {
       console.error("Error saving job:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save job posting",
+        variant: "destructive",
+      });
     }
   }
 
   return {
     form,
-    onSubmit: form.handleSubmit(onSubmit)
+    onSubmit: form.handleSubmit(onSubmit),
+    isLoading: form.formState.isSubmitting
   };
 }

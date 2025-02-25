@@ -6,6 +6,7 @@ import { LocationFields } from "./form-fields/LocationFields";
 import { CompensationFields } from "./form-fields/CompensationFields";
 import { JobDetailsFields } from "./form-fields/JobDetailsFields";
 import { useJobPostingForm } from "./hooks/useJobPostingForm";
+import { Loader2 } from "lucide-react";
 
 interface JobPostingFormProps {
   jobId?: string;
@@ -14,7 +15,7 @@ interface JobPostingFormProps {
 }
 
 export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormProps) {
-  const { form, onSubmit } = useJobPostingForm({ jobId, onSuccess });
+  const { form, onSubmit, isLoading } = useJobPostingForm({ jobId, onSuccess });
 
   return (
     <Form {...form}>
@@ -25,9 +26,20 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
         <JobDetailsFields control={form.control} />
 
         <div className="flex gap-4">
-          <Button type="submit">Submit</Button>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+          >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {jobId ? "Update" : "Create"} Job Posting
+          </Button>
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
           )}

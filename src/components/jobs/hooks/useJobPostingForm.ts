@@ -51,14 +51,12 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         }
 
         if (job) {
-          // Ensure proper number conversion for salary fields
-          const salary_min = job.salary_min ? Number(job.salary_min) : null;
-          const salary_max = job.salary_max ? Number(job.salary_max) : null;
-
+          // Convert salary values from Supabase to numbers
           const formData = {
             ...job,
-            salary_min,
-            salary_max,
+            // Use nullish coalescing to handle potential null values
+            salary_min: job.salary_min != null ? Number(job.salary_min) : null,
+            salary_max: job.salary_max != null ? Number(job.salary_max) : null,
             application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
             skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : "",
             job_type: job.job_type as JobFormValues['job_type'] ?? "full-time",
@@ -84,13 +82,14 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     try {
       form.clearErrors();
       
-      // Ensure salary values are properly converted to numbers or null
+      // Convert form data to proper types before sending to Supabase
       const formattedData = {
         ...data,
         skills_required: data.skills_required ? data.skills_required.split(",").map(skill => skill.trim()) : [],
         application_deadline: data.application_deadline ? data.application_deadline.toISOString() : null,
-        salary_min: data.salary_min === null ? null : Number(data.salary_min),
-        salary_max: data.salary_max === null ? null : Number(data.salary_max),
+        // Use type assertion to ensure salary values are treated as numbers
+        salary_min: data.salary_min != null ? Number(data.salary_min) : null,
+        salary_max: data.salary_max != null ? Number(data.salary_max) : null,
         updated_at: new Date().toISOString()
       };
 

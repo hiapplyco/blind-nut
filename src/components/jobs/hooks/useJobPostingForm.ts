@@ -51,6 +51,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         }
 
         if (job) {
+          // Ensure proper type conversion for salary fields
           const processedFormData: JobFormValues = {
             title: job.title || "",
             client_id: job.client_id || "",

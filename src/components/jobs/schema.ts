@@ -14,14 +14,7 @@ export const jobFormSchema = z.object({
   description: z.string()
     .min(20, { message: 'Description must be at least 20 characters' })
     .max(10000, { message: 'Description cannot exceed 10000 characters' }),
-  location: z.string().superRefine((val, ctx) => {
-    if (!ctx.parent.remote_allowed && !val) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Location is required for non-remote positions',
-      });
-    }
-  }),
+  location: z.string(),
   salary_min: z.union([z.string(), z.number(), z.null()])
     .transform((val) => {
       if (val === '' || val === null) return null;
@@ -56,17 +49,26 @@ export const jobFormSchema = z.object({
   ),
   remote_allowed: z.boolean().default(false),
   is_active: z.boolean().default(true)
-}).refine(
-  (data) => {
-    if (data.salary_min !== null && data.salary_max !== null) {
-      return data.salary_min <= data.salary_max;
-    }
-    return true;
-  },
-  {
-    message: "Minimum salary cannot be greater than maximum salary",
-    path: ["salary_min"]
+}).superRefine((data, ctx) => {
+  // Validate location requirement based on remote_allowed
+  if (!data.remote_allowed && !data.location) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Location is required for non-remote positions',
+      path: ['location']
+    });
   }
-);
+
+  // Validate salary range
+  if (data.salary_min !== null && data.salary_max !== null) {
+    if (data.salary_min > data.salary_max) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Minimum salary cannot be greater than maximum salary",
+        path: ["salary_min"]
+      });
+    }
+  }
+});
 
 export type JobFormValues = z.infer<typeof jobFormSchema>;

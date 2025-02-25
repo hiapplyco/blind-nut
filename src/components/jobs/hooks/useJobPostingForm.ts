@@ -51,15 +51,9 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         }
 
         if (job) {
-          const salary_min = typeof job.salary_min === 'number' ? 
-            job.salary_min : 
-            typeof job.salary_min === 'string' ? 
-              parseFloat(job.salary_min) : null;
-              
-          const salary_max = typeof job.salary_max === 'number' ? 
-            job.salary_max : 
-            typeof job.salary_max === 'string' ? 
-              parseFloat(job.salary_max) : null;
+          // Ensure proper number conversion for salary fields
+          const salary_min = job.salary_min ? Number(job.salary_min) : null;
+          const salary_max = job.salary_max ? Number(job.salary_max) : null;
 
           const formData = {
             ...job,
@@ -90,12 +84,13 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     try {
       form.clearErrors();
       
+      // Ensure salary values are properly converted to numbers or null
       const formattedData = {
         ...data,
         skills_required: data.skills_required ? data.skills_required.split(",").map(skill => skill.trim()) : [],
         application_deadline: data.application_deadline ? data.application_deadline.toISOString() : null,
-        salary_min: data.salary_min,
-        salary_max: data.salary_max,
+        salary_min: data.salary_min === null ? null : Number(data.salary_min),
+        salary_max: data.salary_max === null ? null : Number(data.salary_max),
         updated_at: new Date().toISOString()
       };
 

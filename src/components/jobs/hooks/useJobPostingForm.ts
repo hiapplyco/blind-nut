@@ -51,24 +51,20 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         }
 
         if (job) {
-          // Ensure proper type conversion for salary fields
-          const processedFormData: JobFormValues = {
+          form.reset({
             title: job.title || "",
             client_id: job.client_id || "",
             description: job.content || "",
             location: job.location || "",
-            // Convert salary fields to numbers or null
-            salary_min: job.salary_min ? Number(job.salary_min) : null,
-            salary_max: job.salary_max ? Number(job.salary_max) : null,
+            salary_min: job.salary_min,
+            salary_max: job.salary_max,
             application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
             skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : job.skills_required || "",
             job_type: (job.job_type as JobType) || "full-time",
             experience_level: (job.experience_level as ExperienceLevel) || "entry",
             remote_allowed: job.remote_allowed || false,
             is_active: job.is_active || true
-          };
-
-          form.reset(processedFormData);
+          });
         }
       } catch (error) {
         console.error("Error fetching job:", error);
@@ -92,9 +88,8 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         content: formData.description,
         skills_required: formData.skills_required ? formData.skills_required.split(",").map(skill => skill.trim()) : [],
         application_deadline: formData.application_deadline ? formData.application_deadline.toISOString() : null,
-        // Ensure salary values are numbers when submitting
-        salary_min: formData.salary_min ? Number(formData.salary_min) : null,
-        salary_max: formData.salary_max ? Number(formData.salary_max) : null,
+        salary_min: formData.salary_min,
+        salary_max: formData.salary_max,
         updated_at: new Date().toISOString()
       };
 

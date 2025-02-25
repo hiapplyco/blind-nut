@@ -50,7 +50,6 @@ export const jobFormSchema = z.object({
   remote_allowed: z.boolean().default(false),
   is_active: z.boolean().default(true)
 }).superRefine((data, ctx) => {
-  // Validate location requirement based on remote_allowed
   if (!data.remote_allowed && !data.location) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -59,7 +58,6 @@ export const jobFormSchema = z.object({
     });
   }
 
-  // Validate salary range
   if (data.salary_min !== null && data.salary_max !== null) {
     if (data.salary_min > data.salary_max) {
       ctx.addIssue({

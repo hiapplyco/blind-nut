@@ -1,6 +1,14 @@
 
 import * as z from 'zod';
 
+// Define job types as a union type for stricter type checking
+export const jobTypes = ['full-time', 'part-time', 'contract', 'temporary', 'internship'] as const;
+export type JobType = typeof jobTypes[number];
+
+// Define experience levels as a union type
+export const experienceLevels = ['entry', 'mid', 'senior', 'executive'] as const;
+export type ExperienceLevel = typeof experienceLevels[number];
+
 export const jobFormSchema = z.object({
   title: z.string().min(1, { message: 'Job title is required' }),
   client_id: z.string().min(1, { message: 'Client is required' }),
@@ -8,8 +16,8 @@ export const jobFormSchema = z.object({
   location: z.string().min(1, { message: 'Location is required' }),
   salary_min: z.string(),
   salary_max: z.string(),
-  job_type: z.enum(['full-time', 'part-time', 'contract', 'temporary', 'internship']),
-  experience_level: z.enum(['entry', 'mid', 'senior', 'executive']),
+  job_type: z.enum(jobTypes),
+  experience_level: z.enum(experienceLevels),
   skills_required: z.string(),
   application_deadline: z.date().nullable(),
   remote_allowed: z.boolean().default(false),
@@ -25,3 +33,4 @@ export const jobFormSchema = z.object({
 });
 
 export type JobFormValues = z.infer<typeof jobFormSchema>;
+

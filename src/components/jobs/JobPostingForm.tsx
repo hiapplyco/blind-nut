@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { jobFormSchema, type JobFormValues } from "./schema";
+import { jobFormSchema, type JobFormValues, jobTypes, experienceLevels } from "./schema";
 
 interface JobPostingFormProps {
   jobId?: string;
@@ -57,7 +57,9 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
           salary_min: job.salary_min?.toString() ?? "",
           salary_max: job.salary_max?.toString() ?? "",
           application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
-          skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : ""
+          skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : "",
+          job_type: job.job_type as JobFormValues['job_type'] ?? "full-time",
+          experience_level: job.experience_level as JobFormValues['experience_level'] ?? "entry"
         };
         form.reset(formData);
       }
@@ -206,11 +208,11 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="full-time">Full-time</SelectItem>
-                    <SelectItem value="part-time">Part-time</SelectItem>
-                    <SelectItem value="contract">Contract</SelectItem>
-                    <SelectItem value="temporary">Temporary</SelectItem>
-                    <SelectItem value="internship">Internship</SelectItem>
+                    {jobTypes.map(type => (
+                      <SelectItem key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -231,10 +233,11 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="entry">Entry</SelectItem>
-                    <SelectItem value="mid">Mid</SelectItem>
-                    <SelectItem value="senior">Senior</SelectItem>
-                    <SelectItem value="executive">Executive</SelectItem>
+                    {experienceLevels.map(level => (
+                      <SelectItem key={level} value={level}>
+                        {level.charAt(0).toUpperCase() + level.slice(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -325,3 +328,4 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
     </Form>
   );
 }
+

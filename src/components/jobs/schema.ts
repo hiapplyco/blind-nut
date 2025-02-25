@@ -14,16 +14,13 @@ export const jobFormSchema = z.object({
   description: z.string()
     .min(20, { message: 'Description must be at least 20 characters' })
     .max(10000, { message: 'Description cannot exceed 10000 characters' }),
-  location: z.string().refine((val, ctx) => {
-    const remoteAllowed = (ctx as any).data?.remote_allowed;
-    if (!remoteAllowed && !val) {
+  location: z.string().superRefine((val, ctx) => {
+    if (!ctx.parent.remote_allowed && !val) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Location is required for non-remote positions',
       });
-      return false;
     }
-    return true;
   }),
   salary_min: z.union([z.string(), z.number(), z.null()])
     .transform((val) => val === '' ? null : val === null ? null : Number(val))
@@ -71,3 +68,4 @@ export const jobFormSchema = z.object({
 );
 
 export type JobFormValues = z.infer<typeof jobFormSchema>;
+

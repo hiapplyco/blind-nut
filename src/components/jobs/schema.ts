@@ -15,9 +15,8 @@ export const jobFormSchema = z.object({
     .min(20, { message: 'Description must be at least 20 characters' })
     .max(10000, { message: 'Description cannot exceed 10000 characters' }),
   location: z.string().superRefine((val, ctx) => {
-    // Get remote_allowed from the data object
-    const remote = (ctx.path as string[]).length > 0 ? 
-      (ctx.getData() as any).remote_allowed : 
+    const remote = ctx.path.length > 1 ? 
+      (ctx.parent as { remote_allowed: boolean }).remote_allowed : 
       false;
       
     if (!remote && val.length === 0) {

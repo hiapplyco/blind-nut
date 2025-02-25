@@ -1,7 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { jobFormSchema, JobFormValues } from "../schema";
+import { jobFormSchema, JobFormValues, JobType, ExperienceLevel } from "../schema";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -51,15 +51,19 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         }
 
         if (job) {
-          // Process form data
-          const processedFormData = {
-            ...job,
-            salary_min: job.salary_min ?? null,
-            salary_max: job.salary_max ?? null,
+          const processedFormData: JobFormValues = {
+            title: job.title || "",
+            client_id: job.client_id || "",
+            description: job.description || "",
+            location: job.location || "",
+            salary_min: job.salary_min !== null ? Number(job.salary_min) : null,
+            salary_max: job.salary_max !== null ? Number(job.salary_max) : null,
             application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
             skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : job.skills_required || "",
-            job_type: job.job_type || "full-time",
-            experience_level: job.experience_level || "entry"
+            job_type: (job.job_type as JobType) || "full-time",
+            experience_level: (job.experience_level as ExperienceLevel) || "entry",
+            remote_allowed: job.remote_allowed || false,
+            is_active: job.is_active || true
           };
 
           form.reset(processedFormData);
@@ -81,7 +85,6 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     try {
       form.clearErrors();
       
-      // Process the form data
       const processedData = {
         ...formData,
         skills_required: formData.skills_required ? formData.skills_required.split(",").map(skill => skill.trim()) : [],

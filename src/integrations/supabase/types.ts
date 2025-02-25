@@ -224,51 +224,69 @@ export type Database = {
       }
       jobs: {
         Row: {
+          application_deadline: string | null
           category: string | null
           client_id: string | null
           content: string | null
           created_at: string
+          experience_level: string | null
           id: number
           is_active: boolean | null
           job_type: string | null
           location: string | null
           posted_at: string | null
+          remote_allowed: boolean | null
+          salary_max: number | null
+          salary_min: number | null
           salary_range: string | null
           search_string: string | null
+          skills_required: string[] | null
           summary: string | null
           tags: string[] | null
           title: string | null
           user_id: string | null
         }
         Insert: {
+          application_deadline?: string | null
           category?: string | null
           client_id?: string | null
           content?: string | null
           created_at?: string
+          experience_level?: string | null
           id?: number
           is_active?: boolean | null
           job_type?: string | null
           location?: string | null
           posted_at?: string | null
+          remote_allowed?: boolean | null
+          salary_max?: number | null
+          salary_min?: number | null
           salary_range?: string | null
           search_string?: string | null
+          skills_required?: string[] | null
           summary?: string | null
           tags?: string[] | null
           title?: string | null
           user_id?: string | null
         }
         Update: {
+          application_deadline?: string | null
           category?: string | null
           client_id?: string | null
           content?: string | null
           created_at?: string
+          experience_level?: string | null
           id?: number
           is_active?: boolean | null
           job_type?: string | null
           location?: string | null
           posted_at?: string | null
+          remote_allowed?: boolean | null
+          salary_max?: number | null
+          salary_min?: number | null
           salary_range?: string | null
           search_string?: string | null
+          skills_required?: string[] | null
           summary?: string | null
           tags?: string[] | null
           title?: string | null

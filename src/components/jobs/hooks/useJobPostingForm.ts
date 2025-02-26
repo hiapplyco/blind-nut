@@ -88,11 +88,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
 
     if (analysisError) {
       console.error("Analysis error:", analysisError);
-      toast({
-        title: "Warning",
-        description: "Job saved but analysis failed. You can try analyzing again later.",
-      });
-      return;
+      throw analysisError;
     }
 
     console.log("Analysis completed:", analysisData);
@@ -103,17 +99,22 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
       .eq("id", newJobId);
 
     if (updateError) {
-      console.error("Error updating job with analysis:", updateError);
+      throw updateError;
     }
+
+    return analysisData;
   };
 
-  const handleSuccess = (newJobId: number, isUpdate: boolean) => {
-    console.log("Navigating to editor page:", `/job-editor/${newJobId}`);
+  const handleSuccess = (newJobId: number, isUpdate: boolean, hasAnalysis: boolean) => {
+    const successMessage = isUpdate ? "Job updated successfully" : "Job created successfully";
+    const warningMessage = hasAnalysis ? "" : " (Analysis will be available soon)";
+    
     toast({
       title: "Success",
-      description: isUpdate ? "Job updated successfully" : "Job created successfully",
+      description: successMessage + warningMessage,
     });
     
+    console.log("Navigating to editor page:", `/job-editor/${newJobId}`);
     navigate(`/job-editor/${newJobId}`);
     onSuccess?.();
   };
@@ -136,8 +137,20 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
       const newJobId = await createOrUpdateJob(jobData);
       console.log("Job created/updated with ID:", newJobId);
 
-      await analyzeJobPosting(newJobId);
-      handleSuccess(newJobId, !!jobId);
+      let hasAnalysis = false;
+      try {
+        await analyzeJobPosting(newJobId);
+        hasAnalysis = true;
+      } catch (analysisError) {
+        console.error("Analysis failed, but job was saved:", analysisError);
+        toast({
+          title: "Warning",
+          description: "Job saved but analysis failed. You can try analyzing again later.",
+          variant: "destructive",
+        });
+      }
+
+      handleSuccess(newJobId, !!jobId, hasAnalysis);
 
     } catch (error) {
       console.error("Error saving job:", error);

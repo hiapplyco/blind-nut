@@ -3,12 +3,13 @@ import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, Mic, MicOff, Camera, Settings } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { VideoDisplay } from "@/components/interview/VideoDisplay";
+import { MediaControls } from "@/components/interview/MediaControls";
+import { ChatSection } from "@/components/interview/ChatSection";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -20,7 +21,6 @@ export default function InterviewPrep() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [inputText, setInputText] = useState('');
@@ -201,75 +201,28 @@ export default function InterviewPrep() {
             </div>
           ) : (
             <>
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="absolute inset-0 w-full h-full object-cover"
+              <div className="relative">
+                <VideoDisplay 
+                  videoRef={videoRef}
+                  isVideoEnabled={isVideoEnabled}
                 />
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    onClick={toggleAudio}
-                    className={!isAudioEnabled ? "bg-red-500 hover:bg-red-600" : ""}
-                  >
-                    {isAudioEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    onClick={toggleVideo}
-                    className={!isVideoEnabled ? "bg-red-500 hover:bg-red-600" : ""}
-                  >
-                    <Camera className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </div>
+                <MediaControls
+                  isAudioEnabled={isAudioEnabled}
+                  isVideoEnabled={isVideoEnabled}
+                  onToggleAudio={toggleAudio}
+                  onToggleVideo={toggleVideo}
+                />
               </div>
               
               <Separator />
               
-              <div className="space-y-4">
-                <div className="flex flex-col space-y-4">
-                  {messages.map((message, index) => (
-                    <div 
-                      key={index}
-                      className={`p-4 rounded-lg ${
-                        message.role === 'assistant' 
-                          ? 'bg-primary/10 ml-4' 
-                          : 'bg-muted mr-4'
-                      }`}
-                    >
-                      <p className="text-sm">{message.content}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <form onSubmit={handleSubmit} className="flex gap-2">
-                  <Input
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    placeholder="Type your response..."
-                    disabled={isLoading}
-                    className="flex-1"
-                  />
-                  <Button type="submit" disabled={isLoading || !inputText.trim()}>
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      'Send'
-                    )}
-                  </Button>
-                </form>
-              </div>
+              <ChatSection
+                messages={messages}
+                inputText={inputText}
+                isLoading={isLoading}
+                onInputChange={setInputText}
+                onSubmit={handleSubmit}
+              />
             </>
           )}
         </div>

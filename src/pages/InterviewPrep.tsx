@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,12 +82,26 @@ export default function InterviewPrep() {
     setIsConnected(false);
   };
 
+  const handleConnect = async () => {
+    setIsLoading(true);
+    const success = await startMedia();
+    if (success) {
+      toast.success("Successfully connected to media devices");
+    }
+    setIsLoading(false);
+  };
+
+  const handleDisconnect = () => {
+    stopMedia();
+    toast.info("Interview session ended");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!inputText.trim()) return;
 
-    const userMessage = { role: 'user', content: inputText };
+    const userMessage: Message = { role: 'user', content: inputText };
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
     setIsLoading(true);

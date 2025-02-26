@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3/";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,35 +16,25 @@ serve(async (req) => {
   try {
     const { message, context } = await req.json();
     
-    // Get the Gemini API key from environment variables
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     if (!geminiApiKey) {
       throw new Error('GEMINI_API_KEY not found');
     }
 
-    console.log('Received message:', { messageLength: message?.length });
+    console.log('Received message:', message);
     console.log('Context:', context);
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(geminiApiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    // Prepare the chat messages
-    const messages = context || [];
-    
-    // Create the prompt
-    const prompt = `You are a professional interviewer. Based on the candidate's previous responses and the context of the interview, provide a relevant and engaging follow-up question or response. If this is the start of the interview, begin with an appropriate opening question.
-
-Current context:
-${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
-
-Candidate's latest input:
-${message}
-
-Please provide a natural and engaging response that keeps the interview flowing.`;
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     // Generate content
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent([
+      {
+        role: "user",
+        parts: [{ text: message }]
+      }
+    ]);
     const response = result.response.text();
     
     console.log('Generated response:', response);

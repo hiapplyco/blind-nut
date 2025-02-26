@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { Dashboard } from '../dashboard/Dashboard';
-import { formatJobData } from './utils/formatAnalysis';
+import { formatJobData, formatAnalysisContent } from './utils/formatAnalysis';
 import { DEFAULT_CARD_CONFIGS } from './constants/cardConfigs';
 import { JobEditorHeader } from './editor/JobEditorHeader';
 import { JobEditorContent } from './editor/JobEditorContent';
@@ -53,11 +53,16 @@ export function JobEditorPage() {
 
   const formattedData = formatJobData(job.analysis);
 
+  // Convert analysis to string if it isn't already
+  const analysisContent = typeof job.analysis === 'string' 
+    ? job.analysis 
+    : JSON.stringify(job.analysis);
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <JobEditorHeader 
-        onSourceCandidates={() => handleSourceCandidates(job.analysis)}
-        onCreateLinkedInPost={() => handleCreateLinkedInPost(job.analysis)}
+        onSourceCandidates={() => handleSourceCandidates(analysisContent)}
+        onCreateLinkedInPost={() => handleCreateLinkedInPost(analysisContent)}
         isSourceLoading={isSourceLoading}
         isPostLoading={isPostLoading}
       />
@@ -72,4 +77,3 @@ export function JobEditorPage() {
     </div>
   );
 }
-

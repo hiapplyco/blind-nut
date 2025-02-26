@@ -90,4 +90,3 @@ export function useJobEditor(jobId: string) {
     handleCreateLinkedInPost
   };
 }
-

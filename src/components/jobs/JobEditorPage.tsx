@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -10,11 +10,10 @@ import Heading from '@tiptap/extension-heading';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Linkedin, Search } from 'lucide-react';
+import { ArrowLeft, Linkedin, Search, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
 import { Dashboard } from '../dashboard/Dashboard';
 import { EditorToolbar } from './editor/EditorToolbar';
 import { formatAnalysisContent, formatJobData } from './utils/formatAnalysis';
@@ -24,6 +23,8 @@ import { processJobRequirements } from '@/utils/jobRequirements';
 export function JobEditorPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [isSourceLoading, setIsSourceLoading] = useState(false);
+  const [isPostLoading, setIsPostLoading] = useState(false);
 
   const { data: job, isLoading, error } = useQuery({
     queryKey: ['job', id],
@@ -77,6 +78,7 @@ export function JobEditorPage() {
       return;
     }
 
+    setIsSourceLoading(true);
     const content = editor.getHTML();
     console.log("Processing content for sourcing:", content);
     
@@ -91,6 +93,8 @@ export function JobEditorPage() {
     } catch (error) {
       console.error('Error processing job requirements:', error);
       toast.error("Failed to process job requirements");
+    } finally {
+      setIsSourceLoading(false);
     }
   };
 
@@ -100,6 +104,7 @@ export function JobEditorPage() {
       return;
     }
 
+    setIsPostLoading(true);
     const content = editor.getHTML();
     console.log("Generating LinkedIn post from content:", content);
     
@@ -120,6 +125,8 @@ export function JobEditorPage() {
     } catch (error) {
       console.error('Error generating LinkedIn post:', error);
       toast.error("Failed to generate LinkedIn post");
+    } finally {
+      setIsPostLoading(false);
     }
   };
 
@@ -176,17 +183,27 @@ export function JobEditorPage() {
             onClick={handleSourceCandidates}
             variant="outline"
             className="gap-2"
+            disabled={isSourceLoading}
           >
-            <Search className="h-4 w-4" />
-            Source Candidates
+            {isSourceLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
+            {isSourceLoading ? "Sourcing..." : "Source Candidates"}
           </Button>
           <Button
             onClick={handleCreateLinkedInPost}
             variant="outline"
             className="gap-2"
+            disabled={isPostLoading}
           >
-            <Linkedin className="h-4 w-4" />
-            Create LinkedIn Post
+            {isPostLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Linkedin className="h-4 w-4" />
+            )}
+            {isPostLoading ? "Creating..." : "Create LinkedIn Post"}
           </Button>
         </div>
       </div>

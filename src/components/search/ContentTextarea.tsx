@@ -38,11 +38,6 @@ export const ContentTextarea = ({
     handleUrlSubmit
   } = useUrlScraping(onTextUpdate);
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    onTextChange(newValue);
-  };
-
   if (isProcessing) {
     return (
       <div className="space-y-3">
@@ -72,7 +67,7 @@ export const ContentTextarea = ({
         id="searchText"
         placeholder="Enter job requirements or paste resume content"
         value={searchText}
-        onChange={handleTextChange}
+        onChange={(e) => onTextChange(e.target.value)}
         className={cn(
           "w-full min-h-[100px] p-4 border-4 border-black rounded bg-white resize-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black transition-all duration-300",
           isContentUpdating && "animate-pulse"
@@ -80,7 +75,7 @@ export const ContentTextarea = ({
       />
       <Alert className="bg-muted/50">
         <AlertDescription>
-          Note: The URL scraping feature may not work on all websites due to their structure or access restrictions.
+          Note: The URL scraping feature may not require authentication.
           Best results are achieved with public web pages that don't require authentication.
         </AlertDescription>
       </Alert>

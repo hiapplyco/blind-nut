@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { SearchType } from "../types";
 import { toast } from "sonner";
 import { processJobRequirements } from "@/utils/jobRequirements";
-import { useDebouncedCallback } from "use-debounce";
 
 export const useSearchForm = (
   userId: string,
@@ -19,16 +18,6 @@ export const useSearchForm = (
   const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
   const [searchString, setSearchString] = useState("");
-
-  const debouncedSetSearchText = useDebouncedCallback(
-    (value: string) => setSearchText(value),
-    300
-  );
-
-  const debouncedSetCompanyName = useDebouncedCallback(
-    (value: string) => setCompanyName(value),
-    300
-  );
 
   useEffect(() => {
     const state = location.state as { content?: string; autoRun?: boolean } | null;
@@ -181,9 +170,9 @@ export const useSearchForm = (
 
   return {
     searchText,
-    setSearchText: debouncedSetSearchText,
+    setSearchText,
     companyName,
-    setCompanyName: debouncedSetCompanyName,
+    setCompanyName,
     isProcessing,
     isScrapingProfiles,
     searchType,

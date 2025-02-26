@@ -10,7 +10,7 @@ import Heading from '@tiptap/extension-heading';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Linkedin, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -19,6 +19,7 @@ import { Dashboard } from '../dashboard/Dashboard';
 import { EditorToolbar } from './editor/EditorToolbar';
 import { formatAnalysisContent, formatJobData } from './utils/formatAnalysis';
 import { DEFAULT_CARD_CONFIGS } from './constants/cardConfigs';
+import { processJobRequirements } from '@/utils/jobRequirements';
 
 export function JobEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -70,6 +71,45 @@ export function JobEditorPage() {
     }
   }, [editor, job]);
 
+  const handleSourceCandidates = async () => {
+    if (!editor) return;
+    const content = editor.getHTML();
+    
+    try {
+      toast.info("Processing job requirements for sourcing...");
+      const result = await processJobRequirements(content, "candidates");
+      
+      if (result) {
+        toast.success("Job requirements processed successfully!");
+        navigate('/sourcing');
+      }
+    } catch (error) {
+      console.error('Error processing job requirements:', error);
+      toast.error("Failed to process job requirements");
+    }
+  };
+
+  const handleCreateLinkedInPost = async () => {
+    if (!editor) return;
+    const content = editor.getHTML();
+    
+    try {
+      toast.info("Generating LinkedIn post...");
+      
+      const { data, error } = await supabase.functions.invoke('generate-linkedin-post', {
+        body: { content }
+      });
+
+      if (error) throw error;
+      
+      toast.success("LinkedIn post generated successfully!");
+      navigate('/linkedin-post-generator', { state: { generatedPost: data } });
+    } catch (error) {
+      console.error('Error generating LinkedIn post:', error);
+      toast.error("Failed to generate LinkedIn post");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -103,19 +143,39 @@ export function JobEditorPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => navigate(-1)}
-          className="mr-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        <h1 className="text-3xl font-bold">
-          Job Analysis
-        </h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate(-1)}
+            className="mr-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-3xl font-bold">
+            Job Analysis
+          </h1>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleSourceCandidates}
+            variant="outline"
+            className="gap-2"
+          >
+            <Search className="h-4 w-4" />
+            Source Candidates
+          </Button>
+          <Button
+            onClick={handleCreateLinkedInPost}
+            variant="outline"
+            className="gap-2"
+          >
+            <Linkedin className="h-4 w-4" />
+            Create LinkedIn Post
+          </Button>
+        </div>
       </div>
 
       {formattedData && (

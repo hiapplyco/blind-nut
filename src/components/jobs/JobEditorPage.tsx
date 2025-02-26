@@ -13,16 +13,22 @@ export function JobEditorPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: job, isLoading } = useQuery({
+  const { data: job, isLoading, error } = useQuery({
     queryKey: ['job', id],
     queryFn: async () => {
+      console.log("Fetching job data for ID:", id);
       const { data, error } = await supabase
         .from('jobs')
         .select('*')
         .eq('id', Number(id))
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching job:", error);
+        throw error;
+      }
+      
+      console.log("Job data received:", data);
       return data;
     },
   });
@@ -41,6 +47,27 @@ export function JobEditorPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    toast({
+      title: "Error",
+      description: "Failed to load job analysis",
+      variant: "destructive",
+    });
+    return (
+      <div className="flex items-center justify-center min-h-screen text-red-500">
+        Error loading job analysis
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        No job found
       </div>
     );
   }

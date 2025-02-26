@@ -40,20 +40,25 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     setFormState(prev => ({ ...prev, isSubmitting: true }));
 
     try {
+      console.log("Analyzing job posting...");
       // Call the analyze-schema function with the job content
       const { data: analysisData, error: analysisError } = await supabase.functions
         .invoke('analyze-schema', {
           body: { schema: formState.content }
         });
 
-      if (analysisError) throw analysisError;
+      if (analysisError) {
+        console.error("Analysis error:", analysisError);
+        throw analysisError;
+      }
+
+      console.log("Analysis completed:", analysisData);
 
       // Create or update the job with both the content and analysis
       const jobData = {
         content: formState.content,
         analysis: analysisData,
         updated_at: new Date().toISOString(),
-        // Convert jobId to number when used as database ID
         ...(jobId && { id: Number(jobId) })
       };
 
@@ -66,7 +71,6 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
           .eq("id", Number(jobId));
 
         if (error) throw error;
-        
         newJobId = Number(jobId);
         
         toast({
@@ -80,8 +84,16 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
           .select('id')
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Database error:", error);
+          throw error;
+        }
         
+        if (!data) {
+          throw new Error("No data returned from insert");
+        }
+
+        console.log("Job created successfully:", data);
         newJobId = data.id;
         
         toast({
@@ -91,6 +103,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
       }
 
       // Navigate to the editor page with the job ID
+      console.log("Navigating to editor page:", `/job-editor/${newJobId}`);
       navigate(`/job-editor/${newJobId}`);
       onSuccess?.();
     } catch (error) {

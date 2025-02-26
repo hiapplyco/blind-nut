@@ -224,6 +224,7 @@ export type Database = {
       }
       jobs: {
         Row: {
+          analysis: Json | null
           application_deadline: string | null
           category: string | null
           client_id: string | null
@@ -247,6 +248,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          analysis?: Json | null
           application_deadline?: string | null
           category?: string | null
           client_id?: string | null
@@ -270,6 +272,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          analysis?: Json | null
           application_deadline?: string | null
           category?: string | null
           client_id?: string | null

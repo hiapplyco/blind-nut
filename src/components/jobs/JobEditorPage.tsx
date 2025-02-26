@@ -29,10 +29,10 @@ export function JobEditorPage() {
 
   const editor = useEditor({
     extensions: [StarterKit],
-    content: job?.analysis || '',
+    content: job?.analysis ? JSON.stringify(job.analysis, null, 2) : '',
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none font-mono',
       },
     },
   });
@@ -58,7 +58,7 @@ export function JobEditorPage() {
           Back
         </Button>
         <h1 className="text-3xl font-bold">
-          Edit Job Analysis
+          Job Analysis
         </h1>
       </div>
 

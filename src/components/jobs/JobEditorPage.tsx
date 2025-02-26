@@ -15,6 +15,38 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useEffect } from 'react';
+import { Dashboard } from '../dashboard/Dashboard';
+import { CardConfig } from '../dashboard/types';
+
+const DEFAULT_CARD_CONFIGS: CardConfig[] = [
+  {
+    id: 'salary-overview',
+    title: 'Salary Range Overview',
+    type: 'boxplot',
+    dataKeys: ['analysis.salaryAnalysis'],
+    size: '2x1',
+    priority: 100,
+    minDataPoints: 1
+  },
+  {
+    id: 'skills-required',
+    title: 'Required Skills',
+    type: 'bar',
+    dataKeys: ['analysis.skillsRequired'],
+    size: '1x2',
+    priority: 90,
+    minDataPoints: 1
+  },
+  {
+    id: 'market-health',
+    title: 'Job Market Health',
+    type: 'gauge',
+    dataKeys: ['analysis.marketHealth'],
+    size: '1x1',
+    priority: 85,
+    minDataPoints: 1
+  }
+];
 
 export function JobEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -59,7 +91,6 @@ export function JobEditorPage() {
     },
   });
 
-  // Update editor content when job data is loaded
   useEffect(() => {
     if (editor && job?.analysis) {
       const analysisContent = formatAnalysisContent(job.analysis);
@@ -139,7 +170,6 @@ export function JobEditorPage() {
       let content = '';
       const data = typeof analysis === 'string' ? JSON.parse(analysis) : analysis;
 
-      // Format extracted data
       content += '<h1>Job Details</h1>\n';
       const { extractedData } = data;
       content += `<h2>${extractedData.title || 'Job Title'}</h2>\n`;
@@ -147,12 +177,10 @@ export function JobEditorPage() {
       content += `<p><strong>Job Type:</strong> ${extractedData.jobType}</p>\n`;
       content += `<p><strong>Experience Level:</strong> ${extractedData.experienceLevel}</p>\n`;
       
-      // Salary Range
       if (extractedData.salaryRange) {
         content += `<p><strong>Salary Range:</strong> $${extractedData.salaryRange.min.toLocaleString()} - $${extractedData.salaryRange.max.toLocaleString()}</p>\n`;
       }
 
-      // Skills
       if (extractedData.skills && extractedData.skills.length > 0) {
         content += '<h3>Required Skills</h3>\n<ul>\n';
         extractedData.skills.forEach(skill => {
@@ -161,7 +189,6 @@ export function JobEditorPage() {
         content += '</ul>\n';
       }
 
-      // Analysis sections
       const { analysis: jobAnalysis } = data;
       
       content += '<h2>Market Analysis</h2>\n';
@@ -232,6 +259,10 @@ export function JobEditorPage() {
         <h1 className="text-3xl font-bold">
           Job Analysis
         </h1>
+      </div>
+
+      <div className="mb-8">
+        <Dashboard data={job.analysis} configs={DEFAULT_CARD_CONFIGS} />
       </div>
 
       <div className="prose max-w-none">

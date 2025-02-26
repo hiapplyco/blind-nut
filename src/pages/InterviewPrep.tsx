@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,8 @@ export default function InterviewPrep() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-
+  const [inputText, setInputText] = useState('');
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -48,27 +48,6 @@ export default function InterviewPrep() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         mediaStreamRef.current = stream;
-      }
-
-      // Initialize audio processing
-      if (isAudioEnabled) {
-        audioContextRef.current = new AudioContext();
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
-
-        mediaRecorder.ondataavailable = async (event) => {
-          if (event.data.size > 0) {
-            audioChunksRef.current.push(event.data);
-          }
-        };
-
-        mediaRecorder.onstop = async () => {
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          audioChunksRef.current = [];
-          await processAudioChunk(audioBlob);
-        };
-
-        mediaRecorder.start(1000); // Collect data every second
       }
       
       setIsConnected(true);
@@ -102,70 +81,42 @@ export default function InterviewPrep() {
     setIsConnected(false);
   };
 
-  const processAudioChunk = async (audioBlob: Blob) => {
-    try {
-      // Convert blob to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      reader.onloadend = async () => {
-        const base64Audio = reader.result as string;
-        const base64Data = base64Audio.split(',')[1];
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!inputText.trim()) return;
 
-        // Send to Gemini AI via our edge function
-        const { data, error } = await supabase.functions.invoke('handle-interview', {
-          body: {
-            message: base64Data,
-            context: messages
-          }
-        });
-
-        if (error) {
-          console.error('Error from edge function:', error);
-          return;
-        }
-
-        if (data?.response) {
-          setMessages(prev => [...prev, 
-            { role: 'assistant', content: data.response }
-          ]);
-        }
-      };
-    } catch (err) {
-      console.error('Error processing audio:', err);
-    }
-  };
-
-  const handleConnect = async () => {
+    const userMessage = { role: 'user', content: inputText };
+    setMessages(prev => [...prev, userMessage]);
+    setInputText('');
     setIsLoading(true);
-    setError(null);
 
     try {
-      const success = await startMedia();
-      if (success) {
-        toast({
-          title: "Connected",
-          description: "Successfully connected to interview session",
-        });
+      const { data, error } = await supabase.functions.invoke('handle-interview', {
+        body: {
+          message: inputText,
+          context: messages
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.response) {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: data.response 
+        }]);
       }
     } catch (err) {
-      console.error('Connection error:', err);
-      setError('Failed to start interview session');
+      console.error('Error sending message:', err);
       toast({
         title: "Error",
-        description: "Failed to start interview session",
+        description: "Failed to get interview response",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDisconnect = () => {
-    stopMedia();
-    toast({
-      title: "Disconnected",
-      description: "Interview session ended",
-    });
   };
 
   const toggleAudio = () => {
@@ -272,18 +223,37 @@ export default function InterviewPrep() {
               <Separator />
               
               <div className="space-y-4">
-                {messages.map((message, index) => (
-                  <div 
-                    key={index}
-                    className={`p-4 rounded-lg ${
-                      message.role === 'assistant' 
-                        ? 'bg-primary/10 ml-4' 
-                        : 'bg-muted mr-4'
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                  </div>
-                ))}
+                <div className="flex flex-col space-y-4">
+                  {messages.map((message, index) => (
+                    <div 
+                      key={index}
+                      className={`p-4 rounded-lg ${
+                        message.role === 'assistant' 
+                          ? 'bg-primary/10 ml-4' 
+                          : 'bg-muted mr-4'
+                      }`}
+                    >
+                      <p className="text-sm">{message.content}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <form onSubmit={handleSubmit} className="flex gap-2">
+                  <Input
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder="Type your response..."
+                    disabled={isLoading}
+                    className="flex-1"
+                  />
+                  <Button type="submit" disabled={isLoading || !inputText.trim()}>
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      'Send'
+                    )}
+                  </Button>
+                </form>
               </div>
             </>
           )}

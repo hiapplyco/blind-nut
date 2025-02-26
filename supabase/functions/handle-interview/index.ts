@@ -1,5 +1,4 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -16,54 +15,61 @@ serve(async (req) => {
 
   try {
     const { message, context } = await req.json();
-    const apiKey = Deno.env.get('GEMINI_API_KEY');
-
-    if (!apiKey) {
+    
+    // Get the Gemini API key from environment variables
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!geminiApiKey) {
       throw new Error('GEMINI_API_KEY not found');
     }
 
+    console.log('Received message:', { messageLength: message?.length });
+    console.log('Context:', context);
+
     // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const genAI = new GoogleGenerativeAI(geminiApiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // Create chat session
-    const chat = model.startChat({
-      history: context || [],
-      generationConfig: {
-        maxOutputTokens: 1000,
-        temperature: 0.7,
-        topP: 0.7,
-        topK: 40,
-      },
-    });
+    // Prepare the chat messages
+    const messages = context || [];
+    
+    // Create the prompt
+    const prompt = `You are a professional interviewer. Based on the candidate's previous responses and the context of the interview, provide a relevant and engaging follow-up question or response. If this is the start of the interview, begin with an appropriate opening question.
 
-    // Generate response
-    const result = await chat.sendMessage(message);
-    const response = await result.response;
-    const text = response.text();
+Current context:
+${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
 
-    console.log('Generated response:', text);
+Candidate's latest input:
+${message}
+
+Please provide a natural and engaging response that keeps the interview flowing.`;
+
+    // Generate content
+    const result = await model.generateContent(prompt);
+    const response = result.response.text();
+    
+    console.log('Generated response:', response);
 
     return new Response(
-      JSON.stringify({ response: text }),
+      JSON.stringify({ 
+        response,
+        success: true 
+      }), 
       { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in handle-interview function:', error);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        success: false
+      }),
       { 
         status: 500,
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

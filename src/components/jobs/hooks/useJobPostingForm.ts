@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 interface UseJobPostingFormProps {
   jobId?: string;
@@ -20,6 +21,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     isSubmitting: false
   });
   const navigate = useNavigate();
+  const { session } = useAuth();
 
   const handleContentChange = (value: string) => {
     setFormState(prev => ({ ...prev, content: value }));
@@ -27,6 +29,15 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!session?.user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a job posting",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!formState.content.trim()) {
       toast({
@@ -44,6 +55,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
       const jobData = {
         content: formState.content,
         created_at: new Date().toISOString(),
+        user_id: session.user.id,
         ...(jobId && { id: Number(jobId) })
       };
 

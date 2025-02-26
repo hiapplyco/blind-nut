@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Control } from "react-hook-form";
@@ -12,7 +13,7 @@ export function CompensationFields({ control }: CompensationFieldsProps) {
     <div className="grid gap-4 md:grid-cols-2">
       <FormField
         control={control}
-        name="salary_min"
+        name="salaryMin"
         render={({ field: { value, onChange, ...field } }) => (
           <FormItem>
             <FormLabel>Minimum Salary</FormLabel>
@@ -22,7 +23,7 @@ export function CompensationFields({ control }: CompensationFieldsProps) {
                 placeholder="Minimum salary"
                 {...field}
                 value={value ?? ""}
-                onChange={e => onChange(e.target.value ? Number(e.target.value) : null)}
+                onChange={e => onChange(e.target.valueAsNumber)}
               />
             </FormControl>
             <FormMessage />
@@ -32,7 +33,7 @@ export function CompensationFields({ control }: CompensationFieldsProps) {
 
       <FormField
         control={control}
-        name="salary_max"
+        name="salaryMax"
         render={({ field: { value, onChange, ...field } }) => (
           <FormItem>
             <FormLabel>Maximum Salary</FormLabel>
@@ -42,7 +43,7 @@ export function CompensationFields({ control }: CompensationFieldsProps) {
                 placeholder="Maximum salary"
                 {...field}
                 value={value ?? ""}
-                onChange={e => onChange(e.target.value ? Number(e.target.value) : null)}
+                onChange={e => onChange(e.target.valueAsNumber)}
               />
             </FormControl>
             <FormMessage />

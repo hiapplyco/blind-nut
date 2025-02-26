@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Control } from "react-hook-form";
@@ -12,14 +13,14 @@ interface LocationFieldsProps {
 export function LocationFields({ control }: LocationFieldsProps) {
   const remoteAllowed = useWatch({
     control,
-    name: "remote_allowed",
+    name: "remoteAllowed",
   });
 
   return (
     <div className="space-y-4">
       <FormField
         control={control}
-        name="remote_allowed"
+        name="remoteAllowed"
         render={({ field }) => (
           <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4">
             <FormControl>

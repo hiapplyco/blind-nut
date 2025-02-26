@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +29,7 @@ export function BasicInfoFields({ control }: BasicInfoFieldsProps) {
 
         <FormField
           control={control}
-          name="client_id"
+          name="client"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Client</FormLabel>

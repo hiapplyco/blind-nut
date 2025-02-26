@@ -1,4 +1,5 @@
 
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -14,10 +15,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { useEffect } from 'react';
 import { Dashboard } from '../dashboard/Dashboard';
 import { EditorToolbar } from './editor/EditorToolbar';
-import { formatAnalysisContent } from './utils/formatAnalysis';
+import { formatAnalysisContent, formatJobData } from './utils/formatAnalysis';
 import { DEFAULT_CARD_CONFIGS } from './constants/cardConfigs';
 
 export function JobEditorPage() {
@@ -99,6 +99,8 @@ export function JobEditorPage() {
     );
   }
 
+  const formattedData = formatJobData(job.analysis);
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex items-center mb-6">
@@ -116,9 +118,11 @@ export function JobEditorPage() {
         </h1>
       </div>
 
-      <div className="mb-8">
-        <Dashboard data={job.analysis} configs={DEFAULT_CARD_CONFIGS} />
-      </div>
+      {formattedData && (
+        <div className="mb-8">
+          <Dashboard data={formattedData} configs={DEFAULT_CARD_CONFIGS} />
+        </div>
+      )}
 
       <div className="prose max-w-none">
         <div className="border rounded-lg bg-white shadow-sm">

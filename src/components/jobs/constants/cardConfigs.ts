@@ -5,8 +5,8 @@ export const DEFAULT_CARD_CONFIGS: CardConfig[] = [
   {
     id: 'salary-overview',
     title: 'Salary Range Overview',
-    type: 'boxplot',
-    dataKeys: ['analysis.salaryAnalysis'],
+    type: 'bar',
+    dataKeys: ['analysis.extractedData.salaryRange'],
     size: '2x1',
     priority: 100,
     minDataPoints: 1
@@ -15,7 +15,7 @@ export const DEFAULT_CARD_CONFIGS: CardConfig[] = [
     id: 'skills-required',
     title: 'Required Skills',
     type: 'bar',
-    dataKeys: ['analysis.skillsRequired'],
+    dataKeys: ['analysis.extractedData.skills'],
     size: '1x2',
     priority: 90,
     minDataPoints: 1
@@ -23,7 +23,7 @@ export const DEFAULT_CARD_CONFIGS: CardConfig[] = [
   {
     id: 'market-health',
     title: 'Job Market Health',
-    type: 'gauge',
+    type: 'pie',
     dataKeys: ['analysis.marketHealth'],
     size: '1x1',
     priority: 85,

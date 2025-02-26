@@ -1,4 +1,45 @@
 
+export function formatJobData(analysis: any) {
+  try {
+    if (!analysis) return null;
+    
+    const data = typeof analysis === 'string' ? JSON.parse(analysis) : analysis;
+    
+    // Format salary data for bar chart
+    const salaryData = data.extractedData?.salaryRange ? [
+      { name: 'Minimum', value: data.extractedData.salaryRange.min },
+      { name: 'Maximum', value: data.extractedData.salaryRange.max }
+    ] : [];
+
+    // Format skills data for bar chart
+    const skillsData = data.extractedData?.skills ? 
+      data.extractedData.skills.map((skill: string) => ({
+        name: skill,
+        value: 1
+      })) : [];
+
+    // Format market health data for pie chart
+    const marketHealthData = [
+      { name: 'Positive', value: 60 },
+      { name: 'Neutral', value: 30 },
+      { name: 'Negative', value: 10 }
+    ];
+
+    return {
+      analysis: {
+        extractedData: {
+          salaryRange: salaryData,
+          skills: skillsData
+        },
+        marketHealth: marketHealthData
+      }
+    };
+  } catch (error) {
+    console.error('Error formatting job data:', error);
+    return null;
+  }
+}
+
 export function formatAnalysisContent(analysis: any): string {
   try {
     let content = '';

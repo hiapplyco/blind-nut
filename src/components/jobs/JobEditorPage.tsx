@@ -1,137 +1,26 @@
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Bold from '@tiptap/extension-bold';
-import Italic from '@tiptap/extension-italic';
-import Underline from '@tiptap/extension-underline';
-import Heading from '@tiptap/extension-heading';
-import BulletList from '@tiptap/extension-bullet-list';
-import OrderedList from '@tiptap/extension-ordered-list';
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Linkedin, Search, Loader2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from "@/integrations/supabase/client";
+import React from 'react';
+import { useParams } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { Dashboard } from '../dashboard/Dashboard';
-import { EditorToolbar } from './editor/EditorToolbar';
-import { formatAnalysisContent, formatJobData } from './utils/formatAnalysis';
+import { formatJobData } from './utils/formatAnalysis';
 import { DEFAULT_CARD_CONFIGS } from './constants/cardConfigs';
-import { processJobRequirements } from '@/utils/jobRequirements';
+import { JobEditorHeader } from './editor/JobEditorHeader';
+import { JobEditorContent } from './editor/JobEditorContent';
+import { useJobEditor } from './hooks/useJobEditor';
 
 export function JobEditorPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [isSourceLoading, setIsSourceLoading] = useState(false);
-  const [isPostLoading, setIsPostLoading] = useState(false);
-
-  const { data: job, isLoading, error } = useQuery({
-    queryKey: ['job', id],
-    queryFn: async () => {
-      console.log("Fetching job data for ID:", id);
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('id', Number(id))
-        .single();
-
-      if (error) {
-        console.error("Error fetching job:", error);
-        throw error;
-      }
-      
-      console.log("Job data received:", data);
-      return data;
-    },
-  });
-
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Bold,
-      Italic,
-      Underline,
-      Heading,
-      BulletList,
-      OrderedList,
-    ],
-    content: '',
-    editable: true,
-    editorProps: {
-      attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[500px] p-4',
-      },
-    },
-  });
-
-  useEffect(() => {
-    if (editor && job?.analysis) {
-      const analysisContent = formatAnalysisContent(job.analysis);
-      editor.commands.setContent(analysisContent);
-    }
-  }, [editor, job]);
-
-  const handleSourceCandidates = async () => {
-    if (!editor) {
-      toast.error("Editor not initialized");
-      return;
-    }
-
-    setIsSourceLoading(true);
-    const content = editor.getHTML();
-    console.log("Processing content for sourcing:", content);
-    
-    try {
-      toast.info("Processing job requirements for sourcing...");
-      const result = await processJobRequirements(content, "candidates");
-      
-      if (result) {
-        toast.success("Job requirements processed successfully!");
-        navigate('/sourcing', { 
-          replace: true,
-          state: { processedRequirements: result }
-        });
-      }
-    } catch (error) {
-      console.error('Error processing job requirements:', error);
-      toast.error("Failed to process job requirements");
-    } finally {
-      setIsSourceLoading(false);
-    }
-  };
-
-  const handleCreateLinkedInPost = async () => {
-    if (!editor) {
-      toast.error("Editor not initialized");
-      return;
-    }
-
-    setIsPostLoading(true);
-    const content = editor.getHTML();
-    console.log("Generating LinkedIn post from content:", content);
-    
-    try {
-      toast.info("Generating LinkedIn post...");
-      
-      const { data, error } = await supabase.functions.invoke('generate-linkedin-post', {
-        body: { content }
-      });
-
-      if (error) throw error;
-      
-      toast.success("LinkedIn post generated successfully!");
-      navigate('/linkedin-post-generator', { 
-        replace: true,
-        state: { generatedPost: data.post }
-      });
-    } catch (error) {
-      console.error('Error generating LinkedIn post:', error);
-      toast.error("Failed to generate LinkedIn post");
-    } finally {
-      setIsPostLoading(false);
-    }
-  };
+  const { 
+    job, 
+    isLoading, 
+    error, 
+    isSourceLoading,
+    isPostLoading,
+    handleSourceCandidates,
+    handleCreateLinkedInPost
+  } = useJobEditor(id!);
 
   if (isLoading) {
     return (
@@ -166,50 +55,12 @@ export function JobEditorPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate(-1)}
-            className="mr-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold">
-            Job Analysis
-          </h1>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={handleSourceCandidates}
-            variant="outline"
-            className="gap-2"
-            disabled={isSourceLoading}
-          >
-            {isSourceLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Search className="h-4 w-4" />
-            )}
-            {isSourceLoading ? "Sourcing..." : "Source Candidates"}
-          </Button>
-          <Button
-            onClick={handleCreateLinkedInPost}
-            variant="outline"
-            className="gap-2"
-            disabled={isPostLoading}
-          >
-            {isPostLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Linkedin className="h-4 w-4" />
-            )}
-            {isPostLoading ? "Creating..." : "Create LinkedIn Post"}
-          </Button>
-        </div>
-      </div>
+      <JobEditorHeader 
+        onSourceCandidates={() => handleSourceCandidates(job.analysis)}
+        onCreateLinkedInPost={() => handleCreateLinkedInPost(job.analysis)}
+        isSourceLoading={isSourceLoading}
+        isPostLoading={isPostLoading}
+      />
 
       {formattedData && (
         <div className="mb-8">
@@ -217,14 +68,7 @@ export function JobEditorPage() {
         </div>
       )}
 
-      <div className="prose max-w-none">
-        <div className="border rounded-lg bg-white shadow-sm">
-          <EditorToolbar editor={editor} />
-          <div className="p-4">
-            <EditorContent editor={editor} />
-          </div>
-        </div>
-      </div>
+      <JobEditorContent initialContent={job} />
     </div>
   );
 }

@@ -88,7 +88,10 @@ export function JobEditorPage() {
       
       if (result) {
         toast.success("Job requirements processed successfully!");
-        navigate('/sourcing', { replace: true });
+        navigate('/sourcing', { 
+          replace: true,
+          state: { processedRequirements: result }
+        });
       }
     } catch (error) {
       console.error('Error processing job requirements:', error);
@@ -225,3 +228,4 @@ export function JobEditorPage() {
     </div>
   );
 }
+

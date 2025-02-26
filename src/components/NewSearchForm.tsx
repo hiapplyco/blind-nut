@@ -1,4 +1,4 @@
-
+import { memo } from "react";
 import { useState, useEffect } from "react";
 import { SearchForm } from "./search/SearchForm";
 import { AgentProcessor } from "./search/AgentProcessor";
@@ -8,10 +8,11 @@ import { GenerateAnalysisButton } from "./search/analysis/GenerateAnalysisButton
 import { AnalysisReport } from "./search/analysis/AnalysisReport";
 
 interface NewSearchFormProps {
-  userId: string;
+  userId: string | null;
+  initialRequirements?: any;
 }
 
-const NewSearchForm = ({ userId }: NewSearchFormProps) => {
+const NewSearchForm = ({ userId, initialRequirements }: NewSearchFormProps) => {
   const navigate = useNavigate();
   const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
@@ -83,4 +84,4 @@ const NewSearchForm = ({ userId }: NewSearchFormProps) => {
   );
 };
 
-export default NewSearchForm;
+export default memo(NewSearchForm);

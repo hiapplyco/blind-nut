@@ -10,25 +10,27 @@ const corsHeaders = {
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || "";
 
 interface JobAnalysisRequest {
-  schema: string; // Raw job posting text
+  schema: string;
+}
+
+interface ExtractedData {
+  title: string;
+  client: string;
+  location: string;
+  salaryRange: {
+    min: number;
+    max: number;
+  };
+  jobType: string;
+  experienceLevel: string;
+  skills: string[];
+  applicationDeadline: string;
+  remoteAllowed: boolean;
+  description: string;
 }
 
 interface JobAnalysisResponse {
-  extractedData: {
-    title: string;
-    client: string;
-    location: string;
-    salaryRange: {
-      min: number;
-      max: number;
-    };
-    jobType: string;
-    experienceLevel: string;
-    skills: string[];
-    applicationDeadline: string;
-    remoteAllowed: boolean;
-    description: string;
-  };
+  extractedData: ExtractedData;
   analysis: {
     marketInsights: string;
     compensationAnalysis: string;
@@ -38,7 +40,6 @@ interface JobAnalysisResponse {
 }
 
 async function handleRequest(req: Request): Promise<Response> {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -46,66 +47,73 @@ async function handleRequest(req: Request): Promise<Response> {
   try {
     const { schema } = await req.json() as JobAnalysisRequest;
     
-    // Initialize Google Gemini AI with the correct model
+    if (!schema?.trim()) {
+      throw new Error("Job posting content is required");
+    }
+
+    console.log("Analyzing job posting:", schema);
+    
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
-    // Create prompt for job analysis
+    // Construct a more detailed prompt to help Gemini generate valid JSON
     const prompt = `
-Analyze this job posting and extract structured data along with insights. Return the results as a single JSON object with the following structure:
+You are a job posting analyzer. Your task is to extract information from the given job posting and return a valid JSON object.
 
+Given this job posting:
+${schema}
+
+Analyze it and respond with a JSON object only, no other text. The JSON must exactly match this structure:
 {
   "extractedData": {
-    "title": "job title",
-    "client": "company name",
-    "location": "job location",
+    "title": "infer title if not explicitly stated",
+    "client": "unknown if not stated",
+    "location": "remote if not stated",
     "salaryRange": {
-      "min": minimum salary (number),
-      "max": maximum salary (number)
+      "min": 0,
+      "max": 0
     },
-    "jobType": "employment type",
-    "experienceLevel": "required experience level",
-    "skills": ["list", "of", "required", "skills"],
-    "applicationDeadline": "YYYY-MM-DD deadline date",
-    "remoteAllowed": boolean indicating if remote work is allowed,
-    "description": "job description"
+    "jobType": "full-time if not stated",
+    "experienceLevel": "not specified if not stated",
+    "skills": ["include any mentioned skills"],
+    "applicationDeadline": "2024-12-31 if not stated",
+    "remoteAllowed": false,
+    "description": "full job description or input text if no clear description"
   },
   "analysis": {
-    "marketInsights": "paragraph analyzing how this position compares to market trends",
-    "compensationAnalysis": "paragraph evaluating if the compensation is competitive",
-    "skillsEvaluation": "paragraph discussing the required skills and their relevance",
+    "marketInsights": "1-2 sentences about market context",
+    "compensationAnalysis": "1-2 sentences about compensation if mentioned",
+    "skillsEvaluation": "1-2 sentences about required skills",
     "recommendations": [
-      "1-3 recommendations for improving the job posting"
+      "one recommendation for improvement",
+      "another recommendation if needed"
     ]
   }
-}
+}`;
 
-Important:
-- Extract all available information from the job posting
-- Provide detailed analysis in each section
-- Format dates as YYYY-MM-DD
-- Ensure all fields are properly typed (numbers for salary, array for skills, etc.)
-- If any field is missing, make a reasonable inference but note this in the analysis
-
-Here's the job posting to analyze:
-${schema}
-`;
-
-    // Generate analysis using Gemini
     const result = await model.generateContent(prompt);
-    const analysisContent = result.response.text();
-    
-    // Parse and validate the JSON response
-    let analysisData;
-    try {
-      analysisData = JSON.parse(analysisContent);
-    } catch (parseError) {
-      throw new Error("Failed to parse Gemini output as valid JSON");
+    let analysisContent = result.response.text();
+    console.log("Raw Gemini response:", analysisContent);
+
+    // Clean up the response to ensure valid JSON
+    analysisContent = analysisContent.trim();
+    if (analysisContent.startsWith("```json")) {
+      analysisContent = analysisContent.replace(/```json\n?/, "").replace(/```$/, "");
     }
-    
-    return new Response(JSON.stringify(analysisData), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    analysisContent = analysisContent.trim();
+
+    try {
+      const analysisData = JSON.parse(analysisContent) as JobAnalysisResponse;
+      console.log("Successfully parsed analysis data");
+      
+      return new Response(JSON.stringify(analysisData), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (parseError) {
+      console.error("Failed to parse Gemini output:", parseError);
+      console.log("Invalid JSON content:", analysisContent);
+      throw new Error("Failed to parse Gemini response as valid JSON");
+    }
   } catch (error) {
     console.error("Error in analyze-schema function:", error);
     return new Response(JSON.stringify({ 
@@ -119,3 +127,4 @@ ${schema}
 }
 
 serve(handleRequest);
+

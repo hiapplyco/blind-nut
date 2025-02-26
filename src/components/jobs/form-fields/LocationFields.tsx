@@ -1,9 +1,8 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Control } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
-import { JobFormValues } from "../schema";
+import { JobFormValues } from '../types';
 import { useWatch } from "react-hook-form";
 
 interface LocationFieldsProps {

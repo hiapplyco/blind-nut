@@ -1,0 +1,72 @@
+
+import { useParams, useNavigate } from 'react-router-dom';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+
+export function JobEditorPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  const { data: job, isLoading } = useQuery({
+    queryKey: ['job', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('id', Number(id))
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: job?.analysis || '',
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
+      },
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="flex items-center mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate(-1)}
+          className="mr-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        <h1 className="text-3xl font-bold">
+          Edit Job Analysis
+        </h1>
+      </div>
+
+      <div className="prose max-w-none">
+        <div className="border rounded-lg p-4 bg-white">
+          <EditorContent editor={editor} className="min-h-[500px]" />
+        </div>
+      </div>
+    </div>
+  );
+}

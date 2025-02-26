@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface UseJobPostingFormProps {
   jobId?: string;
@@ -18,6 +19,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     content: "",
     isSubmitting: false
   });
+  const navigate = useNavigate();
 
   const handleContentChange = (value: string) => {
     setFormState(prev => ({ ...prev, content: value }));
@@ -55,6 +57,8 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         ...(jobId && { id: Number(jobId) })
       };
 
+      let newJobId: number;
+      
       if (jobId) {
         const { error } = await supabase
           .from("jobs")
@@ -63,16 +67,22 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
 
         if (error) throw error;
         
+        newJobId = Number(jobId);
+        
         toast({
           title: "Success",
           description: "Job posting updated successfully",
         });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("jobs")
-          .insert(jobData);
+          .insert(jobData)
+          .select('id')
+          .single();
 
         if (error) throw error;
+        
+        newJobId = data.id;
         
         toast({
           title: "Success", 
@@ -80,6 +90,8 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         });
       }
 
+      // Navigate to the editor page with the job ID
+      navigate(`/job-editor/${newJobId}`);
       onSuccess?.();
     } catch (error) {
       console.error("Error saving job:", error);

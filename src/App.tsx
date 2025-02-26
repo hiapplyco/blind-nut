@@ -9,6 +9,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import { JobPostingPage } from "@/components/jobs/JobPostingPage";
+import { JobEditorPage } from "@/components/jobs/JobEditorPage";
 import LinkedInPostGenerator from "@/pages/LinkedInPostGenerator";
 import Sourcing from "@/pages/Sourcing";
 import ScreeningRoom from "@/pages/ScreeningRoom";
@@ -31,6 +32,7 @@ function App() {
             <Route element={<MainLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/job-post" element={<JobPostingPage />} />
+              <Route path="/job-editor/:id" element={<JobEditorPage />} />
               <Route path="/linkedin-post" element={<LinkedInPostGenerator />} />
               <Route path="/sourcing" element={<Sourcing />} />
               <Route path="/screening-room" element={<ScreeningRoom />} />

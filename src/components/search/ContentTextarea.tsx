@@ -2,17 +2,13 @@
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { MoreVertical, Upload, Mic, Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { CaptureWindow } from "./CaptureWindow";
-import { useState } from "react";
-import { FirecrawlService } from "@/utils/FirecrawlService";
-import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { InputActions } from "./InputActions";
+import { UrlDialog } from "./UrlDialog";
+import { useUrlScraping } from "./hooks/useUrlScraping";
 
 interface ContentTextareaProps {
   searchText: string;
@@ -31,56 +27,20 @@ export const ContentTextarea = ({
 }: ContentTextareaProps) => {
   const isMobile = useIsMobile();
   const [showCaptureWindow, setShowCaptureWindow] = useState(false);
-  const [isScrapingUrl, setIsScrapingUrl] = useState(false);
-  const [showUrlDialog, setShowUrlDialog] = useState(false);
-  const [urlInput, setUrlInput] = useState("");
-  const [isContentUpdating, setIsContentUpdating] = useState(false);
+  
+  const {
+    isScrapingUrl,
+    showUrlDialog,
+    urlInput,
+    isContentUpdating,
+    setShowUrlDialog,
+    setUrlInput,
+    handleUrlSubmit
+  } = useUrlScraping(onTextUpdate);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    onTextChange(newValue); // Call the parent's onTextChange directly
-  };
-
-  const handleUrlSubmit = async () => {
-    if (!urlInput.trim()) {
-      toast.error("Please enter a URL");
-      return;
-    }
-
-    try {
-      new URL(urlInput);
-    } catch {
-      toast.error("Invalid URL format");
-      return;
-    }
-
-    setIsScrapingUrl(true);
-    setShowUrlDialog(false);
-    toast.info("Analyzing website content...");
-
-    try {
-      const result = await FirecrawlService.crawlWebsite(urlInput);
-      
-      if (!result.success) {
-        throw new Error(result.error || "Failed to scrape website");
-      }
-      
-      if (result.data?.text) {
-        setIsContentUpdating(true);
-        await new Promise(resolve => setTimeout(resolve, 300));
-        onTextUpdate(result.data.text);
-        toast.success("Website content analyzed successfully!");
-      } else {
-        throw new Error("No content found on the webpage");
-      }
-    } catch (error) {
-      console.error("URL scraping error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to analyze website");
-    } finally {
-      setIsScrapingUrl(false);
-      setUrlInput("");
-      setIsContentUpdating(false);
-    }
+    onTextChange(newValue);
   };
 
   if (isProcessing) {
@@ -95,84 +55,18 @@ export const ContentTextarea = ({
     );
   }
 
-  const renderInputActions = () => {
-    if (isMobile) {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger className="p-2 hover:bg-gray-100 rounded-md">
-            <MoreVertical className="h-5 w-5" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-white border-2 border-black">
-            <DropdownMenuItem 
-              className="cursor-pointer"
-              onClick={() => document.getElementById('file-upload')?.click()}
-            >
-              Upload File
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => setShowCaptureWindow(true)}
-            >
-              Record Audio
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => setShowUrlDialog(true)}
-              disabled={isScrapingUrl}
-            >
-              Paste URL
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    }
-
-    const buttonBaseClasses = "inline-flex items-center px-4 py-2 bg-white border-2 border-black rounded font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all min-w-[140px] justify-center h-[40px]";
-
-    return (
-      <div className="flex gap-2">
-        <div className="relative">
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={onFileUpload}
-            className="hidden"
-            id="file-upload"
-            disabled={isProcessing}
-          />
-          <label
-            htmlFor="file-upload"
-            className={`${buttonBaseClasses} ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            {isProcessing ? 'Processing...' : 'Attach PDF'}
-          </label>
-        </div>
-        <Button
-          onClick={() => setShowCaptureWindow(true)}
-          className={buttonBaseClasses}
-          disabled={isProcessing}
-        >
-          <Mic className="h-4 w-4 mr-2" />
-          Record Audio
-        </Button>
-        <Button
-          onClick={() => setShowUrlDialog(true)}
-          className={buttonBaseClasses}
-          disabled={isProcessing || isScrapingUrl}
-        >
-          <Globe className="h-4 w-4 mr-2" />
-          {isScrapingUrl ? 'Scraping...' : 'Add URL'}
-        </Button>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
         <Label htmlFor="searchText" className="text-xl font-bold">Content</Label>
-        {renderInputActions()}
+        <InputActions 
+          isMobile={isMobile}
+          isProcessing={isProcessing}
+          isScrapingUrl={isScrapingUrl}
+          onFileUploadClick={() => document.getElementById('file-upload')?.click()}
+          onRecordClick={() => setShowCaptureWindow(true)}
+          onUrlClick={() => setShowUrlDialog(true)}
+        />
       </div>
       <textarea
         id="searchText"
@@ -204,49 +98,14 @@ export const ContentTextarea = ({
         }} />
       )}
 
-      <Dialog open={showUrlDialog} onOpenChange={setShowUrlDialog}>
-        <DialogContent className="sm:max-w-[425px] animate-in fade-in-0 zoom-in-95">
-          <DialogHeader>
-            <DialogTitle>Add Website URL</DialogTitle>
-            <DialogDescription>
-              Enter the URL of the website you want to analyze. The content will be processed and added to your search.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="url">Website URL</Label>
-              <Input
-                id="url"
-                type="url"
-                placeholder="https://example.com"
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                className="w-full"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleUrlSubmit();
-                  }
-                }}
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowUrlDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleUrlSubmit}
-                disabled={!urlInput.trim() || isScrapingUrl}
-              >
-                {isScrapingUrl ? 'Processing...' : 'Add Content'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <UrlDialog 
+        showDialog={showUrlDialog}
+        urlInput={urlInput}
+        isScrapingUrl={isScrapingUrl}
+        onClose={() => setShowUrlDialog(false)}
+        onUrlChange={setUrlInput}
+        onSubmit={handleUrlSubmit}
+      />
     </div>
   );
 };

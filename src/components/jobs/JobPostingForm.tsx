@@ -1,7 +1,5 @@
 
-import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useJobPostingForm } from "./hooks/useJobPostingForm";
 import { Loader2 } from "lucide-react";
@@ -26,49 +24,48 @@ Description:
 We are looking for a talented Software Engineer to join our team...`;
 
 export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormProps) {
-  const { form, onSubmit, isLoading } = useJobPostingForm({ jobId, onSuccess });
+  const { content, setContent, isSubmitting, onSubmit } = useJobPostingForm({ 
+    jobId, 
+    onSuccess 
+  });
 
   return (
-    <Form {...form}>
-      <form onSubmit={onSubmit} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="content"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Job Details</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder={placeholder}
-                  className="min-h-[500px] font-mono"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={onSubmit} className="space-y-8">
+      <div>
+        <label 
+          htmlFor="content" 
+          className="block text-sm font-medium mb-2"
+        >
+          Job Details
+        </label>
+        <Textarea
+          id="content"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder={placeholder}
+          className="min-h-[500px] font-mono"
         />
+      </div>
 
-        <div className="flex gap-4">
+      <div className="flex gap-4">
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+        >
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {jobId ? "Update" : "Create"} Job Posting
+        </Button>
+        {onCancel && (
           <Button 
-            type="submit" 
-            disabled={isLoading}
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            disabled={isSubmitting}
           >
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {jobId ? "Update" : "Create"} Job Posting
+            Cancel
           </Button>
-          {onCancel && (
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onCancel}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-          )}
-        </div>
-      </form>
-    </Form>
+        )}
+      </div>
+    </form>
   );
 }

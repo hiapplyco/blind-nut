@@ -1,4 +1,6 @@
 
+import { ReactNode } from 'react';
+
 export type CardType = 
   | 'counter'
   | 'gauge'
@@ -32,4 +34,19 @@ export interface CardData {
 export interface DashboardProps {
   data: any;
   configs: CardConfig[];
+}
+
+export interface CardProps {
+  data: CardData;
+  onExpand?: () => void;
+  onPin?: () => void;
+}
+
+export interface BaseCardProps {
+  children: ReactNode;
+  title: string;
+  size: CardSize;
+  onExpand?: () => void;
+  onPin?: () => void;
+  className?: string;
 }

@@ -50,14 +50,16 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
       const jobData = {
         content: formState.content,
         analysis: analysisData,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        // Convert jobId to number when used as database ID
+        ...(jobId && { id: Number(jobId) })
       };
 
       if (jobId) {
         const { error } = await supabase
           .from("jobs")
           .update(jobData)
-          .eq("id", jobId);
+          .eq("id", Number(jobId));
 
         if (error) throw error;
         
@@ -73,7 +75,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         if (error) throw error;
         
         toast({
-          title: "Success",
+          title: "Success", 
           description: "Job posting created successfully",
         });
       }

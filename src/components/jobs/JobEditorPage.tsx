@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -8,45 +9,16 @@ import Heading from '@tiptap/extension-heading';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bold as BoldIcon, Italic as ItalicIcon, Underline as UnderlineIcon, 
-         Heading1, Heading2, List, ListOrdered } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useEffect } from 'react';
 import { Dashboard } from '../dashboard/Dashboard';
-import { CardConfig } from '../dashboard/types';
-
-const DEFAULT_CARD_CONFIGS: CardConfig[] = [
-  {
-    id: 'salary-overview',
-    title: 'Salary Range Overview',
-    type: 'boxplot',
-    dataKeys: ['analysis.salaryAnalysis'],
-    size: '2x1',
-    priority: 100,
-    minDataPoints: 1
-  },
-  {
-    id: 'skills-required',
-    title: 'Required Skills',
-    type: 'bar',
-    dataKeys: ['analysis.skillsRequired'],
-    size: '1x2',
-    priority: 90,
-    minDataPoints: 1
-  },
-  {
-    id: 'market-health',
-    title: 'Job Market Health',
-    type: 'gauge',
-    dataKeys: ['analysis.marketHealth'],
-    size: '1x1',
-    priority: 85,
-    minDataPoints: 1
-  }
-];
+import { EditorToolbar } from './editor/EditorToolbar';
+import { formatAnalysisContent } from './utils/formatAnalysis';
+import { DEFAULT_CARD_CONFIGS } from './constants/cardConfigs';
 
 export function JobEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -97,123 +69,6 @@ export function JobEditorPage() {
       editor.commands.setContent(analysisContent);
     }
   }, [editor, job]);
-
-  const MenuBar = () => {
-    if (!editor) {
-      return null;
-    }
-
-    return (
-      <div className="border-b p-2 flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={editor.isActive('bold') ? 'bg-slate-200' : ''}
-        >
-          <BoldIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={editor.isActive('italic') ? 'bg-slate-200' : ''}
-        >
-          <ItalicIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={editor.isActive('underline') ? 'bg-slate-200' : ''}
-        >
-          <UnderlineIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={editor.isActive('heading', { level: 1 }) ? 'bg-slate-200' : ''}
-        >
-          <Heading1 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={editor.isActive('heading', { level: 2 }) ? 'bg-slate-200' : ''}
-        >
-          <Heading2 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={editor.isActive('bulletList') ? 'bg-slate-200' : ''}
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={editor.isActive('orderedList') ? 'bg-slate-200' : ''}
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  };
-
-  const formatAnalysisContent = (analysis: any) => {
-    try {
-      let content = '';
-      const data = typeof analysis === 'string' ? JSON.parse(analysis) : analysis;
-
-      content += '<h1>Job Details</h1>\n';
-      const { extractedData } = data;
-      content += `<h2>${extractedData.title || 'Job Title'}</h2>\n`;
-      content += `<p><strong>Location:</strong> ${extractedData.location}</p>\n`;
-      content += `<p><strong>Job Type:</strong> ${extractedData.jobType}</p>\n`;
-      content += `<p><strong>Experience Level:</strong> ${extractedData.experienceLevel}</p>\n`;
-      
-      if (extractedData.salaryRange) {
-        content += `<p><strong>Salary Range:</strong> $${extractedData.salaryRange.min.toLocaleString()} - $${extractedData.salaryRange.max.toLocaleString()}</p>\n`;
-      }
-
-      if (extractedData.skills && extractedData.skills.length > 0) {
-        content += '<h3>Required Skills</h3>\n<ul>\n';
-        extractedData.skills.forEach(skill => {
-          content += `<li>${skill}</li>\n`;
-        });
-        content += '</ul>\n';
-      }
-
-      const { analysis: jobAnalysis } = data;
-      
-      content += '<h2>Market Analysis</h2>\n';
-      content += `<p>${jobAnalysis.marketInsights}</p>\n`;
-
-      content += '<h2>Compensation Analysis</h2>\n';
-      content += `<p>${jobAnalysis.compensationAnalysis}</p>\n`;
-
-      content += '<h2>Skills Evaluation</h2>\n';
-      content += `<p>${jobAnalysis.skillsEvaluation}</p>\n`;
-
-      if (jobAnalysis.recommendations && jobAnalysis.recommendations.length > 0) {
-        content += '<h2>Recommendations</h2>\n<ul>\n';
-        jobAnalysis.recommendations.forEach(rec => {
-          content += `<li>${rec}</li>\n`;
-        });
-        content += '</ul>\n';
-      }
-
-      return content;
-    } catch (error) {
-      console.error('Error formatting analysis:', error);
-      return '<p>Error formatting analysis data</p>';
-    }
-  };
 
   if (isLoading) {
     return (
@@ -267,7 +122,7 @@ export function JobEditorPage() {
 
       <div className="prose max-w-none">
         <div className="border rounded-lg bg-white shadow-sm">
-          <MenuBar />
+          <EditorToolbar editor={editor} />
           <div className="p-4">
             <EditorContent editor={editor} />
           </div>

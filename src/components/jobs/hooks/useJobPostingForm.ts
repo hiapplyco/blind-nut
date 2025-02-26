@@ -40,8 +40,40 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     setFormState(prev => ({ ...prev, isSubmitting: true }));
 
     try {
+      // First create the job with just the content
+      const jobData = {
+        content: formState.content,
+        created_at: new Date().toISOString(),
+        ...(jobId && { id: Number(jobId) })
+      };
+
+      let newJobId: number;
+      
+      if (jobId) {
+        const { error: updateError } = await supabase
+          .from("jobs")
+          .update(jobData)
+          .eq("id", Number(jobId));
+
+        if (updateError) throw updateError;
+        newJobId = Number(jobId);
+      } else {
+        const { data: insertData, error: insertError } = await supabase
+          .from("jobs")
+          .insert(jobData)
+          .select('id')
+          .single();
+
+        if (insertError) throw insertError;
+        if (!insertData) throw new Error("No data returned from insert");
+        
+        newJobId = insertData.id;
+      }
+
+      console.log("Job created/updated with ID:", newJobId);
+
+      // Then attempt to analyze it
       console.log("Analyzing job posting...");
-      // Call the analyze-schema function with the job content
       const { data: analysisData, error: analysisError } = await supabase.functions
         .invoke('analyze-schema', {
           body: { schema: formState.content }
@@ -49,63 +81,34 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
 
       if (analysisError) {
         console.error("Analysis error:", analysisError);
-        throw analysisError;
-      }
-
-      console.log("Analysis completed:", analysisData);
-
-      // Create or update the job with both the content and analysis
-      const jobData = {
-        content: formState.content,
-        analysis: analysisData,
-        updated_at: new Date().toISOString(),
-        ...(jobId && { id: Number(jobId) })
-      };
-
-      let newJobId: number;
-      
-      if (jobId) {
-        const { error } = await supabase
-          .from("jobs")
-          .update(jobData)
-          .eq("id", Number(jobId));
-
-        if (error) throw error;
-        newJobId = Number(jobId);
-        
+        // Don't throw here, we'll update the job without analysis
         toast({
-          title: "Success",
-          description: "Job posting updated successfully",
+          title: "Warning",
+          description: "Job saved but analysis failed. You can try analyzing again later.",
         });
       } else {
-        const { data, error } = await supabase
+        console.log("Analysis completed:", analysisData);
+        // Update the job with the analysis
+        const { error: updateError } = await supabase
           .from("jobs")
-          .insert(jobData)
-          .select('id')
-          .single();
+          .update({ analysis: analysisData })
+          .eq("id", newJobId);
 
-        if (error) {
-          console.error("Database error:", error);
-          throw error;
+        if (updateError) {
+          console.error("Error updating job with analysis:", updateError);
         }
-        
-        if (!data) {
-          throw new Error("No data returned from insert");
-        }
-
-        console.log("Job created successfully:", data);
-        newJobId = data.id;
-        
-        toast({
-          title: "Success", 
-          description: "Job posting created successfully",
-        });
       }
 
-      // Navigate to the editor page with the job ID
+      // Navigate to the editor page regardless of analysis success
       console.log("Navigating to editor page:", `/job-editor/${newJobId}`);
+      toast({
+        title: "Success",
+        description: jobId ? "Job updated successfully" : "Job created successfully",
+      });
+      
       navigate(`/job-editor/${newJobId}`);
       onSuccess?.();
+
     } catch (error) {
       console.error("Error saving job:", error);
       toast({

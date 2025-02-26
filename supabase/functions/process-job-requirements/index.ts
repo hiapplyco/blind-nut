@@ -1,7 +1,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3/";
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,7 +57,6 @@ Focus on:
 
 Format the response as a Google search string that will help find companies matching these criteria.`;
     } else {
-      // Default to candidates search
       prompt = `Given the following job requirements, create a Google search string to find potential candidates:
 
 Job Requirements:
@@ -73,13 +72,7 @@ Focus on:
 Format the response as a Google search string that will help find LinkedIn profiles of qualified candidates.`;
     }
 
-    const result = await model.generateContent([
-      {
-        role: "user",
-        parts: [{ text: prompt }]
-      }
-    ]);
-    
+    const result = await model.generateContent(prompt);
     const searchString = result.response.text().trim();
     
     console.log('Generated search string:', searchString);

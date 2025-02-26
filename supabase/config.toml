@@ -1,4 +1,8 @@
+
 project_id = "kxghaajojntkqrmvsngn"
 
 [functions.enhance-job-description]
+verify_jwt = false
+
+[functions.analyze-schema]
 verify_jwt = false

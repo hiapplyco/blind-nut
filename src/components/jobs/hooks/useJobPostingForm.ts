@@ -1,7 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { jobFormSchema, JobFormValues, JobType, ExperienceLevel } from "../schema";
+import { jobFormSchema, JobFormValues } from "../schema";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -15,18 +15,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
   const form = useForm<JobFormValues>({
     resolver: zodResolver(jobFormSchema),
     defaultValues: {
-      title: "",
-      client_id: "",
-      description: "",
-      location: "",
-      salary_min: null,
-      salary_max: null,
-      job_type: "full-time",
-      experience_level: "entry",
-      skills_required: "",
-      application_deadline: null,
-      remote_allowed: false,
-      is_active: true
+      content: "",
     }
   });
 
@@ -51,20 +40,22 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         }
 
         if (job) {
+          const jobSummary = `
+Title: ${job.title || 'N/A'}
+Client: ${job.client_id || 'N/A'}
+Location: ${job.location || 'Remote'}
+Salary Range: ${job.salary_min || 'N/A'} - ${job.salary_max || 'N/A'}
+Job Type: ${job.job_type || 'Full-time'}
+Experience Level: ${job.experience_level || 'Entry'}
+Skills Required: ${Array.isArray(job.skills_required) ? job.skills_required.join(", ") : job.skills_required || 'N/A'}
+Application Deadline: ${job.application_deadline ? new Date(job.application_deadline).toLocaleDateString() : 'N/A'}
+Remote Allowed: ${job.remote_allowed ? 'Yes' : 'No'}
+
+Description:
+${job.content || ''}`;
+
           form.reset({
-            title: job.title || "",
-            client_id: job.client_id || "",
-            description: job.content || "",
-            location: job.location || "",
-            // Convert salary values to proper number type or null
-            salary_min: job.salary_min !== null && !isNaN(Number(job.salary_min)) ? Number(job.salary_min) : null,
-            salary_max: job.salary_max !== null && !isNaN(Number(job.salary_max)) ? Number(job.salary_max) : null,
-            application_deadline: job.application_deadline ? new Date(job.application_deadline) : null,
-            skills_required: Array.isArray(job.skills_required) ? job.skills_required.join(", ") : job.skills_required || "",
-            job_type: (job.job_type as JobType) || "full-time",
-            experience_level: (job.experience_level as ExperienceLevel) || "entry",
-            remote_allowed: job.remote_allowed || false,
-            is_active: job.is_active || true
+            content: jobSummary.trim()
           });
         }
       } catch (error) {
@@ -82,23 +73,43 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
 
   async function onSubmit(formData: JobFormValues) {
     try {
-      form.clearErrors();
-      
-      const processedData = {
-        ...formData,
-        content: formData.description,
-        skills_required: formData.skills_required ? formData.skills_required.split(",").map(skill => skill.trim()) : [],
-        application_deadline: formData.application_deadline ? formData.application_deadline.toISOString() : null,
-        // Ensure salary values are proper numeric types or null
-        salary_min: formData.salary_min !== null && !isNaN(Number(formData.salary_min)) ? Number(formData.salary_min) : null,
-        salary_max: formData.salary_max !== null && !isNaN(Number(formData.salary_max)) ? Number(formData.salary_max) : null,
+      const lines = formData.content.split('\n');
+      const processed: any = {
+        content: formData.content,
         updated_at: new Date().toISOString()
       };
+
+      // Parse the content to extract structured data
+      lines.forEach(line => {
+        if (line.startsWith('Title:')) {
+          processed.title = line.replace('Title:', '').trim();
+        } else if (line.startsWith('Client:')) {
+          processed.client_id = line.replace('Client:', '').trim();
+        } else if (line.startsWith('Location:')) {
+          processed.location = line.replace('Location:', '').trim();
+        } else if (line.startsWith('Salary Range:')) {
+          const range = line.replace('Salary Range:', '').trim().split('-');
+          processed.salary_min = range[0].trim() !== 'N/A' ? Number(range[0]) : null;
+          processed.salary_max = range[1].trim() !== 'N/A' ? Number(range[1]) : null;
+        } else if (line.startsWith('Job Type:')) {
+          processed.job_type = line.replace('Job Type:', '').trim().toLowerCase();
+        } else if (line.startsWith('Experience Level:')) {
+          processed.experience_level = line.replace('Experience Level:', '').trim().toLowerCase();
+        } else if (line.startsWith('Skills Required:')) {
+          const skills = line.replace('Skills Required:', '').trim();
+          processed.skills_required = skills !== 'N/A' ? skills.split(',').map((s: string) => s.trim()) : [];
+        } else if (line.startsWith('Application Deadline:')) {
+          const deadline = line.replace('Application Deadline:', '').trim();
+          processed.application_deadline = deadline !== 'N/A' ? new Date(deadline).toISOString() : null;
+        } else if (line.startsWith('Remote Allowed:')) {
+          processed.remote_allowed = line.replace('Remote Allowed:', '').trim() === 'Yes';
+        }
+      });
 
       if (jobId) {
         const { error } = await supabase
           .from("jobs")
-          .update(processedData)
+          .update(processed)
           .eq("id", jobId);
 
         if (error) throw error;
@@ -110,7 +121,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
       } else {
         const { error } = await supabase
           .from("jobs")
-          .insert(processedData);
+          .insert(processed);
 
         if (error) throw error;
         

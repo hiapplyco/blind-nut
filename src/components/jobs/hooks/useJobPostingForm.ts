@@ -116,9 +116,8 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     
     console.log("Navigating to editor page:", `/job-editor/${newJobId}`);
     
-    // Use replace: true to prevent going back to the form
+    // Navigate immediately to the editor page
     navigate(`/job-editor/${newJobId}`, { replace: true });
-    onSuccess?.();
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -173,3 +172,4 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     onSubmit
   };
 }
+

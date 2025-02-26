@@ -5,7 +5,8 @@ import {
   UserCheck, 
   PhoneCall, 
   MessageSquare,
-  PlusCircle
+  PlusCircle,
+  Briefcase
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,13 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const toolCards = [
+    {
+      title: "Post a Job",
+      description: "Create and analyze new job postings with AI assistance",
+      icon: Briefcase,
+      path: "/job-post",
+      color: "bg-red-100"
+    },
     {
       title: "Create LinkedIn Post",
       description: "Generate engaging content for your recruitment campaigns",

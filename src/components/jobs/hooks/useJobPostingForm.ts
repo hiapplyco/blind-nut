@@ -115,7 +115,9 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     });
     
     console.log("Navigating to editor page:", `/job-editor/${newJobId}`);
-    navigate(`/job-editor/${newJobId}`);
+    
+    // Use replace: true to prevent going back to the form
+    navigate(`/job-editor/${newJobId}`, { replace: true });
     onSuccess?.();
   };
 

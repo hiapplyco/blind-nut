@@ -72,8 +72,13 @@ export function JobEditorPage() {
   }, [editor, job]);
 
   const handleSourceCandidates = async () => {
-    if (!editor) return;
+    if (!editor) {
+      toast.error("Editor not initialized");
+      return;
+    }
+
     const content = editor.getHTML();
+    console.log("Processing content for sourcing:", content);
     
     try {
       toast.info("Processing job requirements for sourcing...");
@@ -81,7 +86,7 @@ export function JobEditorPage() {
       
       if (result) {
         toast.success("Job requirements processed successfully!");
-        navigate('/sourcing');
+        navigate('/sourcing', { replace: true });
       }
     } catch (error) {
       console.error('Error processing job requirements:', error);
@@ -90,8 +95,13 @@ export function JobEditorPage() {
   };
 
   const handleCreateLinkedInPost = async () => {
-    if (!editor) return;
+    if (!editor) {
+      toast.error("Editor not initialized");
+      return;
+    }
+
     const content = editor.getHTML();
+    console.log("Generating LinkedIn post from content:", content);
     
     try {
       toast.info("Generating LinkedIn post...");
@@ -103,7 +113,10 @@ export function JobEditorPage() {
       if (error) throw error;
       
       toast.success("LinkedIn post generated successfully!");
-      navigate('/linkedin-post-generator', { state: { generatedPost: data } });
+      navigate('/linkedin-post-generator', { 
+        replace: true,
+        state: { generatedPost: data.post }
+      });
     } catch (error) {
       console.error('Error generating LinkedIn post:', error);
       toast.error("Failed to generate LinkedIn post");

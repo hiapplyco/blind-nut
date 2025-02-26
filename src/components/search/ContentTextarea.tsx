@@ -36,13 +36,17 @@ export const ContentTextarea = ({
   const [urlInput, setUrlInput] = useState("");
   const [isContentUpdating, setIsContentUpdating] = useState(false);
 
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    onTextChange(newValue); // Call the parent's onTextChange directly
+  };
+
   const handleUrlSubmit = async () => {
     if (!urlInput.trim()) {
       toast.error("Please enter a URL");
       return;
     }
 
-    // Basic URL validation
     try {
       new URL(urlInput);
     } catch {
@@ -56,7 +60,6 @@ export const ContentTextarea = ({
 
     try {
       const result = await FirecrawlService.crawlWebsite(urlInput);
-      console.log('Crawl result:', result); // Debug log
       
       if (!result.success) {
         throw new Error(result.error || "Failed to scrape website");
@@ -64,7 +67,6 @@ export const ContentTextarea = ({
       
       if (result.data?.text) {
         setIsContentUpdating(true);
-        // Small delay for smooth animation
         await new Promise(resolve => setTimeout(resolve, 300));
         onTextUpdate(result.data.text);
         toast.success("Website content analyzed successfully!");
@@ -176,7 +178,7 @@ export const ContentTextarea = ({
         id="searchText"
         placeholder="Enter job requirements or paste resume content"
         value={searchText}
-        onChange={(e) => onTextChange(e.target.value)}
+        onChange={handleTextChange}
         className={cn(
           "w-full min-h-[100px] p-4 border-4 border-black rounded bg-white resize-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black transition-all duration-300",
           isContentUpdating && "animate-pulse"

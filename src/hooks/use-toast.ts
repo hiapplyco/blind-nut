@@ -163,6 +163,16 @@ function toast({ ...props }: Toast) {
   }
 }
 
+// Add variant methods to toast function
+toast.info = (description: string) =>
+  toast({ description, variant: "default", title: "Info" })
+
+toast.error = (description: string) =>
+  toast({ description, variant: "destructive", title: "Error" })
+
+toast.success = (description: string) =>
+  toast({ description, variant: "default", title: "Success" })
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
@@ -184,4 +194,3 @@ function useToast() {
 }
 
 export { useToast, toast }
-

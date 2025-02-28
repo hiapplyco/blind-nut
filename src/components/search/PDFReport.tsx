@@ -5,14 +5,13 @@ import { KeyTermsWindow } from "./KeyTermsWindow";
 import { CaptureWindow } from "./CaptureWindow";
 import { ViewReportButton } from "./ViewReportButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAgentOutputs } from "@/stores/useAgentOutputs";
-import { Badge } from "@/components/ui/badge";
+import { Terms } from "@/types/agent";
 
 interface PDFReportProps {
   jobSummary: string;
   enhancedDescription: string;
   compensationAnalysis: string;
-  terms: Record<string, string[]>;
+  terms: Terms | null;
   searchString: string;
   jobId?: number;
 }
@@ -40,6 +39,11 @@ export const PDFReport = ({
     }
     
     setCurrentSearchQuery(newQuery);
+  };
+
+  const handleTextCapture = (text: string) => {
+    // Append the captured text to the search query
+    setCurrentSearchQuery((prev) => prev ? `${prev} ${text}` : text);
   };
 
   return (
@@ -71,11 +75,16 @@ export const PDFReport = ({
         </TabsContent>
 
         <TabsContent value="terms" className="mt-0">
-          <KeyTermsWindow terms={terms} onKeyTermClick={handleKeyTermClick} />
+          {terms && (
+            <KeyTermsWindow 
+              terms={terms} 
+              onKeyTermClick={handleKeyTermClick} 
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="capture" className="mt-0">
-          <CaptureWindow />
+          <CaptureWindow onTextUpdate={handleTextCapture} />
         </TabsContent>
       </Tabs>
 

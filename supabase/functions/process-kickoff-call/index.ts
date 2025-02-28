@@ -46,6 +46,8 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') ?? '');
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
+    console.log("Processing kickoff call with Gemini...");
+    
     const prompt = `
       Analyze this recruiting kickoff call information and provide:
       1. A concise summary (3-4 sentences)
@@ -61,11 +63,45 @@ serve(async (req) => {
 
     // Parse the response into sections
     const sections = response.split('\n\n');
-    const summary = sections[0];
-    const keyPoints = sections[1]?.split('\n').filter(point => point.trim().length > 0) ?? [];
-    const actionItems = sections[2]?.split('\n').filter(item => item.trim().length > 0) ?? [];
+    const summary = sections[0]?.replace(/^\d+\.\s*/, '').trim() || '';
+    
+    // Extract key points and action items, handling different potential formats
+    const extractItems = (section: string) => {
+      const items = section?.split('\n')
+        .filter(line => line.trim().length > 0)
+        .map(line => line.replace(/^[*-]\s*/, '').replace(/^\d+\.\s*/, '').trim()) || [];
+      return items;
+    };
+    
+    // Try to find sections by looking for headers or numbered sections
+    let keyPointsSection = '';
+    let actionItemsSection = '';
+    
+    for (const section of sections) {
+      const lowerSection = section.toLowerCase();
+      if (lowerSection.includes('key') && lowerSection.includes('discussion') || 
+          lowerSection.includes('key') && lowerSection.includes('points')) {
+        keyPointsSection = section;
+      } else if (lowerSection.includes('action') || lowerSection.includes('next steps')) {
+        actionItemsSection = section;
+      }
+    }
+    
+    // If we couldn't find sections by headers, use the remaining sections
+    if (!keyPointsSection && sections.length > 1) {
+      keyPointsSection = sections[1];
+    }
+    
+    if (!actionItemsSection && sections.length > 2) {
+      actionItemsSection = sections[2];
+    }
+    
+    const keyPoints = extractItems(keyPointsSection);
+    const actionItems = extractItems(actionItemsSection);
 
     // Store in database
+    console.log("Storing kickoff call in database...");
+    
     const { data: kickoffCall, error: insertError } = await supabaseClient
       .from('kickoff_calls')
       .insert({
@@ -81,6 +117,7 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
+      console.error("Error inserting kickoff call:", insertError);
       throw new Error(`Error inserting kickoff call: ${insertError.message}`);
     }
 

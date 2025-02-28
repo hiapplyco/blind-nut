@@ -37,8 +37,7 @@ export function useJobEditor(jobId: string) {
   }, [jobId]);
 
   const handleSourceCandidates = async (analysisContent: string) => {
-    // Instead of processing here, we'll navigate to the sourcing page
-    // with the jobId, letting that page access the data directly
+    // Convert jobId to number before passing it to the navigation state
     navigate('/sourcing', { 
       state: { 
         jobId: Number(jobId),

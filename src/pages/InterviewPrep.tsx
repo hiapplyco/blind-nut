@@ -25,6 +25,7 @@ export default function InterviewPrep() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const startTimeRef = useRef<Date>(new Date());
+  const [videoReady, setVideoReady] = useState(false);
   
   const {
     videoRef,
@@ -44,6 +45,8 @@ export default function InterviewPrep() {
   useEffect(() => {
     // Set document title
     document.title = "Interview Preparation | Pipecat";
+    // Set video ready state when component mounts
+    setVideoReady(true);
     
     return () => {
       document.title = "Pipecat"; // Reset title on unmount
@@ -85,6 +88,15 @@ export default function InterviewPrep() {
     
     try {
       console.log("Starting media connection");
+      // Ensure videoRef is available
+      if (!videoReady) {
+        console.log("Video element not ready yet, waiting...");
+        setVideoReady(true);
+        setTimeout(() => handleConnect(), 500);
+        setIsLoading(false);
+        return;
+      }
+      
       const success = await startMedia();
       
       if (success) {

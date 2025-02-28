@@ -8,7 +8,7 @@ import {
   MicOff, 
   Share2, 
   MessageSquare,
-  Recording,
+  Circle,
   StopCircle
 } from "lucide-react";
 import { toast } from "sonner";
@@ -106,7 +106,7 @@ export const ScreeningControls = ({
         onClick={toggleRecording}
         className={`rounded-full ${isRecording ? 'bg-red-100 text-red-500 hover:bg-red-200' : ''}`}
       >
-        {isRecording ? <StopCircle className="h-5 w-5" /> : <Recording className="h-5 w-5" />}
+        {isRecording ? <StopCircle className="h-5 w-5" /> : <Circle className="h-5 w-5 fill-red-500" />}
       </Button>
       
       <Button 

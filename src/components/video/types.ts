@@ -1,4 +1,3 @@
-import { DailyCall } from "@daily-co/daily-js";
 
 export interface VideoCallFrameProps {
   onJoinMeeting: () => void;
@@ -6,15 +5,22 @@ export interface VideoCallFrameProps {
   onParticipantLeft: (participant: { id: string }) => void;
   onLeaveMeeting: () => void;
   onRecordingStarted: (recordingId: string) => void;
+  onCallFrameReady?: (callFrame: any) => void;
 }
 
 export interface VideoPreviewProps {
-  onCallFrameReady: (callFrame: DailyCall) => void;
+  onCallFrameReady: (callFrame: any) => void;
   roomUrl: string;
 }
 
-export interface VideoClosingAnimationProps {
-  isVisible: boolean;
-  onAnimationComplete: () => void;
-  mode?: 'turnOn' | 'turnOff';
+export interface MeetingData {
+  startTime: Date;
+  endTime: Date;
+  participants: Array<{ id: string; name?: string }>;
+  transcription?: string;
+}
+
+export interface TranscriptionResult {
+  text: string;
+  confidence: number;
 }

@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import DailyIframe, { DailyCall, DailyEventObjectFatalError } from "@daily-co/daily-js";
 import { VideoPreviewProps } from "./types";
@@ -64,6 +65,23 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
         callFrameRef.current.on('joined-meeting', () => {
           console.log('Successfully joined meeting');
           toast.success('Successfully joined meeting!');
+        });
+
+        callFrameRef.current.on('recording-started', (event: any) => {
+          console.log('Recording started:', event);
+        });
+
+        callFrameRef.current.on('recording-stopped', (event: any) => {
+          console.log('Recording stopped:', event);
+        });
+
+        callFrameRef.current.on('recording-error', (event: any) => {
+          console.error('Recording error:', event);
+          toast.error('Recording error occurred');
+        });
+
+        callFrameRef.current.on('left-meeting', () => {
+          toast.info('You have left the meeting');
         });
 
         onCallFrameReady(callFrameRef.current);

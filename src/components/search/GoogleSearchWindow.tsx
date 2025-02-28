@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ interface SearchResult {
   link: string;
   snippet: string;
   htmlTitle: string;
+  location?: string; // Added location property
 }
 
 export const GoogleSearchWindow = ({ 
@@ -25,16 +27,42 @@ export const GoogleSearchWindow = ({
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchString, setSearchString] = useState(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
+  const resultsPerPage = 10;
 
   // Clear results when search string changes
   useEffect(() => {
     setSearchString(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
     setResults([]);
+    setCurrentPage(1);
+    setTotalResults(0);
   }, [initialSearchString]);
 
-  const handleSearch = async () => {
+  // Extract location from the snippet if possible
+  const extractLocationFromSnippet = (snippet: string): string | undefined => {
+    // Common patterns for LinkedIn locations
+    const locationPatterns = [
+      /Location: ([^\.]+)/i,
+      /([^\.]+), (United States|Canada|UK|Australia|[A-Z][a-z]+ [A-Z][a-z]+)/,
+      /(.*) Area/
+    ];
+    
+    for (const pattern of locationPatterns) {
+      const match = snippet.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    return undefined;
+  };
+
+  const handleSearch = async (page = 1) => {
     setIsLoading(true);
     try {
+      const startIndex = (page - 1) * resultsPerPage + 1;
+      
       const { data: { key }, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
       
       if (keyError) throw keyError;
@@ -47,7 +75,7 @@ export const GoogleSearchWindow = ({
       const response = await fetch(
         `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cseId}&q=${encodeURIComponent(
           searchString
-        )}`
+        )}&start=${startIndex}`
       );
       
       if (!response.ok) {
@@ -58,7 +86,15 @@ export const GoogleSearchWindow = ({
       console.log("Search API response:", data);
 
       if (data?.items) {
-        setResults(data.items);
+        // Process results to extract locations
+        const processedResults = data.items.map((item: any) => ({
+          ...item,
+          location: extractLocationFromSnippet(item.snippet)
+        }));
+        
+        setResults(page === 1 ? processedResults : [...results, ...processedResults]);
+        setCurrentPage(page);
+        setTotalResults(data.searchInformation?.totalResults || 0);
         toast.success("Search results loaded successfully");
       } else {
         toast.error("No results found");
@@ -69,6 +105,10 @@ export const GoogleSearchWindow = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    handleSearch(currentPage + 1);
   };
 
   const handleCopySearchString = () => {
@@ -84,10 +124,11 @@ export const GoogleSearchWindow = ({
 
     // Create CSV content
     const csvContent = [
-      ["Title", "URL", "Description"], // CSV header
+      ["Title", "URL", "Location", "Description"], // CSV header with Location
       ...results.map(result => [
         result.title.replace(/"/g, '""'), // Escape quotes in title
         result.link,
+        result.location || "", // Include location field
         result.snippet.replace(/"/g, '""') // Escape quotes in snippet
       ])
     ]
@@ -115,7 +156,7 @@ export const GoogleSearchWindow = ({
           <h2 className="text-xl font-bold">Google Search Results</h2>
           <div className="space-x-2">
             <Button
-              onClick={handleSearch}
+              onClick={() => handleSearch(1)}
               disabled={isLoading}
               className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
             >
@@ -178,9 +219,31 @@ export const GoogleSearchWindow = ({
                   dangerouslySetInnerHTML={{ __html: result.htmlTitle }}
                 />
               </h3>
+              {result.location && (
+                <p className="mt-1 text-sm font-semibold text-emerald-600">
+                  📍 {result.location}
+                </p>
+              )}
               <p className="mt-1 text-sm text-gray-600">{result.snippet}</p>
             </div>
           ))}
+          
+          {results.length > 0 && Number(totalResults) > results.length && (
+            <div className="flex justify-center mt-4">
+              <Button 
+                onClick={handleLoadMore} 
+                disabled={isLoading}
+                variant="outline"
+                className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <>Load More Results</>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Card>

@@ -10,10 +10,9 @@ interface InterviewPrepModalProps {
 export const InterviewPrepModal = ({ isOpen, onClose }: InterviewPrepModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden">
         <InterviewPrep />
       </DialogContent>
     </Dialog>
   );
 };
-

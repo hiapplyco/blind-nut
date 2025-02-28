@@ -21,6 +21,7 @@ export const KickoffForm = ({ isProcessing, filePaths, title, onTitleChange }: K
   const [url, setUrl] = useState("");
   const [isCrawling, setIsCrawling] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState<string>("");
 
   const handleCrawl = async () => {
     if (!url.trim()) {
@@ -54,7 +55,15 @@ export const KickoffForm = ({ isProcessing, filePaths, title, onTitleChange }: K
     }
 
     setIsSubmitting(true);
+    setProcessingStatus("Submitting kickoff call data to Gemini...");
+    
     try {
+      // Show processing toast so user knows processing has started
+      toast.info("Processing kickoff call information with Gemini...", {
+        duration: 5000,
+        id: "processing-kickoff"
+      });
+      
       const { data: result, error: processingError } = await supabase.functions.invoke('process-kickoff-call', {
         body: {
           text: textInput,
@@ -65,14 +74,21 @@ export const KickoffForm = ({ isProcessing, filePaths, title, onTitleChange }: K
 
       if (processingError) throw processingError;
 
-      toast.success("Successfully processed kickoff call information!");
+      // Update toast when processing is complete
+      toast.success("Successfully processed kickoff call information!", {
+        id: "processing-kickoff"
+      });
+      
       navigate(`/chat?callId=${result.id}&mode=kickoff`);
 
     } catch (error) {
       console.error('Error processing kickoff call:', error);
-      toast.error("Failed to process kickoff call. Please try again.");
+      toast.error("Failed to process kickoff call. Please try again.", {
+        id: "processing-kickoff"
+      });
     } finally {
       setIsSubmitting(false);
+      setProcessingStatus("");
     }
   };
 
@@ -132,6 +148,21 @@ export const KickoffForm = ({ isProcessing, filePaths, title, onTitleChange }: K
         />
       </div>
 
+      {filePaths.length > 0 && (
+        <div className="p-4 border-2 border-green-500 bg-green-50 rounded-md">
+          <p className="text-green-700 font-medium">
+            {filePaths.length} file(s) successfully uploaded and ready for processing
+          </p>
+        </div>
+      )}
+
+      {processingStatus && (
+        <div className="flex items-center gap-2 p-4 border-2 border-blue-500 bg-blue-50 rounded-md animate-pulse">
+          <Loader className="h-5 w-5 text-blue-500 animate-spin" />
+          <p className="text-blue-700 font-medium">{processingStatus}</p>
+        </div>
+      )}
+
       <Button
         type="submit"
         className="w-full bg-[#8B5CF6] text-white py-4 rounded font-bold text-lg border-4 
@@ -143,7 +174,7 @@ export const KickoffForm = ({ isProcessing, filePaths, title, onTitleChange }: K
         {isSubmitting ? (
           <div className="flex items-center justify-center gap-2">
             <Loader className="h-4 w-4 animate-spin" />
-            Processing...
+            Processing with Gemini...
           </div>
         ) : (
           'Process Kickoff Call'

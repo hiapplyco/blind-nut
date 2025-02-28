@@ -6,6 +6,7 @@ import { FileUploadSection } from "@/components/kickoff-call/FileUploadSection";
 import { FileList } from "@/components/kickoff-call/FileList";
 import { SummaryCard } from "@/components/kickoff-call/SummaryCard";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface Summary {
   id: string;
@@ -32,6 +33,13 @@ const KickOffCall = () => {
       content: text.length > 200 ? text.substring(0, 200) + "..." : text,
       source: `File: ${fileName}`
     }]);
+    
+    // Suggest a title if none is set
+    if (!title.trim()) {
+      const suggestedTitle = `Kickoff Call - ${fileName.split('.')[0]}`;
+      setTitle(suggestedTitle);
+      toast.info(`Title set to "${suggestedTitle}"`);
+    }
   };
 
   const removeFile = (index: number) => {
@@ -39,6 +47,8 @@ const KickOffCall = () => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
     setFilePaths(prev => prev.filter((_, i) => i !== index));
     setSummaries(prev => prev.filter(s => s.id !== removedFile.path));
+    
+    toast.info(`Removed file: ${removedFile.name}`);
   };
 
   const removeSummary = (id: string) => {
@@ -114,4 +124,3 @@ const KickOffCall = () => {
 };
 
 export default KickOffCall;
-

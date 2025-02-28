@@ -7,7 +7,7 @@ import {
   MicOff, 
   MessageSquare,
   PhoneOff,
-  Record,
+  CircleDot,
   Square
 } from "lucide-react";
 
@@ -58,7 +58,7 @@ export const InterviewControls = ({
         onClick={onToggleRecording}
         className={`rounded-full ${isRecording ? 'bg-red-100 text-red-500 hover:bg-red-200' : ''}`}
       >
-        {isRecording ? <Square className="h-5 w-5" /> : <Record className="h-5 w-5" />}
+        {isRecording ? <Square className="h-5 w-5" /> : <CircleDot className="h-5 w-5" />}
       </Button>
       
       <Button 

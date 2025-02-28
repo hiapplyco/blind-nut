@@ -48,21 +48,40 @@ export const useMediaStream = ({
 
   const startMedia = async () => {
     try {
+      setIsLoading(true);
+      setError(null);
+      
+      console.log("Requesting media with video:", isVideoEnabled, "audio:", isAudioEnabled);
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: isVideoEnabled,
         audio: isAudioEnabled
       });
       
+      console.log("Stream received:", stream);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          console.log("Video metadata loaded");
+          if (videoRef.current) {
+            videoRef.current.play()
+              .then(() => console.log("Video playback started"))
+              .catch(err => console.error("Error playing video:", err));
+          }
+        };
         mediaStreamRef.current = stream;
+      } else {
+        console.error("Video ref is null");
       }
       
       setIsConnected(true);
+      setIsLoading(false);
       return true;
     } catch (err) {
       console.error('Error accessing media devices:', err);
-      setError('Could not access camera or microphone');
+      setError('Could not access camera or microphone. Please check your browser permissions.');
+      setIsLoading(false);
       return false;
     }
   };
@@ -79,7 +98,10 @@ export const useMediaStream = ({
     }
 
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current.getTracks().forEach(track => {
+        console.log("Stopping track:", track.kind, track.label);
+        track.stop();
+      });
       mediaStreamRef.current = null;
     }
 
@@ -92,21 +114,33 @@ export const useMediaStream = ({
 
   const toggleAudio = () => {
     if (mediaStreamRef.current) {
-      const audioTrack = mediaStreamRef.current.getAudioTracks()[0];
-      if (audioTrack) {
+      const audioTracks = mediaStreamRef.current.getAudioTracks();
+      if (audioTracks.length > 0) {
+        const audioTrack = audioTracks[0];
         audioTrack.enabled = !isAudioEnabled;
         setIsAudioEnabled(!isAudioEnabled);
+        console.log("Audio track toggled:", !isAudioEnabled);
+      } else {
+        toast.error("No audio track found");
       }
+    } else {
+      toast.error("No media stream available");
     }
   };
 
   const toggleVideo = () => {
     if (mediaStreamRef.current) {
-      const videoTrack = mediaStreamRef.current.getVideoTracks()[0];
-      if (videoTrack) {
+      const videoTracks = mediaStreamRef.current.getVideoTracks();
+      if (videoTracks.length > 0) {
+        const videoTrack = videoTracks[0];
         videoTrack.enabled = !isVideoEnabled;
         setIsVideoEnabled(!isVideoEnabled);
+        console.log("Video track toggled:", !isVideoEnabled);
+      } else {
+        toast.error("No video track found");
       }
+    } else {
+      toast.error("No media stream available");
     }
   };
 

@@ -2,9 +2,11 @@
 import { Tag, List, KeyRound } from "lucide-react";
 import { Terms } from "@/types/agent";
 import { AgentWindow } from "../agents/AgentWindow";
+import { useAgentOutputs } from "@/stores/useAgentOutputs";
 
 interface KeyTermsWindowProps {
-  terms: Terms;
+  terms?: Terms;
+  jobId?: number;
   onKeyTermClick?: (term: string, termType: string) => void;
 }
 
@@ -14,7 +16,11 @@ interface TermGroup {
   icon: React.ReactNode;
 }
 
-export const KeyTermsWindow = ({ terms, onKeyTermClick }: KeyTermsWindowProps) => {
+export const KeyTermsWindow = ({ terms: passedTerms, jobId, onKeyTermClick }: KeyTermsWindowProps) => {
+  // If jobId is provided but no terms, fetch terms from agent outputs
+  const { data: agentOutput } = useAgentOutputs(jobId);
+  const terms = passedTerms || (agentOutput?.terms || { skills: [], titles: [], keywords: [] });
+
   const termGroups: TermGroup[] = [
     {
       title: "Skills & Technologies",

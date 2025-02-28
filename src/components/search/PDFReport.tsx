@@ -75,12 +75,18 @@ export const PDFReport = ({
         </TabsContent>
 
         <TabsContent value="terms" className="mt-0">
-          {terms && (
+          {terms ? (
             <KeyTermsWindow 
               terms={terms} 
               onKeyTermClick={handleKeyTermClick} 
+              jobId={jobId}
             />
-          )}
+          ) : jobId ? (
+            <KeyTermsWindow 
+              jobId={jobId} 
+              onKeyTermClick={handleKeyTermClick}
+            />
+          ) : null}
         </TabsContent>
 
         <TabsContent value="capture" className="mt-0">

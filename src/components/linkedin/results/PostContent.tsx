@@ -9,7 +9,7 @@ interface PostContentProps {
 const PostContent = ({ content }: PostContentProps) => {
   return (
     <div className="space-y-4">
-      <div className="bg-[#FEF7CD] p-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.2)]">
+      <div className="bg-[#F1F0FB] p-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]">
         <p className="whitespace-pre-wrap">{content}</p>
       </div>
       <div className="flex gap-4">

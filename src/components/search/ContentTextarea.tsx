@@ -69,7 +69,7 @@ export const ContentTextarea = ({
         value={searchText}
         onChange={(e) => onTextChange(e.target.value)}
         className={cn(
-          "w-full min-h-[100px] p-4 border-4 border-black rounded bg-white resize-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-medium focus:ring-0 focus:border-black transition-all duration-300",
+          "w-full min-h-[100px] p-4 border-4 border-black rounded bg-white resize-none shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] font-medium focus:ring-0 focus:border-black transition-all duration-300",
           isContentUpdating && "animate-pulse"
         )}
       />

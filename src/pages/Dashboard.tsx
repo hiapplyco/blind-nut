@@ -92,7 +92,7 @@ const Dashboard = () => {
             <Card 
               key={tool.path}
               className={`group hover:-translate-y-1 hover:shadow-xl transition-all duration-300 ${tool.color} border-0 aspect-square 
-                        shadow-[5px_5px_10px_rgba(0,0,0,0.15)] ${rotationClass} 
+                        shadow-[5px_5px_10px_rgba(0,0,0,0.3)] ${rotationClass} 
                         hover:rotate-0`}
               style={{
                 transformOrigin: 'center center'

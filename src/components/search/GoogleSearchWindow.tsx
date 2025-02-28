@@ -6,24 +6,28 @@ import { Loader2, Download, Search, AlertCircle, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Textarea } from "@/components/ui/textarea";
+import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
 
 interface GoogleSearchWindowProps {
   searchString: string;
   searchType?: "candidates" | "companies" | "candidates-at-company";
+  jobId?: number;
 }
 
-interface SearchResult {
+export interface SearchResult {
   title: string;
   link: string;
   snippet: string;
   htmlTitle: string;
-  location?: string; // Added location property
+  location?: string;
 }
 
 export const GoogleSearchWindow = ({ 
   searchString: initialSearchString,
-  searchType = "candidates" 
+  searchType = "candidates",
+  jobId
 }: GoogleSearchWindowProps) => {
+  const { setSearchResults, getSearchResults, addToSearchResults } = useClientAgentOutputs();
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchString, setSearchString] = useState(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
@@ -31,13 +35,34 @@ export const GoogleSearchWindow = ({
   const [totalResults, setTotalResults] = useState(0);
   const resultsPerPage = 10;
 
-  // Clear results when search string changes
+  // Load results from store if available
   useEffect(() => {
-    setSearchString(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
-    setResults([]);
-    setCurrentPage(1);
-    setTotalResults(0);
-  }, [initialSearchString]);
+    if (jobId) {
+      const storedData = getSearchResults(jobId);
+      if (storedData) {
+        setResults(storedData.results);
+        setSearchString(storedData.searchQuery);
+        setTotalResults(storedData.totalResults);
+        
+        // Calculate current page based on results length
+        const calculatedPage = Math.ceil(storedData.results.length / resultsPerPage);
+        setCurrentPage(calculatedPage > 0 ? calculatedPage : 1);
+      } else {
+        // Clear results when search string changes
+        setSearchString(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
+        setResults([]);
+        setCurrentPage(1);
+        setTotalResults(0);
+      }
+    }
+  }, [jobId, initialSearchString, getSearchResults]);
+
+  // Save results to store when they change
+  useEffect(() => {
+    if (jobId && results.length > 0) {
+      setSearchResults(jobId, results, searchString, totalResults);
+    }
+  }, [jobId, results, searchString, totalResults, setSearchResults]);
 
   // Extract location from the snippet if possible
   const extractLocationFromSnippet = (snippet: string): string | undefined => {
@@ -92,7 +117,15 @@ export const GoogleSearchWindow = ({
           location: extractLocationFromSnippet(item.snippet)
         }));
         
-        setResults(page === 1 ? processedResults : [...results, ...processedResults]);
+        if (page === 1) {
+          setResults(processedResults);
+        } else {
+          setResults(prev => [...prev, ...processedResults]);
+          if (jobId) {
+            addToSearchResults(jobId, processedResults);
+          }
+        }
+        
         setCurrentPage(page);
         setTotalResults(data.searchInformation?.totalResults || 0);
         toast.success("Search results loaded successfully");

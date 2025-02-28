@@ -1,3 +1,4 @@
+
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { PDFReport } from "./PDFReport";
 
@@ -21,6 +22,7 @@ export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
         compensationAnalysis={agentOutput.compensation_analysis || ''}
         terms={agentOutput.terms}
         searchString=""
+        jobId={jobId}
       />
     </div>
   );

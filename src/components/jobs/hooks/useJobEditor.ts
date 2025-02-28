@@ -38,9 +38,20 @@ export function useJobEditor(jobId: string) {
 
   const handleSourceCandidates = async (analysisContent: string) => {
     // Convert jobId to number before passing it to the navigation state
+    const jobIdNumber = Number(jobId);
+    if (isNaN(jobIdNumber)) {
+      console.error('Invalid job ID:', jobId);
+      toast({
+        title: 'Error',
+        description: 'Invalid job ID',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     navigate('/sourcing', { 
       state: { 
-        jobId: Number(jobId),
+        jobId: jobIdNumber,
         autoRun: true
       } 
     });
@@ -49,11 +60,17 @@ export function useJobEditor(jobId: string) {
   const handleCreateLinkedInPost = async (analysisContent: string) => {
     setIsPostLoading(true);
     try {
+      // Convert jobId to number before passing it to the navigation state
+      const jobIdNumber = Number(jobId);
+      if (isNaN(jobIdNumber)) {
+        throw new Error('Invalid job ID');
+      }
+      
       // Process for LinkedIn post generation
       navigate('/linkedin-post', { 
         state: { 
           content: analysisContent,
-          jobId: Number(jobId),
+          jobId: jobIdNumber,
           autoRun: true
         } 
       });

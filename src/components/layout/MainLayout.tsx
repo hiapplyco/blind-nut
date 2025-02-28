@@ -1,3 +1,4 @@
+
 import { useNavigate, useLocation } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import {
@@ -21,8 +22,7 @@ import { useAuth } from "@/context/AuthContext";
 // Memoize menu items array to prevent recreation on each render
 const menuItems = [
   { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { title: 'Create Job Post', path: '/job-post', icon: PlusCircle },
-  { title: 'Create LinkedIn Post', path: '/linkedin-post', icon: PlusCircle },
+  { title: 'Create Content', path: '/content-creation', icon: PlusCircle },
   { title: 'Sourcing', path: '/sourcing', icon: Search },
   { title: 'Screening Room', path: '/screening-room', icon: Video },
   { title: 'Interview Prep', path: '/interview-prep', icon: Theater },

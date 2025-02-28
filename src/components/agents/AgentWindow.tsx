@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -12,8 +13,18 @@ export const AgentWindow = ({
   icon, 
   children
 }: AgentWindowProps) => {
+  // Generate a random small rotation for the post-it effect
+  const randomRotation = (Math.random() * 2 - 1).toFixed(1);
+
   return (
-    <Card className="w-full p-4 sm:p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all duration-200">
+    <Card 
+      className="w-full p-4 sm:p-6 border-4 border-black bg-[#FFFBF4] 
+                shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] 
+                hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] 
+                transition-all duration-200 transform 
+                rotate-[${randomRotation}deg] hover:rotate-0"
+      style={{ transformOrigin: 'center center' }}
+    >
       <div className="flex items-center gap-2 mb-6">
         <div className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           {icon}

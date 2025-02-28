@@ -67,6 +67,12 @@ const Dashboard = () => {
     }
   ];
 
+  // Function to get random rotation (slight tilt) for post-it note effect
+  const getRandomRotation = () => {
+    // Generate a random number between -2 and 2 for subtle rotation
+    return `rotate-[${(Math.random() * 4 - 2).toFixed(1)}deg]`;
+  };
+
   return (
     <div className="container py-8 space-y-8">
       {/* Hero Section */}
@@ -79,29 +85,38 @@ const Dashboard = () => {
 
       {/* Tools Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {toolCards.map((tool) => (
-          <Card 
-            key={tool.path}
-            className={`group hover:shadow-lg transition-all ${tool.color} border-transparent aspect-square`}
-          >
-            <CardHeader className="h-full flex flex-col">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <tool.icon className="h-6 w-6" />
-                {tool.title}
-              </CardTitle>
-              <CardDescription className="flex-grow flex items-center text-base">
-                {tool.description}
-              </CardDescription>
-              <Button 
-                variant="ghost" 
-                className="w-full mt-auto group-hover:bg-white/50"
-                onClick={() => navigate(tool.path)}
-              >
-                Open Tool
-              </Button>
-            </CardHeader>
-          </Card>
-        ))}
+        {toolCards.map((tool, index) => {
+          const rotationClass = getRandomRotation();
+          
+          return (
+            <Card 
+              key={tool.path}
+              className={`group hover:-translate-y-1 hover:shadow-xl transition-all duration-300 ${tool.color} border-0 aspect-square 
+                        shadow-[5px_5px_10px_rgba(0,0,0,0.15)] ${rotationClass} 
+                        hover:rotate-0`}
+              style={{
+                transformOrigin: 'center center'
+              }}
+            >
+              <CardHeader className="h-full flex flex-col">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <tool.icon className="h-6 w-6" />
+                  {tool.title}
+                </CardTitle>
+                <CardDescription className="flex-grow flex items-center text-base text-gray-700">
+                  {tool.description}
+                </CardDescription>
+                <Button 
+                  variant="ghost" 
+                  className="w-full mt-auto group-hover:bg-white/50"
+                  onClick={() => navigate(tool.path)}
+                >
+                  Open Tool
+                </Button>
+              </CardHeader>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

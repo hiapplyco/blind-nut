@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.0";
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.2.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,8 +43,15 @@ serve(async (req) => {
     }
 
     // Process with Gemini
-    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') ?? '');
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    console.log("Setting up Gemini API with provided key...");
+    const apiKey = Deno.env.get('GEMINI_API_KEY') ?? '';
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY is not set in environment variables');
+    }
+    
+    const genAI = new GoogleGenerativeAI(apiKey);
+    console.log("Using model: gemini-1.5-pro");
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     console.log("Processing kickoff call with Gemini...");
     
@@ -58,78 +65,90 @@ serve(async (req) => {
       ${text}
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response.text();
+    try {
+      const result = await model.generateContent(prompt);
+      const response = result.response.text();
+      console.log("Received response from Gemini");
 
-    // Parse the response into sections
-    const sections = response.split('\n\n');
-    const summary = sections[0]?.replace(/^\d+\.\s*/, '').trim() || '';
-    
-    // Extract key points and action items, handling different potential formats
-    const extractItems = (section: string) => {
-      const items = section?.split('\n')
-        .filter(line => line.trim().length > 0)
-        .map(line => line.replace(/^[*-]\s*/, '').replace(/^\d+\.\s*/, '').trim()) || [];
-      return items;
-    };
-    
-    // Try to find sections by looking for headers or numbered sections
-    let keyPointsSection = '';
-    let actionItemsSection = '';
-    
-    for (const section of sections) {
-      const lowerSection = section.toLowerCase();
-      if (lowerSection.includes('key') && lowerSection.includes('discussion') || 
-          lowerSection.includes('key') && lowerSection.includes('points')) {
-        keyPointsSection = section;
-      } else if (lowerSection.includes('action') || lowerSection.includes('next steps')) {
-        actionItemsSection = section;
+      // Parse the response into sections
+      const sections = response.split('\n\n');
+      const summary = sections[0]?.replace(/^\d+\.\s*/, '').replace(/^Summary:\s*/i, '').trim() || '';
+      
+      // Extract key points and action items, handling different potential formats
+      const extractItems = (section: string) => {
+        if (!section) return [];
+        
+        const lines = section.split('\n').filter(line => line.trim().length > 0);
+        // Remove any header line that might be present
+        const contentLines = lines[0].match(/key (points|discussion)|action items|next steps/i) ? lines.slice(1) : lines;
+        
+        return contentLines.map(line => 
+          line.replace(/^[*•-]\s*/, '')
+              .replace(/^\d+\.\s*/, '')
+              .trim()
+        ).filter(item => item.length > 0);
+      };
+      
+      // Try to find sections by looking for headers or numbered sections
+      let keyPointsSection = '';
+      let actionItemsSection = '';
+      
+      for (const section of sections) {
+        const lowerSection = section.toLowerCase();
+        if (lowerSection.includes('key') && (lowerSection.includes('discussion') || lowerSection.includes('points'))) {
+          keyPointsSection = section;
+        } else if (lowerSection.includes('action') || lowerSection.includes('next steps')) {
+          actionItemsSection = section;
+        }
       }
-    }
-    
-    // If we couldn't find sections by headers, use the remaining sections
-    if (!keyPointsSection && sections.length > 1) {
-      keyPointsSection = sections[1];
-    }
-    
-    if (!actionItemsSection && sections.length > 2) {
-      actionItemsSection = sections[2];
-    }
-    
-    const keyPoints = extractItems(keyPointsSection);
-    const actionItems = extractItems(actionItemsSection);
+      
+      // If we couldn't find sections by headers, use the remaining sections
+      if (!keyPointsSection && sections.length > 1) {
+        keyPointsSection = sections[1];
+      }
+      
+      if (!actionItemsSection && sections.length > 2) {
+        actionItemsSection = sections[2];
+      }
+      
+      const keyPoints = extractItems(keyPointsSection);
+      const actionItems = extractItems(actionItemsSection);
 
-    // Store in database
-    console.log("Storing kickoff call in database...");
-    
-    const { data: kickoffCall, error: insertError } = await supabaseClient
-      .from('kickoff_calls')
-      .insert({
-        user_id: user.id,
-        title,
-        content: text,
-        summary,
-        key_points: keyPoints,
-        action_items: actionItems,
-        file_paths: filePaths
-      })
-      .select()
-      .single();
+      // Store in database
+      console.log("Storing kickoff call in database...");
+      
+      const { data: kickoffCall, error: insertError } = await supabaseClient
+        .from('kickoff_calls')
+        .insert({
+          user_id: user.id,
+          title,
+          content: text,
+          summary,
+          key_points: keyPoints,
+          action_items: actionItems,
+          file_paths: filePaths
+        })
+        .select()
+        .single();
 
-    if (insertError) {
-      console.error("Error inserting kickoff call:", insertError);
-      throw new Error(`Error inserting kickoff call: ${insertError.message}`);
+      if (insertError) {
+        console.error("Error inserting kickoff call:", insertError);
+        throw new Error(`Error inserting kickoff call: ${insertError.message}`);
+      }
+
+      return new Response(
+        JSON.stringify({
+          summary,
+          keyPoints,
+          actionItems,
+          id: kickoffCall.id
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (geminiError) {
+      console.error('Error with Gemini API:', geminiError);
+      throw new Error(`Gemini API error: ${geminiError.message}`);
     }
-
-    return new Response(
-      JSON.stringify({
-        summary,
-        keyPoints,
-        actionItems,
-        id: kickoffCall.id
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error) {
     console.error('Error processing kickoff call:', error);

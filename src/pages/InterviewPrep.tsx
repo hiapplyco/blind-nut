@@ -3,9 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Save } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { InterviewHeader } from "@/components/interview/InterviewHeader";
@@ -34,10 +33,13 @@ export default function InterviewPrep() {
     error,
     isAudioEnabled,
     isVideoEnabled,
+    isRecording,
     startMedia,
     stopMedia,
     toggleAudio,
     toggleVideo,
+    startRecording,
+    stopRecording
   } = useMediaStream();
 
   useEffect(() => {
@@ -92,11 +94,51 @@ export default function InterviewPrep() {
           .update({ status: 'active', started_at: new Date().toISOString() })
           .eq('id', sessionId);
       }
+      
+      // Start with an initial greeting from the AI interviewer
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('handle-interview', {
+          body: {
+            message: "Hello, I'm ready for the interview.",
+            context: []
+          }
+        });
+
+        if (error) throw error;
+
+        if (data?.response) {
+          const assistantMessage: Message = { 
+            role: 'assistant', 
+            content: data.response 
+          };
+          
+          setMessages(prev => [...prev, assistantMessage]);
+          
+          // Save assistant message to database if sessionId exists
+          if (sessionId) {
+            await supabase.from('interview_messages').insert({
+              session_id: sessionId,
+              role: 'assistant',
+              content: data.response
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error getting initial message:', err);
+      } finally {
+        setIsLoading(false);
+      }
     }
     setIsLoading(false);
   };
 
   const handleDisconnect = async () => {
+    // If recording, stop it first
+    if (isRecording) {
+      await stopRecording();
+    }
+    
     stopMedia();
     toast.info("Interview session ended");
     
@@ -167,6 +209,20 @@ export default function InterviewPrep() {
     setIsChatOpen(!isChatOpen);
   };
 
+  const handleToggleRecording = async () => {
+    if (isRecording) {
+      const recordedBlob = await stopRecording();
+      if (recordedBlob && sessionId) {
+        // Here you would typically upload the blob to storage
+        // For now we just log it
+        console.log("Recording stopped, blob size:", recordedBlob.size);
+        toast.success("Recording saved");
+      }
+    } else {
+      startRecording();
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen">
       <InterviewHeader />
@@ -174,7 +230,7 @@ export default function InterviewPrep() {
       {isConnected && (
         <InterviewStatus 
           startTime={startTimeRef.current}
-          isRecording={false}
+          isRecording={isRecording}
         />
       )}
       
@@ -220,9 +276,11 @@ export default function InterviewPrep() {
             <InterviewControls 
               isAudioEnabled={isAudioEnabled}
               isVideoEnabled={isVideoEnabled}
+              isRecording={isRecording}
               onToggleAudio={toggleAudio}
               onToggleVideo={toggleVideo}
               onToggleChat={handleToggleChat}
+              onToggleRecording={handleToggleRecording}
               onEndSession={handleDisconnect}
             />
           </div>

@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3/";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.12";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,24 +22,72 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY not found');
     }
 
-    console.log('Received message:', message);
-    console.log('Context:', context);
+    // Build the interviewer context
+    const interviewerInstructions = `
+    You are an AI interviewer helping a candidate practice for a job interview. 
+    Your goal is to create a realistic and valuable interview experience.
+    
+    - Ask relevant questions based on the candidate's responses
+    - Provide constructive feedback on their answers
+    - Simulate a real interview environment
+    - Be supportive but professional
+    - Help the candidate improve their interviewing skills
+    
+    Focus on both technical skills and soft skills. Adapt your questions based on their previous answers.
+    `;
+
+    // Create conversation history in the format expected by Gemini
+    const conversationHistory = context.map((msg: { role: string; content: string }) => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }]
+    }));
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(geminiApiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     // Generate content
-    const result = await model.generateContent([
-      {
+    let chat;
+    
+    if (conversationHistory.length > 0) {
+      // Continue existing chat
+      chat = model.startChat({
+        history: conversationHistory,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+        },
+      });
+    } else {
+      // Start new chat
+      chat = model.startChat({
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+        },
+      });
+      
+      // Add the interviewer instructions
+      await chat.sendMessage({
         role: "user",
-        parts: [{ text: message }]
-      }
-    ]);
+        parts: [{ text: interviewerInstructions }],
+      });
+      
+      // Set initial context
+      await chat.sendMessage({
+        role: "user", 
+        parts: [{ text: "I'd like to practice for a job interview. Please start by introducing yourself as the interviewer and asking me an initial question." }]
+      });
+    }
+    
+    // Send the user message
+    const result = await chat.sendMessage({
+      role: "user",
+      parts: [{ text: message }]
+    });
+    
     const response = result.response.text();
     
-    console.log('Generated response:', response);
-
     return new Response(
       JSON.stringify({ 
         response,

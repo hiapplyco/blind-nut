@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface UseMediaStreamOptions {
   initialAudioEnabled?: boolean;
@@ -14,10 +14,13 @@ interface UseMediaStreamReturn {
   error: string | null;
   isAudioEnabled: boolean;
   isVideoEnabled: boolean;
+  isRecording: boolean;
   startMedia: () => Promise<boolean>;
   stopMedia: () => void;
   toggleAudio: () => void;
   toggleVideo: () => void;
+  startRecording: () => void;
+  stopRecording: () => Promise<Blob | null>;
 }
 
 export const useMediaStream = ({
@@ -29,6 +32,7 @@ export const useMediaStream = ({
   const [error, setError] = useState<string | null>(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(initialAudioEnabled);
   const [isVideoEnabled, setIsVideoEnabled] = useState(initialVideoEnabled);
+  const [isRecording, setIsRecording] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -36,8 +40,6 @@ export const useMediaStream = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   
-  const { toast } = useToast();
-
   useEffect(() => {
     return () => {
       stopMedia();
@@ -68,6 +70,7 @@ export const useMediaStream = ({
   const stopMedia = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
+      setIsRecording(false);
     }
 
     if (audioContextRef.current) {
@@ -107,6 +110,58 @@ export const useMediaStream = ({
     }
   };
 
+  const startRecording = () => {
+    if (!mediaStreamRef.current) {
+      toast.error("No media stream available for recording");
+      return;
+    }
+    
+    try {
+      // Reset audio chunks
+      audioChunksRef.current = [];
+      
+      // Create media recorder
+      const mediaRecorder = new MediaRecorder(mediaStreamRef.current);
+      mediaRecorderRef.current = mediaRecorder;
+      
+      // Set up event listeners
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+      
+      // Start recording
+      mediaRecorder.start(1000); // Collect data every second
+      setIsRecording(true);
+      toast.success("Recording started");
+    } catch (err) {
+      console.error('Error starting recording:', err);
+      toast.error("Failed to start recording");
+    }
+  };
+  
+  const stopRecording = async (): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
+        setIsRecording(false);
+        resolve(null);
+        return;
+      }
+      
+      mediaRecorderRef.current.onstop = () => {
+        // Create blob from chunks
+        const blob = new Blob(audioChunksRef.current, { type: 'video/webm' });
+        audioChunksRef.current = [];
+        setIsRecording(false);
+        toast.success("Recording stopped");
+        resolve(blob);
+      };
+      
+      mediaRecorderRef.current.stop();
+    });
+  };
+
   return {
     videoRef,
     isConnected,
@@ -114,9 +169,12 @@ export const useMediaStream = ({
     error,
     isAudioEnabled,
     isVideoEnabled,
+    isRecording,
     startMedia,
     stopMedia,
     toggleAudio,
     toggleVideo,
+    startRecording,
+    stopRecording
   };
 };

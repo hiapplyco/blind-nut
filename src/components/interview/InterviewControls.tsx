@@ -6,25 +6,30 @@ import {
   Mic, 
   MicOff, 
   MessageSquare,
-  PhoneOff
+  PhoneOff,
+  Record,
+  Square
 } from "lucide-react";
-import { toast } from "sonner";
 
 interface InterviewControlsProps {
   isAudioEnabled: boolean;
   isVideoEnabled: boolean;
+  isRecording: boolean;
   onToggleAudio: () => void;
   onToggleVideo: () => void;
   onToggleChat: () => void;
+  onToggleRecording: () => void;
   onEndSession: () => void;
 }
 
 export const InterviewControls = ({ 
   isAudioEnabled, 
   isVideoEnabled,
+  isRecording,
   onToggleAudio,
   onToggleVideo,
   onToggleChat,
+  onToggleRecording,
   onEndSession
 }: InterviewControlsProps) => {
   return (
@@ -45,6 +50,15 @@ export const InterviewControls = ({
         className={`rounded-full ${!isAudioEnabled ? 'bg-red-100 text-red-500 hover:bg-red-200' : ''}`}
       >
         {isAudioEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+      </Button>
+      
+      <Button 
+        variant="outline" 
+        size="icon" 
+        onClick={onToggleRecording}
+        className={`rounded-full ${isRecording ? 'bg-red-100 text-red-500 hover:bg-red-200' : ''}`}
+      >
+        {isRecording ? <Square className="h-5 w-5" /> : <Record className="h-5 w-5" />}
       </Button>
       
       <Button 

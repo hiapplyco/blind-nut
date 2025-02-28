@@ -11,6 +11,7 @@ import Dashboard from "@/pages/Dashboard";
 import { JobPostingPage } from "@/components/jobs/JobPostingPage";
 import { JobEditorPage } from "@/components/jobs/JobEditorPage";
 import LinkedInPostGenerator from "@/pages/LinkedInPostGenerator";
+import ContentCreationPage from "@/pages/ContentCreationPage"; // Import the new combined page
 import Sourcing from "@/pages/Sourcing";
 import ScreeningRoom from "@/pages/ScreeningRoom";
 import InterviewPrep from "@/pages/InterviewPrep";
@@ -34,6 +35,7 @@ function App() {
               <Route path="/job-post" element={<JobPostingPage />} />
               <Route path="/job-editor/:id" element={<JobEditorPage />} />
               <Route path="/linkedin-post" element={<LinkedInPostGenerator />} />
+              <Route path="/content-creation" element={<ContentCreationPage />} /> {/* Add the new route */}
               <Route path="/sourcing" element={<Sourcing />} />
               <Route path="/screening-room" element={<ScreeningRoom />} />
               <Route path="/interview-prep" element={<InterviewPrep />} />

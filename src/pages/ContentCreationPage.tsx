@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { JobPostingForm } from "@/components/jobs/JobPostingForm";
@@ -9,13 +10,25 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const ContentCreationPage = () => {
-  const [activeTab, setActiveTab] = useState("job");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(() => {
+    // Check if the user was redirected from linkedin-post
+    return location.state?.from === "/linkedin-post" ? "linkedin" : "job";
+  });
+  
   const [generatedPost, setGeneratedPost] = useState("");
   const [analysis, setAnalysis] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
   const [linkedInActiveTab, setLinkedInActiveTab] = useState("post");
   const [isScrapingUrl, setIsScrapingUrl] = useState(false);
+
+  // If user was redirected from linkedin-post, set tab to linkedin
+  useEffect(() => {
+    if (location.pathname.includes("linkedin-post")) {
+      setActiveTab("linkedin");
+    }
+  }, [location]);
 
   const handleLinkedInSubmit = async (postContent: string, link: string, websiteContent: string) => {
     setIsLoading(true);

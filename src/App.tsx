@@ -34,8 +34,11 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/job-post" element={<JobPostingPage />} />
               <Route path="/job-editor/:id" element={<JobEditorPage />} />
-              <Route path="/linkedin-post" element={<LinkedInPostGenerator />} />
-              <Route path="/content-creation" element={<ContentCreationPage />} /> {/* Add the new route */}
+              
+              {/* Redirect old linkedin-post route to content-creation */}
+              <Route path="/linkedin-post" element={<Navigate to="/content-creation" replace />} />
+              
+              <Route path="/content-creation" element={<ContentCreationPage />} />
               <Route path="/sourcing" element={<Sourcing />} />
               <Route path="/screening-room" element={<ScreeningRoom />} />
               <Route path="/interview-prep" element={<InterviewPrep />} />

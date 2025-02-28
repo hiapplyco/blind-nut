@@ -18,7 +18,7 @@ export const AgentWindow = ({
 
   return (
     <Card 
-      className="w-full p-4 sm:p-6 border-4 border-black bg-[#FFFBF4] 
+      className="w-full p-4 sm:p-6 border-4 border-black bg-[#F1F0FB] 
                 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] 
                 hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,0.8)] 
                 transition-all duration-200 transform 

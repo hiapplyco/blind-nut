@@ -108,7 +108,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-[#FEF7CD]">
+      <div className="min-h-screen flex w-full bg-[#F1F0FB]">
         <Sidebar>
           <SidebarContent>
             <SidebarGroup>
@@ -120,7 +120,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
           <div className="p-4 border-t border-black">
             <Button
               variant="ghost"
-              className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-[#FEF7CD]/50"
+              className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-[#F1F0FB]/50"
               onClick={handleSignOut}
             >
               Sign Out

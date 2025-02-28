@@ -53,15 +53,21 @@ export const useMediaStream = ({
       
       console.log("Requesting media with video:", isVideoEnabled, "audio:", isAudioEnabled);
       
+      // Get media stream
       const stream = await navigator.mediaDevices.getUserMedia({
         video: isVideoEnabled,
         audio: isAudioEnabled
       });
       
       console.log("Stream received:", stream);
+      mediaStreamRef.current = stream;
       
+      // Check if videoRef is available before assigning the stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        console.log("Video ref set with stream");
+        
+        // Make sure to handle the play promise properly
         videoRef.current.onloadedmetadata = () => {
           console.log("Video metadata loaded");
           if (videoRef.current) {
@@ -70,9 +76,9 @@ export const useMediaStream = ({
               .catch(err => console.error("Error playing video:", err));
           }
         };
-        mediaStreamRef.current = stream;
       } else {
         console.error("Video ref is null");
+        return false;
       }
       
       setIsConnected(true);

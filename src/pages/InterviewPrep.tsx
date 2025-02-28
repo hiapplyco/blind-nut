@@ -4,8 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Save } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { InterviewHeader } from "@/components/interview/InterviewHeader";
 import { InterviewStatus } from "@/components/interview/InterviewStatus";
@@ -83,54 +82,63 @@ export default function InterviewPrep() {
 
   const handleConnect = async () => {
     setIsLoading(true);
-    const success = await startMedia();
-    if (success) {
-      toast.success("Successfully connected to media devices");
+    
+    try {
+      console.log("Starting media connection");
+      const success = await startMedia();
       
-      // Update session status
-      if (sessionId) {
-        await supabase
-          .from('interview_sessions')
-          .update({ status: 'active', started_at: new Date().toISOString() })
-          .eq('id', sessionId);
-      }
-      
-      // Start with an initial greeting from the AI interviewer
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('handle-interview', {
-          body: {
-            message: "Hello, I'm ready for the interview.",
-            context: []
-          }
-        });
-
-        if (error) throw error;
-
-        if (data?.response) {
-          const assistantMessage: Message = { 
-            role: 'assistant', 
-            content: data.response 
-          };
-          
-          setMessages(prev => [...prev, assistantMessage]);
-          
-          // Save assistant message to database if sessionId exists
-          if (sessionId) {
-            await supabase.from('interview_messages').insert({
-              session_id: sessionId,
-              role: 'assistant',
-              content: data.response
-            });
-          }
+      if (success) {
+        toast.success("Successfully connected to media devices");
+        
+        // Update session status
+        if (sessionId) {
+          await supabase
+            .from('interview_sessions')
+            .update({ status: 'active', started_at: new Date().toISOString() })
+            .eq('id', sessionId);
         }
-      } catch (err) {
-        console.error('Error getting initial message:', err);
-      } finally {
-        setIsLoading(false);
+        
+        // Start with an initial greeting from the AI interviewer
+        try {
+          const { data, error } = await supabase.functions.invoke('handle-interview', {
+            body: {
+              message: "Hello, I'm ready for the interview.",
+              context: []
+            }
+          });
+
+          if (error) throw error;
+
+          if (data?.response) {
+            const assistantMessage: Message = { 
+              role: 'assistant', 
+              content: data.response 
+            };
+            
+            setMessages(prev => [...prev, assistantMessage]);
+            
+            // Save assistant message to database if sessionId exists
+            if (sessionId) {
+              await supabase.from('interview_messages').insert({
+                session_id: sessionId,
+                role: 'assistant',
+                content: data.response
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Error getting initial message:', err);
+          toast.error("Failed to get interview response. You can still proceed with the session.");
+        }
+      } else {
+        toast.error("Failed to connect to media devices. Please check your permissions.");
       }
+    } catch (err) {
+      console.error("Error in handleConnect:", err);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleDisconnect = async () => {

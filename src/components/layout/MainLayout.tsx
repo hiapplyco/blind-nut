@@ -69,11 +69,9 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
       });
     }, 50);
 
-    // Navigate with state to prevent full page reload
-    navigate(path, { 
-      replace: true,
-      state: { preventReload: true }
-    });
+    // Use navigate without replace to maintain history stack
+    // and avoid full page reloads
+    navigate(path);
     
     return () => clearInterval(interval);
   }, [navigate, location.pathname]);

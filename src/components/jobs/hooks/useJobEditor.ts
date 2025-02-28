@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -15,10 +14,15 @@ export function useJobEditor(jobId: string) {
   useEffect(() => {
     const fetchJob = async () => {
       try {
+        const jobIdNumber = Number(jobId);
+        if (isNaN(jobIdNumber)) {
+          throw new Error('Invalid job ID');
+        }
+
         const { data, error } = await supabase
           .from('jobs')
           .select('*')
-          .eq('id', jobId)
+          .eq('id', jobIdNumber)
           .single();
 
         if (error) throw error;

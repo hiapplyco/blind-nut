@@ -108,7 +108,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-[#FFFBF4]">
+      <div className="min-h-screen flex w-full bg-[#FEF7CD]">
         <Sidebar>
           <SidebarContent>
             <SidebarGroup>
@@ -117,10 +117,10 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <div className="p-4 border-t">
+          <div className="p-4 border-t border-black">
             <Button
               variant="ghost"
-              className="w-full justify-start text-gray-600 hover:text-gray-900"
+              className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-[#FEF7CD]/50"
               onClick={handleSignOut}
             >
               Sign Out
@@ -137,7 +137,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
                     <Progress 
                       value={progress} 
                       className="h-1 rounded-none bg-transparent"
-                      indicatorClassName="bg-primary transition-all duration-300 ease-in-out"
+                      indicatorClassName="bg-[#8B5CF6] transition-all duration-300 ease-in-out"
                     />
                   </div>
                 )}

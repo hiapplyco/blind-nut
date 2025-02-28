@@ -19,9 +19,10 @@ const UrlInput = ({ link, onLinkChange, onFileChange }: UrlInputProps) => {
           placeholder="Add a website URL to analyze (optional)"
           value={link}
           onChange={(e) => onLinkChange(e.target.value)}
+          className="border-2 border-black"
         />
       </div>
-      <Label className="cursor-pointer">
+      <Label className="cursor-pointer hover:text-[#8B5CF6] transition-colors">
         <input 
           type="file" 
           className="hidden" 
@@ -31,7 +32,7 @@ const UrlInput = ({ link, onLinkChange, onFileChange }: UrlInputProps) => {
             }
           }} 
         />
-        <Globe className="h-6 w-6 text-muted-foreground hover:text-foreground" />
+        <Globe className="h-6 w-6 text-gray-600 hover:text-[#8B5CF6]" />
       </Label>
     </div>
   );

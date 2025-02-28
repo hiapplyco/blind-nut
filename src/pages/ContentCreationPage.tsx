@@ -70,23 +70,33 @@ const ContentCreationPage = () => {
   return (
     <div className="container py-8 space-y-8 mx-auto">
       <div className="space-y-4">
-        <h1 className="text-3xl font-bold">Content Creation Hub</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold text-[#8B5CF6]">Content Creation Hub</h1>
+        <p className="text-gray-600">
           Create job postings and LinkedIn promotion posts for your recruitment campaigns
         </p>
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-8">
-          <TabsTrigger value="job">Job Posting</TabsTrigger>
-          <TabsTrigger value="linkedin">LinkedIn Post</TabsTrigger>
+        <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-8 bg-[#F1F1F1] p-1 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <TabsTrigger 
+            value="job" 
+            className="rounded-md data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+          >
+            Job Posting
+          </TabsTrigger>
+          <TabsTrigger 
+            value="linkedin" 
+            className="rounded-md data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+          >
+            LinkedIn Post
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="job" className="max-w-4xl mx-auto">
-          <Card>
+          <Card className="border-2 border-black bg-white shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]">
             <CardHeader>
-              <CardTitle>Create Job Posting</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-2xl font-bold">Create Job Posting</CardTitle>
+              <CardDescription className="text-gray-600">
                 Craft a detailed job posting that will be analyzed and optimized
               </CardDescription>
             </CardHeader>

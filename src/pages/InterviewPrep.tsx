@@ -68,6 +68,7 @@ export default function InterviewPrep() {
             
           if (error) throw error;
           
+          // Ensure sessionId is stored as a number
           setSessionId(data.id);
         }
       } catch (error) {
@@ -138,7 +139,7 @@ export default function InterviewPrep() {
       if (error) throw error;
 
       if (data?.response) {
-        const assistantMessage = { 
+        const assistantMessage: Message = { 
           role: 'assistant', 
           content: data.response 
         };

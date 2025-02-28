@@ -65,6 +65,7 @@ export function JobEditorPage() {
         onCreateLinkedInPost={() => handleCreateLinkedInPost(analysisContent)}
         isSourceLoading={isSourceLoading}
         isPostLoading={isPostLoading}
+        jobId={Number(id)}
       />
 
       {formattedData && (

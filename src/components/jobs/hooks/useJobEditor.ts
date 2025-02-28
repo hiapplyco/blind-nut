@@ -1,80 +1,70 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { processJobRequirements } from '@/utils/jobRequirements';
+import { toast } from '@/hooks/use-toast';
 
 export function useJobEditor(jobId: string) {
-  const navigate = useNavigate();
+  const [job, setJob] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
   const [isSourceLoading, setIsSourceLoading] = useState(false);
   const [isPostLoading, setIsPostLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const { data: job, isLoading, error } = useQuery({
-    queryKey: ['job', jobId],
-    queryFn: async () => {
-      console.log("Fetching job data for ID:", jobId);
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('id', Number(jobId))
-        .single();
+  useEffect(() => {
+    const fetchJob = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('*')
+          .eq('id', jobId)
+          .single();
 
-      if (error) {
-        console.error("Error fetching job:", error);
-        throw error;
+        if (error) throw error;
+        setJob(data);
+      } catch (err) {
+        console.error('Error fetching job:', err);
+        setError(err);
+      } finally {
+        setIsLoading(false);
       }
-      
-      console.log("Job data received:", data);
-      return data;
-    },
-  });
+    };
 
-  const handleSourceCandidates = async (editorContent: string) => {
-    setIsSourceLoading(true);
-    console.log("Processing content for sourcing:", editorContent);
-    
-    try {
-      toast.info("Processing job requirements for sourcing...");
-      const result = await processJobRequirements(editorContent, "candidates");
-      
-      if (result) {
-        toast.success("Job requirements processed successfully!");
-        navigate('/sourcing', { 
-          replace: true,
-          state: { processedRequirements: result }
-        });
-      }
-    } catch (error) {
-      console.error('Error processing job requirements:', error);
-      toast.error("Failed to process job requirements");
-    } finally {
-      setIsSourceLoading(false);
+    if (jobId) {
+      fetchJob();
     }
+  }, [jobId]);
+
+  const handleSourceCandidates = async (analysisContent: string) => {
+    // Instead of processing here, we'll navigate to the sourcing page
+    // with the jobId, letting that page access the data directly
+    navigate('/sourcing', { 
+      state: { 
+        jobId: Number(jobId),
+        autoRun: true
+      } 
+    });
   };
 
-  const handleCreateLinkedInPost = async (editorContent: string) => {
+  const handleCreateLinkedInPost = async (analysisContent: string) => {
     setIsPostLoading(true);
-    console.log("Generating LinkedIn post from content:", editorContent);
-    
     try {
-      toast.info("Generating LinkedIn post...");
-      
-      const { data, error } = await supabase.functions.invoke('generate-linkedin-post', {
-        body: { content: editorContent }
-      });
-
-      if (error) throw error;
-      
-      toast.success("LinkedIn post generated successfully!");
-      navigate('/linkedin-post-generator', { 
-        replace: true,
-        state: { generatedPost: data.post }
+      // Process for LinkedIn post generation
+      navigate('/linkedin-post', { 
+        state: { 
+          content: analysisContent,
+          jobId: Number(jobId),
+          autoRun: true
+        } 
       });
     } catch (error) {
-      console.error('Error generating LinkedIn post:', error);
-      toast.error("Failed to generate LinkedIn post");
+      console.error('Error creating LinkedIn post:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create LinkedIn post',
+        variant: 'destructive',
+      });
     } finally {
       setIsPostLoading(false);
     }
@@ -87,6 +77,6 @@ export function useJobEditor(jobId: string) {
     isSourceLoading,
     isPostLoading,
     handleSourceCandidates,
-    handleCreateLinkedInPost
+    handleCreateLinkedInPost,
   };
 }

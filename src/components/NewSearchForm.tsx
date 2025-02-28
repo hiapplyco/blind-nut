@@ -1,5 +1,5 @@
-import { memo } from "react";
-import { useState, useEffect } from "react";
+
+import { memo, useState, useEffect } from "react";
 import { SearchForm } from "./search/SearchForm";
 import { AgentProcessor } from "./search/AgentProcessor";
 import { useNavigate } from "react-router-dom";
@@ -10,17 +10,27 @@ import { AnalysisReport } from "./search/analysis/AnalysisReport";
 interface NewSearchFormProps {
   userId: string | null;
   initialRequirements?: any;
+  initialJobId?: number;
+  autoRun?: boolean;
 }
 
-const NewSearchForm = ({ userId, initialRequirements }: NewSearchFormProps) => {
+const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = false }: NewSearchFormProps) => {
   const navigate = useNavigate();
-  const [currentJobId, setCurrentJobId] = useState<number | null>(null);
+  const [currentJobId, setCurrentJobId] = useState<number | null>(initialJobId || null);
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
   
   // Only call useAgentOutputs if we have a currentJobId
   const { data: agentOutput, isLoading } = useAgentOutputs(currentJobId || 0);
+
+  // Auto-run analysis if coming from job editor
+  useEffect(() => {
+    if (autoRun && initialJobId && agentOutput) {
+      setCurrentJobId(initialJobId);
+      setIsProcessingComplete(true);
+    }
+  }, [autoRun, initialJobId, agentOutput]);
 
   const handleSearchSubmit = (text: string, jobId: number) => {
     console.log("Search submitted:", { text, jobId });

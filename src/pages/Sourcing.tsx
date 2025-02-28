@@ -1,13 +1,19 @@
 
 import NewSearchForm from "@/components/NewSearchForm";
 import { useAuth } from "@/context/AuthContext";
-import { memo } from "react";
+import { memo, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { useAgentOutputs } from "@/stores/useAgentOutputs";
 
 const SourcingComponent = () => {
   const { session } = useAuth();
   const location = useLocation();
+  const jobId = location.state?.jobId;
   const processedRequirements = location.state?.processedRequirements;
+  const autoRun = location.state?.autoRun;
+  
+  // Pre-fetch agent outputs if we have a jobId
+  const { data: agentOutput } = useAgentOutputs(jobId || 0);
 
   return (
     <div className="container max-w-4xl py-8 space-y-8">
@@ -20,6 +26,8 @@ const SourcingComponent = () => {
       <NewSearchForm 
         userId={session?.user?.id ?? null}
         initialRequirements={processedRequirements}
+        initialJobId={jobId}
+        autoRun={autoRun}
       />
     </div>
   );
@@ -27,4 +35,3 @@ const SourcingComponent = () => {
 
 const Sourcing = memo(SourcingComponent);
 export default Sourcing;
-

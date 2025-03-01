@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -52,6 +53,22 @@ export const useMediaStream = ({
       
       console.log("Requesting media with video:", isVideoEnabled, "audio:", isAudioEnabled);
       
+      // Check if videoRef is available before proceeding
+      if (!videoRef.current) {
+        console.log("Video ref not available yet, waiting for it to be created");
+        
+        // Wait a short time for the ref to be available
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Check again if videoRef is available
+        if (!videoRef.current) {
+          console.error("Video ref still null after waiting");
+          setError('Video element not found. Please try refreshing the page.');
+          setIsLoading(false);
+          return false;
+        }
+      }
+      
       // Get media stream
       const stream = await navigator.mediaDevices.getUserMedia({
         video: isVideoEnabled,
@@ -61,45 +78,55 @@ export const useMediaStream = ({
       console.log("Stream received:", stream);
       mediaStreamRef.current = stream;
       
-      // Ensure the videoRef is available
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        console.log("Video ref set with stream");
+      // Set stream to video element
+      videoRef.current.srcObject = stream;
+      console.log("Video ref set with stream");
+      
+      // Try playing right away
+      try {
+        await videoRef.current.play();
+        console.log("Video playback started immediately");
+      } catch (err) {
+        console.log("Couldn't play immediately, setting up onloadedmetadata event");
         
-        // Make sure to handle the play promise properly
-        try {
-          // Try playing right away
-          await videoRef.current.play();
-          console.log("Video playback started immediately");
-        } catch (err) {
-          console.log("Couldn't play immediately, setting up onloadedmetadata event");
-          // If immediate play fails, set up the onloadedmetadata handler
-          videoRef.current.onloadedmetadata = async () => {
-            console.log("Video metadata loaded");
-            if (videoRef.current) {
-              try {
-                await videoRef.current.play();
-                console.log("Video playback started after metadata load");
-              } catch (playErr) {
-                console.error("Error playing video after metadata load:", playErr);
-              }
+        // If immediate play fails, set up the onloadedmetadata handler
+        videoRef.current.onloadedmetadata = async () => {
+          console.log("Video metadata loaded");
+          if (videoRef.current) {
+            try {
+              await videoRef.current.play();
+              console.log("Video playback started after metadata load");
+            } catch (playErr) {
+              console.error("Error playing video after metadata load:", playErr);
             }
-          };
-        }
-        
-        setIsConnected(true);
-        setIsLoading(false);
-        return true;
-      } else {
-        console.error("Video ref is null");
-        setError('Video element not found. Please try again.');
-        setIsLoading(false);
-        return false;
+          }
+        };
       }
+      
+      setIsConnected(true);
+      setIsLoading(false);
+      return true;
     } catch (err) {
       console.error('Error accessing media devices:', err);
-      setError(err instanceof Error ? err.message : 'Could not access camera or microphone. Please check your browser permissions.');
+      
+      // Provide a more helpful error message based on the error
+      let errorMessage = 'Could not access camera or microphone.';
+      
+      if (err instanceof DOMException) {
+        if (err.name === 'NotFoundError') {
+          errorMessage = 'No camera or microphone found. Please check your device.';
+        } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          errorMessage = 'Permission to access camera or microphone was denied. Please check your browser permissions.';
+        } else if (err.name === 'AbortError') {
+          errorMessage = 'Hardware error occurred. Please try again or use a different device.';
+        } else if (err.name === 'NotReadableError') {
+          errorMessage = 'Could not access your media device. It may be in use by another application.';
+        }
+      }
+      
+      setError(errorMessage);
       setIsLoading(false);
+      toast.error(errorMessage);
       return false;
     }
   };

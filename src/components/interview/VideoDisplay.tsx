@@ -15,10 +15,30 @@ export const VideoDisplay = ({ videoRef, isVideoEnabled }: VideoDisplayProps) =>
     // Reset loaded state when video enabled state changes
     setIsLoaded(false);
     
+    // Create a reference to the current video element
+    const videoElement = videoRef.current;
+    
     // Check if video is already loaded when component mounts or video enabled changes
-    if (videoRef.current && videoRef.current.readyState >= 2) {
+    if (videoElement && videoElement.readyState >= 2) {
       setIsLoaded(true);
     }
+    
+    // Setup event handlers
+    const handleLoadedData = () => {
+      console.log("Video loaded data event fired");
+      setIsLoaded(true);
+    };
+    
+    if (videoElement) {
+      videoElement.addEventListener('loadeddata', handleLoadedData);
+    }
+    
+    // Cleanup event listeners
+    return () => {
+      if (videoElement) {
+        videoElement.removeEventListener('loadeddata', handleLoadedData);
+      }
+    };
   }, [isVideoEnabled, videoRef]);
 
   return (
@@ -31,10 +51,6 @@ export const VideoDisplay = ({ videoRef, isVideoEnabled }: VideoDisplayProps) =>
             playsInline
             muted
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onLoadedData={() => {
-              console.log("Video loaded data event fired");
-              setIsLoaded(true);
-            }}
           />
           
           {!isLoaded && (

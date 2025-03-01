@@ -34,7 +34,7 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
       <div>
         <label 
           htmlFor="content" 
-          className="block text-sm font-medium mb-2"
+          className="block text-sm font-medium mb-2 text-gray-600 font-bold"
         >
           Job Details
         </label>
@@ -43,7 +43,7 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder={placeholder}
-          className="min-h-[500px] font-mono"
+          className="min-h-[500px] font-mono border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]"
         />
       </div>
 
@@ -51,6 +51,7 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
         <Button 
           type="submit" 
           disabled={isSubmitting}
+          className="bg-[#8B5CF6] text-white hover:bg-[#7C3AED] border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]"
         >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {jobId ? "Update" : "Create"} Job Posting
@@ -61,6 +62,7 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
             variant="outline" 
             onClick={onCancel}
             disabled={isSubmitting}
+            className="border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]"
           >
             Cancel
           </Button>

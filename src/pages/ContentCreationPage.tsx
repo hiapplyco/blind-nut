@@ -95,7 +95,7 @@ const ContentCreationPage = () => {
         <TabsContent value="job" className="max-w-4xl mx-auto">
           <Card className="border-2 border-black bg-white shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Create Job Posting</CardTitle>
+              <CardTitle className="text-2xl font-bold text-[#8B5CF6]">Create Job Posting</CardTitle>
               <CardDescription className="text-gray-600">
                 Craft a detailed job posting that will be analyzed and optimized
               </CardDescription>

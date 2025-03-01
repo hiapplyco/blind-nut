@@ -19,7 +19,7 @@ const UrlInput = ({ link, onLinkChange, onFileChange }: UrlInputProps) => {
           placeholder="Add a website URL to analyze (optional)"
           value={link}
           onChange={(e) => onLinkChange(e.target.value)}
-          className="border-2 border-black"
+          className="border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]"
         />
       </div>
       <Label className="cursor-pointer hover:text-[#8B5CF6] transition-colors">

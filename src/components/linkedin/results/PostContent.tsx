@@ -42,13 +42,13 @@ const PostContent = ({ content }: PostContentProps) => {
             navigator.clipboard.writeText(content);
             toast.success("Post copied to clipboard!");
           }}
-          className="border-2 border-black"
+          className="bg-[#8B5CF6] text-white hover:bg-[#7C3AED] border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]"
         >
           Copy to Clipboard
         </Button>
         <Button 
           onClick={handleDownload}
-          className="border-2 border-black"
+          className="bg-white text-[#8B5CF6] hover:bg-gray-100 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]"
           variant="outline"
         >
           <Download className="h-4 w-4 mr-2" />

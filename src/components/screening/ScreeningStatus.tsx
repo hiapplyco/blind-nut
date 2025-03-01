@@ -30,7 +30,7 @@ export const ScreeningStatus = ({
   }, [startTime]);
   
   return (
-    <div className="absolute top-20 left-4 bg-[#F8F5FF] p-3 rounded-lg shadow-md border border-[#7E69AB] z-30">
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#F8F5FF] p-3 rounded-lg shadow-md border border-[#7E69AB] z-30">
       <div className="flex items-center space-x-3">
         <div className="flex items-center">
           <Clock className="h-4 w-4 mr-2 text-[#9b87f5]" />

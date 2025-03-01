@@ -107,7 +107,7 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
       } catch (error) {
         console.error("Error initializing call frame:", error);
         setIsLoading(false);
-        // Don't show toast here as it might be too frequent
+        toast.error('Failed to initialize video call. Please try refreshing the page.');
       }
     };
 
@@ -123,7 +123,7 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
 
   return (
     <div className="absolute inset-0">
-      {isLoading && !roomUrl && (
+      {isLoading && (
         <div className="flex flex-col items-center justify-center h-full w-full bg-gray-50">
           <Loader2 className="h-10 w-10 text-[#9b87f5] animate-spin mb-4" />
           <p className="text-gray-600">Initializing video room...</p>

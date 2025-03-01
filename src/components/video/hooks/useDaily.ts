@@ -3,6 +3,9 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Demo room URL to use as a fallback if everything else fails
+const DEMO_ROOM_URL = "https://pipecat.daily.co/hello";
+
 export const useDaily = (
   onJoinMeeting?: () => void,
   onParticipantJoined?: (participant: any) => void,
@@ -14,6 +17,7 @@ export const useDaily = (
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [usingFallback, setUsingFallback] = useState(false);
 
   useEffect(() => {
     const createRoom = async () => {
@@ -28,6 +32,7 @@ export const useDaily = (
         if (data && data.url) {
           console.log("Successfully created Daily room:", data.url);
           setRoomUrl(data.url);
+          setUsingFallback(false);
         } else {
           throw new Error('No room URL returned from API');
         }
@@ -37,13 +42,19 @@ export const useDaily = (
         
         // Only show toast on first attempt to avoid multiple notifications
         if (retryCount === 0) {
-          toast.error('Failed to create video room. Please try again.');
+          toast.error('Failed to create video room. Trying again...');
         }
         
         // Retry if we haven't reached max retries
         if (retryCount < 2) {
           setRetryCount(prev => prev + 1);
           setTimeout(() => createRoom(), 2000); // Retry after 2 seconds
+        } else {
+          // Use fallback room if all retries fail
+          console.log("Using fallback demo room:", DEMO_ROOM_URL);
+          setRoomUrl(DEMO_ROOM_URL);
+          setUsingFallback(true);
+          toast.warning("Using demo video room due to connection issues");
         }
       } finally {
         setIsLoading(false);
@@ -93,6 +104,7 @@ export const useDaily = (
     ROOM_URL,
     isLoading,
     error,
+    usingFallback,
     handleCallFrameReady,
   };
 };

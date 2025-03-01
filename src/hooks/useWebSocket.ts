@@ -1,7 +1,6 @@
 
 import { useRef, useEffect } from 'react';
 import { setupWebSocketEventHandlers, initializeWebSocketConnection } from '@/utils/websocketUtils';
-import { toast } from "sonner";
 
 export const useWebSocket = (sessionId: number | null) => {
   const wsRef = useRef<WebSocket | null>(null);
@@ -16,7 +15,7 @@ export const useWebSocket = (sessionId: number | null) => {
         setupWebSocketEventHandlers(ws, sessionId);
       } catch (error) {
         console.error('Error initializing WebSocket:', error);
-        toast.error('Failed to initialize WebSocket connection');
+        // Don't show toast for connection errors
       }
     };
 

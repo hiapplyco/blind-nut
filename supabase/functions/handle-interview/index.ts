@@ -1,114 +1,98 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3/";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.12";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Set up CORS to allow requests from any origin
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Create a Supabase client
+const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Mock interview response when AI service is unavailable
+const getDefaultResponse = (message: string) => {
+  const defaultResponses = [
+    "Thank you for that response. Could you tell me about a challenging situation you've faced at work and how you handled it?",
+    "That's interesting. How would you describe your ideal work environment?",
+    "I appreciate your insights. Can you walk me through your approach to problem-solving?",
+    "Great. Now, tell me about a time when you had to adapt to a significant change at work.",
+    "Could you elaborate on your experience with team collaboration?",
+  ];
+  
+  return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
 };
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      headers: corsHeaders,
+    })
   }
 
   try {
-    const { message, context } = await req.json();
-    
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!geminiApiKey) {
-      throw new Error('GEMINI_API_KEY not found');
+    // Get the request body
+    const { message, context = [] } = await req.json();
+
+    // Validate input
+    if (!message || typeof message !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid input: message is required and must be a string', success: false }),
+        {
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          status: 400,
+        }
+      );
     }
 
-    // Build the interviewer context
-    const interviewerInstructions = `
-    You are an AI interviewer helping a candidate practice for a job interview. 
-    Your goal is to create a realistic and valuable interview experience.
-    
-    - Ask relevant questions based on the candidate's responses
-    - Provide constructive feedback on their answers
-    - Simulate a real interview environment
-    - Be supportive but professional
-    - Help the candidate improve their interviewing skills
-    
-    Focus on both technical skills and soft skills. Adapt your questions based on their previous answers.
-    `;
+    console.log('Interview message received:', message);
+    console.log('Context:', context);
 
-    // Create conversation history in the format expected by Gemini
-    const conversationHistory = context.map((msg: { role: string; content: string }) => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.content }]
-    }));
+    try {
+      // TODO: Replace with actual AI service call
+      // For now, just returning a mock response
+      const response = getDefaultResponse(message);
 
-    // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(geminiApiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-
-    // Generate content
-    let chat;
-    
-    if (conversationHistory.length > 0) {
-      // Continue existing chat
-      chat = model.startChat({
-        history: conversationHistory,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        },
-      });
-    } else {
-      // Start new chat
-      chat = model.startChat({
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        },
-      });
+      return new Response(
+        JSON.stringify({ 
+          response, 
+          success: true 
+        }),
+        {
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          status: 200,
+        }
+      );
+    } catch (error) {
+      console.error('Error in AI processing:', error);
       
-      // Add the interviewer instructions
-      await chat.sendMessage({
-        role: "user",
-        parts: [{ text: interviewerInstructions }],
-      });
+      // Return a default response rather than an error
+      const fallbackResponse = getDefaultResponse(message);
       
-      // Set initial context
-      await chat.sendMessage({
-        role: "user", 
-        parts: [{ text: "I'd like to practice for a job interview. Please start by introducing yourself as the interviewer and asking me an initial question." }]
-      });
+      return new Response(
+        JSON.stringify({ 
+          response: fallbackResponse,
+          success: true,
+          note: "Using fallback response due to AI service issue"
+        }),
+        {
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          status: 200,
+        }
+      );
     }
-    
-    // Send the user message
-    const result = await chat.sendMessage({
-      role: "user",
-      parts: [{ text: message }]
-    });
-    
-    const response = result.response.text();
-    
-    return new Response(
-      JSON.stringify({ 
-        response,
-        success: true 
-      }), 
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
-
   } catch (error) {
-    console.error('Error in handle-interview function:', error);
+    console.error('Error handling request:', error);
     
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        success: false
-      }),
-      { 
+      JSON.stringify({ error: 'Internal server error', success: false }),
+      {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

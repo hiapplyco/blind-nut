@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,6 @@ export default function InterviewPrep() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const startTimeRef = useRef<Date>(new Date());
-  const [videoReady, setVideoReady] = useState(false);
   
   const {
     videoRef,
@@ -45,8 +43,6 @@ export default function InterviewPrep() {
   useEffect(() => {
     // Set document title
     document.title = "Interview Preparation | Pipecat";
-    // Set video ready state when component mounts
-    setVideoReady(true);
     
     return () => {
       document.title = "Pipecat"; // Reset title on unmount
@@ -88,14 +84,6 @@ export default function InterviewPrep() {
     
     try {
       console.log("Starting media connection");
-      // Ensure videoRef is available
-      if (!videoReady) {
-        console.log("Video element not ready yet, waiting...");
-        setVideoReady(true);
-        setTimeout(() => handleConnect(), 500);
-        setIsLoading(false);
-        return;
-      }
       
       const success = await startMedia();
       
@@ -110,7 +98,7 @@ export default function InterviewPrep() {
             .eq('id', sessionId);
         }
         
-        // Start with an initial greeting from the AI interviewer
+        // Attempt to get initial message from AI interviewer
         try {
           const { data, error } = await supabase.functions.invoke('handle-interview', {
             body: {
@@ -140,7 +128,8 @@ export default function InterviewPrep() {
           }
         } catch (err) {
           console.error('Error getting initial message:', err);
-          toast.error("Failed to get interview response. You can still proceed with the session.");
+          // Continue without initial message
+          toast.warning("Couldn't connect to AI interviewer. You can still continue with your recording session.");
         }
       } else {
         toast.error("Failed to connect to media devices. Please check your permissions.");

@@ -14,7 +14,12 @@ export const VideoDisplay = ({ videoRef, isVideoEnabled }: VideoDisplayProps) =>
   useEffect(() => {
     // Reset loaded state when video enabled state changes
     setIsLoaded(false);
-  }, [isVideoEnabled]);
+    
+    // Check if video is already loaded when component mounts or video enabled changes
+    if (videoRef.current && videoRef.current.readyState >= 2) {
+      setIsLoaded(true);
+    }
+  }, [isVideoEnabled, videoRef]);
 
   return (
     <div className="relative w-full h-[70vh] rounded-lg overflow-hidden bg-muted flex items-center justify-center">

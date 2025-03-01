@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -62,35 +61,44 @@ export const useMediaStream = ({
       console.log("Stream received:", stream);
       mediaStreamRef.current = stream;
       
-      // Wait a moment to ensure the videoRef is available after render
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          console.log("Video ref set with stream");
-          
-          // Make sure to handle the play promise properly
-          videoRef.current.onloadedmetadata = () => {
+      // Ensure the videoRef is available
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        console.log("Video ref set with stream");
+        
+        // Make sure to handle the play promise properly
+        try {
+          // Try playing right away
+          await videoRef.current.play();
+          console.log("Video playback started immediately");
+        } catch (err) {
+          console.log("Couldn't play immediately, setting up onloadedmetadata event");
+          // If immediate play fails, set up the onloadedmetadata handler
+          videoRef.current.onloadedmetadata = async () => {
             console.log("Video metadata loaded");
             if (videoRef.current) {
-              videoRef.current.play()
-                .then(() => console.log("Video playback started"))
-                .catch(err => console.error("Error playing video:", err));
+              try {
+                await videoRef.current.play();
+                console.log("Video playback started after metadata load");
+              } catch (playErr) {
+                console.error("Error playing video after metadata load:", playErr);
+              }
             }
           };
-          
-          setIsConnected(true);
-          setIsLoading(false);
-        } else {
-          console.error("Video ref is still null after timeout");
-          setError('Video element not found. Please try again.');
-          setIsLoading(false);
         }
-      }, 100);
-      
-      return true;
+        
+        setIsConnected(true);
+        setIsLoading(false);
+        return true;
+      } else {
+        console.error("Video ref is null");
+        setError('Video element not found. Please try again.');
+        setIsLoading(false);
+        return false;
+      }
     } catch (err) {
       console.error('Error accessing media devices:', err);
-      setError('Could not access camera or microphone. Please check your browser permissions.');
+      setError(err instanceof Error ? err.message : 'Could not access camera or microphone. Please check your browser permissions.');
       setIsLoading(false);
       return false;
     }

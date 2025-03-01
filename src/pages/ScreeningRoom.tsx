@@ -31,6 +31,7 @@ const ScreeningRoom = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [hasJoinedMeeting, setHasJoinedMeeting] = useState(false);
   
   const { sessionId } = useScreeningSession();
   useWebSocket(sessionId);
@@ -61,6 +62,7 @@ const ScreeningRoom = () => {
     console.log('Joined meeting');
     toast.success('Welcome to the screening room! Your camera and microphone should start automatically.');
     setIsLoading(false);
+    setHasJoinedMeeting(true);
   };
 
   const handleParticipantJoined = (participant: Participant) => {
@@ -90,6 +92,7 @@ const ScreeningRoom = () => {
       }
 
       toast.success('Meeting data saved successfully');
+      setHasJoinedMeeting(false);
     } catch (error) {
       console.error('Error saving meeting data:', error);
       toast.error('Failed to save meeting data');
@@ -150,11 +153,13 @@ const ScreeningRoom = () => {
     <div className="flex flex-col h-screen relative">
       <ScreeningHeader />
       
-      <ScreeningStatus 
-        startTime={startTimeRef.current}
-        participantCount={participants.length}
-        isRecording={isRecording}
-      />
+      {hasJoinedMeeting && (
+        <ScreeningStatus 
+          startTime={startTimeRef.current}
+          participantCount={participants.length}
+          isRecording={isRecording}
+        />
+      )}
       
       <div className="flex-1 relative">
         <VideoCallFrame
@@ -166,11 +171,13 @@ const ScreeningRoom = () => {
           onCallFrameReady={handleCallFrameReady}
         />
         
-        <ScreeningControls 
-          onToggleChat={() => setIsChatOpen(!isChatOpen)}
-          onScreenShare={handleScreenShare}
-          callFrame={callFrame}
-        />
+        {hasJoinedMeeting && (
+          <ScreeningControls 
+            onToggleChat={() => setIsChatOpen(!isChatOpen)}
+            onScreenShare={handleScreenShare}
+            callFrame={callFrame}
+          />
+        )}
       </div>
       
       <ScreeningChat 

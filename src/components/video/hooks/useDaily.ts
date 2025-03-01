@@ -1,127 +1,82 @@
-import { useRef, useState, useCallback } from "react";
-import { DailyCall, DailyEventObjectRecordingStarted } from "@daily-co/daily-js";
-import { toast } from "sonner";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { MeetingTokenManager } from "../MeetingTokenManager";
-import { RecordingManager } from "../RecordingManager";
-import { useTranscriptionHandler } from "./useTranscriptionHandler";
-import { useMeetingHandler } from "./useMeetingHandler";
-import { useParticipantHandler } from "./useParticipantHandler";
+import { toast } from "sonner";
 
 export const useDaily = (
-  onJoinMeeting: () => void,
-  onParticipantJoined: (participant: { id: string; name?: string }) => void,
-  onParticipantLeft: (participant: { id: string }) => void,
-  onRecordingStarted: (recordingId: string) => void,
-  onLeaveMeeting: () => void,
+  onJoinMeeting?: () => void,
+  onParticipantJoined?: (participant: any) => void,
+  onParticipantLeft?: (participant: any) => void,
+  onRecordingStarted?: (recordingId: string) => void,
+  onLeaveMeeting?: () => void
 ) => {
-  const callFrameRef = useRef<DailyCall | null>(null);
-  const [isCallFrameReady, setIsCallFrameReady] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
+  const [ROOM_URL, setRoomUrl] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  const ROOM_URL = "https://hiapplyco.daily.co/lovable";
-  const meetingTokenManager = MeetingTokenManager();
-  
-  const { currentMeetingId, createMeeting } = useMeetingHandler();
-  const { startTranscription, handleTranscriptionMessage } = useTranscriptionHandler(currentMeetingId);
-  const { handleParticipantJoined, handleParticipantLeft } = useParticipantHandler(
-    onParticipantJoined,
-    onParticipantLeft
-  );
-  
-  const recordingManager = RecordingManager({
-    callFrame: callFrameRef.current,
-    isCallFrameReady,
-    isRecording,
-    setIsRecording,
-  });
-
-  const handleCallFrameReady = useCallback(async (callFrame: DailyCall) => {
-    console.log("Call frame ready, preparing to join meeting");
-    callFrameRef.current = callFrame;
-    setIsCallFrameReady(true);
-
-    try {
-      const token = await meetingTokenManager.createMeetingToken();
-      console.log("Meeting token created, joining room");
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error("No authenticated user found");
-        toast.error("Authentication required");
-        return;
-      }
-
-      await createMeeting(user.id);
-      
-      await callFrame.join({
-        url: ROOM_URL,
-        token,
-      });
-
-      callFrame.on("joined-meeting", () => {
-        console.log("Successfully joined meeting");
-        onJoinMeeting();
-        setTimeout(async () => {
-          console.log("Starting recording after join...");
-          if (!isRecording) {
-            await recordingManager.startRecording();
-          }
-          await startTranscription(callFrame);
-        }, 2000);
-      });
-
-      callFrame.on("recording-started", (event: DailyEventObjectRecordingStarted) => {
-        console.log("Recording started event received:", event);
-        if (event.recordingId) {
-          setIsRecording(true);
-          onRecordingStarted(event.recordingId);
+  useEffect(() => {
+    const createRoom = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase.functions.invoke('create-daily-room');
+        
+        if (error) {
+          throw new Error(error.message);
+        }
+        
+        if (data && data.url) {
+          setRoomUrl(data.url);
         } else {
-          console.warn("Recording started but no recordingId received");
-          toast.warning("Recording started but ID not received");
+          throw new Error('No room URL returned from API');
         }
-      });
+      } catch (err) {
+        console.error('Error creating Daily.co room:', err);
+        setError(err instanceof Error ? err : new Error('Unknown error occurred'));
+        toast.error('Failed to create video room. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      callFrame.on("recording-error", (error: any) => {
-        console.error("Recording error:", error);
-        toast.error("Recording error occurred");
-        setIsRecording(false);
-      });
+    createRoom();
+  }, []);
 
-      callFrame.on("recording-stopped", () => {
-        console.log("Recording stopped");
-        setIsRecording(false);
-      });
+  const handleCallFrameReady = useCallback((callFrame: any) => {
+    if (!callFrame) return;
 
-      callFrame.on("transcription-started", (event) => {
-        console.log("Transcription started:", event);
-      });
+    callFrame.join();
 
-      callFrame.on("transcription-message", async (event) => {
-        await handleTranscriptionMessage(event, user.id);
-      });
+    callFrame.on('joined-meeting', (event: any) => {
+      console.log('Successfully joined meeting', event);
+      if (onJoinMeeting) onJoinMeeting();
+    });
 
-      callFrame.on("participant-joined", handleParticipantJoined);
-      callFrame.on("participant-left", handleParticipantLeft);
+    callFrame.on('participant-joined', (event: any) => {
+      console.log('Participant joined:', event.participant);
+      if (onParticipantJoined) onParticipantJoined(event.participant);
+    });
 
-      callFrame.on("left-meeting", () => {
-        console.log("Left meeting");
-        if (isRecording) {
-          recordingManager.stopRecording();
-        }
-        onLeaveMeeting();
-      });
+    callFrame.on('participant-left', (event: any) => {
+      console.log('Participant left:', event.participant);
+      if (onParticipantLeft) onParticipantLeft(event.participant);
+    });
 
-    } catch (error) {
-      console.error("Error initializing call frame:", error);
-      toast.error("Failed to initialize video call");
-    }
-  }, [onJoinMeeting, onParticipantJoined, onParticipantLeft, onRecordingStarted, onLeaveMeeting, isRecording]);
+    callFrame.on('recording-started', (event: any) => {
+      console.log('Recording started:', event);
+      if (onRecordingStarted && event.recordingId) {
+        onRecordingStarted(event.recordingId);
+      }
+    });
+
+    callFrame.on('left-meeting', (event: any) => {
+      console.log('Left meeting:', event);
+      if (onLeaveMeeting) onLeaveMeeting();
+    });
+  }, [onJoinMeeting, onParticipantJoined, onParticipantLeft, onRecordingStarted, onLeaveMeeting]);
 
   return {
-    callFrameRef,
-    isCallFrameReady,
-    handleCallFrameReady,
     ROOM_URL,
+    isLoading,
+    error,
+    handleCallFrameReady,
   };
 };

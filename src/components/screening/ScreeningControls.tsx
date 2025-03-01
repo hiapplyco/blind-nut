@@ -72,7 +72,7 @@ export const ScreeningControls = ({
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex items-center space-x-3 bg-[#F8F5FF] p-3 rounded-full shadow-lg z-30 border border-[#7E69AB]">
+    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex items-center space-x-3 bg-[#F8F5FF] p-3 rounded-full shadow-lg z-30 border border-[#7E69AB] animate-fade-in">
       <Button 
         variant="outline" 
         size="icon" 

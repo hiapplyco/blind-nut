@@ -92,7 +92,7 @@ const ContentCreationPage = () => {
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="job" className="max-w-4xl mx-auto">
+        <TabsContent value="job" className="max-w-3xl mx-auto">
           <Card className="border-2 border-black bg-white shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-[#8B5CF6]">Create Job Posting</CardTitle>
@@ -106,7 +106,7 @@ const ContentCreationPage = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="linkedin" className="max-w-2xl mx-auto">
+        <TabsContent value="linkedin" className="max-w-3xl mx-auto">
           <LinkedInPostForm 
             onSubmit={handleLinkedInSubmit}
             isLoading={isLoading}

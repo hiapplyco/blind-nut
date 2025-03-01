@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useJobPostingForm } from "./hooks/useJobPostingForm";
 import { Loader2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 interface JobPostingFormProps {
   jobId?: string;
@@ -30,21 +31,24 @@ export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormPro
   });
 
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      <div>
-        <label 
+    <form onSubmit={onSubmit} className="space-y-6">
+      <div className="space-y-2">
+        <Label 
           htmlFor="content" 
-          className="block text-sm font-medium mb-2 text-gray-600 font-bold"
+          className="text-base font-bold text-gray-600"
         >
           Job Details
-        </label>
+        </Label>
         <Textarea
           id="content"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder={placeholder}
-          className="min-h-[500px] font-mono border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]"
+          className="min-h-[400px] font-mono text-base border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]"
         />
+        <p className="text-xs text-gray-500">
+          Include all relevant details about the job position
+        </p>
       </div>
 
       <div className="flex gap-4">

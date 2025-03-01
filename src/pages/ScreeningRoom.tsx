@@ -32,6 +32,7 @@ const ScreeningRoom = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [hasJoinedMeeting, setHasJoinedMeeting] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   const { sessionId } = useScreeningSession();
   useWebSocket(sessionId);
@@ -45,6 +46,7 @@ const ScreeningRoom = () => {
         navigate('/');
         return;
       }
+      setIsAuthenticated(true);
       setIsLoading(false);
     };
     
@@ -135,7 +137,8 @@ const ScreeningRoom = () => {
       });
   };
 
-  if (isLoading) {
+  // If still checking auth, show an auth loading screen
+  if (isLoading && !isAuthenticated) {
     return (
       <div className="flex flex-col h-screen">
         <ScreeningHeader />

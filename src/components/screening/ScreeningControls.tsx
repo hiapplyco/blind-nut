@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Check, LogOut, MessageCircle, MonitorX, Loader2 } from "lucide-react";
+import { LogOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { 
@@ -47,55 +47,41 @@ export const ScreeningControls = ({
     }
   };
 
-  // Chat button in top-right corner
   return (
-    <>
-      <div className="absolute top-4 right-4 z-30">
-        <Button
-          onClick={onToggleChat}
-          variant="outline"
-          className="rounded-full p-3 bg-[#F8F5FF] border border-[#7E69AB] shadow-lg"
-          aria-label="Toggle chat"
-        >
-          <MessageCircle className="h-5 w-5 text-[#4A2B1C]" />
-        </Button>
-      </div>
-
-      <Dialog open={isLeaveDialogOpen} onOpenChange={setIsLeaveDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Leave Screening</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to leave this screening session?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsLeaveDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleLeaveScreening}
-              disabled={isLeaving}
-            >
-              {isLeaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Leaving...
-                </>
-              ) : (
-                <>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Leave
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    <Dialog open={isLeaveDialogOpen} onOpenChange={setIsLeaveDialogOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Leave Screening</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to leave this screening session?
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button 
+            variant="outline" 
+            onClick={() => setIsLeaveDialogOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="destructive" 
+            onClick={handleLeaveScreening}
+            disabled={isLeaving}
+          >
+            {isLeaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Leaving...
+              </>
+            ) : (
+              <>
+                <LogOut className="mr-2 h-4 w-4" />
+                Leave
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };

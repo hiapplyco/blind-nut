@@ -1,17 +1,16 @@
 
 import { useState } from "react";
+import { Check, LogOut, MessageCircle, MonitorX, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { 
-  Video, 
-  VideoOff, 
-  Mic, 
-  MicOff, 
-  Share2, 
-  MessageSquare,
-  Circle,
-  StopCircle
-} from "lucide-react";
 import { toast } from "sonner";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
 
 interface ScreeningControlsProps {
   onToggleChat: () => void;
@@ -24,99 +23,79 @@ export const ScreeningControls = ({
   onScreenShare,
   callFrame
 }: ScreeningControlsProps) => {
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [isRecording, setIsRecording] = useState(false);
+  const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
 
-  const toggleVideo = () => {
-    if (callFrame) {
-      if (isVideoEnabled) {
-        callFrame.setLocalVideo(false);
-      } else {
-        callFrame.setLocalVideo(true);
-      }
-      setIsVideoEnabled(!isVideoEnabled);
-      toast.success(`Camera ${!isVideoEnabled ? 'enabled' : 'disabled'}`);
-    }
-  };
-
-  const toggleAudio = () => {
-    if (callFrame) {
-      if (isAudioEnabled) {
-        callFrame.setLocalAudio(false);
-      } else {
-        callFrame.setLocalAudio(true);
-      }
-      setIsAudioEnabled(!isAudioEnabled);
-      toast.success(`Microphone ${!isAudioEnabled ? 'enabled' : 'disabled'}`);
-    }
-  };
-
-  const toggleRecording = async () => {
-    if (!callFrame) return;
-
+  const handleLeaveScreening = async () => {
+    setIsLeaving(true);
     try {
-      if (!isRecording) {
-        await callFrame.startRecording();
-        setIsRecording(true);
-        toast.success('Recording started');
-      } else {
-        await callFrame.stopRecording();
-        setIsRecording(false);
-        toast.success('Recording stopped');
+      // If there's a callFrame, use it to leave the meeting
+      if (callFrame) {
+        await callFrame.leave();
       }
+      
+      // Navigate away or do other cleanup
+      window.location.href = '/dashboard';
     } catch (error) {
-      console.error('Recording error:', error);
-      toast.error('Recording failed');
+      console.error('Error leaving screening:', error);
+      toast.error('Failed to leave screening properly');
+      // Force navigation as a fallback
+      window.location.href = '/dashboard';
+    } finally {
+      setIsLeaving(false);
+      setIsLeaveDialogOpen(false);
     }
   };
 
+  // Chat button in top-right corner
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex items-center space-x-3 bg-[#F8F5FF] p-3 rounded-full shadow-lg z-30 border border-[#7E69AB] animate-fade-in">
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={toggleVideo}
-        className={`rounded-full ${!isVideoEnabled ? 'bg-red-100 text-red-500 hover:bg-red-200' : ''}`}
-      >
-        {isVideoEnabled ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={toggleAudio}
-        className={`rounded-full ${!isAudioEnabled ? 'bg-red-100 text-red-500 hover:bg-red-200' : ''}`}
-      >
-        {isAudioEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={onScreenShare}
-        className="rounded-full"
-      >
-        <Share2 className="h-5 w-5" />
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={toggleRecording}
-        className={`rounded-full ${isRecording ? 'bg-red-100 text-red-500 hover:bg-red-200' : ''}`}
-      >
-        {isRecording ? <StopCircle className="h-5 w-5" /> : <Circle className="h-5 w-5 fill-red-500" />}
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={onToggleChat}
-        className="rounded-full"
-      >
-        <MessageSquare className="h-5 w-5" />
-      </Button>
-    </div>
+    <>
+      <div className="absolute top-4 right-4 z-30">
+        <Button
+          onClick={onToggleChat}
+          variant="outline"
+          className="rounded-full p-3 bg-[#F8F5FF] border border-[#7E69AB] shadow-lg"
+          aria-label="Toggle chat"
+        >
+          <MessageCircle className="h-5 w-5 text-[#4A2B1C]" />
+        </Button>
+      </div>
+
+      <Dialog open={isLeaveDialogOpen} onOpenChange={setIsLeaveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Leave Screening</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to leave this screening session?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsLeaveDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleLeaveScreening}
+              disabled={isLeaving}
+            >
+              {isLeaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Leaving...
+                </>
+              ) : (
+                <>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Leave
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

@@ -1,0 +1,79 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+  
+  try {
+    const { profileUrl, profileId } = await req.json();
+    
+    if (!profileUrl && !profileId) {
+      throw new Error('Either profileUrl or profileId is required');
+    }
+    
+    console.log(`Enriching profile: ${profileUrl || profileId}`);
+    
+    // Call Nymeria Person Enrich API
+    const nymeriaResponse = await fetch(
+      `https://www.nymeria.io/api/v4/person/enrich?${profileUrl ? `profile=${encodeURIComponent(profileUrl)}` : `lid=${profileId}`}`, 
+      {
+        method: 'GET',
+        headers: {
+          'X-Api-Key': Deno.env.get('NYMERIA_API_KEY') || ''
+        }
+      }
+    );
+    
+    if (!nymeriaResponse.ok) {
+      console.error('Nymeria API error:', await nymeriaResponse.text());
+      throw new Error(`Failed to enrich profile: ${nymeriaResponse.status}`);
+    }
+    
+    const enrichedData = await nymeriaResponse.json();
+    
+    // Optional: Log the enrichment for tracking purposes
+    await fetch(
+      `${Deno.env.get('SUPABASE_URL')}/rest/v1/enrichment_logs`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({
+          profile_url: profileUrl,
+          profile_id: profileId,
+          status: enrichedData.status,
+          created_at: new Date().toISOString()
+        })
+      }
+    );
+    
+    // Return the enriched data
+    return new Response(
+      JSON.stringify(enrichedData),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+    
+  } catch (error) {
+    console.error('Error enriching profile:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        details: 'An error occurred while enriching the profile'
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
+});

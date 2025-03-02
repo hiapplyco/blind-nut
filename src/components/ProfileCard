@@ -50,28 +50,29 @@ export const ProfileCard = ({ profile }) => {
   
   return (
     <>
-      <Card 
-        className="cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)] transition-all p-4 mb-4 border-2 border-black"
-        onClick={handleCardClick}
-      >
-        <h3 className="text-lg font-medium text-[#8B5CF6]">{profile.profile_name}</h3>
-        <p className="text-sm font-medium text-[#8B5CF6]/80">{profile.profile_title}</p>
-        <p className="text-sm text-gray-600">{profile.profile_location}</p>
-        <div className="flex justify-between items-center mt-2">
-          <a 
-            href={profile.profile_url.startsWith('http') ? profile.profile_url : `https://${profile.profile_url}`}
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm text-[#8B5CF6] hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            View on LinkedIn
-          </a>
-          <span className="text-sm bg-[#FEF7CD] text-gray-900 px-2 py-1 rounded-full border border-black">
-            Score: {profile.relevance_score}
-          </span>
-        </div>
-      </Card>
+      <div onClick={handleCardClick} className="cursor-pointer">
+        <Card 
+          className="hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)] transition-all p-4 mb-4 border-2 border-black"
+        >
+          <h3 className="text-lg font-medium text-[#8B5CF6]">{profile.profile_name}</h3>
+          <p className="text-sm font-medium text-[#8B5CF6]/80">{profile.profile_title}</p>
+          <p className="text-sm text-gray-600">{profile.profile_location}</p>
+          <div className="flex justify-between items-center mt-2">
+            <a 
+              href={profile.profile_url.startsWith('http') ? profile.profile_url : `https://${profile.profile_url}`}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm text-[#8B5CF6] hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              View on LinkedIn
+            </a>
+            <span className="text-sm bg-[#FEF7CD] text-gray-900 px-2 py-1 rounded-full border border-black">
+              Score: {profile.relevance_score}
+            </span>
+          </div>
+        </Card>
+      </div>
       
       <ContactInfoModal
         isOpen={showModal}

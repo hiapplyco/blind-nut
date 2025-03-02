@@ -1,9 +1,30 @@
-const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, error }) => {
+
+import React from 'react';
+import { 
+  Button, 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui';
+import { Loader2, Copy } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+
+const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, error, handleCardClick }) => {
+  const { toast } = useToast();
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard");
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
-          <DialogTitle>{profile.profile_name}</DialogTitle>
+          <DialogTitle className="text-[#8B5CF6]">{profile.profile_name}</DialogTitle>
           <DialogDescription>
             {profile.profile_title} • {profile.profile_location}
           </DialogDescription>
@@ -12,11 +33,11 @@ const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, e
         <div className="py-4">
           {isLoading ? (
             <div className="flex justify-center items-center py-8">
-              <Spinner className="h-8 w-8 text-blue-500" />
+              <Loader2 className="h-8 w-8 text-[#8B5CF6] animate-spin" />
               <span className="ml-2 text-gray-600">Retrieving contact information...</span>
             </div>
           ) : error ? (
-            <div className="bg-red-50 text-red-700 p-4 rounded-md">
+            <div className="bg-red-50 text-red-700 p-4 rounded-md border border-black">
               <p>Unable to retrieve contact information: {error}</p>
             </div>
           ) : enrichedData ? (
@@ -25,11 +46,21 @@ const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, e
                 <h3 className="font-medium text-gray-900 mb-2">Contact Information</h3>
                 <div className="space-y-2">
                   {enrichedData.work_email && (
-                    <div className="flex items-start">
-                      <span className="text-gray-500 w-24">Work Email:</span>
-                      <a href={`mailto:${enrichedData.work_email}`} className="text-blue-600 hover:underline">
-                        {enrichedData.work_email}
-                      </a>
+                    <div className="flex items-start justify-between">
+                      <div className="flex">
+                        <span className="text-gray-500 w-24">Work Email:</span>
+                        <a href={`mailto:${enrichedData.work_email}`} className="text-[#8B5CF6] hover:underline">
+                          {enrichedData.work_email}
+                        </a>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(enrichedData.work_email)}
+                        className="ml-2"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
                     </div>
                   )}
                   
@@ -38,20 +69,40 @@ const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, e
                       <span className="text-gray-500 w-24">Personal:</span>
                       <div className="flex flex-col">
                         {enrichedData.personal_emails.map((email, i) => (
-                          <a key={i} href={`mailto:${email}`} className="text-blue-600 hover:underline">
-                            {email}
-                          </a>
+                          <div key={i} className="flex items-center justify-between">
+                            <a href={`mailto:${email}`} className="text-[#8B5CF6] hover:underline">
+                              {email}
+                            </a>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyToClipboard(email)}
+                              className="ml-2"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
                         ))}
                       </div>
                     </div>
                   )}
                   
                   {enrichedData.mobile_phone && (
-                    <div className="flex items-start">
-                      <span className="text-gray-500 w-24">Phone:</span>
-                      <a href={`tel:${enrichedData.mobile_phone}`} className="text-blue-600 hover:underline">
-                        {enrichedData.mobile_phone}
-                      </a>
+                    <div className="flex items-start justify-between">
+                      <div className="flex">
+                        <span className="text-gray-500 w-24">Phone:</span>
+                        <a href={`tel:${enrichedData.mobile_phone}`} className="text-[#8B5CF6] hover:underline">
+                          {enrichedData.mobile_phone}
+                        </a>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(enrichedData.mobile_phone)}
+                        className="ml-2"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -88,7 +139,7 @@ const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, e
                   <h3 className="font-medium text-gray-900 mb-2">Skills</h3>
                   <div className="flex flex-wrap gap-1">
                     {enrichedData.skills.map((skill, i) => (
-                      <span key={i} className="bg-gray-100 px-2 py-1 rounded text-sm">
+                      <span key={i} className="bg-[#FEF7CD] px-2 py-1 rounded text-sm border border-black">
                         {skill}
                       </span>
                     ))}
@@ -106,7 +157,7 @@ const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, e
                         href={profile.url.startsWith('http') ? profile.url : `https://${profile.url}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
+                        className="text-[#8B5CF6] hover:underline"
                       >
                         {profile.username}
                       </a>
@@ -116,7 +167,7 @@ const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, e
               </section>
             </div>
           ) : (
-            <div className="bg-yellow-50 text-yellow-700 p-4 rounded-md">
+            <div className="bg-[#FEF7CD] text-gray-900 p-4 rounded-md border border-black">
               <p>Click "Get Contact Info" to retrieve this person's contact details.</p>
             </div>
           )}
@@ -125,11 +176,12 @@ const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, e
         <DialogFooter className="flex justify-between items-center">
           {!enrichedData && !isLoading && (
             <Button 
-              onClick={() => handleCardClick()} 
+              onClick={handleCardClick} 
               disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              variant="default"
             >
-              {isLoading ? 'Loading...' : 'Get Contact Info'}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Get Contact Info
             </Button>
           )}
           <Button variant="outline" onClick={onClose}>
@@ -140,3 +192,5 @@ const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, e
     </Dialog>
   );
 };
+
+export default ContactInfoModal;

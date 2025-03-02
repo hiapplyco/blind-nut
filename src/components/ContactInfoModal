@@ -1,14 +1,16 @@
 
 import React from 'react';
 import { 
-  Button, 
+  Button
+} from '@/components/ui/button';
+import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
   DialogDescription,
   DialogFooter
-} from '@/components/ui';
+} from '@/components/ui/dialog';
 import { Loader2, Copy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 

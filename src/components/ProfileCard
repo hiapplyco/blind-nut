@@ -41,7 +41,7 @@ export const ProfileCard = ({ profile }) => {
       } catch (err) {
         console.error('Error enriching profile:', err);
         setError(err.message || 'Error retrieving contact information');
-        toast.error('Could not retrieve contact information');
+        toast.error("Could not retrieve contact information");
       } finally {
         setLoading(false);
       }
@@ -51,7 +51,7 @@ export const ProfileCard = ({ profile }) => {
   return (
     <>
       <Card 
-        className="hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)] transition-all p-4 mb-4 border-2 border-black"
+        className="hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)] transition-all p-4 mb-4 border-2 border-black relative"
       >
         <h3 className="text-lg font-medium text-[#8B5CF6]">{profile.profile_name}</h3>
         <p className="text-sm font-medium text-[#8B5CF6]/80">{profile.profile_title}</p>
@@ -69,11 +69,11 @@ export const ProfileCard = ({ profile }) => {
             Score: {profile.relevance_score}
           </span>
         </div>
-        <div className="mt-3 flex justify-end">
+        <div className="mt-3 flex justify-end z-10 relative">
           <Button 
             onClick={handleEnrichProfile}
             disabled={loading}
-            className="border-2 border-black"
+            className="border-2 border-black z-20 bg-[#FEF7CD] hover:bg-[#FEF7CD]/80"
             variant="secondary"
             size="sm"
           >

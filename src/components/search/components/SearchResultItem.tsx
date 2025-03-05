@@ -5,6 +5,7 @@ import { Loader2, User } from "lucide-react";
 import { toast } from "sonner";
 import { SearchResultItemProps } from "../types";
 import { useProfileEnrichment } from "../hooks/useProfileEnrichment";
+import { ContactCard } from "./ContactCard";
 
 export const SearchResultItem = ({ 
   result, 
@@ -12,6 +13,9 @@ export const SearchResultItem = ({
 }: SearchResultItemProps) => {
   const { enrichProfile } = useProfileEnrichment();
   const [isLoading, setIsLoading] = useState(false);
+  const [enrichedData, setEnrichedData] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showContactCard, setShowContactCard] = useState(false);
   
   // Extract name from the title for better search results
   const extractNameFromTitle = (title: string): string => {
@@ -26,21 +30,21 @@ export const SearchResultItem = ({
     if (isLoading) return;
     
     setIsLoading(true);
+    setError(null);
+    setShowContactCard(true);
+    
     try {
       const data = await enrichProfile(result.link);
       if (data) {
+        setEnrichedData(data);
         toast.success("Contact information found!");
-        if (data.work_email) {
-          toast.success(`Email: ${data.work_email}`);
-        }
-        if (data.mobile_phone) {
-          toast.success(`Phone: ${data.mobile_phone}`);
-        }
       } else {
+        setError("No contact information found");
         toast.error("No contact information found");
       }
     } catch (error) {
-      console.error("Error fetching contact info:", error);
+      console.error("Error enriching profile:", error);
+      setError("Could not retrieve contact information");
       toast.error("Could not retrieve contact information");
     } finally {
       setIsLoading(false);
@@ -88,6 +92,15 @@ export const SearchResultItem = ({
           </Button>
         </div>
       )}
+
+      <ContactCard 
+        isOpen={showContactCard}
+        onClose={() => setShowContactCard(false)}
+        profileData={enrichedData}
+        isLoading={isLoading}
+        error={error}
+        profileName={extractNameFromTitle(result.htmlTitle)}
+      />
     </div>
   );
 };

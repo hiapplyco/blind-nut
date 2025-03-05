@@ -1,11 +1,8 @@
 
 import { memo, useState, useEffect } from "react";
 import { SearchForm } from "./search/SearchForm";
-import { AgentProcessor } from "./search/AgentProcessor";
 import { useNavigate } from "react-router-dom";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
-import { GenerateAnalysisButton } from "./search/analysis/GenerateAnalysisButton";
-import { AnalysisReport } from "./search/analysis/AnalysisReport";
 import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
 
 interface NewSearchFormProps {
@@ -20,7 +17,6 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
   const [currentJobId, setCurrentJobId] = useState<number | null>(initialJobId || null);
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
   
   // Only call useAgentOutputs if we have a currentJobId
   const { data: agentOutput, isLoading } = useAgentOutputs(currentJobId || 0);
@@ -41,7 +37,6 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
     // Reset state when a new search is submitted
     if (currentJobId !== jobId) {
       setIsProcessingComplete(false);
-      setIsGeneratingAnalysis(false);
       
       // Clear any previous agent output for the new job
       setOutput(jobId, null);
@@ -50,26 +45,11 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
     setCurrentJobId(jobId);
   };
 
-  const handleProcessingComplete = () => {
-    console.log("Processing complete");
-    // Don't set processing complete until we have agent output
-    if (agentOutput) {
-      setIsProcessingComplete(true);
-      setIsGeneratingAnalysis(false);
-    }
-  };
-
-  const handleGenerateAnalysis = () => {
-    console.log("Starting analysis generation");
-    setIsGeneratingAnalysis(true);
-  };
-
   // Monitor agent output changes
   useEffect(() => {
     if (agentOutput && !isLoading) {
       console.log("Agent output received:", agentOutput);
       setIsProcessingComplete(true);
-      setIsGeneratingAnalysis(false);
     }
   }, [agentOutput, isLoading]);
 
@@ -82,24 +62,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
         isProcessingComplete={isProcessingComplete}
       />
       
-      {currentJobId && (
-        <AnalysisReport 
-          agentOutput={agentOutput}
-          isGeneratingAnalysis={isGeneratingAnalysis}
-          isProcessingComplete={isProcessingComplete}
-        >
-          {isGeneratingAnalysis && !isProcessingComplete && (
-            <AgentProcessor
-              content={searchText}
-              jobId={currentJobId}
-              onComplete={handleProcessingComplete}
-            />
-          )}
-          {!isGeneratingAnalysis && !isProcessingComplete && (
-            <GenerateAnalysisButton onClick={handleGenerateAnalysis} />
-          )}
-        </AnalysisReport>
-      )}
+      {/* Analysis Report section removed */}
     </div>
   );
 };

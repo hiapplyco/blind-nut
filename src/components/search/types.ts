@@ -1,3 +1,4 @@
+
 export type SearchType = "candidates" | "companies" | "candidates-at-company";
 
 export interface SearchFormProps {
@@ -44,4 +45,27 @@ export interface SearchResultsListProps {
 export interface SearchResultItemProps {
   result: SearchResult;
   searchType?: "candidates" | "companies" | "candidates-at-company";
+}
+
+export interface Profile {
+  profile_name: string;
+  profile_title: string;
+  profile_location: string;
+  profile_url: string;
+  relevance_score?: number;
+}
+
+export interface EnrichedProfileData {
+  work_email?: string;
+  personal_emails?: string[];
+  mobile_phone?: string;
+  job_company_name?: string;
+  industry?: string;
+  job_title?: string;
+  skills?: string[];
+  profiles?: Array<{
+    network: string;
+    url: string;
+    username: string;
+  }>;
 }

@@ -1,26 +1,44 @@
 
 import React from 'react';
 import { 
-  Button, 
+  Button
+} from '@/components/ui/button';
+import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
   DialogDescription,
   DialogFooter
-} from '@/components/ui'; 
+} from '@/components/ui/dialog';
 import { Loader2, Copy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Profile, EnrichedProfileData } from './search/types';
 
-const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, error, handleCardClick }) => {
+interface ContactInfoModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  profile: Profile;
+  enrichedData: EnrichedProfileData | null;
+  isLoading: boolean;
+  error: string | null;
+  handleCardClick: () => void;
+}
+
+const ContactInfoModal: React.FC<ContactInfoModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  profile, 
+  enrichedData, 
+  isLoading, 
+  error, 
+  handleCardClick 
+}) => {
   const { toast } = useToast();
 
-  const copyToClipboard = (text) => {
+  const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "Success",
-      description: "Copied to clipboard"
-    });
+    toast.success("Copied to clipboard");
   };
 
   return (

@@ -55,17 +55,43 @@ export interface Profile {
   relevance_score?: number;
 }
 
+export interface Education {
+  school: string;
+  degree?: string;
+  field_of_study?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
+export interface Experience {
+  title: string;
+  company?: string;
+  start_date?: string;
+  end_date?: string;
+  description?: string;
+}
+
+export interface SocialProfile {
+  network: string;
+  url: string;
+  username: string;
+}
+
 export interface EnrichedProfileData {
   work_email?: string;
   personal_emails?: string[];
   mobile_phone?: string;
-  job_company_name?: string;
-  industry?: string;
   job_title?: string;
+  job_company_name?: string;
+  company_size?: string;
+  industry?: string;
+  location?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   skills?: string[];
-  profiles?: Array<{
-    network: string;
-    url: string;
-    username: string;
-  }>;
+  languages?: string[];
+  education?: Education[];
+  experience?: Experience[];
+  profiles?: SocialProfile[];
 }

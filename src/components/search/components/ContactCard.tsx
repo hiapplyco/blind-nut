@@ -29,7 +29,7 @@ export const ContactCard = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-white">
+      <DialogContent className="sm:max-w-md bg-white max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-[#8B5CF6]">{profileName || "Contact Information"}</DialogTitle>
         </DialogHeader>
@@ -46,6 +46,7 @@ export const ContactCard = ({
             </div>
           ) : profileData ? (
             <div className="space-y-4">
+              {/* Contact Information Section */}
               <section>
                 <h3 className="font-medium text-gray-900 mb-2">Contact Information</h3>
                 <div className="space-y-2">
@@ -71,7 +72,7 @@ export const ContactCard = ({
                   {profileData.personal_emails && profileData.personal_emails.length > 0 && (
                     <div className="flex items-start">
                       <span className="text-gray-500 w-24">Personal:</span>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col w-full">
                         {profileData.personal_emails.map((email, i) => (
                           <div key={i} className="flex items-center justify-between">
                             <a href={`mailto:${email}`} className="text-[#8B5CF6] hover:underline">
@@ -112,6 +113,7 @@ export const ContactCard = ({
                 </div>
               </section>
               
+              {/* Professional Information Section */}
               {(profileData.job_title || profileData.job_company_name || profileData.industry) && (
                 <section>
                   <h3 className="font-medium text-gray-900 mb-2">Professional Information</h3>
@@ -136,10 +138,96 @@ export const ContactCard = ({
                         <span>{profileData.job_title}</span>
                       </div>
                     )}
+                    
+                    {profileData.company_size && (
+                      <div className="flex items-start">
+                        <span className="text-gray-500 w-24">Company Size:</span>
+                        <span>{profileData.company_size}</span>
+                      </div>
+                    )}
                   </div>
                 </section>
               )}
               
+              {/* Location Information */}
+              {(profileData.location || profileData.city || profileData.state || profileData.country) && (
+                <section>
+                  <h3 className="font-medium text-gray-900 mb-2">Location</h3>
+                  <div className="space-y-2">
+                    {profileData.location && (
+                      <div className="flex items-start">
+                        <span className="text-gray-500 w-24">Location:</span>
+                        <span>{profileData.location}</span>
+                      </div>
+                    )}
+                    
+                    {profileData.city && (
+                      <div className="flex items-start">
+                        <span className="text-gray-500 w-24">City:</span>
+                        <span>{profileData.city}</span>
+                      </div>
+                    )}
+                    
+                    {profileData.state && (
+                      <div className="flex items-start">
+                        <span className="text-gray-500 w-24">State:</span>
+                        <span>{profileData.state}</span>
+                      </div>
+                    )}
+                    
+                    {profileData.country && (
+                      <div className="flex items-start">
+                        <span className="text-gray-500 w-24">Country:</span>
+                        <span>{profileData.country}</span>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
+              
+              {/* Education Section */}
+              {profileData.education && profileData.education.length > 0 && (
+                <section>
+                  <h3 className="font-medium text-gray-900 mb-2">Education</h3>
+                  <div className="space-y-3">
+                    {profileData.education.map((edu, i) => (
+                      <div key={i} className="border-l-2 border-[#8B5CF6] pl-3">
+                        <p className="font-medium">{edu.school}</p>
+                        {edu.degree && <p className="text-sm">{edu.degree}</p>}
+                        {edu.field_of_study && <p className="text-sm">{edu.field_of_study}</p>}
+                        {(edu.start_date || edu.end_date) && (
+                          <p className="text-xs text-gray-500">
+                            {edu.start_date && edu.start_date}{edu.start_date && edu.end_date && ' - '}{edu.end_date && edu.end_date}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+              
+              {/* Experience Section */}
+              {profileData.experience && profileData.experience.length > 0 && (
+                <section>
+                  <h3 className="font-medium text-gray-900 mb-2">Experience</h3>
+                  <div className="space-y-3">
+                    {profileData.experience.map((exp, i) => (
+                      <div key={i} className="border-l-2 border-[#8B5CF6] pl-3">
+                        <p className="font-medium">{exp.title}</p>
+                        {exp.company && <p className="text-sm">{exp.company}</p>}
+                        {(exp.start_date || exp.end_date) && (
+                          <p className="text-xs text-gray-500">
+                            {exp.start_date && exp.start_date}{exp.start_date && exp.end_date && ' - '}{exp.end_date && exp.end_date}
+                          </p>
+                        )}
+                        {exp.description && <p className="text-sm mt-1">{exp.description}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+              
+              {/* Skills Section */}
               {profileData.skills && profileData.skills.length > 0 && (
                 <section>
                   <h3 className="font-medium text-gray-900 mb-2">Skills</h3>
@@ -153,6 +241,21 @@ export const ContactCard = ({
                 </section>
               )}
               
+              {/* Languages Section */}
+              {profileData.languages && profileData.languages.length > 0 && (
+                <section>
+                  <h3 className="font-medium text-gray-900 mb-2">Languages</h3>
+                  <div className="flex flex-wrap gap-1">
+                    {profileData.languages.map((language, i) => (
+                      <span key={i} className="bg-[#F3E8FF] px-2 py-1 rounded text-sm border border-black">
+                        {language}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              )}
+              
+              {/* Social Profiles Section */}
               {profileData.profiles && profileData.profiles.length > 0 && (
                 <section>
                   <h3 className="font-medium text-gray-900 mb-2">Social Profiles</h3>

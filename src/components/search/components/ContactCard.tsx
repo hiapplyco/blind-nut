@@ -1,7 +1,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Copy, Loader2 } from "lucide-react";
+import { Copy, Loader2, Phone, PhoneOff } from "lucide-react";
 import { toast } from "sonner";
 import { EnrichedProfileData } from "../types";
 
@@ -26,6 +26,8 @@ export const ContactCard = ({
     navigator.clipboard.writeText(text);
     toast.success("Copied to clipboard");
   };
+
+  const hasPhoneNumbers = profileData?.mobile_phone || (profileData?.phone_numbers && profileData.phone_numbers.length > 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -92,22 +94,63 @@ export const ContactCard = ({
                     </div>
                   )}
                   
-                  {profileData.mobile_phone && (
-                    <div className="flex items-start justify-between">
-                      <div className="flex">
-                        <span className="text-gray-500 w-24">Phone:</span>
-                        <a href={`tel:${profileData.mobile_phone}`} className="text-[#8B5CF6] hover:underline">
-                          {profileData.mobile_phone}
-                        </a>
+                  {/* Phone Numbers Section */}
+                  {hasPhoneNumbers ? (
+                    <>
+                      {/* Mobile Phone (if available) */}
+                      {profileData.mobile_phone && (
+                        <div className="flex items-start justify-between">
+                          <div className="flex">
+                            <span className="text-gray-500 w-24">Mobile:</span>
+                            <a href={`tel:${profileData.mobile_phone}`} className="text-[#8B5CF6] hover:underline">
+                              {profileData.mobile_phone}
+                            </a>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(profileData.mobile_phone)}
+                            className="ml-2"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {/* Additional Phone Numbers (if available) */}
+                      {profileData.phone_numbers && profileData.phone_numbers.length > 0 && (
+                        <>
+                          {profileData.phone_numbers.map((phone, i) => (
+                            // Only display phone numbers that are different from the mobile_phone
+                            phone !== profileData.mobile_phone && (
+                              <div key={i} className="flex items-start justify-between">
+                                <div className="flex">
+                                  <span className="text-gray-500 w-24">Phone {i+1}:</span>
+                                  <a href={`tel:${phone}`} className="text-[#8B5CF6] hover:underline">
+                                    {phone}
+                                  </a>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => copyToClipboard(phone)}
+                                  className="ml-2"
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )
+                          ))}
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-start">
+                      <span className="text-gray-500 w-24">Phone:</span>
+                      <div className="flex items-center text-gray-500">
+                        <PhoneOff className="h-4 w-4 mr-2" />
+                        <span>No phone number available</span>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyToClipboard(profileData.mobile_phone)}
-                        className="ml-2"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
                     </div>
                   )}
                 </div>
@@ -293,3 +336,4 @@ export const ContactCard = ({
     </Dialog>
   );
 };
+

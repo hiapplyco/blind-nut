@@ -81,6 +81,7 @@ export interface EnrichedProfileData {
   work_email?: string;
   personal_emails?: string[];
   mobile_phone?: string;
+  phone_numbers?: string[];    // Added phone_numbers array from Nymeria API
   job_title?: string;
   job_company_name?: string;
   company_size?: string;
@@ -95,3 +96,4 @@ export interface EnrichedProfileData {
   experience?: Experience[];
   profiles?: SocialProfile[];
 }
+

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SearchResult } from "../types";
@@ -7,7 +6,7 @@ import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
 
 export const useGoogleSearch = (
   initialSearchString: string,
-  searchType: "candidates" | "companies" | "candidates-at-company" = "candidates",
+  searchType: "candidates" | "candidates-at-company" = "candidates",
   jobId?: number
 ) => {
   const { setSearchResults, getSearchResults, addToSearchResults } = useClientAgentOutputs();
@@ -36,7 +35,6 @@ export const useGoogleSearch = (
     }
   }, [jobId, initialSearchString, getSearchResults]);
 
-  // Updated to reset results when initialSearchString changes
   useEffect(() => {
     if (initialSearchString) {
       setSearchString(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
@@ -76,7 +74,6 @@ export const useGoogleSearch = (
   const handleSearch = async (page = 1) => {
     setIsLoading(true);
     try {
-      // Reset results if this is a new search (page 1)
       if (page === 1) {
         setResults([]);
       }
@@ -87,9 +84,7 @@ export const useGoogleSearch = (
       
       if (keyError) throw keyError;
       
-      const cseId = searchType === 'companies' 
-        ? 'e391b913931574878'  // Companies CSE
-        : 'b28705633bcb44cf0'; // Candidates CSE
+      const cseId = 'b28705633bcb44cf0'; // Candidates CSE
       
       const response = await fetch(
         `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cseId}&q=${encodeURIComponent(

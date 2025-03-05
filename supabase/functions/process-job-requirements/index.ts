@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3";
@@ -50,30 +51,6 @@ Then construct a search string following these rules:
 
 Return ONLY the search string without explanation. Format example:
 site:linkedin.com/in ("Title1" OR "Title2") AND "Company" AND ("Skill1" OR "Skill2" OR "Skill3")`;
-    } else if (searchType === 'companies') {
-      prompt = `You are a search string optimization expert. Extract the most relevant information from the following job requirements and create a precise Google search string to find companies that match these criteria:
-
-${content}
-
-First, identify and extract:
-- Industry sectors and sub-sectors
-- Key technologies and tools
-- Company size indicators
-- Business model indicators
-- Geographic focus
-- Market positioning keywords
-
-Then construct a search string following these rules:
-1. Use quotation marks for exact matching of key terms
-2. Employ (parentheses) to group related concepts
-3. Use OR operators between similar terms and AND between distinct categories
-4. Include -site: operators to exclude irrelevant sites when appropriate
-5. Add intitle: or intext: operators for key terms that should appear in page titles or content
-6. Balance breadth with precision - include enough terms to find relevant companies but avoid over-filtering
-7. Prioritize terms that truly distinguish target companies
-
-Return ONLY the search string without explanation. Format example:
-("Industry1" OR "Industry2") AND ("Technology1" OR "Technology2") AND ("Location" OR "Remote")`;
     } else {
       prompt = `You are a search string optimization expert. Extract the most relevant information from the following job requirements and create a precise Google search string to find qualified candidates:
 

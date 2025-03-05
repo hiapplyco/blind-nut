@@ -1,5 +1,4 @@
-
-export type SearchType = "candidates" | "companies" | "candidates-at-company";
+export type SearchType = "candidates" | "candidates-at-company";
 
 export interface SearchFormProps {
   userId: string;
@@ -18,7 +17,7 @@ export interface SearchResult {
 
 export interface GoogleSearchWindowProps {
   searchString: string;
-  searchType?: "candidates" | "companies" | "candidates-at-company";
+  searchType?: "candidates" | "candidates-at-company";
   jobId?: number;
 }
 
@@ -39,12 +38,12 @@ export interface SearchResultsListProps {
   currentResults: number;
   onLoadMore: () => void;
   isLoadingMore: boolean;
-  searchType?: "candidates" | "companies" | "candidates-at-company";
+  searchType?: "candidates" | "candidates-at-company";
 }
 
 export interface SearchResultItemProps {
   result: SearchResult;
-  searchType?: "candidates" | "companies" | "candidates-at-company";
+  searchType?: "candidates" | "candidates-at-company";
 }
 
 export interface Profile {
@@ -96,4 +95,3 @@ export interface EnrichedProfileData {
   experience?: Experience[];
   profiles?: SocialProfile[];
 }
-

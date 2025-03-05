@@ -5,7 +5,7 @@ import { Loader2, User } from "lucide-react";
 import { toast } from "sonner";
 import { SearchResultItemProps } from "../types";
 import { useProfileEnrichment } from "../hooks/useProfileEnrichment";
-import { ContactCard } from "./ContactCard";
+import { ContactCard } from "./contact-card";
 
 export const SearchResultItem = ({ 
   result, 

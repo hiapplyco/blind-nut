@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-
-type SearchType = "candidates" | "candidates-at-company";
+import { SearchType } from "@/components/search/types";
 
 export const processJobRequirements = async (
   content: string,

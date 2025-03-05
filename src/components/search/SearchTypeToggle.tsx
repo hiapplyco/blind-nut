@@ -3,8 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Users, Briefcase } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-type SearchType = "candidates" | "candidates-at-company";
+import { SearchType } from "./types";
 
 interface SearchTypeToggleProps {
   value: SearchType;

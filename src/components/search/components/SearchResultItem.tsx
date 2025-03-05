@@ -69,7 +69,7 @@ export const SearchResultItem = ({
       )}
       <p className="mt-1 text-sm text-gray-600">{result.snippet}</p>
       
-      {searchType !== 'companies' && result.link.includes('linkedin.com/in/') && (
+      {result.link.includes('linkedin.com/in/') && (
         <div className="mt-2 flex justify-end">
           <Button
             onClick={handleGetContactInfo}

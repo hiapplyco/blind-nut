@@ -1,12 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { SearchResult } from "../types";
+import { SearchResult, SearchType } from "../types";
 import { toast } from "sonner";
 import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
 
 export const useGoogleSearch = (
   initialSearchString: string,
-  searchType: "candidates" | "candidates-at-company" = "candidates",
+  searchType: SearchType = "candidates",
   jobId?: number
 ) => {
   const { setSearchResults, getSearchResults, addToSearchResults } = useClientAgentOutputs();

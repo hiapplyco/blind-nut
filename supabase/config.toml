@@ -6,3 +6,6 @@ verify_jwt = false
 
 [functions.analyze-schema]
 verify_jwt = false
+
+[functions.enrich-profile]
+verify_jwt = false

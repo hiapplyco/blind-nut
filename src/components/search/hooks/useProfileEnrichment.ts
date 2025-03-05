@@ -1,5 +1,7 @@
+
 import { useState } from 'react';
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { EnrichedProfileData } from "../types";
 
 export interface PersonSearchParams {
@@ -43,43 +45,28 @@ export const useProfileEnrichment = () => {
       
       toast.loading("Fetching contact information...");
       
-      const response = await fetch('https://kxghaajojntkqrmvsngn.supabase.co/functions/v1/enrich-profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('enrich-profile', {
+        body: {
           profileUrl
-        })
+        }
       });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to enrich profile: ${response.status}`);
-      }
-      
-      const data = await response.json();
       
       toast.dismiss();
       
-      if (data.data) {
+      if (error) {
+        throw new Error(`Failed to enrich profile: ${error.message}`);
+      }
+      
+      if (data?.data) {
         setEnrichedData(data.data);
-        toast.success("Contact information found!");
-        if (data.data.work_email) {
-          toast.success(`Email: ${data.data.work_email}`);
-        }
-        if (data.data.mobile_phone) {
-          toast.success(`Phone: ${data.data.mobile_phone}`);
-        }
         return data.data;
       } else {
-        toast.error("No contact information found");
         return null;
       }
     } catch (err) {
       console.error('Error enriching profile:', err);
       const errorMessage = err instanceof Error ? err.message : 'Could not retrieve contact information';
       setError(errorMessage);
-      toast.error(errorMessage);
       return null;
     } finally {
       setIsLoading(false);
@@ -94,28 +81,21 @@ export const useProfileEnrichment = () => {
       
       toast.loading("Searching for contact information...");
       
-      const response = await fetch('https://kxghaajojntkqrmvsngn.supabase.co/functions/v1/enrich-profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('enrich-profile', {
+        body: {
           searchParams: params
-        })
+        }
       });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to search for contacts: ${response.status}`);
-      }
-      
-      const data = await response.json() as SearchResponse;
       
       toast.dismiss();
       
-      if (data.data && data.data.length > 0) {
+      if (error) {
+        throw new Error(`Failed to search for contacts: ${error.message}`);
+      }
+      
+      if (data?.data && data.data.length > 0) {
         setSearchResults(data.data);
         setTotalResults(data.total || data.data.length);
-        toast.success(`Found ${data.total || data.data.length} contacts`);
         return data.data;
       } else {
         toast.error("No contacts found matching your search criteria");
@@ -125,7 +105,6 @@ export const useProfileEnrichment = () => {
       console.error('Error searching for contacts:', err);
       const errorMessage = err instanceof Error ? err.message : 'Could not search for contacts';
       setError(errorMessage);
-      toast.error(errorMessage);
       return [];
     } finally {
       setIsLoading(false);

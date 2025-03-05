@@ -1,6 +1,8 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, User } from "lucide-react";
+import { toast } from "sonner";
 import { SearchResultItemProps } from "../types";
 import { useProfileEnrichment } from "../hooks/useProfileEnrichment";
 
@@ -25,7 +27,21 @@ export const SearchResultItem = ({
     
     setIsLoading(true);
     try {
-      await enrichProfile(result.link);
+      const data = await enrichProfile(result.link);
+      if (data) {
+        toast.success("Contact information found!");
+        if (data.work_email) {
+          toast.success(`Email: ${data.work_email}`);
+        }
+        if (data.mobile_phone) {
+          toast.success(`Phone: ${data.mobile_phone}`);
+        }
+      } else {
+        toast.error("No contact information found");
+      }
+    } catch (error) {
+      console.error("Error fetching contact info:", error);
+      toast.error("Could not retrieve contact information");
     } finally {
       setIsLoading(false);
     }

@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { AgentOutput } from '@/types/agent';
-import { SearchResult } from '@/components/search/GoogleSearchWindow';
+import { SearchResult } from '@/components/search/types';
 
 interface ClientAgentOutputsState {
   outputs: Record<number, AgentOutput>;

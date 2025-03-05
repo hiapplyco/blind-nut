@@ -36,6 +36,20 @@ export const useGoogleSearch = (
     }
   }, [jobId, initialSearchString, getSearchResults]);
 
+  // Updated to reset results when initialSearchString changes
+  useEffect(() => {
+    if (initialSearchString) {
+      setSearchString(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
+      setResults([]);
+      setCurrentPage(1);
+      setTotalResults(0);
+      
+      if (jobId) {
+        setSearchResults(jobId, [], searchString, 0);
+      }
+    }
+  }, [initialSearchString, setSearchResults, jobId]);
+
   useEffect(() => {
     if (jobId && results.length > 0) {
       setSearchResults(jobId, results, searchString, totalResults);
@@ -62,6 +76,11 @@ export const useGoogleSearch = (
   const handleSearch = async (page = 1) => {
     setIsLoading(true);
     try {
+      // Reset results if this is a new search (page 1)
+      if (page === 1) {
+        setResults([]);
+      }
+      
       const startIndex = (page - 1) * resultsPerPage + 1;
       
       const { data: { key }, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
@@ -93,6 +112,9 @@ export const useGoogleSearch = (
         
         if (page === 1) {
           setResults(processedResults);
+          if (jobId) {
+            setSearchResults(jobId, processedResults, searchString, data.searchInformation?.totalResults || 0);
+          }
         } else {
           setResults(prev => [...prev, ...processedResults]);
           if (jobId) {

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { GenerateAnalysisButton } from "./search/analysis/GenerateAnalysisButton";
 import { AnalysisReport } from "./search/analysis/AnalysisReport";
+import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
 
 interface NewSearchFormProps {
   userId: string | null;
@@ -23,6 +24,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
   
   // Only call useAgentOutputs if we have a currentJobId
   const { data: agentOutput, isLoading } = useAgentOutputs(currentJobId || 0);
+  const { setOutput } = useClientAgentOutputs();
 
   // Auto-run analysis if coming from job editor
   useEffect(() => {
@@ -35,9 +37,17 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
   const handleSearchSubmit = (text: string, jobId: number) => {
     console.log("Search submitted:", { text, jobId });
     setSearchText(text);
+    
+    // Reset state when a new search is submitted
+    if (currentJobId !== jobId) {
+      setIsProcessingComplete(false);
+      setIsGeneratingAnalysis(false);
+      
+      // Clear any previous agent output for the new job
+      setOutput(jobId, null);
+    }
+    
     setCurrentJobId(jobId);
-    setIsProcessingComplete(false);
-    setIsGeneratingAnalysis(false);
   };
 
   const handleProcessingComplete = () => {

@@ -4,6 +4,7 @@ import { SearchHeader } from "./components/SearchHeader";
 import { SearchResultsList } from "./components/SearchResultsList";
 import { useGoogleSearch } from "./hooks/useGoogleSearch";
 import { GoogleSearchWindowProps } from "./types";
+import { useEffect } from "react";
 
 export const GoogleSearchWindow = ({ 
   searchString: initialSearchString,
@@ -21,6 +22,13 @@ export const GoogleSearchWindow = ({
     handleExport,
     totalResults
   } = useGoogleSearch(initialSearchString, searchType, jobId);
+
+  // Trigger search automatically when a new search string is provided
+  useEffect(() => {
+    if (initialSearchString && initialSearchString.trim() !== '') {
+      handleSearch(1);
+    }
+  }, [initialSearchString]);
 
   return (
     <Card className="p-6 mb-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

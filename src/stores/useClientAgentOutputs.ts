@@ -4,11 +4,11 @@ import { AgentOutput } from '@/types/agent';
 import { SearchResult } from '@/components/search/types';
 
 interface ClientAgentOutputsState {
-  outputs: Record<number, AgentOutput>;
+  outputs: Record<number, AgentOutput | null>;
   searchResults: Record<number, SearchResult[]>;
   searchQueries: Record<number, string>;
   totalResults: Record<number, number>;
-  setOutput: (jobId: number, output: AgentOutput) => void;
+  setOutput: (jobId: number, output: AgentOutput | null) => void;
   getOutput: (jobId: number) => AgentOutput | null;
   setSearchResults: (jobId: number, results: SearchResult[], searchQuery: string, totalResults: number) => void;
   getSearchResults: (jobId: number) => { results: SearchResult[], searchQuery: string, totalResults: number } | null;

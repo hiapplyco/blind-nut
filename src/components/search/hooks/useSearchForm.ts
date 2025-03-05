@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SearchType } from "../types";
 import { toast } from "sonner";
 import { processJobRequirements } from "@/utils/jobRequirements";
+import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
 
 export const useSearchForm = (
   userId: string,
@@ -18,6 +19,7 @@ export const useSearchForm = (
   const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
   const [searchString, setSearchString] = useState("");
+  const { setSearchResults } = useClientAgentOutputs();
 
   useEffect(() => {
     const state = location.state as { content?: string; autoRun?: boolean } | null;
@@ -109,6 +111,12 @@ export const useSearchForm = (
       if (jobError) throw jobError;
       
       const jobId = jobData.id;
+      
+      // Clear previous search results when creating a new job
+      if (jobId) {
+        setSearchResults(jobId, [], "", 0);
+      }
+      
       onJobCreated(jobId, searchText);
 
       const result = await processJobRequirements(searchText, searchType, companyName, userId);
@@ -133,7 +141,7 @@ export const useSearchForm = (
     } finally {
       setIsProcessing(false);
     }
-  }, [searchText, searchType, companyName, userId, onJobCreated]);
+  }, [searchText, searchType, companyName, userId, onJobCreated, setSearchResults]);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

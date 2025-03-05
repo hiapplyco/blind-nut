@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Search, AlertCircle, Copy } from "lucide-react";
+import { Loader2, Download, Search, AlertCircle, Copy, User } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,7 +34,6 @@ export const GoogleSearchWindow = ({
   const [totalResults, setTotalResults] = useState(0);
   const resultsPerPage = 10;
 
-  // Load results from store if available
   useEffect(() => {
     if (jobId) {
       const storedData = getSearchResults(jobId);
@@ -43,12 +41,9 @@ export const GoogleSearchWindow = ({
         setResults(storedData.results);
         setSearchString(storedData.searchQuery);
         setTotalResults(storedData.totalResults);
-        
-        // Calculate current page based on results length
         const calculatedPage = Math.ceil(storedData.results.length / resultsPerPage);
         setCurrentPage(calculatedPage > 0 ? calculatedPage : 1);
       } else {
-        // Clear results when search string changes
         setSearchString(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
         setResults([]);
         setCurrentPage(1);
@@ -57,16 +52,13 @@ export const GoogleSearchWindow = ({
     }
   }, [jobId, initialSearchString, getSearchResults]);
 
-  // Save results to store when they change
   useEffect(() => {
     if (jobId && results.length > 0) {
       setSearchResults(jobId, results, searchString, totalResults);
     }
   }, [jobId, results, searchString, totalResults, setSearchResults]);
 
-  // Extract location from the snippet if possible
   const extractLocationFromSnippet = (snippet: string): string | undefined => {
-    // Common patterns for LinkedIn locations
     const locationPatterns = [
       /Location: ([^\.]+)/i,
       /([^\.]+), (United States|Canada|UK|Australia|[A-Z][a-z]+ [A-Z][a-z]+)/,
@@ -92,7 +84,6 @@ export const GoogleSearchWindow = ({
       
       if (keyError) throw keyError;
       
-      // Use candidates CSE for both candidates and candidates-at-company searches
       const cseId = searchType === 'companies' 
         ? 'e391b913931574878'  // Companies CSE
         : 'b28705633bcb44cf0'; // Candidates CSE
@@ -111,7 +102,6 @@ export const GoogleSearchWindow = ({
       console.log("Search API response:", data);
 
       if (data?.items) {
-        // Process results to extract locations
         const processedResults = data.items.map((item: any) => ({
           ...item,
           location: extractLocationFromSnippet(item.snippet)
@@ -155,20 +145,18 @@ export const GoogleSearchWindow = ({
       return;
     }
 
-    // Create CSV content
     const csvContent = [
-      ["Title", "URL", "Location", "Description"], // CSV header with Location
+      ["Title", "URL", "Location", "Description"],
       ...results.map(result => [
-        result.title.replace(/"/g, '""'), // Escape quotes in title
+        result.title.replace(/"/g, '""'),
         result.link,
-        result.location || "", // Include location field
-        result.snippet.replace(/"/g, '""') // Escape quotes in snippet
+        result.location || "",
+        result.snippet.replace(/"/g, '""')
       ])
     ]
       .map(row => row.map(cell => `"${cell}"`).join(","))
       .join("\n");
 
-    // Create blob and download
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -180,6 +168,45 @@ export const GoogleSearchWindow = ({
     URL.revokeObjectURL(url);
 
     toast.success("Search results exported successfully");
+  };
+
+  const handleEnrichProfile = async (profileUrl: string) => {
+    try {
+      toast.loading("Fetching contact information...");
+      
+      const response = await fetch('https://kxghaajojntkqrmvsngn.supabase.co/functions/v1/enrich-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profileUrl
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to enrich profile');
+      }
+      
+      const data = await response.json();
+      
+      toast.dismiss();
+      
+      if (data.data) {
+        toast.success("Contact information found!");
+        if (data.data.work_email) {
+          toast.success(`Email: ${data.data.work_email}`);
+        }
+        if (data.data.mobile_phone) {
+          toast.success(`Phone: ${data.data.mobile_phone}`);
+        }
+      } else {
+        toast.error("No contact information found");
+      }
+    } catch (err) {
+      console.error('Error enriching profile:', err);
+      toast.error("Could not retrieve contact information");
+    }
   };
 
   return (
@@ -242,7 +269,7 @@ export const GoogleSearchWindow = ({
             </div>
           )}
           {results.map((result, index) => (
-            <div key={index} className="p-4 border rounded-lg">
+            <div key={index} className="p-4 border rounded-lg border-black relative">
               <h3 className="font-medium">
                 <a
                   href={result.link}
@@ -258,6 +285,20 @@ export const GoogleSearchWindow = ({
                 </p>
               )}
               <p className="mt-1 text-sm text-gray-600">{result.snippet}</p>
+              
+              {searchType !== 'companies' && result.link.includes('linkedin.com/in/') && (
+                <div className="mt-2 flex justify-end">
+                  <Button
+                    onClick={() => handleEnrichProfile(result.link)}
+                    size="sm"
+                    variant="secondary"
+                    className="border-2 border-black bg-[#FEF7CD] hover:bg-[#FEF7CD]/80 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.25)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.25)] z-10"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Get Contact Info
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
           

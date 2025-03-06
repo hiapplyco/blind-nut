@@ -1,3 +1,4 @@
+
 import { useNavigate, useLocation } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import {
@@ -18,16 +19,24 @@ import { memo, useCallback, useMemo, useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/context/AuthContext";
 
+// Define the menu item type with optional disabled property
+type MenuItem = {
+  title: string;
+  path: string;
+  icon: React.ComponentType<any>;
+  disabled?: boolean;
+};
+
 // Memoize menu items array to prevent recreation on each render
-const menuItems = [
+const menuItems: MenuItem[] = [
   { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { title: 'Create Content', path: '/content-creation', icon: PlusCircle },
   { title: 'Sourcing', path: '/sourcing', icon: Search },
   { title: 'Screening Room', path: '/screening-room', icon: Video },
   { title: 'Interview Prep', path: '/interview-prep', icon: Theater },
   { title: 'Kickoff Call', path: '/kickoff-call', icon: PhoneCall },
-  { title: 'Chat (Disabled)', path: '/chat', icon: MessageSquare, disabled: true },
-] as const;
+  { title: 'Chat', path: '/chat', icon: MessageSquare, disabled: true },
+];
 
 // Custom SidebarMenuItem component to handle disabled state
 const SidebarMenuItemWithDisabled = ({ 
@@ -35,7 +44,7 @@ const SidebarMenuItemWithDisabled = ({
   pathname, 
   navigate 
 }: { 
-  item: typeof menuItems[number]; 
+  item: MenuItem; 
   pathname: string; 
   navigate: (path: string) => void;
 }) => {

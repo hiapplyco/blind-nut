@@ -1,4 +1,3 @@
-
 import { useNavigate, useLocation } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import {
@@ -27,14 +26,47 @@ const menuItems = [
   { title: 'Screening Room', path: '/screening-room', icon: Video },
   { title: 'Interview Prep', path: '/interview-prep', icon: Theater },
   { title: 'Kickoff Call', path: '/kickoff-call', icon: PhoneCall },
-  { title: 'Chat', path: '/chat', icon: MessageSquare },
+  { title: 'Chat (Disabled)', path: '/chat', icon: MessageSquare, disabled: true },
 ] as const;
 
-interface MainLayoutProps {
-  children?: React.ReactNode;
-}
+// Custom SidebarMenuItem component to handle disabled state
+const SidebarMenuItemWithDisabled = ({ 
+  item, 
+  pathname, 
+  navigate 
+}: { 
+  item: typeof menuItems[number]; 
+  pathname: string; 
+  navigate: (path: string) => void;
+}) => {
+  const isActive = pathname === item.path;
+  
+  return (
+    <li className="relative py-1">
+      <button
+        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+          isActive 
+            ? "text-black bg-white" 
+            : item.disabled 
+              ? "text-gray-400 cursor-not-allowed" 
+              : "text-gray-600 hover:text-gray-900 hover:bg-[#F1F0FB]/50"
+        }`}
+        onClick={() => !item.disabled && navigate(item.path)}
+        disabled={item.disabled}
+      >
+        <item.icon className="h-5 w-5" />
+        <span>{item.title}</span>
+        {item.disabled && (
+          <span className="text-xs font-semibold bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded ml-auto">
+            Disabled
+          </span>
+        )}
+      </button>
+    </li>
+  );
+};
 
-const MainLayoutComponent = ({ children }: MainLayoutProps) => {
+const MainLayoutComponent = ({ children }: { children?: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isNavigating, setIsNavigating] = useState(false);
@@ -69,8 +101,6 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
       });
     }, 50);
 
-    // Use navigate without replace to maintain history stack
-    // and avoid full page reloads
     navigate(path);
     
     return () => clearInterval(interval);
@@ -96,7 +126,7 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
   const menuContent = useMemo(() => (
     <SidebarMenu>
       {menuItems.map((item) => (
-        <SidebarMenuItem
+        <SidebarMenuItemWithDisabled
           key={item.path}
           item={item}
           pathname={location.pathname}

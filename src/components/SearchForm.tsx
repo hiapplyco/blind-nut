@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -11,8 +12,7 @@ import { SubmitButton } from "@/components/search/SubmitButton";
 import { GoogleSearchWindow } from "@/components/search/GoogleSearchWindow";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
-
-type SearchType = "candidates" | "companies" | "candidates-at-company";
+import { SearchType } from "./search/types";
 
 interface SearchFormProps {
   userId: string;

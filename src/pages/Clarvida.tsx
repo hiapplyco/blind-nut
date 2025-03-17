@@ -32,6 +32,8 @@ const Clarvida = () => {
               currentJobId={currentJobId}
               isProcessingComplete={isProcessingComplete}
               source="clarvida"
+              hideSearchTypeToggle={true}
+              submitButtonText="Generate Report"
             />
           ) : (
             <ClarvidaResults 

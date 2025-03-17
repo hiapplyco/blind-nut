@@ -1,12 +1,14 @@
+
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 
 interface SubmitButtonProps {
   isProcessing: boolean;
   isDisabled: boolean;
+  buttonText?: string;
 }
 
-export const SubmitButton = ({ isProcessing, isDisabled }: SubmitButtonProps) => {
+export const SubmitButton = ({ isProcessing, isDisabled, buttonText = "Generate Search" }: SubmitButtonProps) => {
   return (
     <Button 
       type="submit" 
@@ -24,7 +26,7 @@ export const SubmitButton = ({ isProcessing, isDisabled }: SubmitButtonProps) =>
           Processing...
         </div>
       ) : (
-        'Generate Search'
+        buttonText
       )}
     </Button>
   );

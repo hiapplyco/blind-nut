@@ -21,6 +21,8 @@ interface SearchFormContentProps {
   onCompanyNameChange: (value: string) => void;
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   onSubmit: (e: React.FormEvent) => Promise<void>;
+  hideSearchTypeToggle?: boolean;
+  submitButtonText?: string;
 }
 
 const MemoizedSearchTypeToggle = memo(SearchTypeToggle);
@@ -42,14 +44,18 @@ export const SearchFormContent = memo(({
   onCompanyNameChange,
   onFileUpload,
   onSubmit,
+  hideSearchTypeToggle = false,
+  submitButtonText,
 }: SearchFormContentProps) => {
   return (
     <>
       <form onSubmit={onSubmit} className="space-y-6">
-        <MemoizedSearchTypeToggle 
-          value={searchType} 
-          onValueChange={onSearchTypeChange} 
-        />
+        {!hideSearchTypeToggle && (
+          <MemoizedSearchTypeToggle 
+            value={searchType} 
+            onValueChange={onSearchTypeChange} 
+          />
+        )}
         
         <MemoizedFormHeader />
         
@@ -78,6 +84,7 @@ export const SearchFormContent = memo(({
               !searchText?.trim() || 
               (searchType === "candidates-at-company" && !companyName?.trim())
             }
+            buttonText={submitButtonText}
           />
           
           {isScrapingProfiles && (

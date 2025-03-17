@@ -7,6 +7,8 @@ export interface SearchFormProps {
   currentJobId: number | null;
   isProcessingComplete: boolean;
   source?: 'default' | 'clarvida';
+  hideSearchTypeToggle?: boolean;
+  submitButtonText?: string;
 }
 
 // Profile types

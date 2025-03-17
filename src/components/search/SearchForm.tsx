@@ -11,6 +11,8 @@ export const SearchForm = memo(({
   currentJobId,
   isProcessingComplete,
   source = 'default',
+  hideSearchTypeToggle = false,
+  submitButtonText,
 }: SearchFormProps) => {
   const {
     searchText,
@@ -40,6 +42,8 @@ export const SearchForm = memo(({
         onCompanyNameChange={setCompanyName}
         onFileUpload={handleFileUpload}
         onSubmit={handleSubmit}
+        hideSearchTypeToggle={hideSearchTypeToggle}
+        submitButtonText={submitButtonText}
       />
     </Card>
   );

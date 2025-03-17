@@ -1,10 +1,15 @@
+
 import React, { useState } from "react";
-import { SearchFormHeader } from "./SearchFormHeader";
-import { SearchFormContent } from "./SearchFormContent";
-import { SearchFormSubmit } from "./SearchFormSubmit";
-import { SearchType } from "./hooks/types";
+import { SearchTypeToggle } from "./SearchTypeToggle";
+import { FormHeader } from "./FormHeader";
+import { ContentTextarea } from "./ContentTextarea";
+import { CompanyNameInput } from "./CompanyNameInput";
+import { SubmitButton } from "./SubmitButton";
+import { SearchType } from "./types";
+import { Loader2 } from "lucide-react";
 import { useFormState } from "./hooks/useFormState";
 import { useFormSubmit } from "./hooks/useFormSubmit";
+import { processFileUpload } from "./hooks/utils/processFileUpload";
 
 interface SearchFormProps {
   userId: string | null;
@@ -14,7 +19,7 @@ interface SearchFormProps {
   source?: 'default' | 'clarvida';
   hideSearchTypeToggle?: boolean;
   submitButtonText?: string;
-  onSubmitStart?: () => void;  // Add this new prop
+  onSubmitStart?: () => void;
 }
 
 export const SearchForm = ({ 
@@ -25,38 +30,69 @@ export const SearchForm = ({
   source = 'default',
   hideSearchTypeToggle = false,
   submitButtonText,
-  onSubmitStart  // Add this new prop
+  onSubmitStart
 }: SearchFormProps) => {
-  const { searchType, setSearchType, searchText, setSearchText, companyName, setCompanyName } = useFormState();
+  const { searchType, setSearchType, searchText, setSearchText, companyName, setCompanyName } = useFormState(currentJobId || null, () => Promise.resolve(null));
   const { isProcessing, setIsProcessing, handleSubmit } = useFormSubmit(userId, onJobCreated, source);
+  const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     if (onSubmitStart) {
-      onSubmitStart();  // Call this at the beginning of form submission
+      onSubmitStart();
     }
     await handleSubmit(e, searchText, searchType, companyName);
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    await processFileUpload(
+      event.target.files?.[0],
+      userId,
+      setSearchText,
+      setIsProcessing
+    );
+  };
+
   return (
     <form onSubmit={handleFormSubmit} className="space-y-4">
-      <SearchFormHeader 
-        searchType={searchType} 
-        setSearchType={setSearchType} 
-        hideSearchTypeToggle={hideSearchTypeToggle}
+      {!hideSearchTypeToggle && (
+        <SearchTypeToggle 
+          value={searchType} 
+          onValueChange={setSearchType} 
+        />
+      )}
+      
+      <FormHeader />
+      
+      <ContentTextarea
+        searchText={searchText}
+        isProcessing={isProcessing}
+        onTextChange={setSearchText}
+        onFileUpload={handleFileUpload}
+        onTextUpdate={setSearchText}
       />
-      <SearchFormContent 
-        searchText={searchText} 
-        setSearchText={setSearchText} 
-        companyName={companyName} 
-        setCompanyName={setCompanyName} 
-        searchType={searchType}
-      />
-      <SearchFormSubmit 
-        isProcessing={isProcessing} 
-        currentJobId={currentJobId} 
-        isProcessingComplete={isProcessingComplete}
-        submitButtonText={submitButtonText}
-      />
+
+      {searchType === "candidates-at-company" && (
+        <CompanyNameInput
+          companyName={companyName}
+          isProcessing={isProcessing}
+          onChange={setCompanyName}
+        />
+      )}
+
+      <div className="space-y-4">
+        <SubmitButton 
+          isProcessing={isProcessing || isScrapingProfiles}
+          isDisabled={isProcessing || isScrapingProfiles || !searchText?.trim() || (searchType === "candidates-at-company" && !companyName?.trim())}
+          buttonText={submitButtonText}
+        />
+        
+        {isScrapingProfiles && (
+          <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Scraping profiles from search results...</span>
+          </div>
+        )}
+      </div>
     </form>
   );
 };

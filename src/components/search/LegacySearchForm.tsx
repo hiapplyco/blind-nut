@@ -100,7 +100,7 @@ export const LegacySearchForm = ({
           <SubmitButton 
             isProcessing={isProcessing || isScrapingProfiles}
             isDisabled={isProcessing || isScrapingProfiles || !searchText || (searchType === "candidates-at-company" && !companyName)}
-            text={submitButtonText}
+            buttonText={submitButtonText}
           />
           
           {isScrapingProfiles && (

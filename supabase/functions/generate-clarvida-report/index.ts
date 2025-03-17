@@ -14,14 +14,16 @@ serve(async (req) => {
   }
   
   try {
-    const { content, source = 'clarvida' } = await req.json();
+    const { content } = await req.json();
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     
     if (!apiKey) {
+      console.error('GEMINI_API_KEY not found in environment variables');
       throw new Error('GEMINI_API_KEY not found in environment variables');
     }
     
     if (!content) {
+      console.error('Content is required');
       throw new Error('Content is required');
     }
     

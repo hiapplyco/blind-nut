@@ -14,7 +14,7 @@ export const processJobRequirements = async (
     if (source === 'clarvida') {
       console.log('Calling generate-clarvida-report function with content length:', content.length);
       const { data, error } = await supabase.functions.invoke('generate-clarvida-report', {
-        body: { content, source }
+        body: { content }
       });
 
       if (error) {
@@ -22,7 +22,7 @@ export const processJobRequirements = async (
         throw error;
       }
       
-      console.log('Received data from generate-clarvida-report function');
+      console.log('Received data from generate-clarvida-report function:', data);
       return data;
     }
     

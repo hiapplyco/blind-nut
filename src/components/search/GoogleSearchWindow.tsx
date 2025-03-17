@@ -21,15 +21,30 @@ export const GoogleSearchWindow = ({
     handleLoadMore, 
     handleCopySearchString, 
     handleExport,
-    totalResults
+    totalResults,
+    currentPage
   } = useGoogleSearch(initialSearchString || searchTerm || "", searchType, jobId);
+
+  // Update search string when props change
+  useEffect(() => {
+    if (initialSearchString && initialSearchString !== searchString) {
+      console.log("Setting search string from props:", initialSearchString);
+      setSearchString(initialSearchString);
+    }
+  }, [initialSearchString, setSearchString, searchString]);
 
   // Trigger search automatically when a new search string is provided
   useEffect(() => {
-    if ((initialSearchString || searchTerm) && (initialSearchString || searchTerm || "").trim() !== '') {
-      handleSearch(1);
+    const searchStr = initialSearchString || searchTerm;
+    if (searchStr && searchStr.trim() !== '') {
+      console.log("Auto-running search for:", searchStr);
+      const timer = setTimeout(() => {
+        handleSearch(1);
+      }, 500); // Small delay to ensure component is mounted
+      
+      return () => clearTimeout(timer);
     }
-  }, [initialSearchString, searchTerm]);
+  }, [initialSearchString, searchTerm, handleSearch]);
 
   return (
     <Card className="p-6 mb-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
@@ -50,7 +65,7 @@ export const GoogleSearchWindow = ({
           totalResults={totalResults}
           currentResults={results.length}
           onLoadMore={handleLoadMore}
-          isLoadingMore={isLoading}
+          isLoadingMore={isLoading && currentPage > 1}
           searchType={searchType}
         />
       </div>

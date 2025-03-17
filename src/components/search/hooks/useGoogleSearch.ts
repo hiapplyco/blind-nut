@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SearchResult, SearchType } from "../types";
 import { toast } from "sonner";
@@ -18,16 +17,19 @@ export const useGoogleSearch = (
   const [totalResults, setTotalResults] = useState(0);
   const resultsPerPage = 10;
 
+  // Initialize from jobId if available
   useEffect(() => {
     if (jobId) {
       const storedData = getSearchResults(jobId);
       if (storedData) {
+        console.log("Loading stored data for jobId:", jobId, storedData);
         setResults(storedData.results);
         setSearchString(storedData.searchQuery);
         setTotalResults(storedData.totalResults);
         const calculatedPage = Math.ceil(storedData.results.length / resultsPerPage);
         setCurrentPage(calculatedPage > 0 ? calculatedPage : 1);
       } else {
+        console.log("No stored data found for jobId:", jobId, "initializing with:", initialSearchString);
         setSearchString(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
         setResults([]);
         setCurrentPage(1);
@@ -36,21 +38,30 @@ export const useGoogleSearch = (
     }
   }, [jobId, initialSearchString, getSearchResults]);
 
+  // Update when initialSearchString changes
   useEffect(() => {
-    if (initialSearchString) {
-      setSearchString(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
-      setResults([]);
-      setCurrentPage(1);
-      setTotalResults(0);
+    if (initialSearchString && initialSearchString !== searchString) {
+      console.log("Updating search string from initialSearchString:", initialSearchString);
+      const cleanedSearchString = initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, '');
+      setSearchString(cleanedSearchString);
       
-      if (jobId) {
-        setSearchResults(jobId, [], searchString, 0);
+      // Reset results when search string changes
+      if (searchString && searchString !== cleanedSearchString) {
+        setResults([]);
+        setCurrentPage(1);
+        setTotalResults(0);
+        
+        if (jobId) {
+          setSearchResults(jobId, [], cleanedSearchString, 0);
+        }
       }
     }
   }, [initialSearchString, setSearchResults, jobId]);
 
+  // Save results to store when they change
   useEffect(() => {
     if (jobId && results.length > 0) {
+      console.log("Saving search results to store for jobId:", jobId);
       setSearchResults(jobId, results, searchString, totalResults);
     }
   }, [jobId, results, searchString, totalResults, setSearchResults]);
@@ -72,7 +83,12 @@ export const useGoogleSearch = (
     return undefined;
   };
 
-  const handleSearch = async (page = 1) => {
+  const handleSearch = useCallback(async (page = 1) => {
+    if (!searchString.trim()) {
+      toast.error("Please enter a search query");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       if (page === 1) {
@@ -81,9 +97,14 @@ export const useGoogleSearch = (
       
       const startIndex = (page - 1) * resultsPerPage + 1;
       
+      console.log(`Fetching search results for: "${searchString}" (page ${page})`);
+      
       const { data: { key }, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
       
-      if (keyError) throw keyError;
+      if (keyError) {
+        console.error("Error fetching CSE key:", keyError);
+        throw keyError;
+      }
       
       const cseId = 'b28705633bcb44cf0'; // Candidates CSE
       
@@ -130,18 +151,18 @@ export const useGoogleSearch = (
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [searchString, jobId, setSearchResults, addToSearchResults, resultsPerPage]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     handleSearch(currentPage + 1);
-  };
+  }, [currentPage, handleSearch]);
 
-  const handleCopySearchString = () => {
+  const handleCopySearchString = useCallback(() => {
     navigator.clipboard.writeText(searchString);
     toast.success('Search string copied to clipboard');
-  };
+  }, [searchString]);
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     if (results.length === 0) {
       toast.error("No results to export");
       return;
@@ -170,7 +191,7 @@ export const useGoogleSearch = (
     URL.revokeObjectURL(url);
 
     toast.success("Search results exported successfully");
-  };
+  }, [results]);
 
   return { 
     results, 
@@ -184,4 +205,4 @@ export const useGoogleSearch = (
     currentPage,
     totalResults
   };
-};
+}, []);

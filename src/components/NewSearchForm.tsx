@@ -1,9 +1,9 @@
-
 import { memo, useState, useEffect } from "react";
 import { SearchForm } from "./search/SearchForm";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
+import { GoogleSearchWindow } from "./search/GoogleSearchWindow";
 
 interface NewSearchFormProps {
   userId: string | null;
@@ -14,21 +14,57 @@ interface NewSearchFormProps {
 
 const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = false }: NewSearchFormProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentJobId, setCurrentJobId] = useState<number | null>(initialJobId || null);
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [searchString, setSearchString] = useState("");
   
   // Only call useAgentOutputs if we have a currentJobId
   const { data: agentOutput, isLoading } = useAgentOutputs(currentJobId || 0);
   const { setOutput } = useClientAgentOutputs();
 
-  // Auto-run analysis if coming from job editor
+  // Get content from location state if present
   useEffect(() => {
-    if (autoRun && initialJobId && agentOutput) {
-      setCurrentJobId(initialJobId);
-      setIsProcessingComplete(true);
+    const state = location.state as { content?: string; autoRun?: boolean } | null;
+    if (state?.content) {
+      setSearchText(state.content);
+      console.log("Content from state:", state.content);
     }
-  }, [autoRun, initialJobId, agentOutput]);
+  }, [location.state]);
+
+  // Auto-run analysis if coming from job editor or if autoRun is true
+  useEffect(() => {
+    if ((autoRun || (location.state as any)?.autoRun) && searchText) {
+      console.log("Auto-running search with:", searchText);
+      // For direct searches without processing, set the search string directly
+      if (searchText.includes("site:linkedin.com/in/")) {
+        setSearchString(searchText);
+      } else {
+        // Otherwise let the form submission handle it
+        const form = document.querySelector("form");
+        if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+      }
+      
+      // Clear autoRun state to prevent multiple runs
+      if (location.state) {
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [autoRun, searchText, location.state]);
+
+  // Monitor agent output changes
+  useEffect(() => {
+    if (agentOutput && !isLoading) {
+      console.log("Agent output received:", agentOutput);
+      setIsProcessingComplete(true);
+      
+      // If we have a search string in the agent output, use it
+      if (agentOutput.searchString) {
+        setSearchString(agentOutput.searchString);
+      }
+    }
+  }, [agentOutput, isLoading]);
 
   const handleSearchSubmit = (text: string, jobId: number) => {
     console.log("Search submitted:", { text, jobId });
@@ -45,14 +81,6 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
     setCurrentJobId(jobId);
   };
 
-  // Monitor agent output changes
-  useEffect(() => {
-    if (agentOutput && !isLoading) {
-      console.log("Agent output received:", agentOutput);
-      setIsProcessingComplete(true);
-    }
-  }, [agentOutput, isLoading]);
-
   return (
     <div className="space-y-6">
       <SearchForm 
@@ -62,7 +90,13 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
         isProcessingComplete={isProcessingComplete}
       />
       
-      {/* Analysis Report section removed */}
+      {searchString && (
+        <GoogleSearchWindow 
+          searchTerm={searchText} 
+          searchString={searchString} 
+          jobId={currentJobId} 
+        />
+      )}
     </div>
   );
 };

@@ -74,8 +74,9 @@ export const ContactCard = ({
                 <LanguagesInformation languages={profileData.languages} />
               )}
               
-              {profileData.profiles && profileData.profiles.length > 0 && (
-                <SocialProfiles profiles={profileData.profiles} />
+              {(profileData.profiles || profileData.social_profiles) && 
+                (profileData.profiles || profileData.social_profiles)!.length > 0 && (
+                <SocialProfiles profiles={(profileData.profiles || profileData.social_profiles)!} />
               )}
             </div>
           ) : (

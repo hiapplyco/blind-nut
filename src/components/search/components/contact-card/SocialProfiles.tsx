@@ -19,7 +19,7 @@ export const SocialProfiles = ({ profiles }: SocialProfilesProps) => {
               rel="noopener noreferrer"
               className="text-[#8B5CF6] hover:underline"
             >
-              {profile.username}
+              {profile.username || profile.url}
             </a>
           </div>
         ))}

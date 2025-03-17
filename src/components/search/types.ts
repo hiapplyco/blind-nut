@@ -18,7 +18,12 @@ export interface Profile {
   location?: string;
   email?: string;
   phone?: string;
-  // Add other profile properties as needed
+  // Fields for the ProfileCard component
+  profile_name?: string;
+  profile_title?: string;
+  profile_location?: string;
+  profile_url?: string;
+  relevance_score?: number;
 }
 
 export interface EnrichedProfileData {
@@ -28,7 +33,21 @@ export interface EnrichedProfileData {
   education?: Education[];
   skills?: string[];
   social_profiles?: SocialProfile[];
-  // Add other enriched data properties as needed
+  // Additional properties
+  work_email?: string;
+  personal_emails?: string[];
+  mobile_phone?: string;
+  phone_numbers?: string[];
+  job_company_name?: string;
+  industry?: string;
+  job_title?: string;
+  location?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  company_size?: string;
+  languages?: string[];
+  profiles?: SocialProfile[];
 }
 
 export interface Experience {
@@ -37,6 +56,9 @@ export interface Experience {
   description?: string;
   startDate?: string;
   endDate?: string;
+  // For compatibility with existing components
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface Education {
@@ -45,11 +67,17 @@ export interface Education {
   field?: string;
   startDate?: string;
   endDate?: string;
+  // For compatibility with existing components
+  school?: string;
+  field_of_study?: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface SocialProfile {
   network: string;
   url: string;
+  username?: string;
 }
 
 export interface SearchResult {
@@ -59,27 +87,47 @@ export interface SearchResult {
   company?: string;
   location?: string;
   profileUrl?: string;
-  // Add other search result properties as needed
+  // Additional properties for Google search results
+  link?: string;
+  htmlTitle?: string;
+  snippet?: string;
 }
 
 export interface GoogleSearchWindowProps {
-  searchTerm: string;
-  onClose: () => void;
+  searchTerm?: string;
+  searchString?: string;
+  onClose?: () => void;
+  searchType?: SearchType;
+  jobId?: number;
 }
 
 export interface SearchHeaderProps {
-  title: string;
+  title?: string;
   subtitle?: string;
   actionButton?: React.ReactNode;
+  // Additional properties for Google search header
+  searchString?: string;
+  setSearchString?: React.Dispatch<React.SetStateAction<string>>;
+  handleSearch?: () => void | Promise<void>;
+  handleExport?: () => void;
+  handleCopySearchString?: () => void;
+  isLoading?: boolean;
+  resultsExist?: boolean;
 }
 
 export interface SearchResultItemProps {
   result: SearchResult;
-  onClick: (result: SearchResult) => void;
+  onClick?: (result: SearchResult) => void;
+  searchType?: SearchType;
 }
 
 export interface SearchResultsListProps {
   results: SearchResult[];
-  onSelectResult: (result: SearchResult) => void;
+  onSelectResult?: (result: SearchResult) => void;
   isLoading?: boolean;
+  totalResults?: number;
+  currentResults?: number;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
+  searchType?: SearchType;
 }

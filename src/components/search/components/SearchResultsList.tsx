@@ -30,7 +30,7 @@ export const SearchResultsList = ({
         />
       ))}
       
-      {results.length > 0 && Number(totalResults) > currentResults && (
+      {results.length > 0 && totalResults && Number(totalResults) > (currentResults || results.length) && (
         <div className="flex justify-center mt-4">
           <Button 
             onClick={onLoadMore} 

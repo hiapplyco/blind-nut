@@ -7,6 +7,7 @@ import { GoogleSearchWindowProps } from "./types";
 import { useEffect } from "react";
 
 export const GoogleSearchWindow = ({ 
+  searchTerm,
   searchString: initialSearchString,
   searchType = "candidates",
   jobId
@@ -21,14 +22,14 @@ export const GoogleSearchWindow = ({
     handleCopySearchString, 
     handleExport,
     totalResults
-  } = useGoogleSearch(initialSearchString, searchType, jobId);
+  } = useGoogleSearch(initialSearchString || searchTerm || "", searchType, jobId);
 
   // Trigger search automatically when a new search string is provided
   useEffect(() => {
-    if (initialSearchString && initialSearchString.trim() !== '') {
+    if ((initialSearchString || searchTerm) && (initialSearchString || searchTerm || "").trim() !== '') {
       handleSearch(1);
     }
-  }, [initialSearchString]);
+  }, [initialSearchString, searchTerm]);
 
   return (
     <Card className="p-6 mb-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

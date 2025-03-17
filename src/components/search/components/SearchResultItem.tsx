@@ -34,7 +34,7 @@ export const SearchResultItem = ({
     setShowContactCard(true);
     
     try {
-      const data = await enrichProfile(result.link);
+      const data = await enrichProfile(result.link || result.profileUrl || '');
       if (data) {
         setEnrichedData(data);
         toast.success("Contact information found!");
@@ -55,11 +55,11 @@ export const SearchResultItem = ({
     <div className="p-4 border rounded-lg border-black relative">
       <h3 className="font-medium">
         <a
-          href={result.link}
+          href={result.link || result.profileUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-600 hover:underline"
-          dangerouslySetInnerHTML={{ __html: result.htmlTitle }}
+          dangerouslySetInnerHTML={{ __html: result.htmlTitle || result.name }}
         />
       </h3>
       {result.location && (
@@ -67,9 +67,9 @@ export const SearchResultItem = ({
           📍 {result.location}
         </p>
       )}
-      <p className="mt-1 text-sm text-gray-600">{result.snippet}</p>
+      <p className="mt-1 text-sm text-gray-600">{result.snippet || result.title}</p>
       
-      {result.link.includes('linkedin.com/in/') && (
+      {(result.link?.includes('linkedin.com/in/') || result.profileUrl?.includes('linkedin.com/in/')) && (
         <div className="mt-2 flex justify-end">
           <Button
             onClick={handleGetContactInfo}
@@ -99,7 +99,7 @@ export const SearchResultItem = ({
         profileData={enrichedData}
         isLoading={isLoading}
         error={error}
-        profileName={extractNameFromTitle(result.htmlTitle)}
+        profileName={extractNameFromTitle(result.htmlTitle || result.name)}
       />
     </div>
   );

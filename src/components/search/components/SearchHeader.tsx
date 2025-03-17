@@ -20,7 +20,7 @@ export const SearchHeader = ({
         <h2 className="text-xl font-bold">Google Search Results</h2>
         <div className="space-x-2">
           <Button
-            onClick={() => handleSearch()}
+            onClick={() => handleSearch?.()}
             disabled={isLoading}
             className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
           >
@@ -59,7 +59,7 @@ export const SearchHeader = ({
         </div>
         <Textarea
           value={searchString}
-          onChange={(e) => setSearchString(e.target.value)}
+          onChange={(e) => setSearchString?.(e.target.value)}
           className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
           rows={4}
         />

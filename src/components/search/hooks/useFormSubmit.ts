@@ -55,12 +55,17 @@ export const useFormSubmit = (
         }
 
         // Update job with search string
-        const { error: updateError } = await supabase
-          .from('jobs')
-          .update({ search_string: result.searchString })
-          .eq('id', jobId);
+        try {
+          const { error: updateError } = await supabase
+            .from('jobs')
+            .update({ search_string: result.searchString })
+            .eq('id', jobId);
 
-        if (updateError) throw updateError;
+          if (updateError) console.error('Error updating job:', updateError);
+        } catch (updateError) {
+          console.error('Failed to update job with search string:', updateError);
+          // Continue anyway - don't block the user experience for database issues
+        }
 
         onJobCreated(jobId, searchText);
         toast.success("Search string generated successfully!");

@@ -1,5 +1,4 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -29,7 +28,7 @@ serve(async (req) => {
     
     console.log(`Generating Clarvida report for content length: ${content.length}`);
 
-    // Call Gemini API using gemini-flash-2.0 model
+    // Call Gemini API using gemini-flash-2.0 model (ensure this is correctly specified)
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-2.0:generateContent', {
       method: 'POST',
       headers: {
@@ -149,6 +148,12 @@ Return ONLY JSON data in this exact structure:
     // Extract the JSON data from the text response
     let reportData;
     try {
+      // Make sure we're properly extracting the text from the Gemini response
+      if (!result.candidates || !result.candidates[0] || !result.candidates[0].content) {
+        console.error('Unexpected response structure from Gemini API:', JSON.stringify(result));
+        throw new Error('Unexpected response structure from Gemini API');
+      }
+      
       const textContent = result.candidates[0].content.parts[0].text;
       console.log('Text content received, length:', textContent.length);
       

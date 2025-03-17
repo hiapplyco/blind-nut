@@ -107,11 +107,17 @@ export const useGoogleSearch = (
         throw keyError;
       }
       
+      // Add site:linkedin.com/in/ automatically if it's a candidate search and doesn't already have it
+      let finalSearchString = searchString;
+      if (searchType === "candidates" && !finalSearchString.includes("site:linkedin.com/in/")) {
+        finalSearchString = `${finalSearchString} site:linkedin.com/in/`;
+      }
+      
       const cseId = 'b28705633bcb44cf0'; // Candidates CSE
       
       const response = await fetch(
         `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cseId}&q=${encodeURIComponent(
-          searchString
+          finalSearchString
         )}&start=${startIndex}`
       );
       
@@ -152,7 +158,7 @@ export const useGoogleSearch = (
     } finally {
       setIsLoading(false);
     }
-  }, [searchString, jobId, setSearchResults, addToSearchResults, resultsPerPage]);
+  }, [searchString, jobId, setSearchResults, addToSearchResults, resultsPerPage, searchType]);
 
   const handleLoadMore = useCallback(() => {
     handleSearch(currentPage + 1);

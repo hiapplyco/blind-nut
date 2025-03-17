@@ -1,10 +1,10 @@
-
 import { memo, useState, useEffect } from "react";
 import { SearchForm } from "./search/SearchForm";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
 import { GoogleSearchWindow } from "./search/GoogleSearchWindow";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NewSearchFormProps {
   userId: string | null;
@@ -27,10 +27,16 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
 
   // Get content from location state if present
   useEffect(() => {
-    const state = location.state as { content?: string; autoRun?: boolean } | null;
+    const state = location.state as { content?: string; autoRun?: boolean; searchString?: string } | null;
     if (state?.content) {
       setSearchText(state.content);
       console.log("Content from state:", state.content);
+    }
+    
+    // If search string is directly provided in state, use it
+    if (state?.searchString) {
+      console.log("Search string from state:", state.searchString);
+      setSearchString(state.searchString);
     }
   }, [location.state]);
 
@@ -63,7 +69,30 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
       // If we have a search string in the agent output, use it
       // Use optional chaining to safely access the property
       if (agentOutput.searchString) {
+        console.log("Using search string from agent output:", agentOutput.searchString);
         setSearchString(agentOutput.searchString);
+      } else if (agentOutput.job_id) {
+        // If no search string in agent output, try to fetch from job record
+        const fetchJobSearchString = async () => {
+          try {
+            const { data, error } = await supabase
+              .from('jobs')
+              .select('search_string')
+              .eq('id', agentOutput.job_id)
+              .single();
+            
+            if (error) throw error;
+            
+            if (data?.search_string) {
+              console.log("Using search string from job record:", data.search_string);
+              setSearchString(data.search_string);
+            }
+          } catch (error) {
+            console.error("Error fetching job search string:", error);
+          }
+        };
+        
+        fetchJobSearchString();
       }
     }
   }, [agentOutput, isLoading]);
@@ -75,6 +104,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
     // Reset state when a new search is submitted
     if (currentJobId !== jobId) {
       setIsProcessingComplete(false);
+      setSearchString("");
       
       // Clear any previous agent output for the new job
       setOutput(jobId, null);

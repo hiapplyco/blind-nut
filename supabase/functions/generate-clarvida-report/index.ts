@@ -150,12 +150,16 @@ Return ONLY JSON data in this exact structure:
     let reportData;
     try {
       const textContent = result.candidates[0].content.parts[0].text;
+      console.log('Text content received, length:', textContent.length);
       
       // Extract JSON from the response text - look for objects between curly braces
       const jsonMatch = textContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
+        console.log('JSON match found, attempting to parse');
         reportData = JSON.parse(jsonMatch[0]);
+        console.log('Successfully parsed JSON data');
       } else {
+        console.error('Could not extract JSON from Gemini response');
         throw new Error('Could not extract JSON from Gemini response');
       }
     } catch (parseError) {

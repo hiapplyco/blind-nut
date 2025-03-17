@@ -301,6 +301,7 @@ export type Database = {
           salary_range: string | null
           search_string: string | null
           skills_required: string[] | null
+          source: string | null
           summary: string | null
           tags: string[] | null
           title: string | null
@@ -325,6 +326,7 @@ export type Database = {
           salary_range?: string | null
           search_string?: string | null
           skills_required?: string[] | null
+          source?: string | null
           summary?: string | null
           tags?: string[] | null
           title?: string | null
@@ -349,6 +351,7 @@ export type Database = {
           salary_range?: string | null
           search_string?: string | null
           skills_required?: string[] | null
+          source?: string | null
           summary?: string | null
           tags?: string[] | null
           title?: string | null

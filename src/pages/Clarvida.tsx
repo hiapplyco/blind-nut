@@ -16,8 +16,14 @@ const Clarvida = () => {
   const handleJobCreated = (jobId: number, searchText?: string, data?: any) => {
     console.log('Job created callback called with data:', !!data);
     setCurrentJobId(jobId);
-    setAnalysisData(data);
-    setIsProcessingComplete(true);
+    if (data) {
+      console.log('Setting analysis data:', data);
+      setAnalysisData(data);
+      setIsProcessingComplete(true);
+    } else {
+      console.error('No data received in handleJobCreated');
+      setIsProcessingComplete(false);
+    }
   };
   
   return (

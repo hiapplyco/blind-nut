@@ -111,7 +111,10 @@ export const useSearchForm = (
         .select()
         .single();
 
-      if (jobError) throw jobError;
+      if (jobError) {
+        console.error('Error creating job:', jobError);
+        throw jobError;
+      }
       
       const jobId = jobData.id;
       console.log(`Created job with ID: ${jobId}`);

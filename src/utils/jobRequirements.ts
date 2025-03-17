@@ -31,7 +31,12 @@ export const processJobRequirements = async (
       body: { content, searchType, companyName, userId, source }
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error from process-job-requirements:', error);
+      throw error;
+    }
+    
+    console.log('Received data from process-job-requirements function:', data);
     return data;
   } catch (error) {
     console.error('Error processing job requirements:', error);

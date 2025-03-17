@@ -9,6 +9,8 @@ export const SearchForm = memo(({
   userId, 
   onJobCreated, 
   currentJobId,
+  isProcessingComplete,
+  source = 'default',
 }: SearchFormProps) => {
   const {
     searchText,
@@ -22,7 +24,7 @@ export const SearchForm = memo(({
     searchString,
     handleSubmit,
     handleFileUpload,
-  } = useSearchForm(userId, onJobCreated, currentJobId);
+  } = useSearchForm(userId, onJobCreated, currentJobId, source);
 
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

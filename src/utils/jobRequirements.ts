@@ -6,11 +6,12 @@ export const processJobRequirements = async (
   content: string,
   searchType: SearchType,
   companyName?: string,
-  userId?: string
+  userId?: string | null,
+  source?: 'default' | 'clarvida'
 ) => {
   try {
     const { data, error } = await supabase.functions.invoke('process-job-requirements', {
-      body: { content, searchType, companyName, userId }
+      body: { content, searchType, companyName, userId, source }
     });
 
     if (error) throw error;

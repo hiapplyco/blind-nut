@@ -8,9 +8,10 @@ import { processJobRequirements } from "@/utils/jobRequirements";
 import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
 
 export const useSearchForm = (
-  userId: string,
-  onJobCreated: (jobId: number, searchText: string) => void,
-  currentJobId: number | null
+  userId: string | null,
+  onJobCreated: (jobId: number, searchText: string, data?: any) => void,
+  currentJobId: number | null,
+  source?: 'default' | 'clarvida'
 ) => {
   const location = useLocation();
   const [searchText, setSearchText] = useState("");
@@ -103,7 +104,8 @@ export const useSearchForm = (
           content: searchText,
           user_id: userId,
           title,
-          summary
+          summary,
+          source: source || 'default'
         })
         .select()
         .single();
@@ -117,23 +119,29 @@ export const useSearchForm = (
         setSearchResults(jobId, [], "", 0);
       }
       
-      onJobCreated(jobId, searchText);
-
-      const result = await processJobRequirements(searchText, searchType, companyName, userId);
+      const result = await processJobRequirements(searchText, searchType, companyName, userId, source);
       
-      if (!result?.searchString) {
-        throw new Error('Failed to generate search string');
+      if (source === 'clarvida') {
+        // For Clarvida, pass the data directly to the callback
+        onJobCreated(jobId, searchText, result.data);
+        toast.success("Analysis complete!");
+      } else {
+        // For the regular search flow
+        if (!result?.searchString) {
+          throw new Error('Failed to generate search string');
+        }
+
+        const { error: updateError } = await supabase
+          .from('jobs')
+          .update({ search_string: result.searchString })
+          .eq('id', jobId);
+
+        if (updateError) throw updateError;
+
+        setSearchString(result.searchString);
+        onJobCreated(jobId, searchText);
+        toast.success("Search string generated successfully!");
       }
-
-      const { error: updateError } = await supabase
-        .from('jobs')
-        .update({ search_string: result.searchString })
-        .eq('id', jobId);
-
-      if (updateError) throw updateError;
-
-      setSearchString(result.searchString);
-      toast.success("Search string generated successfully!");
 
     } catch (error) {
       console.error('Error processing content:', error);
@@ -141,7 +149,7 @@ export const useSearchForm = (
     } finally {
       setIsProcessing(false);
     }
-  }, [searchText, searchType, companyName, userId, onJobCreated, setSearchResults]);
+  }, [searchText, searchType, companyName, userId, onJobCreated, setSearchResults, source]);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -155,7 +163,7 @@ export const useSearchForm = (
     setIsProcessing(true);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('userId', userId);
+    formData.append('userId', userId || '');
 
     try {
       const { data, error } = await supabase.functions.invoke('parse-document', {

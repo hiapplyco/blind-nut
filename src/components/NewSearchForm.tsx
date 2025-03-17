@@ -1,3 +1,4 @@
+
 import { memo, useState, useEffect } from "react";
 import { SearchForm } from "./search/SearchForm";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -60,6 +61,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
       setIsProcessingComplete(true);
       
       // If we have a search string in the agent output, use it
+      // Use optional chaining to safely access the property
       if (agentOutput.searchString) {
         setSearchString(agentOutput.searchString);
       }

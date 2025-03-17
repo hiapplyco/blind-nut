@@ -1,3 +1,4 @@
+
 export interface Terms {
   skills: string[];
   titles: string[];
@@ -12,4 +13,5 @@ export interface AgentOutput {
   compensation_analysis: string | null;
   enhanced_description: string | null;
   job_summary: string | null;
+  searchString?: string; // Added searchString property as optional
 }

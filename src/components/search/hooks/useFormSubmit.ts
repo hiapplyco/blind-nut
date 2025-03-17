@@ -9,7 +9,7 @@ import { createJob } from "./utils/createJob";
 
 export const useFormSubmit = (
   userId: string | null,
-  onJobCreated: (jobId: number, searchText: string) => void,
+  onJobCreated: (jobId: number, searchText: string, data?: any) => void,
   source: 'default' | 'clarvida' = 'default'
 ) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -25,32 +25,51 @@ export const useFormSubmit = (
     setIsProcessing(true);
 
     try {
+      console.log(`Processing form submission for source: ${source}`);
+      
       // Generate title and summary
       const { title, summary } = await generateSummary(searchText);
       
       // Create job in database
       const jobId = await createJob(searchText, userId, title, summary, source);
+      console.log(`Created job with ID: ${jobId}`);
       
-      // Notify parent component
-      onJobCreated(jobId, searchText);
-
-      // Process content based on search type
+      // Process content based on search type and source
+      console.log(`Calling processJobRequirements with source: ${source}`);
       const result = await processJobRequirements(searchText, searchType, companyName, userId, source);
+      console.log('Received result from processJobRequirements:', result);
       
-      // Update job with search string
-      const { error: updateError } = await supabase
-        .from('jobs')
-        .update({ search_string: result.searchString })
-        .eq('id', jobId);
+      if (source === 'clarvida') {
+        // For Clarvida, pass the data directly to the callback
+        console.log('Processing Clarvida result, data:', result?.data);
+        if (!result || !result.data) {
+          throw new Error('Failed to generate Clarvida report: No data returned');
+        }
+        
+        onJobCreated(jobId, searchText, result.data);
+        return result.data;
+      } else {
+        // For the regular search flow
+        if (!result?.searchString) {
+          throw new Error('Failed to generate search string');
+        }
 
-      if (updateError) throw updateError;
+        // Update job with search string
+        const { error: updateError } = await supabase
+          .from('jobs')
+          .update({ search_string: result.searchString })
+          .eq('id', jobId);
 
-      toast.success("Search string generated successfully!");
-      return result.searchString;
+        if (updateError) throw updateError;
+
+        onJobCreated(jobId, searchText);
+        toast.success("Search string generated successfully!");
+        return result.searchString;
+      }
 
     } catch (error) {
       console.error('Error processing content:', error);
-      toast.error("Failed to process content. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to process content. Please try again.");
       return null;
     } finally {
       setIsProcessing(false);

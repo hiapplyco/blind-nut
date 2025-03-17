@@ -1,10 +1,10 @@
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
 import { SearchForm } from "@/components/search/SearchForm";
 import { useAuth } from "@/context/AuthContext";
 import { ClarvidaHeader } from "@/components/clarvida/ClarvidaHeader";
 import { ClarvidaResults } from "@/components/clarvida/ClarvidaResults";
+import { toast } from "sonner";
 
 const Clarvida = () => {
   const { session } = useAuth();
@@ -14,14 +14,17 @@ const Clarvida = () => {
   const [analysisData, setAnalysisData] = useState<any>(null);
   
   const handleJobCreated = (jobId: number, searchText?: string, data?: any) => {
-    console.log('Job created callback called with data:', !!data);
+    console.log('Job created callback called with jobId:', jobId);
     setCurrentJobId(jobId);
+    
     if (data) {
       console.log('Setting analysis data:', data);
       setAnalysisData(data);
       setIsProcessingComplete(true);
+      toast.success("Analysis complete!");
     } else {
       console.error('No data received in handleJobCreated');
+      toast.error("Failed to generate report. Please try again.");
       setIsProcessingComplete(false);
     }
   };

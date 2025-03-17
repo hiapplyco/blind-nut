@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { SearchType } from "@/components/search/types";
+import { SearchType } from "@/components/search/hooks/types";
 
 export const processJobRequirements = async (
   content: string,

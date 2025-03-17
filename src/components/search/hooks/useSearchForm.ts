@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { SearchType } from "../types";
+import { SearchType } from "./types";
 import { toast } from "sonner";
 import { processJobRequirements } from "@/utils/jobRequirements";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,7 @@ export const useSearchForm = (
   userId: string | null,
   onJobCreated: (jobId: number, searchText: string, data?: any) => void,
   currentJobId: number | null,
-  source?: 'default' | 'clarvida'
+  source: 'default' | 'clarvida' = 'default'
 ) => {
   const location = useLocation();
   const [searchText, setSearchText] = useState("");

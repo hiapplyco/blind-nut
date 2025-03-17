@@ -14,10 +14,12 @@ const Clarvida = () => {
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
   
-  const handleJobCreated = (jobId: number, searchText?: string, data?: any) => {
+  const handleJobCreated = (jobId: number, inputText: string, data?: any) => {
     console.log('Job created callback called with jobId:', jobId);
     setCurrentJobId(jobId);
+    setSearchText(inputText);
     setIsLoading(false);
     
     if (data) {
@@ -83,6 +85,7 @@ const Clarvida = () => {
           ) : (
             analysisData && <ClarvidaResults 
               data={analysisData} 
+              originalSearchText={searchText}
               onNewSearch={() => {
                 setIsProcessingComplete(false);
                 setAnalysisData(null);

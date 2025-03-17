@@ -13,10 +13,12 @@ const Clarvida = () => {
   const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const handleJobCreated = (jobId: number, searchText?: string, data?: any) => {
     console.log('Job created callback called with jobId:', jobId);
     setCurrentJobId(jobId);
+    setIsLoading(false);
     
     if (data) {
       console.log('Setting analysis data:', data);
@@ -35,6 +37,11 @@ const Clarvida = () => {
   const handleRetry = () => {
     setIsError(false);
     setIsProcessingComplete(false);
+    setAnalysisData(null);
+  };
+  
+  const handleSubmitStart = () => {
+    setIsLoading(true);
   };
   
   return (
@@ -55,19 +62,31 @@ const Clarvida = () => {
               </button>
             </div>
           ) : !isProcessingComplete ? (
-            <SearchForm 
-              userId={userId} 
-              onJobCreated={handleJobCreated}
-              currentJobId={currentJobId}
-              isProcessingComplete={isProcessingComplete}
-              source="clarvida"
-              hideSearchTypeToggle={true}
-              submitButtonText="Generate Report"
-            />
+            <div>
+              {isLoading && (
+                <div className="text-center mb-6">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#8B5CF6] mb-2"></div>
+                  <p className="text-gray-600">Generating your report...</p>
+                </div>
+              )}
+              <SearchForm 
+                userId={userId} 
+                onJobCreated={handleJobCreated}
+                currentJobId={currentJobId}
+                isProcessingComplete={isProcessingComplete}
+                source="clarvida"
+                hideSearchTypeToggle={true}
+                submitButtonText="Generate Report"
+                onSubmitStart={handleSubmitStart}
+              />
+            </div>
           ) : (
-            <ClarvidaResults 
+            analysisData && <ClarvidaResults 
               data={analysisData} 
-              onNewSearch={() => setIsProcessingComplete(false)} 
+              onNewSearch={() => {
+                setIsProcessingComplete(false);
+                setAnalysisData(null);
+              }} 
             />
           )}
         </div>

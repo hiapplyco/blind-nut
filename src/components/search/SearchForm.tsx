@@ -1,54 +1,62 @@
-
-import { memo } from "react";
-import { Card } from "@/components/ui/card";
-import { SearchFormProps } from "./types";
-import { useSearchForm } from "./hooks/useSearchForm";
+import React, { useState } from "react";
+import { SearchFormHeader } from "./SearchFormHeader";
 import { SearchFormContent } from "./SearchFormContent";
+import { SearchFormSubmit } from "./SearchFormSubmit";
+import { SearchType } from "./hooks/types";
+import { useFormState } from "./hooks/useFormState";
+import { useFormSubmit } from "./hooks/useFormSubmit";
 
-export const SearchForm = memo(({ 
+interface SearchFormProps {
+  userId: string | null;
+  onJobCreated: (jobId: number, searchText: string, data?: any) => void;
+  currentJobId?: number | null;
+  isProcessingComplete?: boolean;
+  source?: 'default' | 'clarvida';
+  hideSearchTypeToggle?: boolean;
+  submitButtonText?: string;
+  onSubmitStart?: () => void;  // Add this new prop
+}
+
+export const SearchForm = ({ 
   userId, 
   onJobCreated, 
-  currentJobId,
+  currentJobId, 
   isProcessingComplete,
   source = 'default',
   hideSearchTypeToggle = false,
   submitButtonText,
+  onSubmitStart  // Add this new prop
 }: SearchFormProps) => {
-  const {
-    searchText,
-    setSearchText,
-    companyName,
-    setCompanyName,
-    isProcessing,
-    isScrapingProfiles,
-    searchType,
-    setSearchType,
-    searchString,
-    handleSubmit,
-    handleFileUpload,
-  } = useSearchForm(userId, onJobCreated, currentJobId, source);
+  const { searchType, setSearchType, searchText, setSearchText, companyName, setCompanyName } = useFormState();
+  const { isProcessing, setIsProcessing, handleSubmit } = useFormSubmit(userId, onJobCreated, source);
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    if (onSubmitStart) {
+      onSubmitStart();  // Call this at the beginning of form submission
+    }
+    await handleSubmit(e, searchText, searchType, companyName);
+  };
 
   return (
-    <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-      <SearchFormContent
-        searchText={searchText}
-        companyName={companyName}
-        isProcessing={isProcessing}
-        isScrapingProfiles={isScrapingProfiles}
-        searchType={searchType}
-        searchString={searchString}
-        onSearchTypeChange={setSearchType}
-        onSearchTextChange={setSearchText}
-        onCompanyNameChange={setCompanyName}
-        onFileUpload={handleFileUpload}
-        onSubmit={handleSubmit}
+    <form onSubmit={handleFormSubmit} className="space-y-4">
+      <SearchFormHeader 
+        searchType={searchType} 
+        setSearchType={setSearchType} 
         hideSearchTypeToggle={hideSearchTypeToggle}
+      />
+      <SearchFormContent 
+        searchText={searchText} 
+        setSearchText={setSearchText} 
+        companyName={companyName} 
+        setCompanyName={setCompanyName} 
+        searchType={searchType}
+      />
+      <SearchFormSubmit 
+        isProcessing={isProcessing} 
+        currentJobId={currentJobId} 
+        isProcessingComplete={isProcessingComplete}
         submitButtonText={submitButtonText}
       />
-    </Card>
+    </form>
   );
-});
-
-SearchForm.displayName = 'SearchForm';
-
-export default SearchForm;
+};

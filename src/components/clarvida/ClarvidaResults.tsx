@@ -18,6 +18,22 @@ interface ClarvidaResultsProps {
 }
 
 export function ClarvidaResults({ data, onNewSearch }: ClarvidaResultsProps) {
+  // Add safety check for data
+  if (!data) {
+    return (
+      <div className="space-y-8">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Analysis Results</h2>
+          <Button onClick={onNewSearch} variant="outline">New Analysis</Button>
+        </div>
+        
+        <div className="text-center py-12">
+          <p className="text-gray-500">No analysis data available. Please try a new search.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -46,7 +62,7 @@ export function ClarvidaResults({ data, onNewSearch }: ClarvidaResultsProps) {
           <NiceToHaveSkillsCard data={data.nice_to_have_skills} />
         )}
         
-        {data?.interview_questions && data.interview_questions.length > 0 && (
+        {data?.interview_questions && Array.isArray(data.interview_questions) && data.interview_questions.length > 0 && (
           <InterviewQuestionsCard data={{ interview_questions: data.interview_questions }} />
         )}
         
@@ -54,7 +70,7 @@ export function ClarvidaResults({ data, onNewSearch }: ClarvidaResultsProps) {
           <BenefitsDescriptionCard data={data.benefits_description} />
         )}
         
-        {data?.previous_job_titles && (
+        {data?.previous_job_titles && Array.isArray(data.previous_job_titles) && (
           <PreviousJobTitlesCard data={data.previous_job_titles} />
         )}
         

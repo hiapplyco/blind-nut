@@ -1,11 +1,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { SearchType } from "../types";
 import { toast } from "sonner";
 import { processJobRequirements } from "@/utils/jobRequirements";
-import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
+import { supabase } from "@/integrations/supabase/client";
+import { generateSummary } from "./utils/generateSummary";
+import { createJob } from "./utils/createJob";
+import { processFileUpload } from "./utils/processFileUpload";
+import { fetchSearchString } from "./utils/fetchSearchString";
 
 export const useSearchForm = (
   userId: string | null,
@@ -20,7 +23,6 @@ export const useSearchForm = (
   const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
   const [searchType, setSearchType] = useState<SearchType>("candidates");
   const [searchString, setSearchString] = useState("");
-  const { setSearchResults } = useClientAgentOutputs();
 
   useEffect(() => {
     const state = location.state as { content?: string; autoRun?: boolean } | null;
@@ -36,49 +38,15 @@ export const useSearchForm = (
   }, [location.state]);
 
   useEffect(() => {
-    const fetchSearchString = async () => {
-      if (currentJobId) {
-        const { data, error } = await supabase
-          .from('jobs')
-          .select('search_string')
-          .eq('id', currentJobId)
-          .single();
-
-        if (error) {
-          console.error('Error fetching search string:', error);
-          return;
-        }
-
-        if (data?.search_string) {
-          setSearchString(data.search_string);
-        }
+    const getSearchString = async () => {
+      const result = await fetchSearchString(currentJobId);
+      if (result) {
+        setSearchString(result);
       }
     };
 
-    fetchSearchString();
+    getSearchString();
   }, [currentJobId]);
-
-  const generateSummary = async (content: string) => {
-    if (!content?.trim()) {
-      throw new Error('Content is required');
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('summarize-title', {
-        body: { content }
-      });
-
-      if (error) throw error;
-
-      return {
-        title: data?.title || 'Untitled Search',
-        summary: data?.summary || ''
-      };
-    } catch (error) {
-      console.error('Error generating summary:', error);
-      throw error;
-    }
-  };
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,30 +67,7 @@ export const useSearchForm = (
       console.log(`Processing form submission for source: ${source || 'default'}`);
       const { title, summary } = await generateSummary(searchText);
 
-      const { data: jobData, error: jobError } = await supabase
-        .from('jobs')
-        .insert({
-          content: searchText,
-          user_id: userId,
-          title,
-          summary,
-          source: source || 'default'
-        })
-        .select()
-        .single();
-
-      if (jobError) {
-        console.error('Error creating job:', jobError);
-        throw jobError;
-      }
-      
-      const jobId = jobData.id;
-      console.log(`Created job with ID: ${jobId}`);
-      
-      // Clear previous search results when creating a new job
-      if (jobId) {
-        setSearchResults(jobId, [], "", 0);
-      }
+      const jobId = await createJob(searchText, userId, title, summary, source);
       
       console.log(`Calling processJobRequirements with source: ${source || 'default'}`);
       const result = await processJobRequirements(searchText, searchType, companyName, userId, source);
@@ -160,38 +105,12 @@ export const useSearchForm = (
     } finally {
       setIsProcessing(false);
     }
-  }, [searchText, searchType, companyName, userId, onJobCreated, setSearchResults, source]);
+  }, [searchText, searchType, companyName, userId, onJobCreated, source]);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.includes('pdf') && !file.type.includes('image')) {
-      toast.error("Invalid file type. Please upload a PDF file or an image");
-      return;
-    }
-
-    setIsProcessing(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('userId', userId || '');
-
-    try {
-      const { data, error } = await supabase.functions.invoke('parse-document', {
-        body: formData,
-      });
-
-      if (error) throw error;
-
-      if (data?.text) {
-        setSearchText(data.text);
-        toast.success("File processed successfully. The content has been extracted and added to the input field.");
-      }
-    } catch (error) {
-      console.error('Error processing file:', error);
-      toast.error("Failed to process the file. Please try again.");
-    } finally {
-      setIsProcessing(false);
+    if (file) {
+      await processFileUpload(file, userId, setSearchText, setIsProcessing);
     }
   }, [userId]);
 

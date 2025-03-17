@@ -14,6 +14,7 @@ const Clarvida = () => {
   const [analysisData, setAnalysisData] = useState<any>(null);
   
   const handleJobCreated = (jobId: number, searchText?: string, data?: any) => {
+    console.log('Job created callback called with data:', !!data);
     setCurrentJobId(jobId);
     setAnalysisData(data);
     setIsProcessingComplete(true);

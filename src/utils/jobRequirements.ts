@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { SearchType } from "@/components/search/types";
 
@@ -11,11 +12,17 @@ export const processJobRequirements = async (
   try {
     // If source is clarvida, use the clarvida-specific edge function
     if (source === 'clarvida') {
+      console.log('Calling generate-clarvida-report function with content length:', content.length);
       const { data, error } = await supabase.functions.invoke('generate-clarvida-report', {
         body: { content, source }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error from generate-clarvida-report:', error);
+        throw error;
+      }
+      
+      console.log('Received data from generate-clarvida-report function');
       return data;
     }
     

@@ -96,6 +96,7 @@ export const useSearchForm = (
     setIsProcessing(true);
 
     try {
+      console.log(`Processing form submission for source: ${source || 'default'}`);
       const { title, summary } = await generateSummary(searchText);
 
       const { data: jobData, error: jobError } = await supabase
@@ -113,16 +114,23 @@ export const useSearchForm = (
       if (jobError) throw jobError;
       
       const jobId = jobData.id;
+      console.log(`Created job with ID: ${jobId}`);
       
       // Clear previous search results when creating a new job
       if (jobId) {
         setSearchResults(jobId, [], "", 0);
       }
       
+      console.log(`Calling processJobRequirements with source: ${source || 'default'}`);
       const result = await processJobRequirements(searchText, searchType, companyName, userId, source);
+      console.log('Received result from processJobRequirements:', result);
       
       if (source === 'clarvida') {
         // For Clarvida, pass the data directly to the callback
+        console.log('Processing Clarvida result');
+        if (!result || !result.data) {
+          throw new Error('Failed to generate Clarvida report: No data returned');
+        }
         onJobCreated(jobId, searchText, result.data);
         toast.success("Analysis complete!");
       } else {

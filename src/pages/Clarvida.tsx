@@ -13,9 +13,9 @@ const Clarvida = () => {
   const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const [analysisData, setAnalysisData] = useState<any>(null);
   
-  const handleJobCreated = (jobId: number, analysisResult: any) => {
+  const handleJobCreated = (jobId: number, searchText?: string, data?: any) => {
     setCurrentJobId(jobId);
-    setAnalysisData(analysisResult);
+    setAnalysisData(data);
     setIsProcessingComplete(true);
   };
   

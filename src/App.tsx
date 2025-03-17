@@ -18,6 +18,7 @@ import InterviewPrep from "@/pages/InterviewPrep";
 import KickoffCall from "@/pages/KickoffCall";
 import Chat from "@/pages/Chat";
 import Report from "@/pages/Report";
+import Clarvida from "@/pages/Clarvida"; // Import the new Clarvida page
 
 function App() {
   return (
@@ -25,8 +26,9 @@ function App() {
       <Router>
         <Toaster position="top-center" />
         <Routes>
-          {/* Public route */}
+          {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/clarvida" element={<Clarvida />} /> {/* Add standalone Clarvida route */}
 
           {/* Protected routes wrapped in MainLayout */}
           <Route element={<ProtectedRoute />}>

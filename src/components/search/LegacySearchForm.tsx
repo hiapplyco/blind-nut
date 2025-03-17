@@ -18,10 +18,13 @@ import { useFormSubmit } from "./hooks/useFormSubmit";
 import { processFileUpload } from "./hooks/utils/processFileUpload";
 
 interface SearchFormProps {
-  userId: string;
-  onJobCreated: (jobId: number, searchText: string) => void;
+  userId: string | null;
+  onJobCreated: (jobId: number, searchText?: string, data?: any) => void;
   currentJobId: number | null;
   isProcessingComplete: boolean;
+  source?: 'default' | 'clarvida';
+  hideSearchTypeToggle?: boolean;
+  submitButtonText?: string;
 }
 
 export const LegacySearchForm = ({ 
@@ -29,13 +32,16 @@ export const LegacySearchForm = ({
   onJobCreated, 
   currentJobId,
   isProcessingComplete,
+  source = 'default',
+  hideSearchTypeToggle = false,
+  submitButtonText,
 }: SearchFormProps) => {
   const {
     isProcessing,
     setIsProcessing,
     isScrapingProfiles,
     handleSubmit: submitForm
-  } = useFormSubmit(userId, onJobCreated);
+  } = useFormSubmit(userId, onJobCreated, source);
   
   const {
     searchText,
@@ -65,10 +71,12 @@ export const LegacySearchForm = ({
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
       <form onSubmit={(e) => submitForm(e, searchText, searchType, companyName)} className="space-y-6">
-        <SearchTypeToggle 
-          value={searchType} 
-          onValueChange={(value) => setSearchType(value)} 
-        />
+        {!hideSearchTypeToggle && (
+          <SearchTypeToggle 
+            value={searchType} 
+            onValueChange={(value) => setSearchType(value)} 
+          />
+        )}
         
         <FormHeader />
         
@@ -92,6 +100,7 @@ export const LegacySearchForm = ({
           <SubmitButton 
             isProcessing={isProcessing || isScrapingProfiles}
             isDisabled={isProcessing || isScrapingProfiles || !searchText || (searchType === "candidates-at-company" && !companyName)}
+            text={submitButtonText}
           />
           
           {isScrapingProfiles && (
@@ -103,7 +112,7 @@ export const LegacySearchForm = ({
         </div>
       </form>
 
-      {searchString && (
+      {searchString && source !== 'clarvida' && (
         <div className="mt-6">
           <GoogleSearchWindow searchString={searchString} />
         </div>

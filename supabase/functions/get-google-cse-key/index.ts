@@ -17,6 +17,8 @@ serve(async (req) => {
     const apiKey = Deno.env.get('GOOGLE_CSE_API_KEY');
     
     console.log("GOOGLE_CSE_API_KEY present:", !!apiKey);
+    console.log("API key type:", typeof apiKey);
+    console.log("API key length:", apiKey ? apiKey.length : 0);
     
     if (!apiKey) {
       console.error("GOOGLE_CSE_API_KEY is not set in environment variables");
@@ -34,17 +36,27 @@ serve(async (req) => {
     }
 
     // Return the API key
+    console.log("Successfully retrieved API key, returning to client");
     return new Response(
-      JSON.stringify({ key: apiKey }),
+      JSON.stringify({ 
+        key: apiKey,
+        debug: {
+          keyLength: apiKey.length,
+          keyFirstChar: apiKey.charAt(0),
+          keyLastChar: apiKey.charAt(apiKey.length - 1)
+        }
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error("Error in get-google-cse-key function:", error);
+    console.error("Error stack:", error.stack);
     
     return new Response(
       JSON.stringify({ 
         error: error.message || "Unknown error occurred",
-        stack: error.stack || "No stack trace available"
+        stack: error.stack || "No stack trace available",
+        timeStamp: new Date().toISOString()
       }),
       { 
         status: 500, 

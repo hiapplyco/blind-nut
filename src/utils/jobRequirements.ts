@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { SearchType } from "@/components/search/types";
 
@@ -115,7 +116,7 @@ export const processJobRequirements = async (
     // Create a more intelligent fallback search string when the API fails
     // Extract key terms to create a more meaningful search string
     const keyTerms = extractKeyTerms(content);
-    const fallbackSearchString = generateFallbackSearchString(keyTerms, searchType);
+    const fallbackSearchString = generateFallbackSearchString(keyTerms, searchType, companyName);
     
     console.log('Returning fallback search string:', fallbackSearchString);
     return {
@@ -153,7 +154,7 @@ function extractKeyTerms(content: string): string[] {
 }
 
 // Generate a more structured fallback search string
-function generateFallbackSearchString(terms: string[], searchType: SearchType): string {
+function generateFallbackSearchString(terms: string[], searchType: SearchType, companyName?: string): string {
   if (terms.length === 0) {
     return ""; // No terms found
   }
@@ -161,8 +162,13 @@ function generateFallbackSearchString(terms: string[], searchType: SearchType): 
   // Group terms into a proper boolean search
   const formattedTerms = terms.map(term => `"${term}"`).join(" OR ");
   
+  // Add company-specific search if available
+  const companyFilter = companyName ? ` AND ("${companyName}" OR "${companyName.replace(/\s+/g, '')}")` : '';
+  
   if (searchType === 'companies') {
     return `(${formattedTerms})`;
+  } else if (searchType === 'candidates-at-company' && companyName) {
+    return `(${formattedTerms})${companyFilter}`;
   } else {
     // For candidates, add basic role qualifiers
     return `(${formattedTerms}) AND ("professional" OR "experienced" OR "specialist" OR "expert")`;

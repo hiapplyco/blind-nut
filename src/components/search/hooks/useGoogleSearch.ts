@@ -36,7 +36,7 @@ export const useGoogleSearch = (
       setState(prev => ({ ...prev, searchString: cleanedString }));
       console.log("Initial search string set to:", cleanedString);
     }
-  }, []);
+  }, [initialSearchString]);
 
   // Initialize from jobId if available
   useEffect(() => {
@@ -94,6 +94,7 @@ export const useGoogleSearch = (
     setState(prev => ({ ...prev, isLoading: true }));
     
     try {
+      console.log("Executing search with query:", searchString);
       if (page === 1) {
         setState(prev => ({ ...prev, results: [] }));
       }
@@ -109,6 +110,7 @@ export const useGoogleSearch = (
       
       if (data?.items) {
         const processedResults = processSearchResults(data);
+        console.log("Received search results:", processedResults.length);
         
         if (page === 1) {
           setState(prev => ({ 
@@ -140,6 +142,7 @@ export const useGoogleSearch = (
         
         toast.success("Search results loaded successfully");
       } else {
+        console.log("No results returned from search");
         toast.error("No results found");
       }
     } catch (error) {

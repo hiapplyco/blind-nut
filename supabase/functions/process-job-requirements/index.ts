@@ -64,8 +64,12 @@ serve(async (req) => {
             source: source || 'default'
           };
           
-          // Add optional fields if they are supported by the table schema
-          // We need to check if these fields are in the schema before adding them
+          // Add searchType if supported by schema
+          if (searchType) {
+            jobData.search_type = searchType;
+          }
+          
+          // Insert job data without fields that don't exist in schema
           const { data, error } = await supabaseClient
             .from('jobs')
             .insert(jobData)

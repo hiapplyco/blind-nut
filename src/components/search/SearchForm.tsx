@@ -59,8 +59,15 @@ export const SearchForm = ({
   };
 
   const handleFindLinkedInProfiles = () => {
+    console.log("Find LinkedIn Profiles button clicked");
     if (onShowGoogleSearch && searchString) {
+      console.log("Calling onShowGoogleSearch with search string:", searchString);
       onShowGoogleSearch(searchString);
+    } else {
+      console.log("Cannot show Google search: missing callback or search string");
+      if (!searchString) {
+        toast.error("No search string available. Please generate a search string first.");
+      }
     }
   };
 
@@ -129,7 +136,7 @@ export const SearchForm = ({
                 <Button 
                   type="button"
                   onClick={handleFindLinkedInProfiles}
-                  className="w-full"
+                  className="w-full border-2 border-black bg-[#8B5CF6] hover:bg-[#7C3AED] text-white"
                   variant="secondary"
                 >
                   <Search className="w-4 h-4 mr-2" />

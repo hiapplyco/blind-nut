@@ -19,6 +19,45 @@ export const fetchSearchResults = async (
     
     console.log(`Fetching search results for: "${searchString}" (page ${page})`);
     
+    // First try to use the process-search-results edge function which provides enriched results
+    try {
+      console.log("Attempting to use process-search-results for enriched results");
+      const processResponse = await supabase.functions.invoke('process-search-results', {
+        body: { searchString }
+      });
+      
+      if (processResponse.data && processResponse.data.profiles) {
+        console.log("Successfully received enriched profiles:", processResponse.data.profiles.length);
+        // Transform profiles into Google search result format
+        return { 
+          data: {
+            items: processResponse.data.profiles.map((profile: any) => ({
+              title: profile.profile_name,
+              link: profile.profile_url,
+              snippet: `${profile.profile_title} | ${profile.profile_location}`,
+              htmlTitle: profile.profile_name,
+              profileUrl: profile.profile_url,
+              name: profile.profile_name,
+              location: profile.profile_location,
+              title: profile.profile_title,
+              enriched: profile.enriched || false,
+              work_email: profile.work_email,
+              phone_numbers: profile.phone_numbers,
+              relevance_score: profile.relevance_score
+            })),
+            searchInformation: {
+              totalResults: processResponse.data.profiles.length
+            }
+          }, 
+          error: null 
+        };
+      }
+    } catch (enrichError) {
+      console.log("Failed to get enriched profiles, falling back to CSE:", enrichError);
+      // Fall back to regular Google CSE if enriched profiles fail
+    }
+    
+    // Fall back to Google CSE for regular search results
     const { data: { key }, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
     
     if (keyError) {
@@ -61,6 +100,6 @@ export const processSearchResults = (data: GoogleSearchResult): SearchResult[] =
   
   return data.items.map((item: any) => ({
     ...item,
-    location: extractLocationFromSnippet(item.snippet)
+    location: item.location || extractLocationFromSnippet(item.snippet)
   }));
 };

@@ -15,7 +15,7 @@ interface JobDescriptionEnhancerCardProps {
 
 export function JobDescriptionEnhancerCard({ data }: JobDescriptionEnhancerCardProps) {
   const [copied, setCopied] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true); // Start in edit mode
   const [editedContent, setEditedContent] = useState(data.revised_job_listing);
 
   const handleCopy = () => {

@@ -20,10 +20,11 @@ export const useGoogleSearch = (
     isLoading: false,
     searchString: '',
     currentPage: 1,
-    totalResults: 0
+    totalResults: 0,
+    error: null
   });
 
-  const { results, isLoading, searchString, currentPage, totalResults } = state;
+  const { results, isLoading, searchString, currentPage, totalResults, error } = state;
   
   // Storage management for job results
   const { getStoredResults, saveResults, appendResults } = useStoredResults(jobId);
@@ -66,7 +67,8 @@ export const useGoogleSearch = (
           searchString: cleanedSearchString,
           results: [],
           currentPage: 1,
-          totalResults: 0
+          totalResults: 0,
+          error: null
         }));
         
         if (jobId) {
@@ -91,7 +93,8 @@ export const useGoogleSearch = (
       return;
     }
     
-    setState(prev => ({ ...prev, isLoading: true }));
+    // Reset error state before new search
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
       console.log("Executing search with query:", searchString);
@@ -106,7 +109,10 @@ export const useGoogleSearch = (
         resultsPerPage
       );
       
-      if (error) throw error;
+      if (error) {
+        console.error("Search API error:", error);
+        throw error;
+      }
       
       if (data?.items) {
         const processedResults = processSearchResults(data);
@@ -117,7 +123,8 @@ export const useGoogleSearch = (
             ...prev, 
             results: processedResults,
             currentPage: page,
-            totalResults: data.searchInformation?.totalResults || 0
+            totalResults: data.searchInformation?.totalResults || 0,
+            isLoading: false
           }));
           
           if (jobId) {
@@ -132,7 +139,8 @@ export const useGoogleSearch = (
             ...prev, 
             results: [...prev.results, ...processedResults],
             currentPage: page,
-            totalResults: data.searchInformation?.totalResults || 0
+            totalResults: data.searchInformation?.totalResults || 0,
+            isLoading: false
           }));
           
           if (jobId) {
@@ -140,16 +148,20 @@ export const useGoogleSearch = (
           }
         }
         
-        toast.success("Search results loaded successfully");
+        toast.success(`${processedResults.length} profiles found`);
       } else {
         console.log("No results returned from search");
+        setState(prev => ({ ...prev, isLoading: false }));
         toast.error("No results found");
       }
     } catch (error) {
       console.error("Error fetching search results:", error);
+      setState(prev => ({ 
+        ...prev, 
+        isLoading: false,
+        error: error instanceof Error ? error : new Error("Failed to fetch search results") 
+      }));
       toast.error("Failed to fetch search results. Please try again.");
-    } finally {
-      setState(prev => ({ ...prev, isLoading: false }));
     }
   }, [searchString, jobId, saveResults, appendResults, searchType, resultsPerPage]);
 
@@ -169,14 +181,26 @@ export const useGoogleSearch = (
 
   // Export results to CSV
   const handleExport = useCallback(() => {
-    exportResultsToCSV(results);
+    if (results.length === 0) {
+      toast.error("No results to export");
+      return;
+    }
+    
+    try {
+      exportResultsToCSV(results);
+      toast.success("Results exported to CSV");
+    } catch (err) {
+      console.error("Error exporting results:", err);
+      toast.error("Failed to export results");
+    }
   }, [results]);
 
   // Set search string function
   const setSearchString = useCallback((value: React.SetStateAction<string>) => {
     setState(prev => ({ 
       ...prev, 
-      searchString: typeof value === "function" ? value(prev.searchString) : value 
+      searchString: typeof value === "function" ? value(prev.searchString) : value,
+      error: null // Reset error when search string changes
     }));
   }, []);
 
@@ -190,6 +214,7 @@ export const useGoogleSearch = (
     handleCopySearchString, 
     handleExport,
     currentPage,
-    totalResults
+    totalResults,
+    error
   };
 };

@@ -10,7 +10,7 @@ import { CompanyNameInput } from "./CompanyNameInput";
 import { FileUploadHandler } from "./FileUploadHandler";
 import { SubmitButton } from "./SubmitButton";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Search } from "lucide-react";
+import { Copy, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -41,6 +41,7 @@ export const SearchForm = ({
 
   const [isInputActive, setIsInputActive] = useState(false);
   const [showSearchString, setShowSearchString] = useState(false);
+  const [isFindingProfiles, setIsFindingProfiles] = useState(false);
 
   // Show search string when it's generated or when processing is complete
   useEffect(() => {
@@ -58,16 +59,33 @@ export const SearchForm = ({
     toast.success("Search string copied to clipboard!");
   };
 
-  const handleFindLinkedInProfiles = () => {
-    console.log("Find LinkedIn Profiles button clicked");
-    if (onShowGoogleSearch && searchString) {
-      console.log("Calling onShowGoogleSearch with search string:", searchString);
-      onShowGoogleSearch(searchString);
-    } else {
-      console.log("Cannot show Google search: missing callback or search string");
-      if (!searchString) {
-        toast.error("No search string available. Please generate a search string first.");
+  const handleFindLinkedInProfiles = async () => {
+    if (!searchString) {
+      toast.error("No search string available. Please generate a search string first.");
+      console.error("Find LinkedIn Profiles attempted without a search string");
+      return;
+    }
+
+    console.log("Find LinkedIn Profiles button clicked with search string:", searchString);
+    setIsFindingProfiles(true);
+    
+    try {
+      if (onShowGoogleSearch) {
+        console.log("Calling onShowGoogleSearch with search string");
+        onShowGoogleSearch(searchString);
+        toast.success("Finding LinkedIn profiles...");
+      } else {
+        console.error("Cannot show Google search: missing callback function");
+        toast.error("Something went wrong. Please try again.");
       }
+    } catch (error) {
+      console.error("Error finding LinkedIn profiles:", error);
+      toast.error("Failed to find LinkedIn profiles. Please try again.");
+    } finally {
+      // Add a small delay to make the animation more noticeable
+      setTimeout(() => {
+        setIsFindingProfiles(false);
+      }, 800);
     }
   };
 
@@ -130,17 +148,29 @@ export const SearchForm = ({
               rows={4}
             />
             
-            {/* Find LinkedIn Profiles button */}
+            {/* Find LinkedIn Profiles button with animation */}
             {searchString && (
               <div className="mt-3">
                 <Button 
                   type="button"
                   onClick={handleFindLinkedInProfiles}
-                  className="w-full border-2 border-black bg-[#8B5CF6] hover:bg-[#7C3AED] text-white"
+                  disabled={isFindingProfiles}
+                  className={`w-full border-2 border-black bg-[#8B5CF6] hover:bg-[#7C3AED] text-white transition-all duration-300 ${
+                    isFindingProfiles ? 'animate-pulse' : ''
+                  } transform hover:scale-[1.02] active:scale-[0.98] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.25)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.25)]`}
                   variant="secondary"
                 >
-                  <Search className="w-4 h-4 mr-2" />
-                  Find LinkedIn Profiles
+                  {isFindingProfiles ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Finding Profiles...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4 mr-2" />
+                      Find LinkedIn Profiles
+                    </>
+                  )}
                 </Button>
               </div>
             )}

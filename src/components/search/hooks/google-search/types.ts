@@ -1,26 +1,26 @@
 
+import { SearchResult } from "../../types";
+
+export interface GoogleSearchResult {
+  items: any[];
+  searchInformation: {
+    totalResults: number;
+  };
+}
+
 export interface GoogleSearchState {
   results: SearchResult[];
   isLoading: boolean;
   searchString: string;
   currentPage: number;
   totalResults: number;
+  error: Error | null;
 }
 
-export interface GoogleSearchResult {
-  items?: any[];
-  searchInformation?: {
-    totalResults?: number;
-  };
+export interface StoredSearchResults {
+  jobId: number;
+  searchQuery: string;
+  results: SearchResult[];
+  timestamp: string;
+  totalResults: number;
 }
-
-export interface GoogleSearchActions {
-  setSearchString: React.Dispatch<React.SetStateAction<string>>;
-  handleSearch: (page?: number) => Promise<void>;
-  handleLoadMore: () => void;
-  handleCopySearchString: () => void;
-  handleExport: () => void;
-}
-
-// Import necessary types from the parent types file
-import { SearchResult, SearchType } from "../../types";

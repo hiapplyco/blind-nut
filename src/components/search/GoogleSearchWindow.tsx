@@ -5,6 +5,7 @@ import { SearchResultsList } from "./components/SearchResultsList";
 import { useGoogleSearch } from "./hooks/useGoogleSearch";
 import { GoogleSearchWindowProps } from "./types";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 export const GoogleSearchWindow = ({ 
   searchTerm,
@@ -22,7 +23,8 @@ export const GoogleSearchWindow = ({
     handleCopySearchString, 
     handleExport,
     totalResults,
-    currentPage
+    currentPage,
+    error
   } = useGoogleSearch(initialSearchString || searchTerm || "", searchType, jobId);
 
   // Update search string when props change
@@ -35,6 +37,14 @@ export const GoogleSearchWindow = ({
       setSearchString(searchTerm);
     }
   }, [initialSearchString, searchTerm, setSearchString, searchString]);
+
+  // Show error messages
+  useEffect(() => {
+    if (error) {
+      console.error("Search error occurred:", error);
+      toast.error(`Search failed: ${error.message || "Unknown error"}`);
+    }
+  }, [error]);
 
   // Trigger search automatically when a new search string is provided
   useEffect(() => {
@@ -50,7 +60,7 @@ export const GoogleSearchWindow = ({
   }, [initialSearchString, searchString, searchTerm, handleSearch, results.length, isLoading]);
 
   return (
-    <Card className="p-6 mb-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <Card className="p-6 mb-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-fade-in">
       <div className="space-y-4">
         <SearchHeader 
           searchString={searchString}

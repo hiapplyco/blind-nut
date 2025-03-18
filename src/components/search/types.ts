@@ -1,136 +1,92 @@
+import { ReactNode } from "react";
 
-export type SearchType = 'candidates' | 'candidates-at-company' | 'jobs';
+export type SearchType = "candidates" | "candidates-at-company" | "companies" | "news";
 
 export interface SearchFormProps {
   userId: string | null;
-  onJobCreated: (jobId: number, searchText?: string, data?: any) => void;
+  onJobCreated: (jobId: number, searchText: string, data?: any) => void;
   currentJobId: number | null;
-  isProcessingComplete: boolean;
+  isProcessingComplete?: boolean;
   source?: 'default' | 'clarvida';
   hideSearchTypeToggle?: boolean;
   submitButtonText?: string;
   onSubmitStart?: () => void;
+  onShowGoogleSearch?: (searchString: string) => void;
 }
 
-// Profile types
-export interface Profile {
-  id: string;
-  name?: string;
-  title?: string;
-  company?: string;
-  location?: string;
-  email?: string;
-  phone?: string;
-  // Fields for the ProfileCard component
-  profile_name?: string;
-  profile_title?: string;
-  profile_location?: string;
-  profile_url?: string;
-  relevance_score?: number;
+export interface SearchFormHeaderProps {
+  isProcessingComplete?: boolean;
 }
 
-export interface EnrichedProfileData {
-  profile: Profile;
-  contact_info?: any;
-  experience?: Experience[];
-  education?: Education[];
-  skills?: string[];
-  social_profiles?: SocialProfile[];
-  // Additional properties
-  work_email?: string;
-  personal_emails?: string[];
-  mobile_phone?: string;
-  phone_numbers?: string[];
-  job_company_name?: string;
-  industry?: string;
-  job_title?: string;
-  location?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  company_size?: string;
-  languages?: string[];
-  profiles?: SocialProfile[];
+export interface ContentTextareaProps {
+  content: string;
+  onChange: (content: string) => void;
+  placeholder?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  isActive?: boolean;
 }
 
-export interface Experience {
-  company: string;
-  title: string;
-  description?: string;
-  startDate?: string;
-  endDate?: string;
-  // For compatibility with existing components
-  start_date?: string;
-  end_date?: string;
+export interface CompanyNameInputProps {
+  companyName: string;
+  onChange: (name: string) => void;
+  isProcessing: boolean;
 }
 
-export interface Education {
-  institution: string;
-  degree?: string;
-  field?: string;
-  startDate?: string;
-  endDate?: string;
-  // For compatibility with existing components
-  school?: string;
-  field_of_study?: string;
-  start_date?: string;
-  end_date?: string;
-}
-
-export interface SocialProfile {
-  network: string;
-  url: string;
-  username?: string;
-}
-
-export interface SearchResult {
-  id: string;
-  name: string;
-  title?: string;
-  company?: string;
-  location?: string;
-  profileUrl?: string;
-  // Additional properties for Google search results
-  link?: string;
-  htmlTitle?: string;
-  snippet?: string;
+export interface SubmitButtonProps {
+  isProcessing: boolean;
+  isDisabled: boolean;
+  buttonText?: string;
 }
 
 export interface GoogleSearchWindowProps {
   searchTerm?: string;
   searchString?: string;
-  onClose?: () => void;
   searchType?: SearchType;
-  jobId?: number;
+  jobId?: number | null;
 }
 
-export interface SearchHeaderProps {
+export interface SearchResult {
   title?: string;
-  subtitle?: string;
-  actionButton?: React.ReactNode;
-  // Additional properties for Google search header
-  searchString?: string;
-  setSearchString?: React.Dispatch<React.SetStateAction<string>>;
-  handleSearch?: () => void | Promise<void>;
-  handleExport?: () => void;
-  handleCopySearchString?: () => void;
-  isLoading?: boolean;
-  resultsExist?: boolean;
+  name?: string;
+  link?: string;
+  profileUrl?: string;
+  snippet?: string;
+  htmlTitle?: string;
+  location?: string;
+  [key: string]: any;
 }
 
 export interface SearchResultItemProps {
   result: SearchResult;
-  onClick?: (result: SearchResult) => void;
   searchType?: SearchType;
 }
 
 export interface SearchResultsListProps {
   results: SearchResult[];
-  onSelectResult?: (result: SearchResult) => void;
-  isLoading?: boolean;
+  isLoading: boolean;
   totalResults?: number;
   currentResults?: number;
-  onLoadMore?: () => void;
+  onLoadMore: () => void;
   isLoadingMore?: boolean;
   searchType?: SearchType;
+}
+
+export interface SearchHeaderProps {
+  searchString: string;
+  setSearchString?: (value: React.SetStateAction<string>) => void;
+  handleSearch?: () => void;
+  handleExport: () => void;
+  handleCopySearchString: () => void;
+  isLoading: boolean;
+  resultsExist: boolean;
+}
+
+export interface ContactCardProps {
+  isOpen: boolean;
+  onClose: () => void;
+  profileData: any;
+  isLoading: boolean;
+  error: string | null;
+  profileName: string;
 }

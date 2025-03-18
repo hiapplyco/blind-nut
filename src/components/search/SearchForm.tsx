@@ -10,7 +10,7 @@ import { CompanyNameInput } from "./CompanyNameInput";
 import { FileUploadHandler } from "./FileUploadHandler";
 import { SubmitButton } from "./SubmitButton";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy } from "lucide-react";
+import { Copy, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -22,7 +22,8 @@ export const SearchForm = ({
   source = 'default',
   hideSearchTypeToggle = false,
   submitButtonText,
-  onSubmitStart 
+  onSubmitStart,
+  onShowGoogleSearch 
 }: SearchFormProps) => {
   const {
     searchText,
@@ -55,6 +56,12 @@ export const SearchForm = ({
   const handleCopySearchString = () => {
     navigator.clipboard.writeText(searchString);
     toast.success("Search string copied to clipboard!");
+  };
+
+  const handleFindLinkedInProfiles = () => {
+    if (onShowGoogleSearch && searchString) {
+      onShowGoogleSearch(searchString);
+    }
   };
 
   // Generate file upload handler function
@@ -115,6 +122,21 @@ export const SearchForm = ({
               className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
               rows={4}
             />
+            
+            {/* Find LinkedIn Profiles button */}
+            {searchString && (
+              <div className="mt-3">
+                <Button 
+                  type="button"
+                  onClick={handleFindLinkedInProfiles}
+                  className="w-full"
+                  variant="secondary"
+                >
+                  <Search className="w-4 h-4 mr-2" />
+                  Find LinkedIn Profiles
+                </Button>
+              </div>
+            )}
           </div>
         )}
         

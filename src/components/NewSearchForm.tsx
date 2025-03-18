@@ -121,10 +121,9 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
     setCurrentJobId(jobId);
   };
 
-  const handleSearchButtonClick = () => {
-    if (searchString) {
-      setShowGoogleSearch(true);
-    }
+  const handleShowGoogleSearch = (searchString: string) => {
+    console.log("Showing Google search with string:", searchString);
+    setShowGoogleSearch(true);
   };
 
   return (
@@ -134,6 +133,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
         onJobCreated={(jobId, text) => handleSearchSubmit(text, jobId)}
         currentJobId={currentJobId}
         isProcessingComplete={isProcessingComplete}
+        onShowGoogleSearch={handleShowGoogleSearch}
       />
       
       {searchString && showGoogleSearch && (

@@ -1,29 +1,39 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { SearchResult, SearchType } from "../types";
 import { toast } from "sonner";
-import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
+import { SearchResult, SearchType } from "../types";
+import { fetchSearchResults, processSearchResults } from "./google-search/searchApi";
+import { useStoredResults } from "./google-search/useStoredResults";
+import { cleanSearchString, prepareSearchString, exportResultsToCSV } from "./google-search/utils";
+import { GoogleSearchState } from "./google-search/types";
 
 export const useGoogleSearch = (
   initialSearchString: string,
   searchType: SearchType = "candidates",
   jobId?: number
 ) => {
-  const { setSearchResults, getSearchResults, addToSearchResults } = useClientAgentOutputs();
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchString, setSearchString] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalResults, setTotalResults] = useState(0);
   const resultsPerPage = 10;
+  
+  // State management
+  const [state, setState] = useState<GoogleSearchState>({
+    results: [],
+    isLoading: false,
+    searchString: '',
+    currentPage: 1,
+    totalResults: 0
+  });
+
+  const { results, isLoading, searchString, currentPage, totalResults } = state;
+  
+  // Storage management for job results
+  const { getStoredResults, saveResults, appendResults } = useStoredResults(jobId);
 
   // Set initial search string
   useEffect(() => {
     if (initialSearchString && initialSearchString.trim() !== '') {
       // Remove site:linkedin.com/in/ from the displayed search string
-      const cleanedString = initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, '');
-      setSearchString(cleanedString);
+      const cleanedString = cleanSearchString(initialSearchString);
+      setState(prev => ({ ...prev, searchString: cleanedString }));
       console.log("Initial search string set to:", cleanedString);
     }
   }, []);
@@ -31,132 +41,103 @@ export const useGoogleSearch = (
   // Initialize from jobId if available
   useEffect(() => {
     if (jobId) {
-      const storedData = getSearchResults(jobId);
+      const storedData = getStoredResults();
       if (storedData) {
-        console.log("Loading stored data for jobId:", jobId, storedData);
-        setResults(storedData.results);
-        if (storedData.searchQuery) {
-          setSearchString(storedData.searchQuery.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
-        }
-        setTotalResults(storedData.totalResults);
-        const calculatedPage = Math.ceil(storedData.results.length / resultsPerPage);
-        setCurrentPage(calculatedPage > 0 ? calculatedPage : 1);
+        setState(prev => ({
+          ...prev,
+          results: storedData.results,
+          searchString: storedData.searchQuery ? cleanSearchString(storedData.searchQuery) : prev.searchString,
+          totalResults: storedData.totalResults,
+          currentPage: Math.ceil(storedData.results.length / resultsPerPage) || 1
+        }));
       }
     }
-  }, [jobId, getSearchResults, resultsPerPage]);
+  }, [jobId, getStoredResults, resultsPerPage]);
 
   // Update when initialSearchString changes
   useEffect(() => {
     if (initialSearchString && initialSearchString.trim() !== '') {
       console.log("Updating search string from initialSearchString:", initialSearchString);
-      const cleanedSearchString = initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, '');
+      const cleanedSearchString = cleanSearchString(initialSearchString);
       
       if (searchString !== cleanedSearchString) {
-        setSearchString(cleanedSearchString);
-        
-        // Reset results when search string changes
-        setResults([]);
-        setCurrentPage(1);
-        setTotalResults(0);
+        setState(prev => ({
+          ...prev,
+          searchString: cleanedSearchString,
+          results: [],
+          currentPage: 1,
+          totalResults: 0
+        }));
         
         if (jobId) {
-          setSearchResults(jobId, [], cleanedSearchString, 0);
+          saveResults([], cleanedSearchString, 0);
         }
       }
     }
-  }, [initialSearchString, setSearchResults, jobId, searchString]);
+  }, [initialSearchString, saveResults, jobId, searchString]);
 
   // Save results to store when they change
   useEffect(() => {
     if (jobId && results.length > 0) {
       console.log("Saving search results to store for jobId:", jobId);
-      setSearchResults(jobId, results, searchString, totalResults);
+      saveResults(results, searchString, totalResults);
     }
-  }, [jobId, results, searchString, totalResults, setSearchResults]);
+  }, [jobId, results, searchString, totalResults, saveResults]);
 
-  const extractLocationFromSnippet = (snippet: string): string | undefined => {
-    const locationPatterns = [
-      /Location: ([^\.]+)/i,
-      /([^\.]+), (United States|Canada|UK|Australia|[A-Z][a-z]+ [A-Z][a-z]+)/,
-      /(.*) Area/
-    ];
-    
-    for (const pattern of locationPatterns) {
-      const match = snippet.match(pattern);
-      if (match && match[1]) {
-        return match[1].trim();
-      }
-    }
-    
-    return undefined;
-  };
-
+  // Search handling function
   const handleSearch = useCallback(async (page = 1) => {
     if (!searchString.trim()) {
       toast.error("Please enter a search query");
       return;
     }
     
-    setIsLoading(true);
+    setState(prev => ({ ...prev, isLoading: true }));
+    
     try {
       if (page === 1) {
-        setResults([]);
+        setState(prev => ({ ...prev, results: [] }));
       }
       
-      const startIndex = (page - 1) * resultsPerPage + 1;
-      
-      console.log(`Fetching search results for: "${searchString}" (page ${page})`);
-      
-      const { data: { key }, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
-      
-      if (keyError) {
-        console.error("Error fetching CSE key:", keyError);
-        throw keyError;
-      }
-      
-      // Add site:linkedin.com/in/ automatically if it's a candidate search and doesn't already have it
-      let finalSearchString = searchString;
-      if (searchType === "candidates" && !finalSearchString.includes("site:linkedin.com/in/")) {
-        finalSearchString = `${finalSearchString} site:linkedin.com/in/`;
-      }
-      
-      console.log("Final search string being used:", finalSearchString);
-      
-      const cseId = 'b28705633bcb44cf0'; // Candidates CSE
-      
-      const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cseId}&q=${encodeURIComponent(
-          finalSearchString
-        )}&start=${startIndex}`
+      const { data, error } = await fetchSearchResults(
+        searchString, 
+        page, 
+        searchType, 
+        resultsPerPage
       );
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (error) throw error;
       
-      const data = await response.json();
-      console.log("Search API response:", data);
-
       if (data?.items) {
-        const processedResults = data.items.map((item: any) => ({
-          ...item,
-          location: extractLocationFromSnippet(item.snippet)
-        }));
+        const processedResults = processSearchResults(data);
         
         if (page === 1) {
-          setResults(processedResults);
+          setState(prev => ({ 
+            ...prev, 
+            results: processedResults,
+            currentPage: page,
+            totalResults: data.searchInformation?.totalResults || 0
+          }));
+          
           if (jobId) {
-            setSearchResults(jobId, processedResults, searchString, data.searchInformation?.totalResults || 0);
+            saveResults(
+              processedResults, 
+              searchString, 
+              data.searchInformation?.totalResults || 0
+            );
           }
         } else {
-          setResults(prev => [...prev, ...processedResults]);
+          setState(prev => ({ 
+            ...prev, 
+            results: [...prev.results, ...processedResults],
+            currentPage: page,
+            totalResults: data.searchInformation?.totalResults || 0
+          }));
+          
           if (jobId) {
-            addToSearchResults(jobId, processedResults);
+            appendResults(processedResults);
           }
         }
         
-        setCurrentPage(page);
-        setTotalResults(data.searchInformation?.totalResults || 0);
         toast.success("Search results loaded successfully");
       } else {
         toast.error("No results found");
@@ -165,55 +146,36 @@ export const useGoogleSearch = (
       console.error("Error fetching search results:", error);
       toast.error("Failed to fetch search results. Please try again.");
     } finally {
-      setIsLoading(false);
+      setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [searchString, jobId, setSearchResults, addToSearchResults, resultsPerPage, searchType]);
+  }, [searchString, jobId, saveResults, appendResults, searchType, resultsPerPage]);
 
+  // Load more results
   const handleLoadMore = useCallback(() => {
     handleSearch(currentPage + 1);
   }, [currentPage, handleSearch]);
 
+  // Copy search string to clipboard
   const handleCopySearchString = useCallback(() => {
     // Add site:linkedin.com/in/ when copying if not already present
-    let finalSearchString = searchString;
-    if (searchType === "candidates" && !finalSearchString.includes("site:linkedin.com/in/")) {
-      finalSearchString = `${finalSearchString} site:linkedin.com/in/`;
-    }
+    const finalSearchString = prepareSearchString(searchString, searchType);
     
     navigator.clipboard.writeText(finalSearchString);
     toast.success('Search string copied to clipboard');
   }, [searchString, searchType]);
 
+  // Export results to CSV
   const handleExport = useCallback(() => {
-    if (results.length === 0) {
-      toast.error("No results to export");
-      return;
-    }
-
-    const csvContent = [
-      ["Title", "URL", "Location", "Description"],
-      ...results.map(result => [
-        result.title.replace(/"/g, '""'),
-        result.link,
-        result.location || "",
-        result.snippet.replace(/"/g, '""')
-      ])
-    ]
-      .map(row => row.map(cell => `"${cell}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `search-results-${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    toast.success("Search results exported successfully");
+    exportResultsToCSV(results);
   }, [results]);
+
+  // Set search string function
+  const setSearchString = useCallback((value: React.SetStateAction<string>) => {
+    setState(prev => ({ 
+      ...prev, 
+      searchString: typeof value === "function" ? value(prev.searchString) : value 
+    }));
+  }, []);
 
   return { 
     results, 

@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { processJobRequirements } from "@/utils/jobRequirements";
-import { SearchType } from "./types";
+import { SearchType } from "../types";
 import { generateSummary } from "./utils/generateSummary";
 import { createJob } from "./utils/createJob";
 

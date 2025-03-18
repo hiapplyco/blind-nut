@@ -1,6 +1,7 @@
+
 import { ReactNode } from "react";
 
-export type SearchType = "candidates" | "candidates-at-company" | "companies" | "news";
+export type SearchType = "candidates" | "candidates-at-company" | "companies" | "news" | "jobs";
 
 export interface SearchFormProps {
   userId: string | null;
@@ -82,10 +83,75 @@ export interface SearchHeaderProps {
   resultsExist: boolean;
 }
 
+// New interfaces for profile and contact information
+export interface Profile {
+  id: string;
+  name?: string;
+  title?: string;
+  location?: string;
+  profile_name?: string;
+  profile_title?: string;
+  profile_location?: string;
+  profile_url?: string;
+  relevance_score?: number;
+  [key: string]: any;
+}
+
+export interface SocialProfile {
+  network: string;
+  url: string;
+  username?: string;
+}
+
+export interface Education {
+  school?: string;
+  institution?: string;
+  degree?: string;
+  field_of_study?: string;
+  field?: string;
+  startDate?: string;
+  start_date?: string;
+  endDate?: string;
+  end_date?: string;
+}
+
+export interface Experience {
+  title: string;
+  company?: string;
+  startDate?: string;
+  start_date?: string;
+  endDate?: string;
+  end_date?: string;
+  description?: string;
+}
+
+export interface EnrichedProfileData {
+  profile?: Profile;
+  work_email?: string;
+  personal_emails?: string[];
+  mobile_phone?: string;
+  phone_numbers?: string[];
+  job_title?: string;
+  job_company_name?: string;
+  industry?: string;
+  location?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  company_size?: string;
+  skills?: string[];
+  languages?: string[];
+  education?: Education[];
+  experience?: Experience[];
+  profiles?: SocialProfile[];
+  social_profiles?: SocialProfile[];
+  [key: string]: any;
+}
+
 export interface ContactCardProps {
   isOpen: boolean;
   onClose: () => void;
-  profileData: any;
+  profileData: EnrichedProfileData | null;
   isLoading: boolean;
   error: string | null;
   profileName: string;

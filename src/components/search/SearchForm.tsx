@@ -81,8 +81,8 @@ export const SearchForm = ({
         
         {!hideSearchTypeToggle && (
           <SearchTypeToggle 
-            value={searchType} 
-            onValueChange={setSearchType} 
+            value={searchType as SearchType} 
+            onValueChange={(value) => setSearchType(value as SearchType)} 
           />
         )}
         

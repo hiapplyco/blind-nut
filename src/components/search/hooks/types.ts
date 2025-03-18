@@ -1,5 +1,5 @@
 
-export type SearchType = 'candidates' | 'candidates-at-company' | 'jobs';
+export type SearchType = "candidates" | "candidates-at-company" | "companies" | "news" | "jobs";
 
 export interface SearchFormProps {
   userId: string | null;

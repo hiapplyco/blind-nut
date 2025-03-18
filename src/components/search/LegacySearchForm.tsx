@@ -12,7 +12,7 @@ import { SubmitButton } from "@/components/search/SubmitButton";
 import { GoogleSearchWindow } from "@/components/search/GoogleSearchWindow";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import { SearchType } from "./hooks/types";
+import { SearchType } from "../search/types";
 import { useFormState } from "./hooks/useFormState";
 import { useFormSubmit } from "./hooks/useFormSubmit";
 import { processFileUpload } from "./hooks/utils/processFileUpload";
@@ -52,7 +52,7 @@ export const LegacySearchForm = ({
     setSearchType,
     searchString
   } = useFormState(currentJobId, (e, text, type, company) => 
-    submitForm(e, text, type, company)
+    submitForm(e, text, type as SearchType, company)
   );
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,10 +66,10 @@ export const LegacySearchForm = ({
 
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-      <form onSubmit={(e) => submitForm(e, searchText, searchType, companyName)} className="space-y-6">
+      <form onSubmit={(e) => submitForm(e, searchText, searchType as SearchType, companyName)} className="space-y-6">
         {!hideSearchTypeToggle && (
           <SearchTypeToggle 
-            value={searchType} 
+            value={searchType as SearchType} 
             onValueChange={(value) => setSearchType(value)} 
           />
         )}

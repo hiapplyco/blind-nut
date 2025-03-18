@@ -43,7 +43,8 @@ serve(async (req) => {
         debug: {
           keyLength: apiKey.length,
           keyFirstChar: apiKey.charAt(0),
-          keyLastChar: apiKey.charAt(apiKey.length - 1)
+          keyLastChar: apiKey.charAt(apiKey.length - 1),
+          cseId: 'b28705633bcb44cf0' // Verify that we're using the correct CSE ID
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

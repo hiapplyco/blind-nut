@@ -46,8 +46,8 @@ export const fetchSearchResults = async (
     
     console.log("🔍 [DEBUG] Final search string being used:", finalSearchString);
     
-    // Use appropriate CSE ID based on search type
-    const cseId = 'b28705633bcb44cf0'; // Candidates CSE
+    // Use the correct CSE ID for Google Custom Search Engine
+    const cseId = 'b28705633bcb44cf0'; // Verified CSE ID from the image
     console.log("🔍 [DEBUG] Using CSE ID:", cseId);
     
     // Make request to Google CSE API

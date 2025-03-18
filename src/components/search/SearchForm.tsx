@@ -33,6 +33,7 @@ export const SearchForm = ({
     searchType,
     setSearchType,
     searchString,
+    setSearchString,
     handleSubmit,
     handleFileUpload
   } = useSearchForm(userId, onJobCreated, currentJobId, source, onSubmitStart);

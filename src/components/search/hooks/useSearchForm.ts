@@ -52,6 +52,7 @@ export const useSearchForm = (
     searchType,
     setSearchType,
     searchString,
+    setSearchString,
     handleSubmit,
     handleFileUpload
   };

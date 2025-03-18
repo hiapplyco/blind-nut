@@ -41,13 +41,17 @@ export const SearchResultsList = ({
         </div>
       )}
       
-      {results.map((result, index) => (
-        <SearchResultItem 
-          key={`${result.link}-${index}`} 
-          result={result} 
-          searchType={searchType} 
-        />
-      ))}
+      {results.length > 0 && (
+        <div className="grid gap-4">
+          {results.map((result, index) => (
+            <SearchResultItem 
+              key={`${result.link || result.profileUrl}-${index}`} 
+              result={result} 
+              searchType={searchType} 
+            />
+          ))}
+        </div>
+      )}
       
       {results.length > 0 && totalResults && Number(totalResults) > (currentResults || results.length) && (
         <div className="flex justify-center mt-4">

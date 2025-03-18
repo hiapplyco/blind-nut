@@ -46,7 +46,7 @@ export const fetchSearchResults = async (
               profileUrl: profile.profile_url,
               name: profile.profile_name,
               location: profile.profile_location,
-              jobTitle: profile.profile_title, // Changed from 'title' to avoid duplication
+              jobTitle: profile.profile_title, 
               enriched: profile.enriched || false,
               work_email: profile.work_email,
               phone_numbers: profile.phone_numbers,
@@ -60,9 +60,23 @@ export const fetchSearchResults = async (
         };
       } else {
         console.log("No profiles data in response:", processResponse.data);
+        
+        // If we get a successful response but no profiles, return an empty result
+        // instead of falling back to CSE
+        return {
+          data: {
+            items: [],
+            searchInformation: {
+              totalResults: 0
+            }
+          },
+          error: null
+        };
       }
     } catch (enrichError) {
       console.error("Failed to get enriched profiles, falling back to CSE:", enrichError);
+      // Show toast to user
+      toast.error("Error generating profiles. Falling back to regular search.");
       // Fall back to regular Google CSE if enriched profiles fail
     }
     

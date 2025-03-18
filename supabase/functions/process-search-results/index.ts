@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "npm:@google/generative-ai";
@@ -146,39 +145,10 @@ serve(async (req) => {
       };
     });
     
-    // Step 4: Store results in the database using supabaseClient
-    try {
-      const { data: jobData, error: jobError } = await fetch(
-        `${Deno.env.get('SUPABASE_URL')}/rest/v1/search_results`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-          },
-          body: JSON.stringify(enrichedProfiles.map((profile: any) => ({
-            ...profile,
-            search_string: finalSearchString,
-            created_at: new Date().toISOString()
-          })))
-        }
-      );
-      
-      if (jobError) {
-        console.error('Error storing search results:', jobError);
-      } else {
-        console.log('Search results stored successfully');
-      }
-    } catch (dbError) {
-      console.error('Error storing search results in database:', dbError);
-      // Continue even if database storage fails
-    }
-    
-    // Step 5: Return enriched profiles
+    // Step 4: Return enriched profiles
     return new Response(
       JSON.stringify({ 
-        message: 'Profiles generated, enriched, and stored successfully',
+        message: 'Profiles generated and processed successfully',
         profiles: enrichedProfiles,
         searchString: finalSearchString
       }),

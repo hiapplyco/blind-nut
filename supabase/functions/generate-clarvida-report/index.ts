@@ -29,7 +29,7 @@ serve(async (req) => {
     console.log(`Generating Clarvida report for content length: ${content.length}`);
 
     // Call Gemini API using gemini-1.5-flash model (corrected from gemini-flash-2.0)
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

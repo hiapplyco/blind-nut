@@ -21,11 +21,13 @@ export const ContentTextarea = ({
 }: ContentTextareaProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [maxHeight, setMaxHeight] = useState<string>("90vh");
+  const initialHeight = 200; // Initial height in pixels
+  const maxExpansionPercentage = 0.1; // Maximum 10% expansion
   
   // Dynamically calculate max height on mount and window resize
   useEffect(() => {
     const updateMaxHeight = () => {
-      // Set to 90% of viewport height to ensure buttons remain visible
+      // Set to 90% of viewport height as maximum boundary
       const availableHeight = window.innerHeight * 0.9;
       setMaxHeight(`${availableHeight}px`);
     };
@@ -35,18 +37,24 @@ export const ContentTextarea = ({
     return () => window.removeEventListener('resize', updateMaxHeight);
   }, []);
 
-  // Auto-resize the textarea based on content, respecting the max height
+  // Auto-resize the textarea based on content, with limited expansion
   useEffect(() => {
     if (textareaRef.current) {
-      // Reset height to auto to get the proper scrollHeight
-      textareaRef.current.style.height = 'auto';
+      // Reset height to initial value
+      textareaRef.current.style.height = `${initialHeight}px`;
       
       // Get actual content height
       const contentHeight = textareaRef.current.scrollHeight;
       
-      // Clamp the height to not exceed maxHeight
+      // Calculate maximum allowed height (initial height + 10%)
+      const maxAllowedHeight = initialHeight * (1 + maxExpansionPercentage);
+      
+      // Determine final height (bounded by maxAllowedHeight and maxHeight)
       const maxHeightInPx = parseFloat(maxHeight);
-      const finalHeight = Math.min(contentHeight, maxHeightInPx);
+      const finalHeight = Math.min(
+        Math.min(contentHeight, maxAllowedHeight),
+        maxHeightInPx
+      );
       
       // Apply the new height
       textareaRef.current.style.height = `${finalHeight}px`;
@@ -68,6 +76,7 @@ export const ContentTextarea = ({
       onBlur={onBlur}
       style={{ 
         maxHeight,
+        height: `${initialHeight}px`,
         resize: "vertical"
       }}
     />

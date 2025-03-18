@@ -37,6 +37,7 @@ export const fetchSearchResults = async (
       throw new Error("Failed to get Google CSE API key");
     }
     
+    console.log("✅ [SUCCESS] CSE key received:", keyData.key ? "Key exists (length: " + keyData.key.length + ")" : "No key");
     console.log("✅ [SUCCESS] Successfully retrieved CSE key, preparing search request");
     
     // Add site:linkedin.com/in/ automatically if it's a candidate search and doesn't already have it
@@ -46,6 +47,7 @@ export const fetchSearchResults = async (
     
     // Use appropriate CSE ID based on search type
     const cseId = 'b28705633bcb44cf0'; // Candidates CSE
+    console.log("🔍 [DEBUG] Using CSE ID:", cseId);
     
     // Make request to Google CSE API
     const cseUrl = `https://www.googleapis.com/customsearch/v1?key=${keyData.key}&cx=${cseId}&q=${encodeURIComponent(
@@ -75,10 +77,12 @@ export const fetchSearchResults = async (
       const responseData = JSON.parse(responseText);
       console.log("✅ [SUCCESS] Parsed search API response - items count:", responseData.items?.length || 0);
       console.log("🔍 [DEBUG] Total results reported:", responseData.searchInformation?.totalResults || 0);
+      console.log("🔍 [DEBUG] Response data structure:", Object.keys(responseData).join(', '));
       
       // Check if we have search results and transform them into the correct format
       if (responseData && responseData.items && responseData.items.length > 0) {
         console.log("✅ [SUCCESS] Search returned results:", responseData.items.length);
+        console.log("🔍 [DEBUG] First raw item sample:", JSON.stringify(responseData.items[0], null, 2));
         
         const transformedItems = responseData.items.map((item: any) => ({
           ...item,

@@ -1,42 +1,54 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const key = Deno.env.get('GOOGLE_CSE_API_KEY')
+    // Get API key from environment variable
+    const apiKey = Deno.env.get('GOOGLE_CSE_API_KEY');
     
-    if (!key) {
-      console.error('Google CSE API key not found in environment variables')
-      throw new Error('Google CSE API key not found')
+    console.log("GOOGLE_CSE_API_KEY present:", !!apiKey);
+    
+    if (!apiKey) {
+      console.error("GOOGLE_CSE_API_KEY is not set in environment variables");
+      return new Response(
+        JSON.stringify({ 
+          error: "API key not configured", 
+          message: "GOOGLE_CSE_API_KEY is not set on the server"
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    console.log('Successfully retrieved Google CSE API key')
-    
+    // Return the API key
     return new Response(
-      JSON.stringify({ key }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    )
+      JSON.stringify({ key: apiKey }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
-    console.error('Error in get-google-cse-key function:', error.message)
+    console.error("Error in get-google-cse-key function:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || "Unknown error occurred",
+        stack: error.stack || "No stack trace available"
+      }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      },
-    )
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
   }
-})
+});

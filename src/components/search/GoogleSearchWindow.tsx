@@ -84,6 +84,7 @@ export const GoogleSearchWindow = ({
 
   console.log("Current search results:", results);
   console.log("Formatted profiles:", formattedProfiles);
+  console.log("Total results:", totalResults, "Current page:", currentPage);
 
   return (
     <Card className="p-6 mb-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-fade-in">
@@ -126,6 +127,14 @@ export const GoogleSearchWindow = ({
           <div className="bg-red-50 text-red-700 p-4 rounded-md border border-red-300">
             <h3 className="font-medium mb-2">Error finding profiles</h3>
             <p>{error.message}</p>
+            <div className="mt-4">
+              <button
+                onClick={() => handleSearch(1)}
+                className="px-3 py-1 bg-red-100 border border-red-300 rounded text-sm hover:bg-red-200"
+              >
+                Retry Search
+              </button>
+            </div>
           </div>
         )}
 

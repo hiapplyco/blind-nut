@@ -1,75 +1,86 @@
 
+import { saveAs } from "file-saver";
 import { SearchResult } from "../../types";
-import { toast } from "sonner";
 
 /**
- * Extracts location information from a search result snippet
+ * Cleans a search string by removing LinkedIn site restrictions
  */
-export const extractLocationFromSnippet = (snippet: string): string | undefined => {
-  const locationPatterns = [
-    /Location: ([^\.]+)/i,
-    /([^\.]+), (United States|Canada|UK|Australia|[A-Z][a-z]+ [A-Z][a-z]+)/,
-    /(.*) Area/
-  ];
-  
-  for (const pattern of locationPatterns) {
-    const match = snippet.match(pattern);
-    if (match && match[1]) {
-      return match[1].trim();
-    }
-  }
-  
-  return undefined;
+export const cleanSearchString = (searchString: string): string => {
+  return searchString
+    .replace(/site:linkedin\.com\/in\//g, '')
+    .replace(/\s+site:linkedin\.com\s*/g, ' ')
+    .trim();
 };
 
 /**
- * Prepares search string for Google search, adding site:linkedin.com/in/ if needed
+ * Adds LinkedIn site restriction if not already present
  */
 export const prepareSearchString = (searchString: string, searchType: string): string => {
-  let finalSearchString = searchString;
-  if (searchType === "candidates" && !finalSearchString.includes("site:linkedin.com/in/")) {
-    finalSearchString = `${finalSearchString} site:linkedin.com/in/`;
+  const cleanString = cleanSearchString(searchString);
+  
+  // If it's a candidate search and doesn't already have the LinkedIn site restriction, add it
+  if (searchType === 'candidates' || searchType === 'candidates-at-company') {
+    if (!searchString.includes('site:linkedin.com/in/')) {
+      return `${cleanString} site:linkedin.com/in/`;
+    }
   }
-  return finalSearchString;
+  
+  console.log("Prepared search string:", cleanString);
+  return cleanString;
+};
+
+/**
+ * Extracts location information from a snippet
+ */
+export const extractLocationFromSnippet = (snippet: string): string => {
+  if (!snippet) return '';
+  
+  // Try to find location after a pipe symbol (common format in LinkedIn snippets)
+  const pipeMatch = snippet.match(/\|\s*([^|]+?)(?:\s*\||$)/);
+  if (pipeMatch && pipeMatch[1]) {
+    return pipeMatch[1].trim();
+  }
+  
+  // Try to match common location patterns (City, State/Country format)
+  const locationMatch = snippet.match(/([A-Za-z\s]+,\s*[A-Za-z\s]+)/);
+  return locationMatch ? locationMatch[1].trim() : '';
 };
 
 /**
  * Exports search results to CSV file
  */
 export const exportResultsToCSV = (results: SearchResult[]): void => {
-  if (results.length === 0) {
-    toast.error("No results to export");
-    return;
-  }
+  if (!results || results.length === 0) return;
 
-  const csvContent = [
-    ["Title", "URL", "Location", "Description"],
-    ...results.map(result => [
-      result.title.replace(/"/g, '""'),
-      result.link,
-      result.location || "",
-      result.snippet.replace(/"/g, '""')
-    ])
-  ]
-    .map(row => row.map(cell => `"${cell}"`).join(","))
-    .join("\n");
-
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", `search-results-${new Date().toISOString().split('T')[0]}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-
-  toast.success("Search results exported successfully");
-};
-
-/**
- * Removes site:linkedin.com/in/ from search string for display purposes
- */
-export const cleanSearchString = (searchString: string): string => {
-  return searchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, '');
+  // Format the current date for the filename
+  const date = new Date().toISOString().split('T')[0];
+  
+  // Define CSV headers
+  const headers = [
+    'Name',
+    'Title',
+    'Location',
+    'Profile URL',
+    'Relevance Score'
+  ].join(',');
+  
+  // Convert results to CSV rows
+  const csvRows = results.map(result => {
+    return [
+      `"${result.name.replace(/"/g, '""')}"`,
+      `"${result.jobTitle?.replace(/"/g, '""') || ''}"`,
+      `"${result.location?.replace(/"/g, '""') || ''}"`,
+      `"${result.profileUrl || result.link}"`,
+      result.relevance_score || ''
+    ].join(',');
+  });
+  
+  // Combine headers and rows
+  const csvContent = [headers, ...csvRows].join('\n');
+  
+  // Create and download the CSV file
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+  saveAs(blob, `linkedin-search-results-${date}.csv`);
+  
+  console.log(`Exported ${results.length} results to CSV`);
 };

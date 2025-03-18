@@ -65,6 +65,7 @@ export const fetchSearchResults = async (
     }
     
     // Fall back to Google CSE for regular search results
+    console.log("Falling back to Google CSE API");
     const { data, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
     
     if (keyError) {
@@ -88,11 +89,17 @@ export const fetchSearchResults = async (
     const cseId = 'b28705633bcb44cf0'; // Candidates CSE
     
     // Make request to Google CSE API
-    const response = await fetch(
-      `https://www.googleapis.com/customsearch/v1?key=${data.key}&cx=${cseId}&q=${encodeURIComponent(
-        finalSearchString
-      )}&start=${startIndex}`
-    );
+    const cseUrl = `https://www.googleapis.com/customsearch/v1?key=${data.key}&cx=${cseId}&q=${encodeURIComponent(
+      finalSearchString
+    )}&start=${startIndex}`;
+    
+    console.log("Making CSE request to:", cseUrl.replace(data.key, "REDACTED_KEY"));
+    
+    const response = await fetch(cseUrl);
+    
+    // Log the response status and headers for debugging
+    console.log("CSE API response status:", response.status);
+    console.log("CSE API response headers:", Object.fromEntries([...response.headers.entries()]));
     
     // Log the full response for debugging
     const responseText = await response.text();
@@ -104,37 +111,42 @@ export const fetchSearchResults = async (
       throw new Error(`Google CSE API error: ${response.status} - ${responseText}`);
     }
     
-    const responseData = JSON.parse(responseText);
-    console.log("Parsed search API response:", responseData);
-    
-    // Check if we have search results and transform them into the correct format
-    if (responseData && responseData.items && responseData.items.length > 0) {
-      return { 
-        data: {
-          items: responseData.items.map((item: any) => ({
-            ...item,
-            name: item.title.replace(/\s\|\s.*$/, ''), // Extract name from title
-            location: extractLocationFromSnippet(item.snippet),
-            jobTitle: item.snippet.split('|')[0].trim(),
-            profileUrl: item.link,
-            relevance_score: 75 // Default score for CSE results
-          })),
-          searchInformation: responseData.searchInformation
-        }, 
-        error: null 
-      };
-    } else {
-      console.log("No items in search results:", responseData);
-      // Return empty results instead of throwing an error
-      return { 
-        data: {
-          items: [],
-          searchInformation: {
-            totalResults: "0"  // This matches the type now
-          }
-        }, 
-        error: null 
-      };
+    try {
+      const responseData = JSON.parse(responseText);
+      console.log("Parsed search API response:", responseData);
+      
+      // Check if we have search results and transform them into the correct format
+      if (responseData && responseData.items && responseData.items.length > 0) {
+        return { 
+          data: {
+            items: responseData.items.map((item: any) => ({
+              ...item,
+              name: item.title.replace(/\s\|\s.*$/, ''), // Extract name from title
+              location: extractLocationFromSnippet(item.snippet),
+              jobTitle: item.snippet.split('|')[0].trim(),
+              profileUrl: item.link,
+              relevance_score: 75 // Default score for CSE results
+            })),
+            searchInformation: responseData.searchInformation
+          }, 
+          error: null 
+        };
+      } else {
+        console.log("No items in search results:", responseData);
+        // Return empty results instead of throwing an error
+        return { 
+          data: {
+            items: [],
+            searchInformation: {
+              totalResults: "0"  // This matches the type now
+            }
+          }, 
+          error: null 
+        };
+      }
+    } catch (parseError) {
+      console.error("Error parsing CSE API response:", parseError);
+      throw new Error(`Failed to parse CSE API response: ${parseError.message}`);
     }
   } catch (error) {
     console.error("Error fetching search results:", error);
@@ -152,6 +164,8 @@ export const processSearchResults = (data: GoogleSearchResult): SearchResult[] =
     return [];
   }
   
+  console.log("Processing search results:", data.items.length);
+  
   return data.items.map((item: any) => {
     // Ensure all required fields are present and properly formatted
     const result: SearchResult = {
@@ -165,6 +179,7 @@ export const processSearchResults = (data: GoogleSearchResult): SearchResult[] =
       profileUrl: item.profileUrl || item.link || ""
     };
     
+    console.log("Processed search result:", result);
     return result;
   });
 };

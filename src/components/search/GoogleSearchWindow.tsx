@@ -21,6 +21,13 @@ export const GoogleSearchWindow = ({
   searchType = "candidates",
   jobId
 }: GoogleSearchWindowProps) => {
+  console.log("GoogleSearchWindow rendered with props:", { 
+    searchTerm, 
+    initialSearchString, 
+    searchType, 
+    jobId 
+  });
+
   const { 
     results, 
     isLoading, 
@@ -62,10 +69,14 @@ export const GoogleSearchWindow = ({
     if (searchStr && searchStr.trim() !== '' && results.length === 0 && !isLoading) {
       console.log("Auto-running search for:", searchStr);
       const timer = setTimeout(() => {
+        console.log("Executing handleSearch() after timeout");
         handleSearch(1);
       }, 500); // Small delay to ensure component is mounted
       
-      return () => clearTimeout(timer);
+      return () => {
+        console.log("Clearing search timeout");
+        clearTimeout(timer);
+      };
     }
   }, [initialSearchString, searchString, searchTerm, handleSearch, results.length, isLoading]);
 
@@ -82,8 +93,7 @@ export const GoogleSearchWindow = ({
     setShowResultsAs(prev => prev === 'cards' ? 'list' : 'cards');
   };
 
-  console.log("Current search results:", results);
-  console.log("Formatted profiles:", formattedProfiles);
+  console.log("Current search results:", results.length > 0 ? `${results.length} results` : "No results");
   console.log("Total results:", totalResults, "Current page:", currentPage);
 
   return (
@@ -98,6 +108,15 @@ export const GoogleSearchWindow = ({
           isLoading={isLoading}
           resultsExist={results.length > 0}
         />
+
+        {/* Debug info */}
+        <div className="bg-blue-50 p-3 mb-2 border rounded text-xs font-mono">
+          <div><strong>Debug:</strong> searchString: {searchString || "none"}</div>
+          <div>initialSearchString: {initialSearchString || "none"}</div>
+          <div>isLoading: {isLoading ? "true" : "false"}</div>
+          <div>totalResults: {totalResults}, resultsCount: {results.length}</div>
+          {error && <div className="text-red-500">Error: {error.message}</div>}
+        </div>
 
         <div className="flex justify-end mb-2">
           <button 

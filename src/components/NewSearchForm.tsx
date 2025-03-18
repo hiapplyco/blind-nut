@@ -122,7 +122,23 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
   };
 
   const handleShowGoogleSearch = (searchString: string) => {
-    console.log("Showing Google search with string:", searchString);
+    console.log("handleShowGoogleSearch called with:", searchString);
+    
+    if (!searchString || searchString.trim() === '') {
+      console.error("Empty search string provided to handleShowGoogleSearch");
+      toast.error("Cannot search with empty search string");
+      return;
+    }
+    
+    // Ensure search string contains LinkedIn site constraint
+    const finalSearchString = searchString.includes("site:linkedin.com/in/") 
+      ? searchString 
+      : `${searchString} site:linkedin.com/in/`;
+    
+    console.log("Setting search string:", finalSearchString);
+    setSearchString(finalSearchString);
+    
+    console.log("Setting showGoogleSearch to true");
     setShowGoogleSearch(true);
   };
 
@@ -136,12 +152,21 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
         onShowGoogleSearch={handleShowGoogleSearch}
       />
       
-      {searchString && showGoogleSearch && (
-        <GoogleSearchWindow 
-          searchTerm={searchText} 
-          searchString={searchString} 
-          jobId={currentJobId} 
-        />
+      {showGoogleSearch && searchString && (
+        <div>
+          <div className="bg-yellow-100 p-3 mb-4 border-l-4 border-yellow-500 text-sm">
+            <p className="font-semibold">Debug Info:</p>
+            <p>Search Text: {searchText ? `"${searchText.substring(0, 50)}${searchText.length > 50 ? '...' : ''}"` : 'None'}</p>
+            <p>Search String: {searchString ? `"${searchString}"` : 'None'}</p>
+            <p>Current Job ID: {currentJobId || 'None'}</p>
+          </div>
+          
+          <GoogleSearchWindow 
+            searchTerm={searchText} 
+            searchString={searchString} 
+            jobId={currentJobId} 
+          />
+        </div>
       )}
     </div>
   );

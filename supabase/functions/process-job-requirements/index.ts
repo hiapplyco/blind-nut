@@ -24,7 +24,7 @@ serve(async (req) => {
     console.log("Processing job requirements with params:", { searchType, companyName, source });
     
     const genAI = new GoogleGenerativeAI(Deno.env.get("GEMINI_API_KEY") || "");
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     // Use specialized prompt for Clarvida source
     let promptText;

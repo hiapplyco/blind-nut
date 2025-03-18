@@ -111,7 +111,9 @@ export const useGoogleSearch = (
       
       if (error) {
         console.error("Search API error:", error);
-        throw error;
+        setState(prev => ({ ...prev, isLoading: false, error }));
+        toast.error(`Search failed: ${error.message}`);
+        return;
       }
       
       if (data?.items) {
@@ -123,7 +125,7 @@ export const useGoogleSearch = (
             ...prev, 
             results: processedResults,
             currentPage: page,
-            totalResults: data.searchInformation?.totalResults || 0,
+            totalResults: Number(data.searchInformation?.totalResults) || 0,
             isLoading: false
           }));
           
@@ -131,7 +133,7 @@ export const useGoogleSearch = (
             saveResults(
               processedResults, 
               searchString, 
-              data.searchInformation?.totalResults || 0
+              Number(data.searchInformation?.totalResults) || 0
             );
           }
         } else {
@@ -139,7 +141,7 @@ export const useGoogleSearch = (
             ...prev, 
             results: [...prev.results, ...processedResults],
             currentPage: page,
-            totalResults: data.searchInformation?.totalResults || 0,
+            totalResults: Number(data.searchInformation?.totalResults) || 0,
             isLoading: false
           }));
           
@@ -148,11 +150,15 @@ export const useGoogleSearch = (
           }
         }
         
-        toast.success(`${processedResults.length} profiles found`);
+        if (processedResults.length > 0) {
+          toast.success(`${processedResults.length} profiles found`);
+        } else {
+          toast.info("No profiles found matching your criteria");
+        }
       } else {
         console.log("No results returned from search");
         setState(prev => ({ ...prev, isLoading: false }));
-        toast.error("No results found");
+        toast.info("No results found");
       }
     } catch (error) {
       console.error("Error fetching search results:", error);

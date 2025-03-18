@@ -3,11 +3,17 @@ import { Card } from "@/components/ui/card";
 import { SearchHeader } from "./components/SearchHeader";
 import { SearchResultsList } from "./components/SearchResultsList";
 import { useGoogleSearch } from "./hooks/useGoogleSearch";
-import { GoogleSearchWindowProps } from "./types";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ProfilesList } from "@/components/ProfileCard";
 import { Loader2 } from "lucide-react";
+
+interface GoogleSearchWindowProps {
+  searchTerm?: string;
+  searchString?: string;
+  searchType?: 'candidates' | 'candidates-at-company' | 'companies';
+  jobId?: number | null;
+}
 
 export const GoogleSearchWindow = ({ 
   searchTerm,
@@ -27,7 +33,7 @@ export const GoogleSearchWindow = ({
     totalResults,
     currentPage,
     error
-  } = useGoogleSearch(initialSearchString || searchTerm || "", searchType, jobId);
+  } = useGoogleSearch(initialSearchString || searchTerm || "", searchType, jobId || undefined);
 
   const [showResultsAs, setShowResultsAs] = useState<'cards' | 'list'>('cards');
 

@@ -65,15 +65,16 @@ export const fetchSearchResults = async (
     }
     
     // Fall back to Google CSE for regular search results
-    const { data: { key }, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
+    const { data, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
     
     if (keyError) {
       console.error("Error fetching CSE key:", keyError);
       throw keyError;
     }
     
-    if (!key) {
-      console.error("No CSE key returned from function");
+    if (!data || !data.key) {
+      console.error("No CSE key returned from function:", data);
+      toast.error("Failed to get Google CSE API key");
       throw new Error("Failed to get Google CSE API key");
     }
     
@@ -86,26 +87,31 @@ export const fetchSearchResults = async (
     
     const cseId = 'b28705633bcb44cf0'; // Candidates CSE
     
+    // Make request to Google CSE API
     const response = await fetch(
-      `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cseId}&q=${encodeURIComponent(
+      `https://www.googleapis.com/customsearch/v1?key=${data.key}&cx=${cseId}&q=${encodeURIComponent(
         finalSearchString
       )}&start=${startIndex}`
     );
     
+    // Log the full response for debugging
+    const responseText = await response.text();
+    console.log("Raw CSE API response:", responseText);
+    
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("CSE API response not OK:", response.status, errorText);
-      throw new Error(`Google CSE API error: ${response.status} - ${errorText}`);
+      console.error("CSE API response not OK:", response.status, responseText);
+      toast.error(`Google CSE API error: ${response.status}`);
+      throw new Error(`Google CSE API error: ${response.status} - ${responseText}`);
     }
     
-    const data = await response.json();
-    console.log("Search API response:", data);
+    const data2 = JSON.parse(responseText);
+    console.log("Parsed search API response:", data2);
     
     // Check if we have search results and transform them into the correct format
-    if (data && data.items) {
+    if (data2 && data2.items && data2.items.length > 0) {
       return { 
         data: {
-          items: data.items.map((item: any) => ({
+          items: data2.items.map((item: any) => ({
             ...item,
             name: item.title.replace(/\s\|\s.*$/, ''), // Extract name from title
             location: extractLocationFromSnippet(item.snippet),
@@ -113,12 +119,13 @@ export const fetchSearchResults = async (
             profileUrl: item.link,
             relevance_score: 75 // Default score for CSE results
           })),
-          searchInformation: data.searchInformation
+          searchInformation: data2.searchInformation
         }, 
         error: null 
       };
     } else {
-      console.log("No items in search results:", data);
+      console.log("No items in search results:", data2);
+      // Return empty results instead of throwing an error
       return { 
         data: {
           items: [],
@@ -131,6 +138,7 @@ export const fetchSearchResults = async (
     }
   } catch (error) {
     console.error("Error fetching search results:", error);
+    toast.error("Failed to fetch search results. Please try again.");
     return { data: null, error: error as Error };
   }
 };
@@ -152,7 +160,9 @@ export const processSearchResults = (data: GoogleSearchResult): SearchResult[] =
       snippet: item.snippet || "",
       name: item.name || item.title || "",
       location: item.location || extractLocationFromSnippet(item.snippet) || "",
-      relevance_score: item.relevance_score || 75
+      relevance_score: item.relevance_score || 75,
+      jobTitle: item.jobTitle || (item.snippet ? item.snippet.split('|')[0].trim() : ""),
+      profileUrl: item.profileUrl || item.link || ""
     };
     
     return result;

@@ -54,7 +54,7 @@ async function handleRequest(req: Request): Promise<Response> {
     console.log("Analyzing job posting:", schema);
     
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-thinking-exp-01-21" });
     
     // Construct a more detailed prompt to help Gemini generate valid JSON
     const prompt = `

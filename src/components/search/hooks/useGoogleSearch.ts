@@ -120,12 +120,15 @@ export const useGoogleSearch = (
         const processedResults = processSearchResults(data);
         console.log("Received search results:", processedResults.length);
         
+        // Convert string totalResults to number
+        const numTotalResults = Number(data.searchInformation?.totalResults) || 0;
+        
         if (page === 1) {
           setState(prev => ({ 
             ...prev, 
             results: processedResults,
             currentPage: page,
-            totalResults: Number(data.searchInformation?.totalResults) || 0,
+            totalResults: numTotalResults,
             isLoading: false
           }));
           
@@ -133,7 +136,7 @@ export const useGoogleSearch = (
             saveResults(
               processedResults, 
               searchString, 
-              Number(data.searchInformation?.totalResults) || 0
+              numTotalResults
             );
           }
         } else {
@@ -141,7 +144,7 @@ export const useGoogleSearch = (
             ...prev, 
             results: [...prev.results, ...processedResults],
             currentPage: page,
-            totalResults: Number(data.searchInformation?.totalResults) || 0,
+            totalResults: numTotalResults,
             isLoading: false
           }));
           

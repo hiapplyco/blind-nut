@@ -130,7 +130,7 @@ export const fetchSearchResults = async (
         data: {
           items: [],
           searchInformation: {
-            totalResults: "0"
+            totalResults: "0"  // This matches the type now
           }
         }, 
         error: null 

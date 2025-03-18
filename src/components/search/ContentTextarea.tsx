@@ -57,7 +57,7 @@ export const ContentTextarea = ({
     <Textarea
       ref={textareaRef}
       placeholder={placeholder}
-      className={`min-h-[200px] overflow-y-auto border-4 ${borderClass} focus:ring-0 focus:border-[#8B5CF6] transition-all`}
+      className={`min-h-[150px] h-[200px] overflow-y-auto border-4 ${borderClass} focus:ring-0 focus:border-[#8B5CF6] transition-all`}
       value={content}
       onChange={(e) => onChange(e.target.value)}
       onFocus={onFocus}

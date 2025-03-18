@@ -1,8 +1,27 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SearchResult } from "../../types";
 import { extractLocationFromSnippet, prepareSearchString } from "./utils";
 import { GoogleSearchResult } from "./types";
+
+/**
+ * Processes raw search results into a standardized format
+ */
+export const processSearchResults = (data: GoogleSearchResult): SearchResult[] => {
+  if (!data?.items || !Array.isArray(data.items)) {
+    return [];
+  }
+  
+  return data.items.map((item: any) => ({
+    ...item,
+    name: item.title?.replace(/\s*\|\s.*$/, '') || item.title || '',
+    location: extractLocationFromSnippet(item.snippet),
+    jobTitle: item.snippet?.split('|')[0]?.trim() || '',
+    profileUrl: item.link,
+    relevance_score: 75 // Default score for CSE results
+  }));
+};
 
 /**
  * Fetches search results from Google Custom Search Engine

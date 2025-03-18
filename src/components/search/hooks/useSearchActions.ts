@@ -1,6 +1,7 @@
+
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { SearchType } from "../../types";
+import { SearchType } from "../types";
 import { fetchSearchResults, processSearchResults } from "./google-search/searchApi";
 import { prepareSearchString, exportResultsToCSV } from "./google-search/utils";
 

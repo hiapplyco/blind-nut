@@ -38,6 +38,7 @@ export const fetchSearchResults = async (
     }
     
     console.log("✅ [SUCCESS] CSE key received:", keyData.key ? "Key exists (length: " + keyData.key.length + ")" : "No key");
+    console.log("✅ [SUCCESS] CSE key debug info:", keyData.debug);
     console.log("✅ [SUCCESS] Successfully retrieved CSE key, preparing search request");
     
     // Add site:linkedin.com/in/ automatically if it's a candidate search and doesn't already have it
@@ -65,7 +66,7 @@ export const fetchSearchResults = async (
     // Get the raw response text
     const responseText = await response.text();
     console.log("🔍 [DEBUG] CSE API response length:", responseText.length);
-    console.log("🔍 [DEBUG] CSE API response preview:", responseText.substring(0, 200) + "...");
+    console.log("🔍 [DEBUG] CSE API response preview:", responseText.substring(0, 500) + "...");
     
     if (!response.ok) {
       console.error(`❌ [ERROR] CSE API response not OK: ${response.status}`, responseText.substring(0, 500));
@@ -117,7 +118,7 @@ export const fetchSearchResults = async (
       }
     } catch (parseError) {
       console.error("❌ [ERROR] Error parsing CSE API response:", parseError);
-      console.error("❌ [ERROR] Raw response causing parse error:", responseText.substring(0, 200));
+      console.error("❌ [ERROR] Raw response causing parse error:", responseText.substring(0, 500));
       toast.error(`Failed to parse search results: ${parseError.message}`);
       throw new Error(`Failed to parse CSE API response: ${parseError.message}`);
     }

@@ -42,6 +42,15 @@ export const GoogleSearchWindow = ({
     error
   } = useGoogleSearch(initialSearchString || searchTerm || "", searchType, jobId || undefined);
 
+  console.log("🔍 [DEBUG] GoogleSearchWindow state after useGoogleSearch:", {
+    resultsCount: results.length,
+    isLoading,
+    searchString,
+    totalResults,
+    currentPage,
+    hasError: !!error
+  });
+
   const [showResultsAs, setShowResultsAs] = useState<'cards' | 'list'>('cards');
 
   // Update search string when props change

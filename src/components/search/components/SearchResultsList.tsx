@@ -13,6 +13,19 @@ export const SearchResultsList = ({
   isLoadingMore,
   searchType
 }: SearchResultsListProps) => {
+  console.log("🔍 [DEBUG] SearchResultsList rendering with:", {
+    resultsCount: results?.length || 0,
+    isLoading,
+    totalResults,
+    currentResults,
+    isLoadingMore,
+    searchType
+  });
+
+  if (results && results.length > 0) {
+    console.log("🔍 [DEBUG] First result sample:", JSON.stringify(results[0], null, 2));
+  }
+
   return (
     <div className="space-y-4">
       {isLoading && results.length === 0 && (

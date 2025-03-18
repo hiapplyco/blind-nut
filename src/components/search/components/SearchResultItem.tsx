@@ -11,6 +11,12 @@ export const SearchResultItem = ({
   result, 
   searchType 
 }: SearchResultItemProps) => {
+  console.log("🔍 [DEBUG] SearchResultItem rendering with:", {
+    name: result.name || result.title,
+    link: result.link || result.profileUrl,
+    hasLocation: !!result.location
+  });
+
   const { enrichProfile } = useProfileEnrichment();
   const [isLoading, setIsLoading] = useState(false);
   const [enrichedData, setEnrichedData] = useState(null);

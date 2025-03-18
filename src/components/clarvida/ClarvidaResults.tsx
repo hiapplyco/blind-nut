@@ -12,26 +12,25 @@ import { BooleanSearchStringCard } from "./cards/BooleanSearchStringCard";
 import { TalentLocationsCard } from "./cards/TalentLocationsCard";
 import { JobAdSummaryCard } from "./cards/JobAdSummaryCard";
 import { Search, Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 interface ClarvidaResultsProps {
   data: any;
   onNewSearch: () => void;
   originalSearchText?: string;
+  onSearchCandidates?: (searchString: string) => void;
 }
 
-export function ClarvidaResults({ data, onNewSearch, originalSearchText }: ClarvidaResultsProps) {
-  const navigate = useNavigate();
-
-  // Handle navigation to the sourcing page with search content
+export function ClarvidaResults({ 
+  data, 
+  onNewSearch, 
+  originalSearchText, 
+  onSearchCandidates 
+}: ClarvidaResultsProps) {
+  
+  // Handle searching candidates with the boolean search string
   const handleSearchCandidates = () => {
-    if (originalSearchText) {
-      navigate('/sourcing', { 
-        state: { 
-          content: originalSearchText, 
-          autoRun: true 
-        } 
-      });
+    if (data?.boolean_search_string?.boolean_string && onSearchCandidates) {
+      onSearchCandidates(data.boolean_search_string.boolean_string);
     }
   };
 
@@ -56,7 +55,7 @@ export function ClarvidaResults({ data, onNewSearch, originalSearchText }: Clarv
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold">Analysis Results</h2>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          {originalSearchText && (
+          {data?.boolean_search_string?.boolean_string && (
             <Button 
               onClick={handleSearchCandidates} 
               className="flex items-center gap-2"

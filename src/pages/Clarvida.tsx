@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { SearchForm } from "@/components/search/SearchForm";
 import { useClarvidaAuth } from "@/context/ClarvidaAuthContext";
 import { ClarvidaHeader } from "@/components/clarvida/ClarvidaHeader";
@@ -7,6 +7,18 @@ import { ClarvidaResults } from "@/components/clarvida/ClarvidaResults";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Card } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+
+// Lazy load components to improve initial page load
+const GoogleSearchWindow = lazy(() => import("@/components/search/GoogleSearchWindow").then(module => ({ default: module.GoogleSearchWindow })));
+const NewSearchForm = lazy(() => import("@/components/NewSearchForm"));
+
+const LoadingState = () => (
+  <div className="h-96 flex items-center justify-center">
+    <Loader2 className="h-8 w-8 animate-spin text-[#8B5CF6]" />
+  </div>
+);
 
 const Clarvida = () => {
   const { session, signOut } = useClarvidaAuth();
@@ -18,6 +30,8 @@ const Clarvida = () => {
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [showSourcing, setShowSourcing] = useState(false);
+  const [searchString, setSearchString] = useState("");
   
   const handleJobCreated = (jobId: number, inputText: string, data?: any) => {
     console.log('Job created callback called with jobId:', jobId);
@@ -52,6 +66,11 @@ const Clarvida = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate("/clarvida/login");
+  };
+  
+  const handleSearchCandidates = (booleanString: string) => {
+    setSearchString(booleanString);
+    setShowSourcing(true);
   };
   
   return (
@@ -102,14 +121,64 @@ const Clarvida = () => {
               />
             </div>
           ) : (
-            analysisData && <ClarvidaResults 
-              data={analysisData} 
-              originalSearchText={searchText}
-              onNewSearch={() => {
-                setIsProcessingComplete(false);
-                setAnalysisData(null);
-              }} 
-            />
+            <div className="space-y-8">
+              {analysisData && (
+                <ClarvidaResults 
+                  data={analysisData} 
+                  originalSearchText={searchText}
+                  onNewSearch={() => {
+                    setIsProcessingComplete(false);
+                    setAnalysisData(null);
+                    setShowSourcing(false);
+                  }}
+                  onSearchCandidates={handleSearchCandidates}
+                />
+              )}
+              
+              {showSourcing && (
+                <div className="mt-8">
+                  <Card className="border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)] bg-white p-6">
+                    <h2 className="text-2xl font-bold text-[#8B5CF6] mb-6">Candidate Sourcing</h2>
+                    <Suspense fallback={<LoadingState />}>
+                      {searchString ? (
+                        <GoogleSearchWindow 
+                          searchString={searchString} 
+                          jobId={currentJobId} 
+                        />
+                      ) : (
+                        <NewSearchForm 
+                          userId={userId}
+                          initialJobId={currentJobId}
+                        />
+                      )}
+                    </Suspense>
+                  </Card>
+                  
+                  {/* Additional help card */}
+                  <Card className="p-6 mt-6 border-2 border-black bg-[#FEF7CD] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)]">
+                    <h3 className="text-lg font-bold mb-2">Sourcing Tips</h3>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex gap-2">
+                        <span className="font-bold">⚡</span>
+                        <span>Use specific keywords related to the skills and experience you're looking for</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="font-bold">⚡</span>
+                        <span>Include location if you're searching for candidates in a specific area</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="font-bold">⚡</span>
+                        <span>When searching for candidates at a company, try different variations of the company name</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="font-bold">⚡</span>
+                        <span>Use the "Get Contact Info" button to access candidate contact details</span>
+                      </li>
+                    </ul>
+                  </Card>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

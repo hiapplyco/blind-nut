@@ -1,9 +1,9 @@
-import { useState } from "react";
+
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-interface FileUploadHandlerProps {
-  userId: string;
+export interface FileUploadHandlerProps {
+  userId: string | null;
   onTextUpdate: (text: string) => void;
   onProcessingChange: (isProcessing: boolean) => void;
 }
@@ -27,7 +27,7 @@ export const FileUploadHandler = ({ userId, onTextUpdate, onProcessingChange }: 
     onProcessingChange(true);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('userId', userId);
+    formData.append('userId', userId || '');
 
     try {
       const { data, error } = await supabase.functions.invoke('parse-document', {

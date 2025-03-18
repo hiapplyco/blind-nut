@@ -5,7 +5,7 @@ import { Users, Briefcase } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { SearchType } from "./types";
 
-interface SearchTypeToggleProps {
+export interface SearchTypeToggleProps {
   value: SearchType;
   onValueChange: (value: SearchType) => void;
 }

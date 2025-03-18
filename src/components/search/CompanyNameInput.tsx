@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface CompanyNameInputProps {
+export interface CompanyNameInputProps {
   companyName: string;
   isProcessing: boolean;
   onChange: (value: string) => void;

@@ -9,6 +9,7 @@ export interface SearchFormProps {
   source?: 'default' | 'clarvida';
   hideSearchTypeToggle?: boolean;
   submitButtonText?: string;
+  onSubmitStart?: () => void;
 }
 
 // Profile types

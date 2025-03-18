@@ -10,7 +10,7 @@ import { InputActions } from "./InputActions";
 import { UrlDialog } from "./UrlDialog";
 import { useUrlScraping } from "./hooks/useUrlScraping";
 
-interface ContentTextareaProps {
+export interface ContentTextareaProps {
   searchText: string;
   isProcessing: boolean;
   onTextChange: (value: string) => void;

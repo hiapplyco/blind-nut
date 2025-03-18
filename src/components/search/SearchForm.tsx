@@ -9,21 +9,28 @@ import { CompanyNameInput } from "./CompanyNameInput";
 import { useSearchForm } from "./hooks/useSearchForm";
 import { SearchType } from "./hooks/types";
 import { ProcessingProgress } from "./ProcessingProgress";
-import { FileUploadHandler } from "./FileUploadHandler";
 import { AgentProcessor } from "./AgentProcessor";
 
 export interface SearchFormProps {
   userId: string | null;
-  onJobCreated: (jobId: number, content: string) => void;
+  onJobCreated: (jobId: number, content: string, data?: any) => void;
   currentJobId: number | null;
   isProcessingComplete: boolean;
+  source?: 'default' | 'clarvida';
+  hideSearchTypeToggle?: boolean;
+  submitButtonText?: string;
+  onSubmitStart?: () => void;
 }
 
 export const SearchForm = ({ 
   userId, 
   onJobCreated,
   currentJobId,
-  isProcessingComplete 
+  isProcessingComplete,
+  source = 'default',
+  hideSearchTypeToggle = false,
+  submitButtonText,
+  onSubmitStart
 }: SearchFormProps) => {
   const [isAgentProcessing, setIsAgentProcessing] = useState(false);
 
@@ -37,11 +44,15 @@ export const SearchForm = ({
     setSearchType, 
     handleSubmit, 
     handleFileUpload 
-  } = useSearchForm(userId, onJobCreated, currentJobId);
+  } = useSearchForm(userId, onJobCreated, currentJobId, source);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Search form submitted with:", { searchText, searchType, companyName });
+    
+    if (onSubmitStart) {
+      onSubmitStart();
+    }
     
     await handleSubmit(e);
     
@@ -58,36 +69,47 @@ export const SearchForm = ({
         <FormHeader />
         
         <div className="space-y-4">
-          <SearchTypeToggle 
-            searchType={searchType}
-            onChange={(type: SearchType) => {
-              console.log("Search type changed to:", type);
-              setSearchType(type);
-            }}
-          />
+          {!hideSearchTypeToggle && (
+            <SearchTypeToggle 
+              value={searchType}
+              onValueChange={(type: SearchType) => {
+                console.log("Search type changed to:", type);
+                setSearchType(type);
+              }}
+            />
+          )}
           
           {searchType === "candidates-at-company" && (
             <CompanyNameInput 
               companyName={companyName} 
+              isProcessing={isProcessing}
               onChange={setCompanyName} 
             />
           )}
           
           <ContentTextarea 
-            value={searchText} 
-            onChange={setSearchText} 
-            placeholder="Paste job description here..." 
+            searchText={searchText} 
+            isProcessing={isProcessing}
+            onTextChange={setSearchText} 
+            onFileUpload={handleFileUpload}
+            onTextUpdate={setSearchText}
           />
           
           <div className="flex justify-between items-center">
-            <FileUploadHandler onFileUpload={handleFileUpload} />
+            <input 
+              type="file"
+              id="file-upload"
+              className="hidden"
+              onChange={handleFileUpload}
+              accept="application/pdf,image/*"
+            />
             
             <Button 
               type="submit" 
               disabled={isProcessing || !searchText}
               className="border-2 border-black bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
             >
-              {isProcessing ? 'Processing...' : 'Generate Search String'}
+              {isProcessing ? 'Processing...' : submitButtonText || 'Generate Search String'}
             </Button>
           </div>
         </div>

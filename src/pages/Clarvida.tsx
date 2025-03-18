@@ -1,14 +1,17 @@
 
 import { useState } from "react";
 import { SearchForm } from "@/components/search/SearchForm";
-import { useAuth } from "@/context/AuthContext";
+import { useClarvidaAuth } from "@/context/ClarvidaAuthContext";
 import { ClarvidaHeader } from "@/components/clarvida/ClarvidaHeader";
 import { ClarvidaResults } from "@/components/clarvida/ClarvidaResults";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Clarvida = () => {
-  const { session } = useAuth();
+  const { session, signOut } = useClarvidaAuth();
   const userId = session?.user?.id || null;
+  const navigate = useNavigate();
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
   const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const [analysisData, setAnalysisData] = useState<any>(null);
@@ -45,11 +48,27 @@ const Clarvida = () => {
   const handleSubmitStart = () => {
     setIsLoading(true);
   };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/clarvida/login");
+  };
   
   return (
     <div className="min-h-screen bg-[#F1F0FB] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <ClarvidaHeader />
+        <div className="flex justify-between items-center">
+          <ClarvidaHeader />
+          {userId && (
+            <Button 
+              variant="outline" 
+              onClick={handleSignOut}
+              className="text-sm"
+            >
+              Sign Out
+            </Button>
+          )}
+        </div>
         
         <div className="space-y-8 mt-8">
           {isError ? (

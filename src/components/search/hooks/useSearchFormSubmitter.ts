@@ -36,6 +36,12 @@ export const useSearchFormSubmitter = (
       return;
     }
 
+    // For Clarvida source, check if user is authenticated
+    if (source === 'clarvida' && !userId) {
+      toast.error("Please sign in to use Clarvida");
+      return;
+    }
+
     if (onSubmitStart) {
       onSubmitStart();
     }

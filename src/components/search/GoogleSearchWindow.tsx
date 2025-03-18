@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { SearchHeader } from "./components/SearchHeader";
 import { SearchResultsList } from "./components/SearchResultsList";
@@ -6,7 +5,7 @@ import { useGoogleSearch } from "./hooks/useGoogleSearch";
 import { GoogleSearchWindowProps } from "./types";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ProfilesList } from "@/components/ProfileCard";
+import { ProfilesList } from "@/components/ProfileCard.tsx";
 
 export const GoogleSearchWindow = ({ 
   searchTerm,

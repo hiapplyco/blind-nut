@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import ContactInfoModal from './ContactInfoModal';
+import ContactInfoModal from './ContactInfoModal.tsx';
 
 // Profile Card Component
 export const ProfileCard = ({ profile }) => {

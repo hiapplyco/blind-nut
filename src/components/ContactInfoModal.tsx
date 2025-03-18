@@ -13,30 +13,11 @@ import {
 } from '@/components/ui/dialog';
 import { Loader2, Copy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Profile, EnrichedProfileData } from './search/types';
 
-interface ContactInfoModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  profile: Profile;
-  enrichedData: EnrichedProfileData | null;
-  isLoading: boolean;
-  error: string | null;
-  handleCardClick: () => void;
-}
-
-const ContactInfoModal: React.FC<ContactInfoModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  profile, 
-  enrichedData, 
-  isLoading, 
-  error, 
-  handleCardClick 
-}) => {
+const ContactInfoModal = ({ isOpen, onClose, profile, enrichedData, isLoading, error, handleCardClick }) => {
   const { toast } = useToast();
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     toast.success("Copied to clipboard");
   };
@@ -45,9 +26,9 @@ const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
-          <DialogTitle className="text-[#8B5CF6]">{profile.name || profile.profile_name}</DialogTitle>
+          <DialogTitle className="text-[#8B5CF6]">{profile.profile_name}</DialogTitle>
           <DialogDescription>
-            {profile.title || profile.profile_title} • {profile.location || profile.profile_location}
+            {profile.profile_title} • {profile.profile_location}
           </DialogDescription>
         </DialogHeader>
         
@@ -171,8 +152,7 @@ const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
               <section>
                 <h3 className="font-medium text-gray-900 mb-2">Social Profiles</h3>
                 <div className="space-y-2">
-                  {(enrichedData.profiles || enrichedData.social_profiles) && 
-                   (enrichedData.profiles || enrichedData.social_profiles)?.map((profile, i) => (
+                  {enrichedData.profiles && enrichedData.profiles.map((profile, i) => (
                     <div key={i} className="flex items-start">
                       <span className="text-gray-500 w-24 capitalize">{profile.network}:</span>
                       <a 
@@ -181,7 +161,7 @@ const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
                         rel="noopener noreferrer"
                         className="text-[#8B5CF6] hover:underline"
                       >
-                        {profile.username || profile.url}
+                        {profile.username}
                       </a>
                     </div>
                   ))}

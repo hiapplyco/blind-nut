@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { SearchType } from "@/components/search/types";
 
@@ -28,7 +27,9 @@ export const processJobRequirements = async (
       return data;
     }
     
-    // Otherwise use the regular process-job-requirements function
+    // Otherwise use the regular process-job-requirements function for search string generation
+    // This ensures we're using the Gemini 2.0 Flash model from the Supabase edge function
+    console.log('Calling process-job-requirements function with searchType:', searchType);
     const { data, error } = await supabase.functions.invoke('process-job-requirements', {
       body: { content, searchType, companyName, userId, source }
     });
@@ -121,7 +122,5 @@ export const processJobRequirements = async (
         }
       }
     };
-    
-    throw error;
   }
 };

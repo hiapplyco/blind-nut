@@ -37,7 +37,7 @@ serve(async (req) => {
       promptText = promptManager.render(clarvidaPrompt, { content });
       console.log("Using Clarvida prompt");
     } else {
-      // Use standard processing (existing code)
+      // Use standard processing with the updated default prompt
       promptText = promptManager.render(defaultPrompt, { content, searchType, companyName });
       console.log("Using default prompt");
     }
@@ -47,8 +47,59 @@ serve(async (req) => {
     const responseText = result.response.text();
     console.log("Received response from Gemini API:", responseText);
     
+    // For default search behavior, just return the search string directly
+    if (source !== "clarvida") {
+      // Remove any site:linkedin.com/in/ that might be in the response as it's already configured in the CSE
+      let searchString = responseText.trim();
+      console.log("Search string before processing:", searchString);
+      
+      // Create job record if a userId is provided
+      if (userId) {
+        const { data, error } = await supabaseClient
+          .from('jobs')
+          .insert({
+            user_id: userId,
+            content: content,
+            search_type: searchType,
+            company_name: companyName || null,
+            source: source || 'default',
+            search_string: searchString
+          })
+          .select('id')
+          .single();
+          
+        if (error) {
+          console.error("Error inserting job:", error);
+          throw error;
+        }
+        
+        console.log("Job created with ID:", data.id);
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            searchString: searchString,
+            jobId: data.id
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          searchString: searchString
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+    
+    // For Clarvida source, try to parse JSON from the AI response
     try {
-      // Parse JSON from the AI response
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       let parsedResponse;
       
@@ -71,12 +122,12 @@ serve(async (req) => {
             ? parsedResponse.terms.titles.map((title: string) => `"${title}"`).join(" OR ") 
             : "";
           
-          parsedResponse.searchString = `(${skills})${titles ? ` AND (${titles})` : ""} site:linkedin.com/in/`;
+          parsedResponse.searchString = `(${skills})${titles ? ` AND (${titles})` : ""}`;
           console.log("Generated fallback search string:", parsedResponse.searchString);
         } else {
           // If no terms available, create a simple search string from the content
           const keywords = content.split(/\s+/).filter((word: string) => word.length > 5).slice(0, 5);
-          parsedResponse.searchString = `(${keywords.join(" OR ")}) site:linkedin.com/in/`;
+          parsedResponse.searchString = `(${keywords.join(" OR ")})`;
           console.log("Generated emergency fallback search string:", parsedResponse.searchString);
         }
       }

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SearchResult } from "../../types";
@@ -39,34 +38,28 @@ export const fetchSearchResults = async (
     
     console.log("✅ [SUCCESS] CSE key received:", keyData.key ? "Key exists (length: " + keyData.key.length + ")" : "No key");
     console.log("✅ [SUCCESS] CSE key debug info:", keyData.debug);
-    console.log("✅ [SUCCESS] Successfully retrieved CSE key, preparing search request");
     
-    // Add site:linkedin.com/in/ automatically if it's a candidate search and doesn't already have it
+    // Ensure the search string includes site:linkedin.com/in/ for candidate searches
     const finalSearchString = prepareSearchString(searchString, searchType);
-    
-    console.log("🔍 [DEBUG] Final search string being used:", finalSearchString);
+    console.log("🔍 [CRITICAL] Final search string with site restriction:", finalSearchString);
     
     // Use the correct CSE ID for Google Custom Search Engine
-    const cseId = 'b28705633bcb44cf0'; // Verified CSE ID from the image
-    console.log("🔍 [DEBUG] Using CSE ID:", cseId);
+    const cseId = keyData.debug?.cseId || 'b28705633bcb44cf0'; // Use the CSE ID from the server if available
+    console.log("🔍 [CRITICAL] Using CSE ID:", cseId);
     
-    // Make request to Google CSE API
+    // Make request to Google CSE API with the properly formatted search string
     const cseUrl = `https://www.googleapis.com/customsearch/v1?key=${keyData.key}&cx=${cseId}&q=${encodeURIComponent(
       finalSearchString
     )}&start=${startIndex}`;
     
-    console.log("🔍 [DEBUG] Making CSE request to:", cseUrl.replace(keyData.key, "REDACTED_KEY"));
+    console.log("🔍 [CRITICAL] Making CSE request with full search constraints");
     
     const response = await fetch(cseUrl);
-    
-    // Log the response status and headers for debugging
     console.log("🔍 [DEBUG] CSE API response status:", response.status);
-    console.log("🔍 [DEBUG] CSE API response headers:", Object.fromEntries([...response.headers.entries()]));
     
     // Get the raw response text
     const responseText = await response.text();
     console.log("🔍 [DEBUG] CSE API response length:", responseText.length);
-    console.log("🔍 [DEBUG] CSE API response preview:", responseText.substring(0, 500) + "...");
     
     if (!response.ok) {
       console.error(`❌ [ERROR] CSE API response not OK: ${response.status}`, responseText.substring(0, 500));
@@ -78,12 +71,10 @@ export const fetchSearchResults = async (
       const responseData = JSON.parse(responseText);
       console.log("✅ [SUCCESS] Parsed search API response - items count:", responseData.items?.length || 0);
       console.log("🔍 [DEBUG] Total results reported:", responseData.searchInformation?.totalResults || 0);
-      console.log("🔍 [DEBUG] Response data structure:", Object.keys(responseData).join(', '));
       
       // Check if we have search results and transform them into the correct format
       if (responseData && responseData.items && responseData.items.length > 0) {
         console.log("✅ [SUCCESS] Search returned results:", responseData.items.length);
-        console.log("🔍 [DEBUG] First raw item sample:", JSON.stringify(responseData.items[0], null, 2));
         
         const transformedItems = responseData.items.map((item: any) => ({
           ...item,
@@ -93,8 +84,6 @@ export const fetchSearchResults = async (
           profileUrl: item.link,
           relevance_score: 75 // Default score for CSE results
         }));
-        
-        console.log("🔍 [DEBUG] First transformed item sample:", JSON.stringify(transformedItems[0], null, 2));
         
         return { 
           data: {
@@ -118,7 +107,6 @@ export const fetchSearchResults = async (
       }
     } catch (parseError) {
       console.error("❌ [ERROR] Error parsing CSE API response:", parseError);
-      console.error("❌ [ERROR] Raw response causing parse error:", responseText.substring(0, 500));
       toast.error(`Failed to parse search results: ${parseError.message}`);
       throw new Error(`Failed to parse CSE API response: ${parseError.message}`);
     }
@@ -127,32 +115,4 @@ export const fetchSearchResults = async (
     toast.error("Failed to fetch search results. Please try again.");
     return { data: null, error: error as Error };
   }
-};
-
-/**
- * Processes Google search results into a standardized format
- */
-export const processSearchResults = (data: GoogleSearchResult): SearchResult[] => {
-  if (!data?.items) {
-    console.log("ℹ️ [INFO] No items in search results data:", data);
-    return [];
-  }
-  
-  console.log("🔍 [DEBUG] Processing search results:", data.items.length);
-  
-  return data.items.map((item: any) => {
-    // Ensure all required fields are present and properly formatted
-    const result: SearchResult = {
-      title: item.title || "",
-      link: item.link || item.profileUrl || "",
-      snippet: item.snippet || "",
-      name: item.name || item.title || "",
-      location: item.location || extractLocationFromSnippet(item.snippet) || "",
-      relevance_score: item.relevance_score || 75,
-      jobTitle: item.jobTitle || (item.snippet ? item.snippet.split('|')[0].trim() : ""),
-      profileUrl: item.profileUrl || item.link || ""
-    };
-    
-    return result;
-  });
 };

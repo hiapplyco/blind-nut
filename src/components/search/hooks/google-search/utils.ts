@@ -19,13 +19,19 @@ export const prepareSearchString = (searchString: string, searchType: string): s
   const cleanString = cleanSearchString(searchString);
   
   // If it's a candidate search and doesn't already have the LinkedIn site restriction, add it
-  if (searchType === 'candidates' || searchType === 'candidates-at-company') {
-    if (!searchString.includes('site:linkedin.com/in/')) {
-      return `${cleanString} site:linkedin.com/in/`;
-    }
+  if ((searchType === 'candidates' || searchType === 'candidates-at-company') && 
+      !searchString.includes('site:linkedin.com/in/')) {
+    console.log("🔍 [CRITICAL] Adding site:linkedin.com/in/ to search string");
+    return `${cleanString} site:linkedin.com/in/`;
   }
   
-  console.log("Prepared search string:", cleanString);
+  // If it already includes the site restriction, return as is
+  if (searchString.includes('site:linkedin.com/in/')) {
+    console.log("🔍 [DEBUG] Search string already includes site:linkedin.com/in/");
+    return searchString;
+  }
+  
+  console.log("🔍 [DEBUG] Using search string as-is:", cleanString);
   return cleanString;
 };
 

@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { SearchHeader } from "./components/SearchHeader";
 import { SearchResultsList } from "./components/SearchResultsList";
@@ -21,7 +20,7 @@ export const GoogleSearchWindow = ({
   searchType = "candidates",
   jobId
 }: GoogleSearchWindowProps) => {
-  console.log("🔍 [DEBUG] GoogleSearchWindow rendered with props:", { 
+  console.log("🔍 [CRITICAL] GoogleSearchWindow rendered with props:", { 
     searchTerm, 
     initialSearchString, 
     searchType, 
@@ -42,7 +41,7 @@ export const GoogleSearchWindow = ({
     error
   } = useGoogleSearch(initialSearchString || searchTerm || "", searchType, jobId || undefined);
 
-  console.log("🔍 [DEBUG] GoogleSearchWindow state after useGoogleSearch:", {
+  console.log("🔍 [CRITICAL] GoogleSearchWindow state after useGoogleSearch:", {
     resultsCount: results.length,
     isLoading,
     searchString,
@@ -76,7 +75,7 @@ export const GoogleSearchWindow = ({
   useEffect(() => {
     const searchStr = initialSearchString || searchString || searchTerm;
     if (searchStr && searchStr.trim() !== '' && results.length === 0 && !isLoading) {
-      console.log("🔍 [DEBUG] Auto-running search for:", searchStr);
+      console.log("🔍 [CRITICAL] Auto-running search for:", searchStr);
       console.log("🔍 [DEBUG] Current state before auto-search:", {
         results: results.length,
         isLoading,
@@ -85,15 +84,9 @@ export const GoogleSearchWindow = ({
         searchTerm
       });
       
-      const timer = setTimeout(() => {
-        console.log("🔍 [DEBUG] Executing handleSearch() after timeout");
-        handleSearch(1);
-      }, 500); // Small delay to ensure component is mounted
-      
-      return () => {
-        console.log("🔍 [DEBUG] Clearing search timeout");
-        clearTimeout(timer);
-      };
+      // Add immediate search trigger
+      console.log("🔍 [CRITICAL] Executing handleSearch() immediately");
+      handleSearch(1);
     }
   }, [initialSearchString, searchString, searchTerm, handleSearch, results.length, isLoading]);
 

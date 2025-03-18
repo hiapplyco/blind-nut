@@ -20,6 +20,12 @@ export const SearchDebugInfo = ({
   resultsCount,
   error
 }: SearchDebugInfoProps) => {
+  // Only render in development mode and when enabled with a query parameter
+  const shouldRender = process.env.NODE_ENV === 'development' && 
+                      window.location.search.includes('debug=true');
+  
+  if (!shouldRender) return null;
+  
   return (
     <div className="bg-blue-50 p-3 mb-2 border rounded text-xs font-mono">
       <div><strong>Debug:</strong> searchString: {searchString || "none"}</div>

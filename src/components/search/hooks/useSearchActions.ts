@@ -133,8 +133,9 @@ export const useSearchActions = (
     }
     
     try {
+      // Export all currently visible results
       exportResultsToCSV(results);
-      toast.success("Results exported to CSV");
+      toast.success(`${results.length} results exported to CSV`);
     } catch (err) {
       console.error("Error exporting results:", err);
       toast.error("Failed to export results");

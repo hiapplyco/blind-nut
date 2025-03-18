@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { ProfilesList } from "@/components/profile/ProfileCard";
 import { DisplayModeToggle } from "./components/DisplayModeToggle";
-import { SearchDebugInfo } from "./components/SearchDebugInfo";
 import { SearchLoadingState } from "./components/SearchLoadingState";
 import { SearchErrorState } from "./components/SearchErrorState";
 import { EmptySearchState } from "./components/EmptySearchState";
@@ -98,19 +97,6 @@ export const GoogleSearchWindow = ({
           resultsExist={results.length > 0}
         />
 
-        {/* Debug info */}
-        <SearchDebugInfo 
-          searchString={searchString}
-          initialSearchString={initialSearchString}
-          searchTerm={searchTerm}
-          isLoading={isLoading}
-          totalResults={totalResults}
-          resultsCount={results.length}
-          error={error}
-        />
-
-        <DisplayModeToggle currentMode={showResultsAs} onToggle={toggleDisplayMode} />
-
         {/* Display loading state */}
         {isLoading && results.length === 0 && <SearchLoadingState />}
 
@@ -122,9 +108,16 @@ export const GoogleSearchWindow = ({
         {/* Display empty state when no results and not loading */}
         {!isLoading && results.length === 0 && !error && <EmptySearchState />}
 
-        {/* Display results when available */}
+        {/* Search results section with toggle */}
         {results.length > 0 && !isLoading && (
-          <>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="text-sm font-medium text-gray-500">
+                Found {totalResults.toLocaleString()} results
+              </div>
+              <DisplayModeToggle currentMode={showResultsAs} onToggle={toggleDisplayMode} />
+            </div>
+            
             {showResultsAs === 'cards' ? (
               <ProfilesList profiles={formattedProfiles} />
             ) : (
@@ -146,7 +139,7 @@ export const GoogleSearchWindow = ({
                 isLoading={isLoading && currentPage > 1} 
               />
             )}
-          </>
+          </div>
         )}
       </div>
     </Card>

@@ -53,7 +53,7 @@ export const fetchSearchResults = async (
               relevance_score: profile.relevance_score
             })),
             searchInformation: {
-              totalResults: processResponse.data.profiles.length
+              totalResults: processResponse.data.profiles.length.toString()
             }
           }, 
           error: null 
@@ -104,14 +104,14 @@ export const fetchSearchResults = async (
       throw new Error(`Google CSE API error: ${response.status} - ${responseText}`);
     }
     
-    const data2 = JSON.parse(responseText);
-    console.log("Parsed search API response:", data2);
+    const responseData = JSON.parse(responseText);
+    console.log("Parsed search API response:", responseData);
     
     // Check if we have search results and transform them into the correct format
-    if (data2 && data2.items && data2.items.length > 0) {
+    if (responseData && responseData.items && responseData.items.length > 0) {
       return { 
         data: {
-          items: data2.items.map((item: any) => ({
+          items: responseData.items.map((item: any) => ({
             ...item,
             name: item.title.replace(/\s\|\s.*$/, ''), // Extract name from title
             location: extractLocationFromSnippet(item.snippet),
@@ -119,18 +119,18 @@ export const fetchSearchResults = async (
             profileUrl: item.link,
             relevance_score: 75 // Default score for CSE results
           })),
-          searchInformation: data2.searchInformation
+          searchInformation: responseData.searchInformation
         }, 
         error: null 
       };
     } else {
-      console.log("No items in search results:", data2);
+      console.log("No items in search results:", responseData);
       // Return empty results instead of throwing an error
       return { 
         data: {
           items: [],
           searchInformation: {
-            totalResults: 0
+            totalResults: "0"
           }
         }, 
         error: null 

@@ -31,7 +31,13 @@ export const processJobRequirements = async (
     // This ensures we're using the Gemini 2.0 Flash model from the Supabase edge function
     console.log('Calling process-job-requirements function with searchType:', searchType);
     const { data, error } = await supabase.functions.invoke('process-job-requirements', {
-      body: { content, searchType, companyName, userId, source }
+      body: { 
+        content, 
+        searchType, 
+        companyName, 
+        userId, 
+        source 
+      }
     });
 
     if (error) {
@@ -106,9 +112,10 @@ export const processJobRequirements = async (
       };
     }
     
-    // For standard searches, create a basic fallback search string
-    const basicTerms = content.split(/\s+/).filter(word => word.length > 5).slice(0, 5);
-    const fallbackSearchString = `(${basicTerms.join(" OR ")}) site:linkedin.com/in/`;
+    // Create a more intelligent fallback search string when the API fails
+    // Extract key terms to create a more meaningful search string
+    const keyTerms = extractKeyTerms(content);
+    const fallbackSearchString = generateFallbackSearchString(keyTerms, searchType);
     
     console.log('Returning fallback search string:', fallbackSearchString);
     return {
@@ -116,7 +123,7 @@ export const processJobRequirements = async (
       searchString: fallbackSearchString,
       data: {
         terms: {
-          skills: basicTerms,
+          skills: keyTerms,
           titles: [],
           keywords: []
         }
@@ -124,3 +131,40 @@ export const processJobRequirements = async (
     };
   }
 };
+
+// Helper function to extract key terms from content
+function extractKeyTerms(content: string): string[] {
+  // Remove common words and punctuation
+  const cleanedContent = content.replace(/[^\w\s]/gi, ' ').toLowerCase();
+  
+  // Split into words and filter out common words and short words
+  const words = cleanedContent.split(/\s+/);
+  
+  // Find words that appear to be skills or key terms (longer words, possibly capitalized in original)
+  const keyTerms = words.filter(word => {
+    // Keep words longer than 4 characters
+    return word.length > 4 && 
+      // Filter out common stop words
+      !['about', 'above', 'after', 'again', 'against', 'should', 'would', 'could', 'their', 'there', 'where', 'which', 'while', 'other'].includes(word);
+  });
+  
+  // Get unique terms and limit to most relevant ones (up to 8)
+  return [...new Set(keyTerms)].slice(0, 8);
+}
+
+// Generate a more structured fallback search string
+function generateFallbackSearchString(terms: string[], searchType: SearchType): string {
+  if (terms.length === 0) {
+    return ""; // No terms found
+  }
+  
+  // Group terms into a proper boolean search
+  const formattedTerms = terms.map(term => `"${term}"`).join(" OR ");
+  
+  if (searchType === 'companies') {
+    return `(${formattedTerms})`;
+  } else {
+    // For candidates, add basic role qualifiers
+    return `(${formattedTerms}) AND ("professional" OR "experienced" OR "specialist" OR "expert")`;
+  }
+}

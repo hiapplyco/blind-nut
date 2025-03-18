@@ -55,36 +55,44 @@ serve(async (req) => {
       
       // Create job record if a userId is provided
       if (userId) {
-        const { data, error } = await supabaseClient
-          .from('jobs')
-          .insert({
+        try {
+          // Only include fields that exist in the jobs table
+          const jobData = {
             user_id: userId,
             content: content,
-            search_type: searchType,
-            company_name: companyName || null,
-            source: source || 'default',
-            search_string: searchString
-          })
-          .select('id')
-          .single();
+            search_string: searchString,
+            source: source || 'default'
+          };
           
-        if (error) {
-          console.error("Error inserting job:", error);
-          throw error;
-        }
-        
-        console.log("Job created with ID:", data.id);
-        
-        return new Response(
-          JSON.stringify({
-            success: true,
-            searchString: searchString,
-            jobId: data.id
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          // Add optional fields if they are supported by the table schema
+          // We need to check if these fields are in the schema before adding them
+          const { data, error } = await supabaseClient
+            .from('jobs')
+            .insert(jobData)
+            .select('id')
+            .single();
+            
+          if (error) {
+            console.error("Error inserting job:", error);
+            throw error;
           }
-        );
+          
+          console.log("Job created with ID:", data.id);
+          
+          return new Response(
+            JSON.stringify({
+              success: true,
+              searchString: searchString,
+              jobId: data.id
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        } catch (dbError) {
+          console.error("Database error:", dbError);
+          // Continue execution and return the search string even if DB operation fails
+        }
       }
       
       return new Response(
@@ -135,26 +143,32 @@ serve(async (req) => {
       // Insert the job analysis into the database if a userId is provided
       let jobId;
       if (userId) {
-        const { data, error } = await supabaseClient
-          .from('jobs')
-          .insert({
+        try {
+          // Only include fields that exist in the jobs table
+          const jobData = {
             user_id: userId,
             content: content,
             output: parsedResponse,
-            search_type: searchType,
-            company_name: companyName || null,
             source: source || 'default',
             search_string: parsedResponse.searchString
-          })
-          .select('id')
-          .single();
+          };
           
-        if (error) {
-          console.error("Error inserting job:", error);
-          throw error;
+          const { data, error } = await supabaseClient
+            .from('jobs')
+            .insert(jobData)
+            .select('id')
+            .single();
+            
+          if (error) {
+            console.error("Error inserting job:", error);
+            throw error;
+          }
+          jobId = data.id;
+          console.log("Job created with ID:", jobId);
+        } catch (dbError) {
+          console.error("Database error:", dbError);
+          // Continue execution and return the analysis even if DB operation fails
         }
-        jobId = data.id;
-        console.log("Job created with ID:", jobId);
       }
       
       return new Response(

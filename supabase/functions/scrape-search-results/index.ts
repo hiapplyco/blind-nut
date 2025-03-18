@@ -1,7 +1,5 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-// import { Browser } from "npm:puppeteer";
-// import puppeteer from "npm:puppeteer";
-import { supabaseClient } from "../_shared/supabase-client.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,16 +12,10 @@ serve(async (req) => {
   }
 
   try {
-    const { searchString } = await req.json();
-    console.log('Search string received:', searchString);
-
-    // Temporarily return mock data
-    const profiles = [];
-
     return new Response(
       JSON.stringify({
-        message: 'Function temporarily disabled',
-        profiles
+        message: 'This function is deprecated. Direct Google CSE integration is used instead.',
+        profiles: []
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

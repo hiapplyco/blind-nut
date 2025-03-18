@@ -19,67 +19,22 @@ export const fetchSearchResults = async (
     
     console.log(`Fetching search results for: "${searchString}" (page ${page})`);
     
-    // First try to use the process-search-results edge function which provides enriched results
-    try {
-      console.log("Attempting to use process-search-results for enriched results");
-      const processResponse = await supabase.functions.invoke('process-search-results', {
-        body: { searchString }
-      });
-      
-      console.log("Response from process-search-results:", processResponse);
-      
-      if (processResponse.error) {
-        console.error("Error from process-search-results:", processResponse.error);
-        throw processResponse.error;
-      }
-      
-      if (processResponse.data && processResponse.data.profiles) {
-        console.log("Successfully received enriched profiles:", processResponse.data.profiles.length);
-        // Transform profiles into Google search result format
-        return { 
-          data: {
-            items: processResponse.data.profiles.map((profile: any) => ({
-              title: profile.profile_name,
-              link: profile.profile_url,
-              snippet: `${profile.profile_title} | ${profile.profile_location}`,
-              htmlTitle: profile.profile_name,
-              profileUrl: profile.profile_url,
-              name: profile.profile_name,
-              location: profile.profile_location,
-              jobTitle: profile.profile_title, 
-              enriched: profile.enriched || false,
-              work_email: profile.work_email,
-              phone_numbers: profile.phone_numbers,
-              relevance_score: profile.relevance_score
-            })),
-            searchInformation: {
-              totalResults: processResponse.data.profiles.length.toString()
-            }
-          }, 
-          error: null 
-        };
-      }
-    } catch (enrichError) {
-      console.error("Failed to get enriched profiles, falling back to CSE:", enrichError);
-      // Fall back to regular Google CSE if enriched profiles fail
-    }
-    
-    // Fall back to Google CSE for regular search results
-    console.log("Falling back to Google CSE API");
-    const { data, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
+    // Get the CSE API key from Supabase Edge Function
+    console.log("Retrieving Google CSE API key");
+    const { data: keyData, error: keyError } = await supabase.functions.invoke('get-google-cse-key');
     
     if (keyError) {
       console.error("Error fetching CSE key:", keyError);
       throw keyError;
     }
     
-    if (!data || !data.key) {
-      console.error("No CSE key returned from function:", data);
+    if (!keyData || !keyData.key) {
+      console.error("No CSE key returned from function:", keyData);
       toast.error("Failed to get Google CSE API key");
       throw new Error("Failed to get Google CSE API key");
     }
     
-    console.log("Successfully retrieved CSE key, making direct CSE request");
+    console.log("Successfully retrieved CSE key, making CSE request");
     
     // Add site:linkedin.com/in/ automatically if it's a candidate search and doesn't already have it
     const finalSearchString = prepareSearchString(searchString, searchType);
@@ -89,11 +44,11 @@ export const fetchSearchResults = async (
     const cseId = 'b28705633bcb44cf0'; // Candidates CSE
     
     // Make request to Google CSE API
-    const cseUrl = `https://www.googleapis.com/customsearch/v1?key=${data.key}&cx=${cseId}&q=${encodeURIComponent(
+    const cseUrl = `https://www.googleapis.com/customsearch/v1?key=${keyData.key}&cx=${cseId}&q=${encodeURIComponent(
       finalSearchString
     )}&start=${startIndex}`;
     
-    console.log("Making CSE request to:", cseUrl.replace(data.key, "REDACTED_KEY"));
+    console.log("Making CSE request to:", cseUrl.replace(keyData.key, "REDACTED_KEY"));
     
     const response = await fetch(cseUrl);
     

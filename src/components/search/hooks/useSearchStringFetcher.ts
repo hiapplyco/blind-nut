@@ -7,17 +7,25 @@ import { fetchSearchString } from "./utils/fetchSearchString";
  */
 export const useSearchStringFetcher = (
   currentJobId: number | null,
-  setSearchString: (searchString: string) => void
+  setSearchString: (searchString: string) => void,
+  onFetchComplete?: () => void
 ) => {
   // Fetch search string when job ID changes
   useEffect(() => {
     const getSearchString = async () => {
       const result = await fetchSearchString(currentJobId);
       if (result) {
+        console.log("Search string fetched:", result);
         setSearchString(result);
+        if (onFetchComplete) {
+          onFetchComplete();
+        }
       }
     };
 
-    getSearchString();
-  }, [currentJobId, setSearchString]);
+    if (currentJobId) {
+      console.log("Fetching search string for job ID:", currentJobId);
+      getSearchString();
+    }
+  }, [currentJobId, setSearchString, onFetchComplete]);
 };

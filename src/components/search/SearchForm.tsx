@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { SearchFormHeader } from "./SearchFormHeader";
 import { useSearchForm } from "./hooks/useSearchForm";
@@ -9,6 +9,10 @@ import { SearchTypeToggle } from "./SearchTypeToggle";
 import { CompanyNameInput } from "./CompanyNameInput";
 import { FileUploadHandler } from "./FileUploadHandler";
 import { SubmitButton } from "./SubmitButton";
+import { Textarea } from "@/components/ui/textarea";
+import { Copy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export const SearchForm = ({ 
   userId, 
@@ -28,17 +32,28 @@ export const SearchForm = ({
     isProcessing,
     searchType,
     setSearchType,
+    searchString,
     handleSubmit,
     handleFileUpload
-  } = useSearchForm(userId, onJobCreated, currentJobId, source);
+  } = useSearchForm(userId, onJobCreated, currentJobId, source, onSubmitStart);
 
   const [isInputActive, setIsInputActive] = useState(false);
+  const [showSearchString, setShowSearchString] = useState(false);
+
+  // Show search string when it's generated or when processing is complete
+  useEffect(() => {
+    if (searchString && !isProcessing) {
+      setShowSearchString(true);
+    }
+  }, [searchString, isProcessing]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
-    if (onSubmitStart) {
-      onSubmitStart();
-    }
     await handleSubmit(e);
+  };
+
+  const handleCopySearchString = () => {
+    navigator.clipboard.writeText(searchString);
+    toast.success("Search string copied to clipboard!");
   };
 
   // Generate file upload handler function
@@ -79,6 +94,28 @@ export const SearchForm = ({
           onBlur={() => setIsInputActive(false)}
           isActive={isInputActive}
         />
+        
+        {showSearchString && searchString && (
+          <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-medium text-sm text-gray-600">Generated Search String:</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopySearchString}
+                className="hover:bg-gray-200"
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+            <Textarea
+              value={searchString}
+              onChange={(e) => setSearchString(e.target.value)}
+              className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
+              rows={4}
+            />
+          </div>
+        )}
         
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
           <div>

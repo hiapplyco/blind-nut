@@ -1,3 +1,4 @@
+
 import { memo, useState, useEffect } from "react";
 import { SearchForm } from "./search/SearchForm";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -5,6 +6,7 @@ import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
 import { GoogleSearchWindow } from "./search/GoogleSearchWindow";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface NewSearchFormProps {
   userId: string | null;
@@ -20,6 +22,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [searchString, setSearchString] = useState("");
+  const [showGoogleSearch, setShowGoogleSearch] = useState(false);
   
   // Only call useAgentOutputs if we have a currentJobId
   const { data: agentOutput, isLoading } = useAgentOutputs(currentJobId || 0);
@@ -37,6 +40,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
     if (state?.searchString) {
       console.log("Search string from state:", state.searchString);
       setSearchString(state.searchString);
+      setShowGoogleSearch(true);
     }
   }, [location.state]);
 
@@ -47,6 +51,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
       // For direct searches without processing, set the search string directly
       if (searchText.includes("site:linkedin.com/in/")) {
         setSearchString(searchText);
+        setShowGoogleSearch(true);
       } else {
         // Otherwise let the form submission handle it
         const form = document.querySelector("form");
@@ -71,6 +76,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
       if (agentOutput.searchString) {
         console.log("Using search string from agent output:", agentOutput.searchString);
         setSearchString(agentOutput.searchString);
+        toast.success("Search string generated successfully!");
       } else if (agentOutput.job_id) {
         // If no search string in agent output, try to fetch from job record
         const fetchJobSearchString = async () => {
@@ -86,6 +92,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
             if (data?.search_string) {
               console.log("Using search string from job record:", data.search_string);
               setSearchString(data.search_string);
+              toast.success("Search string generated successfully!");
             }
           } catch (error) {
             console.error("Error fetching job search string:", error);
@@ -105,12 +112,19 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
     if (currentJobId !== jobId) {
       setIsProcessingComplete(false);
       setSearchString("");
+      setShowGoogleSearch(false);
       
       // Clear any previous agent output for the new job
       setOutput(jobId, null);
     }
     
     setCurrentJobId(jobId);
+  };
+
+  const handleSearchButtonClick = () => {
+    if (searchString) {
+      setShowGoogleSearch(true);
+    }
   };
 
   return (
@@ -122,7 +136,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
         isProcessingComplete={isProcessingComplete}
       />
       
-      {searchString && (
+      {searchString && showGoogleSearch && (
         <GoogleSearchWindow 
           searchTerm={searchText} 
           searchString={searchString} 

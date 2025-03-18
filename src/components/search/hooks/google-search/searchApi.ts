@@ -26,6 +26,13 @@ export const fetchSearchResults = async (
         body: { searchString }
       });
       
+      console.log("Response from process-search-results:", processResponse);
+      
+      if (processResponse.error) {
+        console.error("Error from process-search-results:", processResponse.error);
+        throw processResponse.error;
+      }
+      
       if (processResponse.data && processResponse.data.profiles) {
         console.log("Successfully received enriched profiles:", processResponse.data.profiles.length);
         // Transform profiles into Google search result format
@@ -51,9 +58,11 @@ export const fetchSearchResults = async (
           }, 
           error: null 
         };
+      } else {
+        console.log("No profiles data in response:", processResponse.data);
       }
     } catch (enrichError) {
-      console.log("Failed to get enriched profiles, falling back to CSE:", enrichError);
+      console.error("Failed to get enriched profiles, falling back to CSE:", enrichError);
       // Fall back to regular Google CSE if enriched profiles fail
     }
     
@@ -96,7 +105,10 @@ export const fetchSearchResults = async (
  * Processes Google search results into a standardized format
  */
 export const processSearchResults = (data: GoogleSearchResult): SearchResult[] => {
-  if (!data?.items) return [];
+  if (!data?.items) {
+    console.log("No items in search results data:", data);
+    return [];
+  }
   
   return data.items.map((item: any) => ({
     ...item,

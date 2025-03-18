@@ -1,44 +1,23 @@
-
 import { PromptTemplate } from './types.ts';
 
 export const defaultPrompt: PromptTemplate = {
   name: 'default-job-analysis',
   version: '1.0.0',
-  description: 'Standard job analysis prompt',
-  template: `Analyze the following job description and provide key insights:
+  description: 'Generates a boolean search string from a job description for talent sourcing.',
+  template: `You are a Boolean and X-Ray search string builder, a 'Boolean Blackbelt' for talent sourcing. Your ONLY output is a boolean search string, nothing else.
+
+Based on the following job description, extract relevant details and generate an optimized boolean search string for X-Ray searches on LinkedIn (site:linkedin.com/in/).
 
 {{content}}
 
-Based on this job description, generate a boolean search string that can be used to find qualified candidates on LinkedIn. Make sure to:
-1. Include the most important skills and experience requirements
-2. Combine terms with AND and OR operators appropriately
-3. Group related terms with parentheses
-4. Use quotation marks for exact phrases
-5. Include "site:linkedin.com/in/" in the search string to limit results to LinkedIn profiles
-{{#if searchType === 'candidates-at-company'}}
-6. Include the company name "{{companyName}}" in the search string
-{{/if}}
+In your boolean string, make sure to:
+- Incorporate key roles, skills, and locations mentioned in the job description.
+- Use Boolean operators (AND, OR, NOT) and X-Ray operators (site:, -, "phrase", ()).
+- Focus on finding qualified candidates, considering the job requirements.
+- Exclude irrelevant terms if necessary to refine the search.
 
-You MUST return your analysis as a valid JSON object in the following format exactly:
-{
-  "terms": {
-    "skills": ["skill1", "skill2", "skill3"],
-    "titles": ["title1", "title2"],
-    "keywords": ["keyword1", "keyword2"]
-  },
-  "salary": {
-    "min": number,
-    "max": number,
-    "currency": "string"
-  },
-  "location": "string",
-  "company": "string",
-  "job_title": "string",
-  "experience_level": "string",
-  "employment_type": "string",
-  "searchString": "YOUR GENERATED BOOLEAN SEARCH STRING"
-}
+Example: If the job description is for a "Senior Marketing Manager with SEO experience in London", a possible boolean string could be: site:linkedin.com/in/ ("marketing manager" OR "marketing director") AND "SEO" AND London -intitle:job -intitle:hiring
 
-The searchString field is CRITICAL and must contain a complete, valid boolean search string with proper syntax for LinkedIn X-Ray searches.`,
-  parameters: ['content', 'searchType', 'companyName'],
+Remember: Output ONLY the boolean search string. No explanations, no code blocks, no extra text. Just the string.`,
+  parameters: ['content', 'searchType', 'companyName'], // Keeping parameters as they might be used elsewhere, but template focuses on 'content' for boolean string generation
 };

@@ -24,24 +24,23 @@ import Clarvida from "@/pages/Clarvida";
 import ClarvidaLogin from "@/pages/ClarvidaLogin";
 
 function App() {
-  // Get the base URL from the environment or default to empty string
-  // This is important for custom domain routing
-  const basename = import.meta.env.BASE_URL || "";
-
+  // Remove the basename configuration to let React Router handle paths naturally
   return (
     <AuthProvider>
       <ClarvidaAuthProvider>
-        <Router basename={basename}>
+        <Router>
           <Toaster position="top-center" />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
             
-            {/* Clarvida routes */}
+            {/* Clarvida routes - move these to top level for better visibility */}
             <Route path="/clarvida/login" element={<ClarvidaLogin />} />
-            <Route element={<ClarvidaProtectedRoute />}>
-              <Route path="/clarvida" element={<Clarvida />} />
-            </Route>
+            <Route path="/clarvida" element={
+              <ClarvidaProtectedRoute>
+                <Clarvida />
+              </ClarvidaProtectedRoute>
+            } />
 
             {/* Protected routes wrapped in MainLayout */}
             <Route element={<ProtectedRoute />}>
@@ -63,7 +62,7 @@ function App() {
               </Route>
             </Route>
 
-            {/* Catch all route - very important for SPA handling on custom domains */}
+            {/* Catch all route - ensure SPA routing works correctly on refresh */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>

@@ -39,7 +39,7 @@ export const fetchSearchResults = async (
               profileUrl: profile.profile_url,
               name: profile.profile_name,
               location: profile.profile_location,
-              title: profile.profile_title,
+              jobTitle: profile.profile_title, // Changed from 'title' to avoid duplication
               enriched: profile.enriched || false,
               work_email: profile.work_email,
               phone_numbers: profile.phone_numbers,

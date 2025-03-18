@@ -30,7 +30,7 @@ serve(async (req) => {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     // Updated model name from gemini-2.0-flash to gemini-1.5-flash
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     // Use specialized prompt for Clarvida source
     let promptText;

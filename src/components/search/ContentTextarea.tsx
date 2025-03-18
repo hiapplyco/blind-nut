@@ -25,7 +25,7 @@ export const ContentTextarea = ({
   // Dynamically calculate max height on mount and window resize
   useEffect(() => {
     const updateMaxHeight = () => {
-      // Subtract some additional pixels to account for other UI elements
+      // Set to 90% of viewport height to ensure buttons remain visible
       const availableHeight = window.innerHeight * 0.9;
       setMaxHeight(`${availableHeight}px`);
     };
@@ -44,10 +44,14 @@ export const ContentTextarea = ({
       // Get actual content height
       const contentHeight = textareaRef.current.scrollHeight;
       
-      // Determine the final height (either content height or max)
-      textareaRef.current.style.height = `${contentHeight}px`;
+      // Clamp the height to not exceed maxHeight
+      const maxHeightInPx = parseFloat(maxHeight);
+      const finalHeight = Math.min(contentHeight, maxHeightInPx);
+      
+      // Apply the new height
+      textareaRef.current.style.height = `${finalHeight}px`;
     }
-  }, [content]);
+  }, [content, maxHeight]);
 
   const borderClass = isActive 
     ? "border-[#8B5CF6] shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)]" 

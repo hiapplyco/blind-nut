@@ -24,10 +24,14 @@ import Clarvida from "@/pages/Clarvida";
 import ClarvidaLogin from "@/pages/ClarvidaLogin";
 
 function App() {
+  // Get the base URL from the environment or default to empty string
+  // This is important for custom domain routing
+  const basename = import.meta.env.BASE_URL || "";
+
   return (
     <AuthProvider>
       <ClarvidaAuthProvider>
-        <Router>
+        <Router basename={basename}>
           <Toaster position="top-center" />
           <Routes>
             {/* Public routes */}
@@ -59,7 +63,7 @@ function App() {
               </Route>
             </Route>
 
-            {/* Catch all route */}
+            {/* Catch all route - very important for SPA handling on custom domains */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>

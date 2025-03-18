@@ -9,7 +9,12 @@ export const ClarvidaProtectedRoute = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.log("ClarvidaProtectedRoute:", { isAuthenticated, isLoading, path: location.pathname });
+    console.log("ClarvidaProtectedRoute:", { 
+      isAuthenticated, 
+      isLoading, 
+      path: location.pathname,
+      fullUrl: window.location.href
+    });
   }, [isAuthenticated, isLoading, location]);
 
   if (isLoading) {
@@ -22,6 +27,7 @@ export const ClarvidaProtectedRoute = () => {
 
   if (!isAuthenticated) {
     console.log("Not authenticated, redirecting to /clarvida/login from", location.pathname);
+    // Use absolute path to ensure proper redirection on custom domains
     return <Navigate to="/clarvida/login" state={{ from: location }} replace />;
   }
 

@@ -35,6 +35,7 @@ export const ClarvidaAuthProvider = ({ children }: { children: React.ReactNode }
           console.error("Clarvida Auth Error:", error);
           setSession(null);
         } else {
+          console.log("Clarvida Session Data:", !!data.session);
           setSession(data.session);
         }
         setIsLoading(false);
@@ -82,11 +83,17 @@ export const ClarvidaAuthProvider = ({ children }: { children: React.ReactNode }
   const signUp = async (email: string, password: string) => {
     try {
       console.log("Clarvida signUp attempt:", email);
+      // Get the full origin including protocol for redirects
+      const origin = window.location.origin;
+      const redirectTo = `${origin}/clarvida`;
+      
+      console.log("Using redirect URL:", redirectTo);
+      
       const { data, error } = await supabase.auth.signUp({
         email, 
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/clarvida`
+          emailRedirectTo: redirectTo
         }
       });
       

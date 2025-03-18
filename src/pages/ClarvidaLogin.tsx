@@ -5,13 +5,12 @@ import { useClarvidaAuth } from "@/context/ClarvidaAuthContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ClarvidaHeader } from "@/components/clarvida/ClarvidaHeader";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card } from "@/components/ui/card";
+import { ClarvidaHeader } from "@/components/clarvida/ClarvidaHeader";
 
 // Define form schema for validation
 const authSchema = z.object({
@@ -41,6 +40,7 @@ const ClarvidaLogin = () => {
 
   // Check if user is already authenticated
   useEffect(() => {
+    console.log("ClarvidaLogin - Auth state:", { isAuthenticated, redirectTo: from });
     if (isAuthenticated) {
       navigate(from, { replace: true });
     }
@@ -77,6 +77,11 @@ const ClarvidaLogin = () => {
       setIsLoading(false);
     }
   };
+
+  // Added for debugging
+  useEffect(() => {
+    console.log("ClarvidaLogin component mounted at path:", location.pathname);
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-[#F1F0FB] py-12 px-4 sm:px-6 lg:px-8">

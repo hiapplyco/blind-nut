@@ -22,26 +22,30 @@ export const ContentTextarea = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [maxHeight, setMaxHeight] = useState<string>("90vh");
   
-  // Set max height to 90% of viewport height
+  // Dynamically calculate max height on mount and window resize
   useEffect(() => {
     const updateMaxHeight = () => {
-      setMaxHeight(`${window.innerHeight * 0.9}px`);
+      // Subtract some additional pixels to account for other UI elements
+      const availableHeight = window.innerHeight * 0.9;
+      setMaxHeight(`${availableHeight}px`);
     };
     
-    // Initial calculation
     updateMaxHeight();
-    
-    // Recalculate on window resize
     window.addEventListener('resize', updateMaxHeight);
     return () => window.removeEventListener('resize', updateMaxHeight);
   }, []);
 
-  // Auto-resize the textarea based on content, but with max height constraint
+  // Auto-resize the textarea based on content, respecting the max height
   useEffect(() => {
     if (textareaRef.current) {
+      // Reset height to auto to get the proper scrollHeight
       textareaRef.current.style.height = 'auto';
-      const scrollHeight = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = `${scrollHeight}px`;
+      
+      // Get actual content height
+      const contentHeight = textareaRef.current.scrollHeight;
+      
+      // Determine the final height (either content height or max)
+      textareaRef.current.style.height = `${contentHeight}px`;
     }
   }, [content]);
 
@@ -50,17 +54,18 @@ export const ContentTextarea = ({
     : "border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)]";
 
   return (
-    <div className="space-y-2">
-      <Textarea
-        ref={textareaRef}
-        placeholder={placeholder}
-        className={`min-h-[200px] max-h-[${maxHeight}] overflow-y-auto border-4 ${borderClass} focus:ring-0 focus:border-[#8B5CF6] transition-all`}
-        value={content}
-        onChange={(e) => onChange(e.target.value)}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        style={{ maxHeight }}
-      />
-    </div>
+    <Textarea
+      ref={textareaRef}
+      placeholder={placeholder}
+      className={`min-h-[200px] overflow-y-auto border-4 ${borderClass} focus:ring-0 focus:border-[#8B5CF6] transition-all`}
+      value={content}
+      onChange={(e) => onChange(e.target.value)}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      style={{ 
+        maxHeight,
+        resize: "vertical"
+      }}
+    />
   );
 };

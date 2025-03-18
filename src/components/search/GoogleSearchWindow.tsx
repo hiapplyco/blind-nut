@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { SearchHeader } from "./components/SearchHeader";
 import { SearchResultsList } from "./components/SearchResultsList";
@@ -5,7 +6,8 @@ import { useGoogleSearch } from "./hooks/useGoogleSearch";
 import { GoogleSearchWindowProps } from "./types";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ProfilesList } from "@/components/ProfileCard.tsx";
+import { ProfilesList } from "@/components/ProfileCard";
+import { Loader2 } from "lucide-react";
 
 export const GoogleSearchWindow = ({ 
   searchTerm,
@@ -64,7 +66,7 @@ export const GoogleSearchWindow = ({
   // Format profile data for ProfilesList component
   const formattedProfiles = results.map(result => ({
     profile_name: result.name || result.title || "",
-    profile_title: result.snippet || "",
+    profile_title: result.jobTitle || result.snippet || "",
     profile_location: result.location || "",
     profile_url: result.link || result.profileUrl || "",
     relevance_score: result.relevance_score || 75
@@ -73,6 +75,9 @@ export const GoogleSearchWindow = ({
   const toggleDisplayMode = () => {
     setShowResultsAs(prev => prev === 'cards' ? 'list' : 'cards');
   };
+
+  console.log("Current search results:", results);
+  console.log("Formatted profiles:", formattedProfiles);
 
   return (
     <Card className="p-6 mb-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-fade-in">
@@ -96,21 +101,7 @@ export const GoogleSearchWindow = ({
           </button>
         </div>
 
-        {showResultsAs === 'cards' && formattedProfiles.length > 0 ? (
-          <ProfilesList profiles={formattedProfiles} />
-        ) : (
-          <SearchResultsList 
-            results={results}
-            isLoading={isLoading}
-            totalResults={totalResults}
-            currentResults={results.length}
-            onLoadMore={handleLoadMore}
-            isLoadingMore={isLoading && currentPage > 1}
-            searchType={searchType}
-          />
-        )}
-
-        {/* Show loading or empty state if needed */}
+        {/* Display loading state */}
         {isLoading && results.length === 0 && (
           <div className="flex justify-center items-center p-10">
             <div className="text-center">
@@ -119,21 +110,64 @@ export const GoogleSearchWindow = ({
                   <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-[#8B5CF6]"></div>
                 </div>
               </div>
-              <p className="text-gray-500">Generating LinkedIn profiles...</p>
+              <p className="text-gray-500">Searching for LinkedIn profiles...</p>
             </div>
           </div>
         )}
 
-        {/* Load more button */}
-        {results.length > 0 && !isLoading && (
-          <div className="mt-6 flex justify-center">
-            <button 
-              onClick={handleLoadMore}
-              className="px-4 py-2 bg-[#8B5CF6] text-white rounded-md hover:bg-[#7C3AED] transition-colors"
-            >
-              Load More Results
-            </button>
+        {/* Display error state */}
+        {error && !isLoading && results.length === 0 && (
+          <div className="bg-red-50 text-red-700 p-4 rounded-md border border-red-300">
+            <h3 className="font-medium mb-2">Error finding profiles</h3>
+            <p>{error.message}</p>
           </div>
+        )}
+
+        {/* Display empty state when no results and not loading */}
+        {!isLoading && results.length === 0 && !error && (
+          <div className="bg-gray-50 text-gray-500 p-8 rounded-md border border-gray-200 text-center">
+            <p className="mb-2">No LinkedIn profiles found matching your search criteria.</p>
+            <p>Try modifying your search terms or click the Search button to retry.</p>
+          </div>
+        )}
+
+        {/* Display results when available */}
+        {results.length > 0 && !isLoading && (
+          <>
+            {showResultsAs === 'cards' ? (
+              <ProfilesList profiles={formattedProfiles} />
+            ) : (
+              <SearchResultsList 
+                results={results}
+                isLoading={isLoading}
+                totalResults={totalResults}
+                currentResults={results.length}
+                onLoadMore={handleLoadMore}
+                isLoadingMore={isLoading && currentPage > 1}
+                searchType={searchType}
+              />
+            )}
+            
+            {/* Load more button */}
+            {totalResults > results.length && (
+              <div className="mt-6 flex justify-center">
+                <button 
+                  onClick={handleLoadMore}
+                  className="px-4 py-2 bg-[#8B5CF6] text-white rounded-md hover:bg-[#7C3AED] transition-colors"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="inline w-4 h-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Load More Results'
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </Card>

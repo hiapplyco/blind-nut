@@ -58,25 +58,9 @@ export const fetchSearchResults = async (
           }, 
           error: null 
         };
-      } else {
-        console.log("No profiles data in response:", processResponse.data);
-        
-        // If we get a successful response but no profiles, return an empty result
-        // instead of falling back to CSE
-        return {
-          data: {
-            items: [],
-            searchInformation: {
-              totalResults: 0
-            }
-          },
-          error: null
-        };
       }
     } catch (enrichError) {
       console.error("Failed to get enriched profiles, falling back to CSE:", enrichError);
-      // Show toast to user
-      toast.error("Error generating profiles. Falling back to regular search.");
       // Fall back to regular Google CSE if enriched profiles fail
     }
     
@@ -87,6 +71,13 @@ export const fetchSearchResults = async (
       console.error("Error fetching CSE key:", keyError);
       throw keyError;
     }
+    
+    if (!key) {
+      console.error("No CSE key returned from function");
+      throw new Error("Failed to get Google CSE API key");
+    }
+    
+    console.log("Successfully retrieved CSE key, making direct CSE request");
     
     // Add site:linkedin.com/in/ automatically if it's a candidate search and doesn't already have it
     const finalSearchString = prepareSearchString(searchString, searchType);
@@ -102,13 +93,42 @@ export const fetchSearchResults = async (
     );
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error("CSE API response not OK:", response.status, errorText);
+      throw new Error(`Google CSE API error: ${response.status} - ${errorText}`);
     }
     
     const data = await response.json();
     console.log("Search API response:", data);
     
-    return { data, error: null };
+    // Check if we have search results and transform them into the correct format
+    if (data && data.items) {
+      return { 
+        data: {
+          items: data.items.map((item: any) => ({
+            ...item,
+            name: item.title.replace(/\s\|\s.*$/, ''), // Extract name from title
+            location: extractLocationFromSnippet(item.snippet),
+            jobTitle: item.snippet.split('|')[0].trim(),
+            profileUrl: item.link,
+            relevance_score: 75 // Default score for CSE results
+          })),
+          searchInformation: data.searchInformation
+        }, 
+        error: null 
+      };
+    } else {
+      console.log("No items in search results:", data);
+      return { 
+        data: {
+          items: [],
+          searchInformation: {
+            totalResults: 0
+          }
+        }, 
+        error: null 
+      };
+    }
   } catch (error) {
     console.error("Error fetching search results:", error);
     return { data: null, error: error as Error };
@@ -124,8 +144,17 @@ export const processSearchResults = (data: GoogleSearchResult): SearchResult[] =
     return [];
   }
   
-  return data.items.map((item: any) => ({
-    ...item,
-    location: item.location || extractLocationFromSnippet(item.snippet)
-  }));
+  return data.items.map((item: any) => {
+    // Ensure all required fields are present and properly formatted
+    const result: SearchResult = {
+      title: item.title || "",
+      link: item.link || item.profileUrl || "",
+      snippet: item.snippet || "",
+      name: item.name || item.title || "",
+      location: item.location || extractLocationFromSnippet(item.snippet) || "",
+      relevance_score: item.relevance_score || 75
+    };
+    
+    return result;
+  });
 };

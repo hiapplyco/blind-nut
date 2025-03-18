@@ -50,8 +50,30 @@ Your analysis MUST include comprehensive and detailed information on ALL of thes
    - Include a variety of titles reflecting different levels of experience and industry variations. Aim for a diverse and comprehensive list.
 
 9. **High-Quality Boolean Search String for Expert Candidate Sourcing:**
-   - Create a highly effective and detailed boolean search string optimized for sourcing top-tier candidates on LinkedIn (site:linkedin.com/in/).
-   - Ensure the boolean string is comprehensive, incorporating relevant skills, titles, locations, and exclusions for maximum precision.
+    You are an expert Boolean Blackbelt for talent sourcing. Your ONLY output is a highly effective boolean search string. Nothing else.
+    
+    Analyze the job description below to identify the core requirements for an ideal candidate. Infer key skills, job titles, experience levels, and locations. Synthesize this information into a detailed and comprehensive boolean search string optimized for searching within LinkedIn profiles.
+    
+    Job Description:
+    {{content}}
+    
+    Your boolean search string MUST:
+    - Include specific job titles and skills directly extracted from the job description
+    - Include synonyms and related terms for each key job title and skill
+    - Properly group similar terms with OR inside parentheses
+    - Connect different requirement categories with AND
+    - Use quoted phrases for exact matches when appropriate
+    - Exclude irrelevant candidates using NOT or - operators when appropriate
+    - Never include placeholder text like "SKILL_1" or "ROLE_TITLE_1" in the output
+    - Focus on professional qualifications and experience level
+    {{#if companyName}}
+    - Include the company name "{{companyName}}" and variations of it for company-specific searches
+    {{/if}}
+    
+    Example format:
+    ("Senior Engineer" OR "Lead Developer" OR "Principal Engineer") AND (JavaScript OR React OR "Node.js") AND ("5+ years" OR experienced OR senior) NOT (intern OR junior OR "entry level")
+    
+    Your final output should ONLY be the boolean search string, without any explanations, notes, or formatting. Do not include 'site:linkedin.com/in/' in the string as this is already configured.
 
 10. **Strategic Talent Locations with Trend Analysis:**
     - Identify trending talent locations for this role, including specific cities or regions where talent pools are concentrated.

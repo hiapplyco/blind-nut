@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useClarvidaAuth } from "@/context/ClarvidaAuthContext";
 import { toast } from "sonner";
@@ -7,44 +7,72 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ClarvidaHeader } from "@/components/clarvida/ClarvidaHeader";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Card } from "@/components/ui/card";
+
+// Define form schema for validation
+const authSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type AuthFormValues = z.infer<typeof authSchema>;
 
 const ClarvidaLogin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp } = useClarvidaAuth();
+  const { signIn, signUp, isAuthenticated } = useClarvidaAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
   const from = location.state?.from?.pathname || "/clarvida";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Initialize form with validation
+  const form = useForm<AuthFormValues>({
+    resolver: zodResolver(authSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
+
+  const onSubmit = async (values: AuthFormValues) => {
+    console.log("Clarvida form submission:", { isSignUp, email: values.email });
     setIsLoading(true);
 
     try {
       let result;
       
       if (isSignUp) {
-        result = await signUp(email, password);
+        result = await signUp(values.email, values.password);
         if (!result.error) {
           toast.success("Account created! Please check your email for verification.");
         }
       } else {
-        result = await signIn(email, password);
+        result = await signIn(values.email, values.password);
         if (!result.error) {
-          toast.success("Successfully signed in!");
+          toast.success("Successfully signed in to Clarvida!");
           navigate(from, { replace: true });
         }
       }
 
       if (result.error) {
-        toast.error(result.error.message);
+        console.error("Clarvida auth error:", result.error);
+        toast.error(result.error.message || "Authentication failed");
       }
     } catch (err) {
-      console.error("Auth error:", err);
-      toast.error("An error occurred during authentication");
+      console.error("Clarvida auth unexpected error:", err);
+      toast.error("An unexpected error occurred during authentication");
     } finally {
       setIsLoading(false);
     }
@@ -55,68 +83,89 @@ const ClarvidaLogin = () => {
       <div className="max-w-md mx-auto">
         <ClarvidaHeader />
         
-        <div className="mt-8 bg-white shadow-lg rounded-lg p-8 border border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            {isSignUp ? "Create a Clarvida Account" : "Sign in to Clarvida"}
-          </h2>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                className="mt-1 block w-full"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="mt-1 block w-full"
-              />
-            </div>
-            
-            <Button
-              type="submit"
-              className="w-full bg-[#8B5CF6] hover:bg-[#7c4ef3]"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <span className="mr-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                  </span>
-                  {isSignUp ? "Creating Account..." : "Signing In..."}
-                </>
-              ) : (
-                isSignUp ? "Create Account" : "Sign In"
-              )}
-            </Button>
-          </form>
-          
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-[#8B5CF6] hover:text-[#7c4ef3] font-medium"
-            >
-              {isSignUp
-                ? "Already have an account? Sign in"
-                : "Don't have an account? Sign up"}
-            </button>
+        <Card className="mt-8 shadow-lg rounded-lg p-8 border border-gray-200">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {isSignUp ? "Create a Clarvida Account" : "Sign in to Clarvida"}
+            </h2>
+            <p className="text-sm text-gray-600 mt-2">
+              {isSignUp 
+                ? "Fill in your details to create an account" 
+                : "Enter your credentials to access your account"}
+            </p>
           </div>
-        </div>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <Button
+                type="submit"
+                className="w-full bg-[#8B5CF6] hover:bg-[#7c4ef3]"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="mr-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    </span>
+                    {isSignUp ? "Creating Account..." : "Signing In..."}
+                  </>
+                ) : (
+                  isSignUp ? "Create Account" : "Sign In"
+                )}
+              </Button>
+              
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-sm text-[#8B5CF6] hover:text-[#7c4ef3] font-medium"
+                >
+                  {isSignUp
+                    ? "Already have an account? Sign in"
+                    : "Don't have an account? Sign up"}
+                </button>
+              </div>
+            </form>
+          </Form>
+        </Card>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ClarvidaAuthContextType {
   session: Session | null;
@@ -26,14 +27,28 @@ export const ClarvidaAuthProvider = ({ children }: { children: React.ReactNode }
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsLoading(false);
-    });
+    // Check for existing session
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Clarvida Auth Error:", error);
+          setSession(null);
+        } else {
+          setSession(data.session);
+        }
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Error checking Clarvida session:", err);
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Clarvida Auth State Change:", _event, !!session);
       setSession(session);
       setIsLoading(false);
     });
@@ -44,23 +59,58 @@ export const ClarvidaAuthProvider = ({ children }: { children: React.ReactNode }
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email, 
-      password
-    });
-    return { error };
+    try {
+      console.log("Clarvida signIn attempt:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email, 
+        password
+      });
+      
+      if (error) {
+        console.error("Clarvida signIn error:", error);
+        return { error };
+      }
+      
+      console.log("Clarvida signIn success:", !!data.session);
+      return { error: null };
+    } catch (err) {
+      console.error("Unexpected error during Clarvida signIn:", err);
+      return { error: err };
+    }
   };
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email, 
-      password
-    });
-    return { error };
+    try {
+      console.log("Clarvida signUp attempt:", email);
+      const { data, error } = await supabase.auth.signUp({
+        email, 
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/clarvida`
+        }
+      });
+      
+      if (error) {
+        console.error("Clarvida signUp error:", error);
+        return { error };
+      }
+      
+      console.log("Clarvida signUp success:", !!data.session);
+      return { error: null };
+    } catch (err) {
+      console.error("Unexpected error during Clarvida signUp:", err);
+      return { error: err };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+      toast.success("Successfully signed out from Clarvida!");
+    } catch (err) {
+      console.error("Error during Clarvida signOut:", err);
+      toast.error("Failed to sign out from Clarvida");
+    }
   };
 
   const value = useMemo(() => ({

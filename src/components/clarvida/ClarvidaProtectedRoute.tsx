@@ -2,10 +2,15 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { useClarvidaAuth } from "@/context/ClarvidaAuthContext";
+import { useEffect } from "react";
 
 export const ClarvidaProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useClarvidaAuth();
   const location = useLocation();
+
+  useEffect(() => {
+    console.log("ClarvidaProtectedRoute:", { isAuthenticated, isLoading, path: location.pathname });
+  }, [isAuthenticated, isLoading, location]);
 
   if (isLoading) {
     return (
@@ -16,8 +21,11 @@ export const ClarvidaProtectedRoute = () => {
   }
 
   if (!isAuthenticated) {
+    console.log("Not authenticated, redirecting to /clarvida/login from", location.pathname);
     return <Navigate to="/clarvida/login" state={{ from: location }} replace />;
   }
 
+  // User is authenticated, render the protected route
+  console.log("Authenticated, rendering Clarvida protected content");
   return <Outlet />;
 };

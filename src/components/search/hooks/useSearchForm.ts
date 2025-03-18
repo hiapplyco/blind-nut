@@ -4,7 +4,7 @@ import { useSearchFormState } from "./useSearchFormState";
 import { useSearchStringFetcher } from "./useSearchStringFetcher";
 import { useFileUploadHandler } from "./useFileUploadHandler";
 import { useSearchFormSubmitter } from "./useSearchFormSubmitter";
-import { SearchType } from "./types";
+import { SearchType } from "../types";
 
 export const useSearchForm = (
   userId: string | null,

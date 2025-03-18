@@ -1,6 +1,8 @@
 
+import { Language } from "../../types";
+
 interface LanguagesInformationProps {
-  languages: string[];
+  languages: Language[];
 }
 
 export const LanguagesInformation = ({ languages }: LanguagesInformationProps) => {
@@ -10,7 +12,7 @@ export const LanguagesInformation = ({ languages }: LanguagesInformationProps) =
       <div className="flex flex-wrap gap-1">
         {languages.map((language, i) => (
           <span key={i} className="bg-[#F3E8FF] px-2 py-1 rounded text-sm border border-black">
-            {language}
+            {language.language} {language.proficiency && `(${language.proficiency})`}
           </span>
         ))}
       </div>

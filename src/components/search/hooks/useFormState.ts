@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { SearchType } from "./types";
+import { SearchType } from "../types";
 import { fetchSearchString } from "./utils/fetchSearchString";
 
 export const useFormState = (

@@ -1,30 +1,35 @@
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
+/**
+ * Hook for handling automatic search initiation
+ */
 export const useSearchInitiation = (
   searchString: string,
-  initialSearchString?: string,
+  initialSearchString?: string, 
   searchTerm?: string,
-  results?: any[],
-  isLoading?: boolean,
-  handleSearch?: (page: number) => void
+  results: any[] = [],
+  isLoading: boolean = false,
+  handleSearch: (page?: number) => void = () => {}
 ) => {
-  // Trigger search automatically when a new search string is provided
+  // Auto-search with initialSearchString or searchTerm if provided and not loading
   useEffect(() => {
-    const searchStr = initialSearchString || searchString || searchTerm;
-    if (searchStr && searchStr.trim() !== '' && (!results || results.length === 0) && !isLoading && handleSearch) {
-      console.log("🔍 [CRITICAL] Auto-running search for:", searchStr);
-      console.log("🔍 [DEBUG] Current state before auto-search:", {
-        results: results?.length || 0,
-        isLoading,
-        initialSearchString,
-        searchString,
-        searchTerm
-      });
-      
-      // Add immediate search trigger
-      console.log("🔍 [CRITICAL] Executing handleSearch() immediately");
+    // Check if we should auto-search
+    const shouldAutoSearch = (
+      // We need a search string
+      searchString && 
+      searchString.trim() !== '' &&
+      // We don't have results yet
+      results.length === 0 &&
+      // We're not already loading
+      !isLoading &&
+      // We were given an initialSearchString or searchTerm
+      (initialSearchString || searchTerm)
+    );
+    
+    if (shouldAutoSearch) {
+      console.log("🔍 [AUTO] Auto-initiating search with:", searchString);
       handleSearch(1);
     }
-  }, [initialSearchString, searchString, searchTerm, handleSearch, results, isLoading]);
+  }, [searchString, initialSearchString, searchTerm, results.length, isLoading, handleSearch]);
 };

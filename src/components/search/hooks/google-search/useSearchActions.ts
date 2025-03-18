@@ -30,20 +30,24 @@ export const useSearchActions = (
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      console.log("Executing search with query:", searchString);
+      console.log("🔍 [CRITICAL] Executing search with query:", searchString);
       if (page === 1) {
         setState(prev => ({ ...prev, results: [] }));
       }
       
+      // Ensure the search string includes the site restriction
+      const searchWithSite = prepareSearchString(searchString, searchType);
+      console.log("🔍 [CRITICAL] Search string with site constraint:", searchWithSite);
+      
       const { data, error } = await fetchSearchResults(
-        searchString, 
+        searchWithSite, 
         page, 
         searchType, 
         resultsPerPage
       );
       
       if (error) {
-        console.error("Search API error:", error);
+        console.error("❌ [ERROR] Search API error:", error);
         setState(prev => ({ ...prev, isLoading: false, error }));
         toast.error(`Search failed: ${error.message}`);
         return;
@@ -51,7 +55,7 @@ export const useSearchActions = (
       
       if (data?.items) {
         const processedResults = processSearchResults(data);
-        console.log("Received search results:", processedResults.length);
+        console.log("✅ [SUCCESS] Received search results:", processedResults.length);
         
         // Convert string totalResults to number
         const numTotalResults = Number(data.searchInformation?.totalResults) || 0;
@@ -68,7 +72,7 @@ export const useSearchActions = (
           if (jobId) {
             saveResults(
               processedResults, 
-              searchString, 
+              searchWithSite, // Save the full search string with site constraint
               numTotalResults
             );
           }
@@ -92,12 +96,12 @@ export const useSearchActions = (
           toast.info("No profiles found matching your criteria");
         }
       } else {
-        console.log("No results returned from search");
+        console.log("ℹ️ [INFO] No results returned from search");
         setState(prev => ({ ...prev, isLoading: false }));
         toast.info("No results found");
       }
     } catch (error) {
-      console.error("Error fetching search results:", error);
+      console.error("❌ [ERROR] Error fetching search results:", error);
       setState(prev => ({ 
         ...prev, 
         isLoading: false,

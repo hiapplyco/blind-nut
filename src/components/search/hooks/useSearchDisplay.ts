@@ -1,38 +1,46 @@
 
-import { useState, useEffect } from 'react';
-import { SearchResult } from '../types';
+import { useState, useEffect } from "react";
+import { SearchResult } from "../types";
 
+/**
+ * Hook for managing search result display options
+ */
 export const useSearchDisplay = (
   results: SearchResult[],
   initialSearchString?: string,
   searchTerm?: string,
-  setSearchString?: (value: string) => void
+  setSearchString?: (value: React.SetStateAction<string>) => void
 ) => {
   const [showResultsAs, setShowResultsAs] = useState<'cards' | 'list'>('cards');
   
-  // Update search string when props change
-  useEffect(() => {
-    if (initialSearchString && initialSearchString !== searchString && setSearchString) {
-      console.log("🔍 [DEBUG] Setting search string from props:", initialSearchString);
-      setSearchString(initialSearchString);
-    } else if (searchTerm && !initialSearchString && !searchString && setSearchString) {
-      console.log("🔍 [DEBUG] Setting search string from search term:", searchTerm);
-      setSearchString(searchTerm);
-    }
-  }, [initialSearchString, searchTerm, setSearchString, searchString]);
+  // Formatted profiles for card display
+  const formattedProfiles = results.map(result => ({
+    id: result.link,
+    name: result.name,
+    title: result.jobTitle || '',
+    location: result.location || '',
+    profile_name: result.name,
+    profile_title: result.jobTitle || '',
+    profile_location: result.location || '',
+    profile_url: result.profileUrl || result.link,
+    relevance_score: result.relevance_score
+  }));
 
+  // Initialize search string from props if available
+  useEffect(() => {
+    if (setSearchString) {
+      if (initialSearchString && initialSearchString.trim() !== '') {
+        setSearchString(initialSearchString);
+      } else if (searchTerm && searchTerm.trim() !== '') {
+        setSearchString(searchTerm);
+      }
+    }
+  }, [initialSearchString, searchTerm, setSearchString]);
+
+  // Toggle between cards and list view
   const toggleDisplayMode = () => {
     setShowResultsAs(prev => prev === 'cards' ? 'list' : 'cards');
   };
-  
-  // Format profile data for ProfilesList component
-  const formattedProfiles = results.map(result => ({
-    profile_name: result.name || result.title || "",
-    profile_title: result.jobTitle || result.snippet || "",
-    profile_location: result.location || "",
-    profile_url: result.link || result.profileUrl || "",
-    relevance_score: result.relevance_score || 75
-  }));
 
   return {
     showResultsAs,

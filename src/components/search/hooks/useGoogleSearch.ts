@@ -5,6 +5,9 @@ import { useSearchInitialization } from "./google-search/useSearchInitialization
 import { useSearchActions } from "./google-search/useSearchActions";
 import { useSearchStorage } from "./google-search/useSearchStorage";
 
+/**
+ * Main hook that combines all Google search functionality
+ */
 export const useGoogleSearch = (
   initialSearchString: string,
   searchType: SearchType = "candidates",

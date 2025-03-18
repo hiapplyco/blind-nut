@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { SearchType } from "@/components/search/hooks/types";
+import { SearchType } from "@/components/search/types";
 
 export const processJobRequirements = async (
   content: string,
@@ -10,6 +10,8 @@ export const processJobRequirements = async (
   source?: 'default' | 'clarvida'
 ) => {
   try {
+    console.log(`Processing job requirements with searchType: ${searchType}, companyName: ${companyName}, source: ${source}`);
+    
     // If source is clarvida, use the clarvida-specific edge function
     if (source === 'clarvida') {
       console.log('Calling generate-clarvida-report function with content length:', content.length);
@@ -37,6 +39,11 @@ export const processJobRequirements = async (
     }
     
     console.log('Received data from process-job-requirements function:', data);
+    
+    if (!data.searchString && data.data?.searchString) {
+      data.searchString = data.data.searchString;
+    }
+    
     return data;
   } catch (error) {
     console.error('Error processing job requirements:', error);
@@ -97,6 +104,23 @@ export const processJobRequirements = async (
         }
       };
     }
+    
+    // For standard searches, create a basic fallback search string
+    const basicTerms = content.split(/\s+/).filter(word => word.length > 5).slice(0, 5);
+    const fallbackSearchString = `(${basicTerms.join(" OR ")}) site:linkedin.com/in/`;
+    
+    console.log('Returning fallback search string:', fallbackSearchString);
+    return {
+      success: true,
+      searchString: fallbackSearchString,
+      data: {
+        terms: {
+          skills: basicTerms,
+          titles: [],
+          keywords: []
+        }
+      }
+    };
     
     throw error;
   }

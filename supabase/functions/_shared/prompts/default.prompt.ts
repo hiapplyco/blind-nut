@@ -15,13 +15,16 @@ Based on this job description, generate a boolean search string that can be used
 3. Group related terms with parentheses
 4. Use quotation marks for exact phrases
 5. Include "site:linkedin.com/in/" in the search string to limit results to LinkedIn profiles
+{{#if searchType === 'candidates-at-company'}}
+6. Include the company name "{{companyName}}" in the search string
+{{/if}}
 
-Return your analysis as JSON in the following format:
+You MUST return your analysis as a valid JSON object in the following format exactly:
 {
   "terms": {
-    "skills": ["string"],
-    "titles": ["string"],
-    "keywords": ["string"]
+    "skills": ["skill1", "skill2", "skill3"],
+    "titles": ["title1", "title2"],
+    "keywords": ["keyword1", "keyword2"]
   },
   "salary": {
     "min": number,
@@ -33,7 +36,9 @@ Return your analysis as JSON in the following format:
   "job_title": "string",
   "experience_level": "string",
   "employment_type": "string",
-  "searchString": "string" (Your generated boolean search string for candidate sourcing)
-}`,
-  parameters: ['content'],
+  "searchString": "YOUR GENERATED BOOLEAN SEARCH STRING"
+}
+
+The searchString field is CRITICAL and must contain a complete, valid boolean search string with proper syntax for LinkedIn X-Ray searches.`,
+  parameters: ['content', 'searchType', 'companyName'],
 };

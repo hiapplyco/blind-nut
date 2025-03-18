@@ -13,10 +13,20 @@ export const useGoogleSearch = (
   const { setSearchResults, getSearchResults, addToSearchResults } = useClientAgentOutputs();
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchString, setSearchString] = useState(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
+  const [searchString, setSearchString] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
   const resultsPerPage = 10;
+
+  // Set initial search string
+  useEffect(() => {
+    if (initialSearchString && initialSearchString.trim() !== '') {
+      // Remove site:linkedin.com/in/ from the displayed search string
+      const cleanedString = initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, '');
+      setSearchString(cleanedString);
+      console.log("Initial search string set to:", cleanedString);
+    }
+  }, []);
 
   // Initialize from jobId if available
   useEffect(() => {
@@ -25,29 +35,26 @@ export const useGoogleSearch = (
       if (storedData) {
         console.log("Loading stored data for jobId:", jobId, storedData);
         setResults(storedData.results);
-        setSearchString(storedData.searchQuery);
+        if (storedData.searchQuery) {
+          setSearchString(storedData.searchQuery.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
+        }
         setTotalResults(storedData.totalResults);
         const calculatedPage = Math.ceil(storedData.results.length / resultsPerPage);
         setCurrentPage(calculatedPage > 0 ? calculatedPage : 1);
-      } else {
-        console.log("No stored data found for jobId:", jobId, "initializing with:", initialSearchString);
-        setSearchString(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
-        setResults([]);
-        setCurrentPage(1);
-        setTotalResults(0);
       }
     }
-  }, [jobId, initialSearchString, getSearchResults, resultsPerPage]);
+  }, [jobId, getSearchResults, resultsPerPage]);
 
   // Update when initialSearchString changes
   useEffect(() => {
-    if (initialSearchString && initialSearchString !== searchString) {
+    if (initialSearchString && initialSearchString.trim() !== '') {
       console.log("Updating search string from initialSearchString:", initialSearchString);
       const cleanedSearchString = initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, '');
-      setSearchString(cleanedSearchString);
       
-      // Reset results when search string changes
-      if (searchString && searchString !== cleanedSearchString) {
+      if (searchString !== cleanedSearchString) {
+        setSearchString(cleanedSearchString);
+        
+        // Reset results when search string changes
         setResults([]);
         setCurrentPage(1);
         setTotalResults(0);
@@ -167,9 +174,15 @@ export const useGoogleSearch = (
   }, [currentPage, handleSearch]);
 
   const handleCopySearchString = useCallback(() => {
-    navigator.clipboard.writeText(searchString);
+    // Add site:linkedin.com/in/ when copying if not already present
+    let finalSearchString = searchString;
+    if (searchType === "candidates" && !finalSearchString.includes("site:linkedin.com/in/")) {
+      finalSearchString = `${finalSearchString} site:linkedin.com/in/`;
+    }
+    
+    navigator.clipboard.writeText(finalSearchString);
     toast.success('Search string copied to clipboard');
-  }, [searchString]);
+  }, [searchString, searchType]);
 
   const handleExport = useCallback(() => {
     if (results.length === 0) {

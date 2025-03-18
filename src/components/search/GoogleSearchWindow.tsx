@@ -30,13 +30,16 @@ export const GoogleSearchWindow = ({
     if (initialSearchString && initialSearchString !== searchString) {
       console.log("Setting search string from props:", initialSearchString);
       setSearchString(initialSearchString);
+    } else if (searchTerm && !initialSearchString && !searchString) {
+      console.log("Setting search string from search term:", searchTerm);
+      setSearchString(searchTerm);
     }
-  }, [initialSearchString, setSearchString, searchString]);
+  }, [initialSearchString, searchTerm, setSearchString, searchString]);
 
   // Trigger search automatically when a new search string is provided
   useEffect(() => {
-    const searchStr = initialSearchString || searchTerm;
-    if (searchStr && searchStr.trim() !== '') {
+    const searchStr = initialSearchString || searchString || searchTerm;
+    if (searchStr && searchStr.trim() !== '' && results.length === 0 && !isLoading) {
       console.log("Auto-running search for:", searchStr);
       const timer = setTimeout(() => {
         handleSearch(1);
@@ -44,7 +47,7 @@ export const GoogleSearchWindow = ({
       
       return () => clearTimeout(timer);
     }
-  }, [initialSearchString, searchTerm, handleSearch]);
+  }, [initialSearchString, searchString, searchTerm, handleSearch, results.length, isLoading]);
 
   return (
     <Card className="p-6 mb-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

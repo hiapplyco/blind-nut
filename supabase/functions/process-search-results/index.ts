@@ -30,7 +30,7 @@ serve(async (req) => {
     
     // Step 1: Generate sample profiles using Gemini
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const prompt = `You are a professional recruiter assistant. Given this X-Ray search string: "${finalSearchString}", 
     generate 25 example LinkedIn profiles that would match this search. For each profile include:
@@ -40,9 +40,11 @@ serve(async (req) => {
     4. Profile URL (use a realistic format like linkedin.com/in/firstname-lastname-id)
     5. A relevance score from 1-100 based on how well they match the search criteria
     Format the output as a JSON array of objects with these exact keys:
-    profile_name, profile_title, profile_location, profile_url, relevance_score`;
+    profile_name, profile_title, profile_location, profile_url, relevance_score
     
-    console.log('Using prompt:', prompt);
+    IMPORTANT: Return only valid JSON and nothing else. Do not include explanation text before or after the JSON.`;
+    
+    console.log('Using profile generation prompt');
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
     
@@ -76,7 +78,18 @@ serve(async (req) => {
     
     const nymeriaApiKey = Deno.env.get('NYMERIA_API_KEY');
     if (!nymeriaApiKey) {
-      throw new Error('NYMERIA_API_KEY is not set in environment variables');
+      console.warn('NYMERIA_API_KEY is not set in environment variables, skipping enrichment');
+      // Continue without enrichment
+      return new Response(
+        JSON.stringify({ 
+          message: 'Profiles generated successfully (without enrichment)',
+          profiles: profiles.map((profile: any) => ({
+            ...profile,
+            enriched: false
+          }))
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
     
     // Prepare bulk enrichment request
@@ -133,31 +146,41 @@ serve(async (req) => {
       };
     });
     
-    // Step 4: Store results in the database
-    const { data: jobData, error: jobError } = await fetch(
-      `${Deno.env.get('SUPABASE_URL')}/rest/v1/search_results`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-        },
-        body: JSON.stringify(enrichedProfiles.map((profile: any) => ({
-          ...profile,
-          search_string: finalSearchString,
-          created_at: new Date().toISOString()
-        })))
+    // Step 4: Store results in the database using supabaseClient
+    try {
+      const { data: jobData, error: jobError } = await fetch(
+        `${Deno.env.get('SUPABASE_URL')}/rest/v1/search_results`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          },
+          body: JSON.stringify(enrichedProfiles.map((profile: any) => ({
+            ...profile,
+            search_string: finalSearchString,
+            created_at: new Date().toISOString()
+          })))
+        }
+      );
+      
+      if (jobError) {
+        console.error('Error storing search results:', jobError);
+      } else {
+        console.log('Search results stored successfully');
       }
-    );
-    
-    if (jobError) throw jobError;
+    } catch (dbError) {
+      console.error('Error storing search results in database:', dbError);
+      // Continue even if database storage fails
+    }
     
     // Step 5: Return enriched profiles
     return new Response(
       JSON.stringify({ 
         message: 'Profiles generated, enriched, and stored successfully',
-        profiles: enrichedProfiles 
+        profiles: enrichedProfiles,
+        searchString: finalSearchString
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

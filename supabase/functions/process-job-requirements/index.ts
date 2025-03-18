@@ -23,7 +23,12 @@ serve(async (req) => {
     
     console.log("Processing job requirements with params:", { searchType, companyName, source });
     
-    const genAI = new GoogleGenerativeAI(Deno.env.get("GEMINI_API_KEY") || "");
+    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY environment variable is not set");
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     // Use specialized prompt for Clarvida source
@@ -33,12 +38,14 @@ serve(async (req) => {
       console.log("Using Clarvida prompt");
     } else {
       // Use standard processing (existing code)
-      promptText = promptManager.render(defaultPrompt, { content });
+      promptText = promptManager.render(defaultPrompt, { content, searchType, companyName });
       console.log("Using default prompt");
     }
-
+    
+    console.log("Sending prompt to Gemini API");
     const result = await model.generateContent(promptText);
     const responseText = result.response.text();
+    console.log("Received response from Gemini API:", responseText);
     
     try {
       // Parse JSON from the AI response
@@ -47,11 +54,11 @@ serve(async (req) => {
       
       if (jsonMatch) {
         parsedResponse = JSON.parse(jsonMatch[0]);
+        console.log("Successfully parsed JSON response");
       } else {
+        console.error("Failed to extract JSON from response:", responseText);
         throw new Error("Could not extract JSON from response");
       }
-      
-      console.log("Successfully parsed response:", parsedResponse);
       
       // Ensure searchString is in the response
       if (!parsedResponse.searchString) {
@@ -66,10 +73,15 @@ serve(async (req) => {
           
           parsedResponse.searchString = `(${skills})${titles ? ` AND (${titles})` : ""} site:linkedin.com/in/`;
           console.log("Generated fallback search string:", parsedResponse.searchString);
+        } else {
+          // If no terms available, create a simple search string from the content
+          const keywords = content.split(/\s+/).filter((word: string) => word.length > 5).slice(0, 5);
+          parsedResponse.searchString = `(${keywords.join(" OR ")}) site:linkedin.com/in/`;
+          console.log("Generated emergency fallback search string:", parsedResponse.searchString);
         }
       }
       
-      // Insert the job into the database if a userId is provided
+      // Insert the job analysis into the database if a userId is provided
       let jobId;
       if (userId) {
         const { data, error } = await supabaseClient
@@ -86,7 +98,10 @@ serve(async (req) => {
           .select('id')
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error inserting job:", error);
+          throw error;
+        }
         jobId = data.id;
         console.log("Job created with ID:", jobId);
       }
@@ -104,7 +119,17 @@ serve(async (req) => {
       );
     } catch (parseError) {
       console.error("Error parsing AI response:", parseError);
-      throw new Error("Failed to parse AI response: " + parseError.message);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Failed to parse AI response: ${parseError.message}`,
+          rawResponse: responseText
+        }),
+        {
+          status: 422,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
   } catch (error) {
     console.error("Error processing job requirements:", error);

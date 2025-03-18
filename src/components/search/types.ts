@@ -1,3 +1,4 @@
+
 export type SearchType = 'candidates' | 'candidates-at-company' | 'companies';
 
 // Props interfaces for components
@@ -48,6 +49,10 @@ export interface SearchResultsListProps {
 
 // Profile and contact data interfaces
 export interface Profile {
+  id?: string;
+  name: string;
+  title?: string;
+  location?: string;
   profile_name: string;
   profile_title?: string;
   profile_location?: string;
@@ -61,8 +66,15 @@ export interface EnrichedProfileData {
   work_email?: string;
   personal_emails?: string[];
   phone_numbers?: string[];
+  mobile_phone?: string;
   location?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   company?: string;
+  job_company_name?: string;
+  job_title?: string;
+  company_size?: string;
   title?: string;
   linkedin_url?: string;
   twitter_url?: string;
@@ -73,17 +85,23 @@ export interface EnrichedProfileData {
   experience?: Experience[];
   languages?: Language[];
   social_profiles?: SocialProfile[];
+  profiles?: SocialProfile[];
   summary?: string;
   industry?: string;
   enriched?: boolean;
+  profile?: Profile;
 }
 
 export interface Education {
   school: string;
+  institution?: string;
   degree?: string;
   field_of_study?: string;
+  field?: string;
   start_date?: string;
   end_date?: string;
+  startDate?: string;
+  endDate?: string;
   description?: string;
 }
 
@@ -92,6 +110,8 @@ export interface Experience {
   title: string;
   start_date?: string;
   end_date?: string;
+  startDate?: string;
+  endDate?: string;
   description?: string;
   location?: string;
 }
@@ -118,4 +138,29 @@ export interface SearchResult {
   jobTitle?: string;
   profileUrl?: string;
   [key: string]: any;
+}
+
+// Google search types
+export interface GoogleSearchResult {
+  items: any[];
+  searchInformation: {
+    totalResults: number;
+  };
+}
+
+export interface GoogleSearchState {
+  results: SearchResult[];
+  isLoading: boolean;
+  searchString: string;
+  currentPage: number;
+  totalResults: number;
+  error: Error | null;
+}
+
+export interface StoredSearchResults {
+  jobId: number;
+  searchQuery: string;
+  results: SearchResult[];
+  timestamp: string;
+  totalResults: number;
 }

@@ -14,11 +14,11 @@ export const ExperienceInformation = ({ experience }: ExperienceInformationProps
           <div key={i} className="border-l-2 border-[#8B5CF6] pl-3">
             <p className="font-medium">{exp.title}</p>
             {exp.company && <p className="text-sm">{exp.company}</p>}
-            {(exp.startDate || exp.start_date || exp.endDate || exp.end_date) && (
+            {(exp.start_date || exp.startDate || exp.end_date || exp.endDate) && (
               <p className="text-xs text-gray-500">
-                {(exp.startDate || exp.start_date) && (exp.startDate || exp.start_date)}
-                {(exp.startDate || exp.start_date) && (exp.endDate || exp.end_date) && ' - '}
-                {(exp.endDate || exp.end_date) && (exp.endDate || exp.end_date)}
+                {(exp.start_date || exp.startDate) && (exp.start_date || exp.startDate)}
+                {(exp.start_date || exp.startDate) && (exp.end_date || exp.endDate) && ' - '}
+                {(exp.end_date || exp.endDate) && (exp.end_date || exp.endDate)}
               </p>
             )}
             {exp.description && <p className="text-sm mt-1">{exp.description}</p>}

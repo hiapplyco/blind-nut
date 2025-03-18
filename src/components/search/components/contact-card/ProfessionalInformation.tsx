@@ -10,10 +10,10 @@ export const ProfessionalInformation = ({ profileData }: ProfessionalInformation
     <section>
       <h3 className="font-medium text-gray-900 mb-2">Professional Information</h3>
       <div className="space-y-2">
-        {profileData.job_company_name && (
+        {(profileData.company || profileData.job_company_name) && (
           <div className="flex items-start">
             <span className="text-gray-500 w-24">Company:</span>
-            <span>{profileData.job_company_name}</span>
+            <span>{profileData.company || profileData.job_company_name}</span>
           </div>
         )}
         
@@ -24,10 +24,10 @@ export const ProfessionalInformation = ({ profileData }: ProfessionalInformation
           </div>
         )}
         
-        {profileData.job_title && (
+        {(profileData.title || profileData.job_title) && (
           <div className="flex items-start">
             <span className="text-gray-500 w-24">Title:</span>
-            <span>{profileData.job_title}</span>
+            <span>{profileData.title || profileData.job_title}</span>
           </div>
         )}
         

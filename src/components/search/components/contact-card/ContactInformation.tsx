@@ -89,8 +89,7 @@ export const ContactInformation = ({ profileData }: ContactInformationProps) => 
             {profileData.phone_numbers && profileData.phone_numbers.length > 0 && (
               <>
                 {profileData.phone_numbers.map((phone, i) => (
-                  // Only display phone numbers that are different from the mobile_phone
-                  phone !== profileData.mobile_phone && (
+                  (profileData.mobile_phone !== phone) && (
                     <div key={i} className="flex items-start justify-between">
                       <div className="flex">
                         <span className="text-gray-500 w-24">Phone {i+1}:</span>

@@ -15,11 +15,11 @@ export const EducationInformation = ({ education }: EducationInformationProps) =
             <p className="font-medium">{edu.school || edu.institution}</p>
             {edu.degree && <p className="text-sm">{edu.degree}</p>}
             {(edu.field_of_study || edu.field) && <p className="text-sm">{edu.field_of_study || edu.field}</p>}
-            {(edu.startDate || edu.start_date || edu.endDate || edu.end_date) && (
+            {(edu.start_date || edu.startDate || edu.end_date || edu.endDate) && (
               <p className="text-xs text-gray-500">
-                {(edu.startDate || edu.start_date) && (edu.startDate || edu.start_date)}
-                {(edu.startDate || edu.start_date) && (edu.endDate || edu.end_date) && ' - '}
-                {(edu.endDate || edu.end_date) && (edu.endDate || edu.end_date)}
+                {(edu.start_date || edu.startDate) && (edu.start_date || edu.startDate)}
+                {(edu.start_date || edu.startDate) && (edu.end_date || edu.endDate) && ' - '}
+                {(edu.end_date || edu.endDate) && (edu.end_date || edu.endDate)}
               </p>
             )}
           </div>

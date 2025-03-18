@@ -50,7 +50,7 @@ export const ContactCard = ({
             <div className="space-y-4">
               <ContactInformation profileData={profileData} />
               
-              {(profileData.job_title || profileData.job_company_name || profileData.industry) && (
+              {(profileData.title || profileData.job_title || profileData.company || profileData.job_company_name || profileData.industry) && (
                 <ProfessionalInformation profileData={profileData} />
               )}
               
@@ -74,9 +74,10 @@ export const ContactCard = ({
                 <LanguagesInformation languages={profileData.languages} />
               )}
               
-              {(profileData.profiles || profileData.social_profiles) && 
-                (profileData.profiles || profileData.social_profiles)!.length > 0 && (
-                <SocialProfiles profiles={(profileData.profiles || profileData.social_profiles)!} />
+              {(profileData.social_profiles || profileData.profiles) && 
+                ((profileData.social_profiles && profileData.social_profiles.length > 0) || 
+                 (profileData.profiles && profileData.profiles.length > 0)) && (
+                <SocialProfiles profiles={(profileData.social_profiles || profileData.profiles)!} />
               )}
             </div>
           ) : (

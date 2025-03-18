@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,6 @@ export const ProfileCard = ({ profile: originalProfile }) => {
   
   // Convert the original profile to the Profile type
   const profile: Profile = {
-    id: originalProfile.profile_url, // Use profile_url as id since it's required
     name: originalProfile.profile_name,
     title: originalProfile.profile_title,
     location: originalProfile.profile_location,
@@ -54,6 +52,7 @@ export const ProfileCard = ({ profile: originalProfile }) => {
         
         // Create an enriched profile data object with the required format
         const enrichedProfileData: EnrichedProfileData = {
+          name: profile.profile_name,
           profile: profile,
           ...(data.data || {}),
         };

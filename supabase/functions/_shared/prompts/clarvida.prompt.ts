@@ -1,28 +1,71 @@
-
 import { PromptTemplate } from './types.ts';
 
 export const clarvidaPrompt: PromptTemplate = {
   name: 'clarvida-job-analysis',
-  version: '1.0.0',
-  description: 'A comprehensive talent acquisition and career coaching prompt for job analysis',
-  template: `You are a professional talent acquisition and career coaching AI. Analyze the following job description and provide detailed insights in JSON format:
+  version: '2.0.0', // Version bump for significant enrichment
+  description: 'A comprehensive and in-depth talent acquisition and career coaching prompt for rich job analysis.',
+  template: `You are an expert professional talent acquisition and career coaching AI, renowned for your thorough and insightful analyses. Analyze the following job description and provide exceptionally detailed insights in JSON format.  Your goal is to generate rich, actionable information for talent acquisition and candidate coaching cards.
 
 {{content}}
 
-Your analysis should include detailed information on these topics:
-1. Compensation analysis with salary ranges and benefits
-2. Timeline expectations at 30, 60, 90 days and 1 year
-3. Company description
-4. Job description enhancement suggestions with optimization tips
-5. Nice-to-have skills with reasoning
-6. Interview questions with competency assessment
-7. Benefits description
-8. Previous job titles for ideal candidates
-9. Boolean search string for candidate sourcing
-10. Talent locations with trending areas
-11. Job ad summary with key skills
+Your analysis MUST include comprehensive and detailed information on ALL of these topics, going beyond surface-level observations:
 
-Return ONLY JSON data in this exact structure:
+1. **Compensation Analysis with Deep Market Research:**
+   - Generate an in-depth compensation analysis report.
+   - Provide realistic salary ranges (min, max, average) based on thorough market research for the role and location.
+   - Detail specific benefits packages commonly offered for similar roles, including health, retirement, and perks.
+   - List typical bonuses and incentive structures applicable to this position.
+   - Describe any fringe benefits that would be attractive to candidates.
+   - Include at least 3 reputable sources with source names and URLs to back up your compensation data.
+
+2. **Detailed Timeline Expectations (30, 60, 90 Days & 1 Year):**
+   - Outline very specific and actionable expectations for a new hire at 30, 60, 90 days, and 1 year milestones.
+   - For each timeline, detail key objectives, expected contributions, and performance indicators.  Think in terms of concrete tasks and achievements.
+
+3. **In-Depth Company Description:**
+   - Create a compelling and detailed company description that goes beyond basic facts.
+   - Include information about company culture, values, mission, recent achievements, market position, growth potential, and employee value proposition.
+   - Aim to create a description that would excite potential candidates about the company.
+
+4. **Enhanced Job Description with Actionable Optimization Tips:**
+   - Provide concrete and actionable optimization tips to improve the job description's clarity, attractiveness, and SEO effectiveness.
+   - Present a fully revised job listing incorporating your optimization tips.  This revised listing should be significantly more compelling and informative than the original.
+
+5. **Extensive List of Nice-to-Have Skills with Justification:**
+   - Identify a comprehensive list of "nice-to-have" skills that would further enhance a candidate's profile for this role.
+   - For EACH "nice-to-have" skill, provide detailed reasoning explaining why it would be beneficial and how it would add value in the context of this job.
+   - Differentiate between "supplemental qualifications" (credentials, certifications) and "nice-to-have skills" (soft skills, specific tool proficiencies).
+
+6. **Comprehensive Interview Questions with Competency-Based Assessment:**
+   - Develop a robust set of interview questions designed to thoroughly assess candidate competency.
+   - For EACH question, explicitly state the primary competency being assessed (e.g., problem-solving, leadership, communication).
+   - Include a variety of question types (behavioral, situational, technical) to provide a well-rounded assessment. Aim for at least 8-10 high-quality questions.
+
+7. **Persuasive Benefits Description:**
+   - Craft a persuasive and engaging benefits description paragraph that highlights the most attractive aspects of the company's benefits package.
+   - Focus on the *value* proposition of the benefits to the employee, not just listing features.
+
+8. **Broad Range of Previous Job Titles for Ideal Candidates:**
+   - Generate an extensive list of previous job titles that ideal candidates for this role might have held.
+   - Include a variety of titles reflecting different levels of experience and industry variations. Aim for a diverse and comprehensive list.
+
+9. **High-Quality Boolean Search String for Expert Candidate Sourcing:**
+   - Create a highly effective and detailed boolean search string optimized for sourcing top-tier candidates on LinkedIn (site:linkedin.com/in/).
+   - Ensure the boolean string is comprehensive, incorporating relevant skills, titles, locations, and exclusions for maximum precision.
+
+10. **Strategic Talent Locations with Trend Analysis:**
+    - Identify trending talent locations for this role, including specific cities or regions where talent pools are concentrated.
+    - Suggest skill-based locations – areas known for producing talent with the required skills.
+    - Recommend relevant online communities or platforms where ideal candidates might be found.  Provide reasoning for each location and community suggestion.
+
+11. **Detailed Job Ad Summary with Key Skill Breakdown:**
+    - Provide detailed summary paragraphs of the job ad, capturing the essence of the role and company.
+    - List key hard skills and soft skills prominently featured in the job description.
+    - Reiterate the generated boolean search string for quick access.
+
+
+Return ONLY JSON data in this exact structure. Ensure ALL sections are filled with rich, detailed, and insightful information as described above. Your analysis is crucial for creating compelling talent acquisition materials and effective candidate coaching resources.
+
 {
   "compensation_analysis": {
     "report": "string",

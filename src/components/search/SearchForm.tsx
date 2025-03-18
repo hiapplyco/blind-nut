@@ -1,98 +1,115 @@
 
-import React, { useState } from "react";
-import { SearchTypeToggle } from "./SearchTypeToggle";
+import { useState } from "react";
+import { Button } from "@/components/ui/button"; 
+import { Card } from "@/components/ui/card";
 import { FormHeader } from "./FormHeader";
 import { ContentTextarea } from "./ContentTextarea";
+import { SearchTypeToggle } from "./SearchTypeToggle";
 import { CompanyNameInput } from "./CompanyNameInput";
-import { SubmitButton } from "./SubmitButton";
-import { SearchType } from "./types";
-import { Loader2 } from "lucide-react";
-import { useFormState } from "./hooks/useFormState";
-import { useFormSubmit } from "./hooks/useFormSubmit";
-import { processFileUpload } from "./hooks/utils/processFileUpload";
+import { useSearchForm } from "./hooks/useSearchForm";
+import { SearchType } from "./hooks/types";
+import { ProcessingProgress } from "./ProcessingProgress";
+import { FileUploadHandler } from "./FileUploadHandler";
+import { AgentProcessor } from "./AgentProcessor";
 
-interface SearchFormProps {
+export interface SearchFormProps {
   userId: string | null;
-  onJobCreated: (jobId: number, searchText: string, data?: any) => void;
-  currentJobId?: number | null;
-  isProcessingComplete?: boolean;
-  source?: 'default' | 'clarvida';
-  hideSearchTypeToggle?: boolean;
-  submitButtonText?: string;
-  onSubmitStart?: () => void;
+  onJobCreated: (jobId: number, content: string) => void;
+  currentJobId: number | null;
+  isProcessingComplete: boolean;
 }
 
 export const SearchForm = ({ 
   userId, 
-  onJobCreated, 
-  currentJobId, 
-  isProcessingComplete,
-  source = 'default',
-  hideSearchTypeToggle = false,
-  submitButtonText,
-  onSubmitStart
+  onJobCreated,
+  currentJobId,
+  isProcessingComplete 
 }: SearchFormProps) => {
-  const { searchType, setSearchType, searchText, setSearchText, companyName, setCompanyName } = useFormState(currentJobId || null, () => Promise.resolve(null));
-  const { isProcessing, setIsProcessing, handleSubmit } = useFormSubmit(userId, onJobCreated, source);
-  const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
+  const [isAgentProcessing, setIsAgentProcessing] = useState(false);
+
+  const { 
+    searchText, 
+    setSearchText, 
+    companyName, 
+    setCompanyName, 
+    isProcessing, 
+    searchType, 
+    setSearchType, 
+    handleSubmit, 
+    handleFileUpload 
+  } = useSearchForm(userId, onJobCreated, currentJobId);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
-    if (onSubmitStart) {
-      onSubmitStart();
+    e.preventDefault();
+    console.log("Search form submitted with:", { searchText, searchType, companyName });
+    
+    await handleSubmit(e);
+    
+    // If we need to process results with Agent, set the flag
+    if (!isProcessingComplete && currentJobId && searchText && !isAgentProcessing) {
+      console.log("Starting agent processing for job ID:", currentJobId);
+      setIsAgentProcessing(true);
     }
-    await handleSubmit(e, searchText, searchType, companyName);
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    await processFileUpload(
-      event.target.files?.[0],
-      userId,
-      setSearchText,
-      setIsProcessing
-    );
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-4">
-      {!hideSearchTypeToggle && (
-        <SearchTypeToggle 
-          value={searchType} 
-          onValueChange={setSearchType} 
-        />
-      )}
-      
-      <FormHeader />
-      
-      <ContentTextarea
-        searchText={searchText}
-        isProcessing={isProcessing}
-        onTextChange={setSearchText}
-        onFileUpload={handleFileUpload}
-        onTextUpdate={setSearchText}
-      />
-
-      {searchType === "candidates-at-company" && (
-        <CompanyNameInput
-          companyName={companyName}
-          isProcessing={isProcessing}
-          onChange={setCompanyName}
-        />
-      )}
-
-      <div className="space-y-4">
-        <SubmitButton 
-          isProcessing={isProcessing || isScrapingProfiles}
-          isDisabled={isProcessing || isScrapingProfiles || !searchText?.trim() || (searchType === "candidates-at-company" && !companyName?.trim())}
-          buttonText={submitButtonText}
-        />
+    <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+      <form onSubmit={handleFormSubmit} className="space-y-6">
+        <FormHeader />
         
-        {isScrapingProfiles && (
-          <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Scraping profiles from search results...</span>
+        <div className="space-y-4">
+          <SearchTypeToggle 
+            searchType={searchType}
+            onChange={(type: SearchType) => {
+              console.log("Search type changed to:", type);
+              setSearchType(type);
+            }}
+          />
+          
+          {searchType === "candidates-at-company" && (
+            <CompanyNameInput 
+              companyName={companyName} 
+              onChange={setCompanyName} 
+            />
+          )}
+          
+          <ContentTextarea 
+            value={searchText} 
+            onChange={setSearchText} 
+            placeholder="Paste job description here..." 
+          />
+          
+          <div className="flex justify-between items-center">
+            <FileUploadHandler onFileUpload={handleFileUpload} />
+            
+            <Button 
+              type="submit" 
+              disabled={isProcessing || !searchText}
+              className="border-2 border-black bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+            >
+              {isProcessing ? 'Processing...' : 'Generate Search String'}
+            </Button>
           </div>
-        )}
-      </div>
-    </form>
+        </div>
+      </form>
+      
+      {isProcessing && (
+        <ProcessingProgress 
+          message="Generating search string..." 
+          progress={50} 
+        />
+      )}
+      
+      {isAgentProcessing && currentJobId && (
+        <AgentProcessor 
+          content={searchText} 
+          jobId={currentJobId} 
+          onComplete={() => {
+            console.log("Agent processing completed");
+            setIsAgentProcessing(false);
+          }} 
+        />
+      )}
+    </Card>
   );
 };

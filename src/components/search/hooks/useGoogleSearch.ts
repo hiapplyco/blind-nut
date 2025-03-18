@@ -37,7 +37,7 @@ export const useGoogleSearch = (
         setTotalResults(0);
       }
     }
-  }, [jobId, initialSearchString, getSearchResults]);
+  }, [jobId, initialSearchString, getSearchResults, resultsPerPage]);
 
   // Update when initialSearchString changes
   useEffect(() => {
@@ -57,7 +57,7 @@ export const useGoogleSearch = (
         }
       }
     }
-  }, [initialSearchString, setSearchResults, jobId]);
+  }, [initialSearchString, setSearchResults, jobId, searchString]);
 
   // Save results to store when they change
   useEffect(() => {
@@ -112,6 +112,8 @@ export const useGoogleSearch = (
       if (searchType === "candidates" && !finalSearchString.includes("site:linkedin.com/in/")) {
         finalSearchString = `${finalSearchString} site:linkedin.com/in/`;
       }
+      
+      console.log("Final search string being used:", finalSearchString);
       
       const cseId = 'b28705633bcb44cf0'; // Candidates CSE
       

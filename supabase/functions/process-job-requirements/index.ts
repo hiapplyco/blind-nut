@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "npm:@google/generative-ai";
 import { supabaseClient } from "../_shared/supabase-client.ts";
@@ -50,7 +51,23 @@ serve(async (req) => {
         throw new Error("Could not extract JSON from response");
       }
       
-      console.log("Successfully parsed response");
+      console.log("Successfully parsed response:", parsedResponse);
+      
+      // Ensure searchString is in the response
+      if (!parsedResponse.searchString) {
+        console.warn("No searchString found in AI response, attempting to construct one");
+        
+        // Construct a basic search string from the terms
+        if (parsedResponse.terms && parsedResponse.terms.skills && parsedResponse.terms.skills.length > 0) {
+          const skills = parsedResponse.terms.skills.map((skill: string) => `"${skill}"`).join(" OR ");
+          const titles = parsedResponse.terms.titles && parsedResponse.terms.titles.length > 0 
+            ? parsedResponse.terms.titles.map((title: string) => `"${title}"`).join(" OR ") 
+            : "";
+          
+          parsedResponse.searchString = `(${skills})${titles ? ` AND (${titles})` : ""} site:linkedin.com/in/`;
+          console.log("Generated fallback search string:", parsedResponse.searchString);
+        }
+      }
       
       // Insert the job into the database if a userId is provided
       let jobId;
@@ -63,7 +80,8 @@ serve(async (req) => {
             output: parsedResponse,
             search_type: searchType,
             company_name: companyName || null,
-            source: source || 'default'
+            source: source || 'default',
+            search_string: parsedResponse.searchString
           })
           .select('id')
           .single();
@@ -77,7 +95,8 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           data: parsedResponse,
-          jobId
+          jobId,
+          searchString: parsedResponse.searchString
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

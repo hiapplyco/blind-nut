@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "npm:@google/generative-ai";
@@ -16,11 +17,22 @@ serve(async (req) => {
     const { searchString } = await req.json();
     console.log('Processing search string:', searchString);
     
+    if (!searchString || searchString.trim() === '') {
+      throw new Error('Search string is required');
+    }
+    
+    // Ensure the search string includes site:linkedin.com/in/ if not already present
+    const finalSearchString = searchString.includes('site:linkedin.com/in/') 
+      ? searchString 
+      : `${searchString} site:linkedin.com/in/`;
+    
+    console.log('Using final search string:', finalSearchString);
+    
     // Step 1: Generate sample profiles using Gemini
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
-    const prompt = `You are a professional recruiter assistant. Given this X-Ray search string: "${searchString}", 
+    const prompt = `You are a professional recruiter assistant. Given this X-Ray search string: "${finalSearchString}", 
     generate 25 example LinkedIn profiles that would match this search. For each profile include:
     1. Full name
     2. Current title
@@ -38,14 +50,34 @@ serve(async (req) => {
     
     let profiles;
     try {
+      // Try to parse the entire response as JSON
       profiles = JSON.parse(responseText);
     } catch (parseError) {
-      console.error('Error parsing generated profiles:', parseError);
-      throw new Error('Failed to parse generated profiles');
+      console.error('Error parsing generated profiles as direct JSON:', parseError);
+      
+      // Try to extract JSON from the text response
+      const jsonMatch = responseText.match(/\[\s*\{[\s\S]*\}\s*\]/);
+      if (jsonMatch) {
+        try {
+          profiles = JSON.parse(jsonMatch[0]);
+        } catch (extractError) {
+          console.error('Error parsing extracted JSON:', extractError);
+          throw new Error('Could not parse the generated profiles');
+        }
+      } else {
+        throw new Error('Failed to extract JSON from the Gemini response');
+      }
     }
+    
+    console.log(`Successfully parsed ${profiles.length} profiles`);
     
     // Step 2: Enrich profiles with contact information using Nymeria API
     console.log('Enriching profiles with Nymeria API');
+    
+    const nymeriaApiKey = Deno.env.get('NYMERIA_API_KEY');
+    if (!nymeriaApiKey) {
+      throw new Error('NYMERIA_API_KEY is not set in environment variables');
+    }
     
     // Prepare bulk enrichment request
     const enrichmentRequests = profiles.map((profile: any) => ({
@@ -62,7 +94,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Api-Key': Deno.env.get('NYMERIA_API_KEY') || ''
+        'X-Api-Key': nymeriaApiKey
       },
       body: JSON.stringify({
         requests: enrichmentRequests
@@ -113,6 +145,7 @@ serve(async (req) => {
         },
         body: JSON.stringify(enrichedProfiles.map((profile: any) => ({
           ...profile,
+          search_string: finalSearchString,
           created_at: new Date().toISOString()
         })))
       }

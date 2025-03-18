@@ -1,3 +1,4 @@
+
 import { PromptTemplate } from '../types';
 
 export const linkedinSearchPrompt: PromptTemplate = {
@@ -21,7 +22,7 @@ Based on this description, construct a highly targeted boolean search string tha
     - Target market/audience:  Think of related customer segments.
     - Technologies/services: Include synonyms and related technologies.
 
-2.  Utilize these operators for maximum precision: `site:linkedin.com/company/`, AND, OR, "exact phrase", (), and - (exclusion).
+2.  Utilize these operators for maximum precision: site:linkedin.com/company/, AND, OR, "exact phrase", (), and - (exclusion).
 
 3.  Incorporate the metro area "{{metroArea}}" if provided, using AND to narrow geographically.
 
@@ -86,7 +87,7 @@ Based on this description, construct a highly targeted boolean search string tha
 4.  Incorporate the metro area "{{metroArea}}" if provided, using AND to narrow geographically.
 
 5.  Output ONLY a boolean search string following this pattern (adapt and expand for optimal results):
-    site:linkedin.com/in/ {{#if companyName}} "{{companyName}}" AND {{/if}} {{#if metroArea}} AND "{{metroArea}}" {{/if}} ("ROLE_TITLE_1" OR "SIMILAR_ROLE") AND ("SKILL_1" OR "RELATED_SKILL" OR "QUALIFICATION") AND ("INDUSTRY_SECTOR_1" OR "RELATED_INDUSTRY")
+    site:linkedin.com/in/ {{#if companyName}} "{{companyName}}" AND {{/if}} {{#if metroArea}} "{{metroArea}}" {{/if}} ("ROLE_TITLE_1" OR "SIMILAR_ROLE") AND ("SKILL_1" OR "RELATED_SKILL" OR "QUALIFICATION") AND ("INDUSTRY_SECTOR_1" OR "RELATED_INDUSTRY")
 
 6.  Be as detailed and comprehensive as possible. Infer synonyms, related roles, skills, and industries.  Use exclusions to remove irrelevant profiles (e.g., -"entry level" -"intern"). Aim for expert-level boolean string quality.
 

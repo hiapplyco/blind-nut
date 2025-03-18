@@ -1,3 +1,4 @@
+
 import { PromptTemplate } from './types.ts';
 
 export const defaultPrompt: PromptTemplate = {

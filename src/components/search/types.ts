@@ -57,6 +57,7 @@ export interface Profile {
   profile_title?: string;
   profile_location?: string;
   profile_url: string;
+  snippet?: string;
   relevance_score?: number;
 }
 

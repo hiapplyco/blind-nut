@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,7 @@ export const ProfileCard = ({ profile: originalProfile }) => {
     profile_title: originalProfile.profile_title,
     profile_location: originalProfile.profile_location,
     profile_url: originalProfile.profile_url,
-    snippet: originalProfile.snippet || ''
+    snippet: originalProfile.snippet || '',
   };
   
   const handleEnrichProfile = async () => {

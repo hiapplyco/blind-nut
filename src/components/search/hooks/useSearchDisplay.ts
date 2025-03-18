@@ -24,7 +24,7 @@ export const useSearchDisplay = (
     profile_title: result.jobTitle || '',
     profile_location: result.location || '',
     profile_url: result.profileUrl || result.link,
-    snippet: result.snippet || ''
+    snippet: result.snippet || ''  // Ensure snippet is included in formatted profiles
   }));
 
   // Initialize search string from props if available

@@ -60,11 +60,8 @@ export const SearchFormContent = memo(({
         <MemoizedFormHeader />
         
         <MemoizedContentTextarea
-          searchText={searchText}
-          isProcessing={isProcessing}
-          onTextChange={onSearchTextChange}
-          onFileUpload={onFileUpload}
-          onTextUpdate={onSearchTextChange}
+          content={searchText}
+          onChange={onSearchTextChange}
         />
 
         {searchType === "candidates-at-company" && (

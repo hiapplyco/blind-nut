@@ -64,10 +64,6 @@ export const LegacySearchForm = ({
     );
   };
 
-  const handleTextUpdate = (text: string) => {
-    setSearchText(text);
-  };
-
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
       <form onSubmit={(e) => submitForm(e, searchText, searchType, companyName)} className="space-y-6">
@@ -81,11 +77,8 @@ export const LegacySearchForm = ({
         <FormHeader />
         
         <ContentTextarea
-          searchText={searchText}
-          isProcessing={isProcessing}
-          onTextChange={setSearchText}
-          onFileUpload={handleFileUpload}
-          onTextUpdate={handleTextUpdate}
+          content={searchText}
+          onChange={setSearchText}
         />
 
         {searchType === "candidates-at-company" && (

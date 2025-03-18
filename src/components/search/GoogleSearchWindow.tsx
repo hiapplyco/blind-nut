@@ -21,7 +21,7 @@ export const GoogleSearchWindow = ({
   searchType = "candidates",
   jobId
 }: GoogleSearchWindowProps) => {
-  console.log("GoogleSearchWindow rendered with props:", { 
+  console.log("🔍 [DEBUG] GoogleSearchWindow rendered with props:", { 
     searchTerm, 
     initialSearchString, 
     searchType, 
@@ -47,10 +47,10 @@ export const GoogleSearchWindow = ({
   // Update search string when props change
   useEffect(() => {
     if (initialSearchString && initialSearchString !== searchString) {
-      console.log("Setting search string from props:", initialSearchString);
+      console.log("🔍 [DEBUG] Setting search string from props:", initialSearchString);
       setSearchString(initialSearchString);
     } else if (searchTerm && !initialSearchString && !searchString) {
-      console.log("Setting search string from search term:", searchTerm);
+      console.log("🔍 [DEBUG] Setting search string from search term:", searchTerm);
       setSearchString(searchTerm);
     }
   }, [initialSearchString, searchTerm, setSearchString, searchString]);
@@ -58,7 +58,7 @@ export const GoogleSearchWindow = ({
   // Show error messages
   useEffect(() => {
     if (error) {
-      console.error("Search error occurred:", error);
+      console.error("❌ [ERROR] Search error occurred:", error);
       toast.error(`Search failed: ${error.message || "Unknown error"}`);
     }
   }, [error]);
@@ -67,14 +67,22 @@ export const GoogleSearchWindow = ({
   useEffect(() => {
     const searchStr = initialSearchString || searchString || searchTerm;
     if (searchStr && searchStr.trim() !== '' && results.length === 0 && !isLoading) {
-      console.log("Auto-running search for:", searchStr);
+      console.log("🔍 [DEBUG] Auto-running search for:", searchStr);
+      console.log("🔍 [DEBUG] Current state before auto-search:", {
+        results: results.length,
+        isLoading,
+        initialSearchString,
+        searchString,
+        searchTerm
+      });
+      
       const timer = setTimeout(() => {
-        console.log("Executing handleSearch() after timeout");
+        console.log("🔍 [DEBUG] Executing handleSearch() after timeout");
         handleSearch(1);
       }, 500); // Small delay to ensure component is mounted
       
       return () => {
-        console.log("Clearing search timeout");
+        console.log("🔍 [DEBUG] Clearing search timeout");
         clearTimeout(timer);
       };
     }
@@ -113,6 +121,7 @@ export const GoogleSearchWindow = ({
         <div className="bg-blue-50 p-3 mb-2 border rounded text-xs font-mono">
           <div><strong>Debug:</strong> searchString: {searchString || "none"}</div>
           <div>initialSearchString: {initialSearchString || "none"}</div>
+          <div>searchTerm: {searchTerm || "none"}</div>
           <div>isLoading: {isLoading ? "true" : "false"}</div>
           <div>totalResults: {totalResults}, resultsCount: {results.length}</div>
           {error && <div className="text-red-500">Error: {error.message}</div>}

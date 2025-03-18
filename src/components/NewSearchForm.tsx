@@ -122,10 +122,17 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
   };
 
   const handleShowGoogleSearch = (searchString: string) => {
-    console.log("handleShowGoogleSearch called with:", searchString);
+    console.log("🔍 [DEBUG] onShowGoogleSearch called with:", searchString);
+    console.log("🔍 [DEBUG] Current state before search:", {
+      currentJobId,
+      showGoogleSearch: showGoogleSearch,
+      searchTextLength: searchText?.length || 0,
+      existingSearchString: searchString || 'none',
+      isProcessingComplete
+    });
     
     if (!searchString || searchString.trim() === '') {
-      console.error("Empty search string provided to handleShowGoogleSearch");
+      console.error("❌ [ERROR] Empty search string provided to handleShowGoogleSearch");
       toast.error("Cannot search with empty search string");
       return;
     }
@@ -135,11 +142,20 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
       ? searchString 
       : `${searchString} site:linkedin.com/in/`;
     
-    console.log("Setting search string:", finalSearchString);
+    console.log("🔍 [DEBUG] Setting search string:", finalSearchString);
     setSearchString(finalSearchString);
     
-    console.log("Setting showGoogleSearch to true");
+    console.log("🔍 [DEBUG] Setting showGoogleSearch to true");
     setShowGoogleSearch(true);
+    
+    // Check if the state updates actually take effect
+    setTimeout(() => {
+      console.log("🔍 [DEBUG] State after timeout:", {
+        showGoogleSearch,
+        searchString: finalSearchString,
+        searchStringState: searchString,
+      });
+    }, 100);
   };
 
   return (
@@ -159,6 +175,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
             <p>Search Text: {searchText ? `"${searchText.substring(0, 50)}${searchText.length > 50 ? '...' : ''}"` : 'None'}</p>
             <p>Search String: {searchString ? `"${searchString}"` : 'None'}</p>
             <p>Current Job ID: {currentJobId || 'None'}</p>
+            <p>showGoogleSearch: {showGoogleSearch ? 'true' : 'false'}</p>
           </div>
           
           <GoogleSearchWindow 

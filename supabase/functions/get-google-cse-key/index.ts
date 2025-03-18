@@ -23,7 +23,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: "API key not configured", 
-          message: "GOOGLE_CSE_API_KEY is not set on the server"
+          message: "GOOGLE_CSE_API_KEY is not set on the server",
+          debug: "Please set this environment variable in the Supabase dashboard under Settings > API > Edge Functions"
         }),
         { 
           status: 500, 

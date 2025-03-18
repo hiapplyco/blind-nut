@@ -66,8 +66,7 @@ export const exportResultsToCSV = (results: SearchResult[]): void => {
     'Name',
     'Title',
     'Location',
-    'Profile URL',
-    'Relevance Score'
+    'Profile URL'
   ].join(',');
   
   // Convert results to CSV rows
@@ -76,8 +75,7 @@ export const exportResultsToCSV = (results: SearchResult[]): void => {
       `"${result.name.replace(/"/g, '""')}"`,
       `"${result.jobTitle?.replace(/"/g, '""') || ''}"`,
       `"${result.location?.replace(/"/g, '""') || ''}"`,
-      `"${result.profileUrl || result.link}"`,
-      result.relevance_score || ''
+      `"${result.profileUrl || result.link}"`
     ].join(',');
   });
   

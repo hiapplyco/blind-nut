@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, User } from "lucide-react";
+import { Loader2, User, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { SearchResultItemProps } from "../types";
 import { useProfileEnrichment } from "../hooks/useProfileEnrichment";
@@ -58,7 +58,7 @@ export const SearchResultItem = ({
   };
 
   return (
-    <div className="p-4 border rounded-lg border-black relative">
+    <div className="p-4 border rounded-lg border-black relative hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)] transition-all duration-300 hover:bg-[#F5F0ED]">
       <h3 className="font-medium">
         <a
           href={result.link || result.profileUrl}
@@ -69,8 +69,9 @@ export const SearchResultItem = ({
         />
       </h3>
       {result.location && (
-        <p className="mt-1 text-sm font-semibold text-emerald-600">
-          📍 {result.location}
+        <p className="mt-1 text-sm font-semibold text-emerald-600 flex items-center">
+          <MapPin className="h-4 w-4 mr-1" />
+          {result.location}
         </p>
       )}
       <p className="mt-1 text-sm text-gray-600">{result.snippet || result.title}</p>
@@ -82,7 +83,7 @@ export const SearchResultItem = ({
             size="sm"
             variant="secondary"
             disabled={isLoading}
-            className="border-2 border-black bg-[#FEF7CD] hover:bg-[#FEF7CD]/80 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.25)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.25)] z-10"
+            className="border-2 border-black bg-[#FEF7CD] hover:bg-[#FEF7CD]/80 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.25)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.25)] z-10 animate-fade-in"
           >
             {isLoading ? (
               <>

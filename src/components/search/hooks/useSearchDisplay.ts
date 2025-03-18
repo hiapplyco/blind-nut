@@ -12,6 +12,7 @@ export const useSearchDisplay = (
   setSearchString?: (value: React.SetStateAction<string>) => void
 ) => {
   const [showResultsAs, setShowResultsAs] = useState<'cards' | 'list'>('cards');
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   
   // Formatted profiles for card display
   const formattedProfiles = results.map(result => ({
@@ -23,7 +24,7 @@ export const useSearchDisplay = (
     profile_title: result.jobTitle || '',
     profile_location: result.location || '',
     profile_url: result.profileUrl || result.link,
-    relevance_score: result.relevance_score
+    snippet: result.snippet || ''
   }));
 
   // Initialize search string from props if available
@@ -42,9 +43,16 @@ export const useSearchDisplay = (
     setShowResultsAs(prev => prev === 'cards' ? 'list' : 'cards');
   };
 
+  // Toggle expanded card
+  const toggleCardExpansion = (id: string) => {
+    setExpandedCardId(prev => prev === id ? null : id);
+  };
+
   return {
     showResultsAs,
     toggleDisplayMode,
-    formattedProfiles
+    formattedProfiles,
+    expandedCardId,
+    toggleCardExpansion
   };
 };

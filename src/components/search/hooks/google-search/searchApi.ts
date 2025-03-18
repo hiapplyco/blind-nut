@@ -19,7 +19,7 @@ export const processSearchResults = (data: GoogleSearchResult): SearchResult[] =
     location: extractLocationFromSnippet(item.snippet),
     jobTitle: item.snippet?.split('|')[0]?.trim() || '',
     profileUrl: item.link,
-    relevance_score: 75 // Default score for CSE results
+    relevance_score: undefined // Removed arbitrary score
   }));
 };
 
@@ -100,8 +100,8 @@ export const fetchSearchResults = async (
           name: item.title.replace(/\s\|\s.*$/, ''), // Extract name from title
           location: extractLocationFromSnippet(item.snippet),
           jobTitle: item.snippet.split('|')[0].trim(),
-          profileUrl: item.link,
-          relevance_score: 75 // Default score for CSE results
+          profileUrl: item.link
+          // No relevance_score here anymore
         }));
         
         return { 

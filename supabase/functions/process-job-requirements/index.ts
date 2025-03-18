@@ -1,15 +1,13 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "npm:@google/generative-ai";
 import { supabaseClient } from "../_shared/supabase-client.ts";
 import { promptManager } from "../_shared/prompts/promptManager.ts";
 import { clarvidaPrompt } from "../_shared/prompts/clarvida.prompt.ts";
 import { defaultPrompt } from "../_shared/prompts/default.prompt.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from "./cors.ts";
+import { generateContent } from "./gemini.ts";
+import { createJobRecord } from "./db.ts";
+import { processClarvidaResponse } from "./clarvida.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -23,15 +21,6 @@ serve(async (req) => {
     
     console.log("Processing job requirements with params:", { searchType, companyName, source });
     
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY environment variable is not set");
-    }
-
-    const genAI = new GoogleGenerativeAI(apiKey);
-    // Updated model name from gemini-2.0-flash to gemini-1.5-flash
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
     // Use specialized prompt for Clarvida source
     let promptText;
     if (source === "clarvida") {
@@ -43,10 +32,7 @@ serve(async (req) => {
       console.log("Using default prompt");
     }
     
-    console.log("Sending prompt to Gemini API");
-    const result = await model.generateContent(promptText);
-    const responseText = result.response.text();
-    console.log("Received response from Gemini API:", responseText);
+    const responseText = await generateContent(promptText);
     
     // For default search behavior, just return the search string directly
     if (source !== "clarvida") {
@@ -57,38 +43,13 @@ serve(async (req) => {
       // Create job record if a userId is provided
       if (userId) {
         try {
-          // Only include fields that exist in the jobs table
-          const jobData = {
-            user_id: userId,
-            content: content,
-            search_string: searchString,
-            source: source || 'default'
-          };
-          
-          // Add searchType if supported by schema
-          if (searchType) {
-            jobData.search_type = searchType;
-          }
-          
-          // Insert job data without fields that don't exist in schema
-          const { data, error } = await supabaseClient
-            .from('jobs')
-            .insert(jobData)
-            .select('id')
-            .single();
-            
-          if (error) {
-            console.error("Error inserting job:", error);
-            throw error;
-          }
-          
-          console.log("Job created with ID:", data.id);
+          const jobId = await createJobRecord(userId, content, searchString, source || 'default', searchType);
           
           return new Response(
             JSON.stringify({
               success: true,
               searchString: searchString,
-              jobId: data.id
+              jobId: jobId
             }),
             {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -113,37 +74,7 @@ serve(async (req) => {
     
     // For Clarvida source, try to parse JSON from the AI response
     try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      let parsedResponse;
-      
-      if (jsonMatch) {
-        parsedResponse = JSON.parse(jsonMatch[0]);
-        console.log("Successfully parsed JSON response");
-      } else {
-        console.error("Failed to extract JSON from response:", responseText);
-        throw new Error("Could not extract JSON from response");
-      }
-      
-      // Ensure searchString is in the response
-      if (!parsedResponse.searchString) {
-        console.warn("No searchString found in AI response, attempting to construct one");
-        
-        // Construct a basic search string from the terms
-        if (parsedResponse.terms && parsedResponse.terms.skills && parsedResponse.terms.skills.length > 0) {
-          const skills = parsedResponse.terms.skills.map((skill: string) => `"${skill}"`).join(" OR ");
-          const titles = parsedResponse.terms.titles && parsedResponse.terms.titles.length > 0 
-            ? parsedResponse.terms.titles.map((title: string) => `"${title}"`).join(" OR ") 
-            : "";
-          
-          parsedResponse.searchString = `(${skills})${titles ? ` AND (${titles})` : ""}`;
-          console.log("Generated fallback search string:", parsedResponse.searchString);
-        } else {
-          // If no terms available, create a simple search string from the content
-          const keywords = content.split(/\s+/).filter((word: string) => word.length > 5).slice(0, 5);
-          parsedResponse.searchString = `(${keywords.join(" OR ")})`;
-          console.log("Generated emergency fallback search string:", parsedResponse.searchString);
-        }
-      }
+      const parsedResponse = processClarvidaResponse(responseText, content);
       
       // Insert the job analysis into the database if a userId is provided
       let jobId;

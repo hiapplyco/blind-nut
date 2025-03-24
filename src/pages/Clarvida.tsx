@@ -41,16 +41,16 @@ const Clarvida = () => {
   };
 
   const menuItems = [
-    { title: 'Dashboard', path: '/clarvida', icon: Home, active: true },
-    { title: 'Search', path: '/clarvida/search', icon: Search },
-    { title: 'Reports', path: '/clarvida/reports', icon: FileText },
-    { title: 'Settings', path: '/clarvida/settings', icon: Settings },
+    { title: 'Dashboard', path: '/clarvida', icon: Home, active: location.pathname === '/clarvida' },
+    { title: 'Search', path: '/clarvida/search', icon: Search, active: location.pathname === '/clarvida/search' },
+    { title: 'Reports', path: '/clarvida/reports', icon: FileText, active: location.pathname === '/clarvida/reports' },
+    { title: 'Settings', path: '/clarvida/settings', icon: Settings, active: location.pathname === '/clarvida/settings' },
   ];
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-[#F1F0FB]">
-        <Sidebar>
+        <Sidebar collapsible="offcanvas">
           <SidebarContent>
             <div className="px-3 py-4">
               <ClarvidaHeader />

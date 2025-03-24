@@ -28,9 +28,9 @@ const MainLayoutComponent = () => {
   }, [isAuthenticated, navigate]);
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-[#F1F0FB]">
-        <Sidebar>
+        <Sidebar collapsible="icon">
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupContent>

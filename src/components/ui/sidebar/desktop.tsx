@@ -34,7 +34,8 @@ export const DesktopSidebar = React.forwardRef<HTMLDivElement, DesktopSidebarPro
         />
         <div
           className={cn(
-            "fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] duration-300 ease-in-out md:flex",
+            "fixed inset-y-0 z-10 hidden h-svh transition-all duration-300 ease-in-out md:flex",
+            state === "expanded" ? "w-[--sidebar-width]" : "w-[--sidebar-width-icon]",
             side === "left" ? (
               state === "collapsed" ? "left-[-var(--sidebar-width)]" : "left-0"
             ) : (

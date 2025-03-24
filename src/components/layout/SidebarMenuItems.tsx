@@ -1,7 +1,8 @@
 
 import { memo } from "react";
 import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle, LayoutDashboard } from "lucide-react";
-import { SidebarMenu } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar/context";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Define the menu item type with optional disabled property
 export type MenuItem = {
@@ -32,29 +33,60 @@ export const SidebarMenuItemWithDisabled = memo(({
   pathname: string; 
   navigate: (path: string) => void;
 }) => {
+  const { state } = useSidebar();
   const isActive = pathname === item.path;
+  const isCollapsed = state === "collapsed";
+  
+  const buttonContent = (
+    <>
+      <item.icon className="h-5 w-5" />
+      {!isCollapsed && (
+        <span className="transition-opacity duration-300">
+          {item.title}
+          {item.disabled && (
+            <span className="text-xs font-semibold bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded ml-2">
+              Disabled
+            </span>
+          )}
+        </span>
+      )}
+    </>
+  );
+  
+  const buttonClasses = `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+    isActive 
+      ? "text-black bg-white" 
+      : item.disabled 
+        ? "text-gray-400 cursor-not-allowed" 
+        : "text-gray-600 hover:text-gray-900 hover:bg-[#F1F0FB]/50"
+  }`;
   
   return (
     <li className="relative py-1">
-      <button
-        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-          isActive 
-            ? "text-black bg-white" 
-            : item.disabled 
-              ? "text-gray-400 cursor-not-allowed" 
-              : "text-gray-600 hover:text-gray-900 hover:bg-[#F1F0FB]/50"
-        }`}
-        onClick={() => !item.disabled && navigate(item.path)}
-        disabled={item.disabled}
-      >
-        <item.icon className="h-5 w-5" />
-        <span>{item.title}</span>
-        {item.disabled && (
-          <span className="text-xs font-semibold bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded ml-auto">
-            Disabled
-          </span>
-        )}
-      </button>
+      {isCollapsed ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className={buttonClasses}
+              onClick={() => !item.disabled && navigate(item.path)}
+              disabled={item.disabled}
+            >
+              {buttonContent}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {item.title} {item.disabled && "(Disabled)"}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <button
+          className={buttonClasses}
+          onClick={() => !item.disabled && navigate(item.path)}
+          disabled={item.disabled}
+        >
+          {buttonContent}
+        </button>
+      )}
     </li>
   );
 });
@@ -70,7 +102,7 @@ export const SidebarMenuContent = memo(({
   handleNavigation: (path: string) => void;
 }) => {
   return (
-    <SidebarMenu>
+    <ul className="flex w-full min-w-0 flex-col gap-1">
       {menuItems.map((item) => (
         <SidebarMenuItemWithDisabled
           key={item.path}
@@ -79,7 +111,7 @@ export const SidebarMenuContent = memo(({
           navigate={handleNavigation}
         />
       ))}
-    </SidebarMenu>
+    </ul>
   );
 });
 

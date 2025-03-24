@@ -88,6 +88,20 @@ const ClarvidaLogin = () => {
       <div className="max-w-md mx-auto">
         <ClarvidaHeader />
         
+        <div className="flex flex-col items-center mb-6">
+          <img 
+            src="/lovable-uploads/a36a9030-18dd-4eec-bf47-21de5406f97b.png" 
+            alt="Purple Squirrel" 
+            className="w-40 h-40 object-contain mb-3"
+          />
+          <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-[#8B5CF6] via-[#9B87F5] to-[#A18472] bg-clip-text text-transparent">
+            Find Your <span className="text-[#8B5CF6] font-extrabold">Purple Squirrel</span>
+          </h1>
+          <p className="text-sm text-gray-600 text-center">
+            Powerful recruitment search tools
+          </p>
+        </div>
+        
         <Card className="mt-8 shadow-lg rounded-lg p-8 border border-gray-200">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">

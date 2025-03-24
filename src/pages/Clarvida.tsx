@@ -13,7 +13,7 @@ import {
 import { Home, Search, FileText, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useClarvidaAuth } from "@/context/ClarvidaAuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { ClarvidaHeader } from "@/components/clarvida/ClarvidaHeader";
 import { ClarvidaResults } from "@/components/clarvida/ClarvidaResults";
@@ -21,6 +21,8 @@ import { ClarvidaResults } from "@/components/clarvida/ClarvidaResults";
 const Clarvida = () => {
   const { signOut } = useClarvidaAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mockData, setMockData] = useState(null);
   
   const handleSignOut = async () => {
     try {
@@ -31,6 +33,11 @@ const Clarvida = () => {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');
     }
+  };
+
+  const handleNewSearch = () => {
+    // Placeholder for new search action
+    toast.info('New search functionality coming soon!');
   };
 
   const menuItems = [
@@ -52,7 +59,7 @@ const Clarvida = () => {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems.map((item) => (
-                    <SidebarMenuItem key={item.path}>
+                    <li key={item.path} className="relative py-1">
                       <button
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
                           item.active 
@@ -64,7 +71,7 @@ const Clarvida = () => {
                         <item.icon className="h-5 w-5" />
                         <span>{item.title}</span>
                       </button>
-                    </SidebarMenuItem>
+                    </li>
                   ))}
                 </SidebarMenu>
               </SidebarGroupContent>
@@ -88,7 +95,15 @@ const Clarvida = () => {
               <h1 className="text-2xl font-bold">Clarvida Dashboard</h1>
               <div className="w-10"></div> {/* Spacer for balance */}
             </div>
-            <ClarvidaResults />
+            <ClarvidaResults 
+              data={mockData} 
+              onNewSearch={handleNewSearch}
+              originalSearchText="Sample job description"
+              onSearchCandidates={(searchString) => {
+                console.log("Search candidates with:", searchString);
+                toast.info("Candidate search functionality coming soon!");
+              }}
+            />
           </div>
         </div>
       </div>

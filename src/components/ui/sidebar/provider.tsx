@@ -47,7 +47,9 @@ export const SidebarProvider = React.forwardRef<HTMLDivElement, SidebarProviderP
       return () => window.removeEventListener("keydown", handleKeyDown)
     }, [toggleSidebar])
 
-    const state = open ? "expanded" : "collapsed"
+    // Fix: Explicitly type state as the literal union type expected by SidebarContextType
+    const state: "expanded" | "collapsed" = open ? "expanded" : "collapsed"
+    
     const contextValue = React.useMemo(
       () => ({
         state,

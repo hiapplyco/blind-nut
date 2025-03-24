@@ -41,10 +41,34 @@ const Clarvida = () => {
   };
 
   const menuItems = [
-    { title: 'Dashboard', path: '/clarvida', icon: Home, active: location.pathname === '/clarvida' },
-    { title: 'Search', path: '/clarvida/search', icon: Search, active: location.pathname === '/clarvida/search' },
-    { title: 'Reports', path: '/clarvida/reports', icon: FileText, active: location.pathname === '/clarvida/reports' },
-    { title: 'Settings', path: '/clarvida/settings', icon: Settings, active: location.pathname === '/clarvida/settings' },
+    { 
+      title: 'Dashboard', 
+      path: '/clarvida', 
+      icon: Home, 
+      active: location.pathname === '/clarvida',
+      onClick: () => navigate('/clarvida')
+    },
+    { 
+      title: 'Search', 
+      path: '/clarvida/search', 
+      icon: Search, 
+      active: location.pathname === '/clarvida/search',
+      onClick: () => navigate('/clarvida/search')
+    },
+    { 
+      title: 'Reports', 
+      path: '/clarvida/reports', 
+      icon: FileText, 
+      active: location.pathname === '/clarvida/reports',
+      onClick: () => navigate('/clarvida/reports')
+    },
+    { 
+      title: 'Settings', 
+      path: '/clarvida/settings', 
+      icon: Settings, 
+      active: location.pathname === '/clarvida/settings',
+      onClick: () => navigate('/clarvida/settings')
+    },
   ];
 
   return (
@@ -59,19 +83,10 @@ const Clarvida = () => {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems.map((item) => (
-                    <li key={item.path} className="relative py-1">
-                      <button
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                          item.active 
-                            ? "text-black bg-white" 
-                            : "text-gray-600 hover:text-gray-900 hover:bg-[#F1F0FB]/50"
-                        }`}
-                        onClick={() => navigate(item.path)}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.title}</span>
-                      </button>
-                    </li>
+                    <SidebarMenuItem
+                      key={item.path}
+                      item={item}
+                    />
                   ))}
                 </SidebarMenu>
               </SidebarGroupContent>

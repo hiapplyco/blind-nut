@@ -19,7 +19,10 @@ export const ChatInput = ({ input, setInput, handleSubmit, isLoading, isGenerati
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder="Ask questions about your data..."
-        className="border-2 border-black rounded-lg p-4 resize-none"
+        className={cn(
+          "border-2 border-black rounded-lg p-4 resize-none",
+          (isLoading || isGenerating) && "bg-gray-100 text-gray-400"
+        )}
         rows={3}
         disabled={isLoading || isGenerating}
       />
@@ -29,7 +32,8 @@ export const ChatInput = ({ input, setInput, handleSubmit, isLoading, isGenerati
           className={cn(
             "bg-purple-600 text-white hover:bg-purple-700",
             "border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
-            "hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+            "hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all",
+            (isLoading || isGenerating || !input.trim()) && "opacity-50 cursor-not-allowed"
           )}
           disabled={isLoading || isGenerating || !input.trim()}
         >

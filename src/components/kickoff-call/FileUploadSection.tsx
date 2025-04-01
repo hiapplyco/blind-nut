@@ -12,10 +12,11 @@ interface FileUploadSectionProps {
 
 export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSectionProps) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{fileName: string, status: string} | null>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
     setIsUploading(true);
 
@@ -48,16 +49,36 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
           continue;
         }
 
+        // Create a unique ID for this upload in the toast system
+        const toastId = `upload-${Date.now()}-${file.name}`;
+        
+        // Show initial toast for file upload
+        toast.loading(`Uploading ${file.name}...`, { id: toastId });
+        
+        setUploadProgress({
+          fileName: file.name,
+          status: "Uploading file..."
+        });
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('userId', session.user.id);
 
+        // Update progress status
+        setUploadProgress({
+          fileName: file.name,
+          status: "Processing with Gemini..."
+        });
+        
+        // Update toast to show processing status
+        toast.loading(`Processing ${file.name} with Gemini...`, { id: toastId });
+        
         const { data, error } = await supabase.functions.invoke('parse-document', {
           body: formData,
         });
 
         if (error) {
-          toast.error(`Failed to process ${file.name}: ${error.message}`);
+          toast.error(`Failed to process ${file.name}: ${error.message}`, { id: toastId });
           continue;
         }
 
@@ -73,16 +94,19 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
 
           if (summaryError) {
             console.error('Error storing summary:', summaryError);
-            toast.error(`Failed to store summary for ${file.name}`);
+            toast.error(`Failed to store summary for ${file.name}`, { id: toastId });
             continue;
           }
 
           onFileUpload(data.filePath, file.name, data.text);
-          toast.success(`Successfully processed ${file.name}`, {
+          
+          // Update toast to show success
+          toast.success(`Successfully processed ${file.name}`, { 
+            id: toastId,
             className: "animate-fade-in",
           });
         } else {
-          toast.error(`No text content extracted from ${file.name}`);
+          toast.error(`No text content extracted from ${file.name}`, { id: toastId });
         }
       }
     } catch (error) {
@@ -90,6 +114,7 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
       toast.error("Failed to process files. Please try again.");
     } finally {
       setIsUploading(false);
+      setUploadProgress(null);
       if (event.target) event.target.value = '';
     }
   };
@@ -140,6 +165,18 @@ export const FileUploadSection = ({ onFileUpload, isProcessing }: FileUploadSect
           )}
         </span>
       </div>
+
+      {uploadProgress && (
+        <div className="mt-2 p-3 border-2 border-blue-400 bg-blue-50 rounded-md">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+            <div>
+              <p className="font-medium text-blue-700">{uploadProgress.fileName}</p>
+              <p className="text-sm text-blue-600">{uploadProgress.status}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

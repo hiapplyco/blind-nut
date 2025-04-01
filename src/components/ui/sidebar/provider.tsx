@@ -33,7 +33,11 @@ export const SidebarProvider = React.forwardRef<HTMLDivElement, SidebarProviderP
     )
 
     const toggleSidebar = React.useCallback(() => {
-      return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
+      if (isMobile) {
+        setOpenMobile(prev => !prev);
+      } else {
+        setOpen(prev => !prev);
+      }
     }, [isMobile, setOpen, setOpenMobile])
 
     React.useEffect(() => {
@@ -47,7 +51,9 @@ export const SidebarProvider = React.forwardRef<HTMLDivElement, SidebarProviderP
       return () => window.removeEventListener("keydown", handleKeyDown)
     }, [toggleSidebar])
 
-    const state = open ? ("expanded" as const) : ("collapsed" as const)
+    // Explicitly type state as the literal union type expected by SidebarContextType
+    const state: "expanded" | "collapsed" = open ? "expanded" : "collapsed"
+    
     const contextValue = React.useMemo(
       () => ({
         state,
@@ -87,4 +93,3 @@ export const SidebarProvider = React.forwardRef<HTMLDivElement, SidebarProviderP
   }
 )
 SidebarProvider.displayName = "SidebarProvider"
-

@@ -1,11 +1,11 @@
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Users, Building2, Briefcase } from "lucide-react";
+import { Users, Briefcase } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { SearchType } from "./types";
 
-type SearchType = "candidates" | "companies" | "candidates-at-company";
-
-interface SearchTypeToggleProps {
+export interface SearchTypeToggleProps {
   value: SearchType;
   onValueChange: (value: SearchType) => void;
 }
@@ -25,12 +25,6 @@ export const SearchTypeToggle = ({ value, onValueChange }: SearchTypeToggleProps
               <div className="flex items-center">
                 <Users className="h-4 w-4 mr-2" />
                 Candidates
-              </div>
-            </SelectItem>
-            <SelectItem value="companies">
-              <div className="flex items-center">
-                <Building2 className="h-4 w-4 mr-2" />
-                Companies
               </div>
             </SelectItem>
             <SelectItem value="candidates-at-company">
@@ -60,14 +54,6 @@ export const SearchTypeToggle = ({ value, onValueChange }: SearchTypeToggleProps
         >
           <Users className="h-4 w-4 mr-2" />
           Candidates
-        </ToggleGroupItem>
-        <ToggleGroupItem 
-          value="companies" 
-          aria-label="Search for companies"
-          className="data-[state=on]:bg-[#D946EF] data-[state=on]:text-white hover:bg-[#D946EF]/20"
-        >
-          <Building2 className="h-4 w-4 mr-2" />
-          Companies
         </ToggleGroupItem>
         <ToggleGroupItem 
           value="candidates-at-company" 

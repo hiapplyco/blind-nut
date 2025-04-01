@@ -1,30 +1,31 @@
+
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface SubmitButtonProps {
   isProcessing: boolean;
   isDisabled: boolean;
+  buttonText?: string;
 }
 
-export const SubmitButton = ({ isProcessing, isDisabled }: SubmitButtonProps) => {
+export const SubmitButton = ({ 
+  isProcessing, 
+  isDisabled,
+  buttonText
+}: SubmitButtonProps) => {
   return (
     <Button 
       type="submit" 
-      className="w-full bg-[#8B5CF6] text-white py-4 rounded font-bold text-lg border-4 
-        border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 
-        hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all
-        disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-hover" 
       disabled={isDisabled}
+      className="w-full md:w-auto border-2 border-black bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
     >
       {isProcessing ? (
-        <div className="flex items-center justify-center">
-          <div className="animate-spin mr-2">
-            <Upload className="h-4 w-4" />
-          </div>
+        <div className="flex items-center">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Processing...
         </div>
       ) : (
-        'Generate Search'
+        buttonText || 'Generate Search String'
       )}
     </Button>
   );

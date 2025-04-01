@@ -2,6 +2,8 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { VariantProps, cva } from "class-variance-authority"
+import { useSidebar } from "./context"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 export const SidebarMenu = React.memo(({ className, ...props }: React.ComponentProps<"ul">) => (
   <ul
@@ -34,51 +36,79 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-interface MenuItem {
+export interface SidebarMenuItemProps {
   title: string;
-  path: string;
   icon: React.ComponentType<any>;
+  path?: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
 }
 
-interface SidebarMenuItemProps extends React.ComponentProps<"li"> {
-  item: MenuItem;
-  pathname: string;
-  navigate: (path: string) => void;
-}
-
-const SidebarMenuItemComponent = React.memo(({ className, item, pathname, navigate, ...props }: SidebarMenuItemProps) => {
-  const handleClick = React.useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    if (pathname !== item.path) {
-      navigate(item.path);
+export const SidebarMenuItem = React.forwardRef<
+  HTMLLIElement,
+  React.ComponentProps<"li"> & {
+    item: SidebarMenuItemProps;
+  }
+>(({ className, item, ...props }, ref) => {
+  const { state } = useSidebar();
+  const Icon = item.icon;
+  const isCollapsed = state === "collapsed";
+  
+  const buttonContent = (
+    <>
+      <Icon className="h-4 w-4 shrink-0" />
+      {!isCollapsed && <span>{item.title}</span>}
+    </>
+  );
+  
+  const handleClick = (e: React.MouseEvent) => {
+    if (item.disabled) {
+      e.preventDefault();
+      return;
     }
-  }, [navigate, item.path, pathname]);
-
-  const ButtonIcon = item.icon;
-  const isActive = pathname === item.path;
+    
+    if (item.onClick) {
+      e.preventDefault();
+      item.onClick();
+    }
+  };
+  
+  const button = (
+    <button
+      onClick={handleClick}
+      disabled={item.disabled}
+      className={cn(
+        sidebarMenuButtonVariants({ variant: "default" }),
+        item.active && "bg-purple-100 text-purple-900",
+        item.disabled && "opacity-50 cursor-not-allowed"
+      )}
+    >
+      {buttonContent}
+    </button>
+  );
 
   return (
     <li
+      ref={ref}
       data-sidebar="menu-item"
       className={cn("group/menu-item relative", className)}
       {...props}
     >
-      <button
-        onClick={handleClick}
-        className={cn(
-          sidebarMenuButtonVariants({ variant: "default" }),
-          isActive && "bg-purple-100 text-purple-900"
-        )}
-      >
-        <ButtonIcon className="h-4 w-4" />
-        <span>{item.title}</span>
-      </button>
+      {isCollapsed ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {button}
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {item.title}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        button
+      )}
     </li>
   );
-}, (prevProps, nextProps) => {
-  return prevProps.pathname === nextProps.pathname && 
-         prevProps.item.path === nextProps.item.path;
 });
 
-SidebarMenuItemComponent.displayName = "SidebarMenuItem";
-export const SidebarMenuItem = SidebarMenuItemComponent;
+SidebarMenuItem.displayName = "SidebarMenuItem";

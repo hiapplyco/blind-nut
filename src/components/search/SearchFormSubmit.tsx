@@ -1,12 +1,14 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { processJobRequirements } from "@/utils/jobRequirements";
+import { SearchType } from "./types";
 
 interface SearchFormSubmitProps {
   userId: string;
   searchText: string;
-  searchType: "candidates" | "companies" | "candidates-at-company";
+  searchType: SearchType;
   companyName: string;
   onJobCreated: (jobId: number, text: string) => void;
   onProcessingChange: (isProcessing: boolean) => void;

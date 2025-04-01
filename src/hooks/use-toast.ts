@@ -1,8 +1,9 @@
+
 import * as React from "react"
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 5000 // Changed from 1000000 to 5000ms (5 seconds)
+const TOAST_REMOVE_DELAY = 5000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -86,8 +87,6 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -164,6 +163,16 @@ function toast({ ...props }: Toast) {
   }
 }
 
+// Add variant methods to toast function
+toast.info = (description: string) =>
+  toast({ description, variant: "default", title: "Info" })
+
+toast.error = (description: string) =>
+  toast({ description, variant: "destructive", title: "Error" })
+
+toast.success = (description: string) =>
+  toast({ description, variant: "default", title: "Success" })
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
@@ -185,4 +194,3 @@ function useToast() {
 }
 
 export { useToast, toast }
-

@@ -1,6 +1,6 @@
 
-import { useNavigate, useLocation } from "react-router-dom";
 import { Outlet } from "react-router-dom";
+import { useEffect, memo } from "react";
 import {
   SidebarProvider,
   Sidebar,
@@ -8,9 +8,8 @@ import {
   SidebarTrigger,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar";
+<<<<<<< HEAD
 import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,24 +17,20 @@ import { toast } from "sonner";
 import { memo, useCallback, useMemo, useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/context/AuthContext";
+=======
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { SidebarMenuContent } from "./SidebarMenuItems";
+import { NavigationProgress } from "./NavigationProgress";
+import { SignOutButton } from "./SignOutButton";
+import { useNavigation } from "@/hooks/useNavigation";
+>>>>>>> origin/main
 
-// Memoize menu items array to prevent recreation on each render
-const menuItems = [
-  { title: 'Dashboard', path: '/dashboard', icon: Home },
-  { title: 'Create LinkedIn Post', path: '/linkedin-post', icon: PlusCircle },
-  { title: 'Sourcing', path: '/sourcing', icon: Search },
-  { title: 'Screening Room', path: '/screening-room', icon: Video },
-  { title: 'Interview Prep', path: '/interview-prep', icon: Theater },
-  { title: 'Kickoff Call', path: '/kickoff-call', icon: PhoneCall },
-  { title: 'Chat', path: '/chat', icon: MessageSquare },
-] as const;
-
-interface MainLayoutProps {
-  children?: React.ReactNode;
-}
-
-const MainLayoutComponent = ({ children }: MainLayoutProps) => {
+const MainLayoutComponent = () => {
+  const { isNavigating, progress, handleNavigation, currentPath } = useNavigation();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+<<<<<<< HEAD
   const location = useLocation();
   const [isNavigating, setIsNavigating] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -109,26 +104,31 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
       ))}
     </SidebarMenu>
   ), [location.pathname, handleNavigation]);
+=======
+  
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+>>>>>>> origin/main
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-[#FFFBF4]">
-        <Sidebar>
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-[#F1F0FB]">
+        <Sidebar collapsible="icon">
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupContent>
-                {menuContent}
+                <SidebarMenuContent 
+                  pathname={currentPath} 
+                  handleNavigation={handleNavigation} 
+                />
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <div className="p-4 border-t">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-gray-600 hover:text-gray-900"
-              onClick={handleSignOut}
-            >
-              Sign Out
-            </Button>
+          <div className="p-4 border-t border-black">
+            <SignOutButton />
           </div>
         </Sidebar>
         <div className="flex-1">
@@ -136,15 +136,10 @@ const MainLayoutComponent = ({ children }: MainLayoutProps) => {
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <SidebarTrigger />
-                {isNavigating && (
-                  <div className="fixed top-0 left-0 w-full z-50">
-                    <Progress 
-                      value={progress} 
-                      className="h-1 rounded-none bg-transparent"
-                      indicatorClassName="bg-primary transition-all duration-300 ease-in-out"
-                    />
-                  </div>
-                )}
+                <NavigationProgress 
+                  isNavigating={isNavigating} 
+                  progress={progress} 
+                />
               </div>
               <div 
                 className={`transition-opacity duration-300 ${

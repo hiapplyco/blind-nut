@@ -7,8 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ScreeningHeader } from "@/components/screening/ScreeningHeader";
+import { ScreeningControls } from "@/components/screening/ScreeningControls";
+import { ScreeningChat } from "@/components/screening/ScreeningChat";
+import { ScreeningStatus } from "@/components/screening/ScreeningStatus";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useScreeningSession } from "@/hooks/useScreeningSession";
+import { Loader2 } from "lucide-react";
 
 interface Participant {
   id: string;
@@ -23,25 +27,44 @@ const ScreeningRoom = () => {
   const [whisperTranscript, setWhisperTranscript] = useState<string>("");
   const transcriptionProcessor = TranscriptionProcessor();
   const meetingDataManager = MeetingDataManager();
+  const [callFrame, setCallFrame] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [hasJoinedMeeting, setHasJoinedMeeting] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   const { sessionId } = useScreeningSession();
   useWebSocket(sessionId);
 
   useEffect(() => {
     const checkAuth = async () => {
+      setIsLoading(true);
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error || !session) {
         toast.error('Please sign in to access the screening room');
         navigate('/');
         return;
       }
+      setIsAuthenticated(true);
+      setIsLoading(false);
     };
+    
     checkAuth();
+    
+    // Set document title
+    document.title = "Screening Room | Pipecat";
+    
+    return () => {
+      document.title = "Pipecat"; // Reset title on unmount
+    };
   }, [navigate]);
 
   const handleJoinMeeting = () => {
     console.log('Joined meeting');
     toast.success('Welcome to the screening room! Your camera and microphone should start automatically.');
+    setIsLoading(false);
+    setHasJoinedMeeting(true);
   };
 
   const handleParticipantJoined = (participant: Participant) => {
@@ -71,6 +94,7 @@ const ScreeningRoom = () => {
       }
 
       toast.success('Meeting data saved successfully');
+      setHasJoinedMeeting(false);
     } catch (error) {
       console.error('Error saving meeting data:', error);
       toast.error('Failed to save meeting data');
@@ -79,18 +103,67 @@ const ScreeningRoom = () => {
 
   const handleRecordingStarted = async (recordingId: string) => {
     try {
+      setIsRecording(true);
       const transcript = await transcriptionProcessor.processRecording(recordingId);
       setWhisperTranscript(transcript);
       toast.success('Recording started successfully');
     } catch (error) {
       console.error('Error processing recording:', error);
       toast.error('Failed to process recording');
+      setIsRecording(false);
     }
   };
 
+  const handleRecordingStopped = () => {
+    setIsRecording(false);
+    toast.success('Recording saved successfully');
+  };
+
+  const handleCallFrameReady = (frame: any) => {
+    setCallFrame(frame);
+  };
+
+  const handleScreenShare = () => {
+    if (!callFrame) {
+      toast.error('Video call not ready');
+      return;
+    }
+
+    callFrame.startScreenShare()
+      .then(() => toast.success('Screen sharing started'))
+      .catch((error: any) => {
+        console.error('Screen sharing error:', error);
+        toast.error('Failed to start screen sharing');
+      });
+  };
+
+  // If still checking auth, show an auth loading screen
+  if (isLoading && !isAuthenticated) {
+    return (
+      <div className="flex flex-col h-screen">
+        <ScreeningHeader />
+        <div className="flex-1 flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 text-[#9b87f5] animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Initializing screening room...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen relative">
       <ScreeningHeader />
+      
+      {hasJoinedMeeting && (
+        <ScreeningStatus 
+          startTime={startTimeRef.current}
+          participantCount={participants.length}
+          isRecording={isRecording}
+        />
+      )}
+      
       <div className="flex-1 relative">
         <VideoCallFrame
           onJoinMeeting={handleJoinMeeting}
@@ -98,8 +171,23 @@ const ScreeningRoom = () => {
           onParticipantLeft={handleParticipantLeft}
           onLeaveMeeting={handleLeaveMeeting}
           onRecordingStarted={handleRecordingStarted}
+          onCallFrameReady={handleCallFrameReady}
         />
+        
+        {hasJoinedMeeting && (
+          <ScreeningControls 
+            onToggleChat={() => setIsChatOpen(!isChatOpen)}
+            onScreenShare={handleScreenShare}
+            callFrame={callFrame}
+          />
+        )}
       </div>
+      
+      <ScreeningChat 
+        open={isChatOpen} 
+        onClose={() => setIsChatOpen(false)}
+        sessionId={sessionId}
+      />
     </div>
   );
 };

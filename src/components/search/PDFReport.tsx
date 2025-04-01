@@ -1,15 +1,11 @@
 
+import { useState } from "react";
+import { GoogleSearchWindow } from "./GoogleSearchWindow";
+import { KeyTermsWindow } from "./KeyTermsWindow";
+import { CaptureWindow } from "./CaptureWindow";
+import { ViewReportButton } from "./ViewReportButton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Terms } from "@/types/agent";
-import ReactMarkdown from 'react-markdown';
-import { Card } from "@/components/ui/card";
-import { 
-  RocketIcon, 
-  TargetIcon, 
-  GraduationCapIcon, 
-  StarIcon, 
-  TrendingUpIcon, 
-  GiftIcon 
-} from "lucide-react";
 
 interface PDFReportProps {
   jobSummary: string;
@@ -17,137 +13,93 @@ interface PDFReportProps {
   compensationAnalysis: string;
   terms: Terms | null;
   searchString: string;
+  jobId?: number;
 }
 
-export const PDFReport = ({ 
+export const PDFReport = ({
   jobSummary,
   enhancedDescription,
   compensationAnalysis,
   terms,
-  searchString
+  searchString,
+  jobId,
 }: PDFReportProps) => {
+  const [currentSearchQuery, setCurrentSearchQuery] = useState(searchString || "");
+
+  // Update/create search query based on terms
+  const handleKeyTermClick = (term: string, termType: string) => {
+    let newQuery = `site:linkedin.com/in/ ${term}`;
+    
+    // For skills, we add them to the existing query
+    if (termType === "skills" || termType === "core_skills") {
+      // Check if we already have a search query
+      if (currentSearchQuery && !currentSearchQuery.includes(term)) {
+        newQuery = `${currentSearchQuery} ${term}`;
+      }
+    }
+    
+    setCurrentSearchQuery(newQuery);
+  };
+
+  const handleTextCapture = (text: string) => {
+    // Append the captured text to the search query
+    setCurrentSearchQuery((prev) => prev ? `${prev} ${text}` : text);
+  };
+
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8">
-      <h1 className="text-4xl font-bold mb-8">Job Analysis Report</h1>
-      
-      <div className="grid gap-8">
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <RocketIcon className="w-6 h-6 text-purple-500" />
-            <h2 className="text-2xl font-semibold">Job Summary</h2>
-          </div>
-          <div className="prose max-w-none">
-            <ReactMarkdown components={{
-              p: ({children}) => <p className="text-gray-600">{children}</p>,
-              strong: ({children}) => <span className="font-semibold text-gray-900">{children}</span>
-            }}>
-              {jobSummary}
-            </ReactMarkdown>
-          </div>
-        </Card>
+    <div className="space-y-6">
+      <Tabs defaultValue="search" className="w-full">
+        <TabsList className="w-full mb-6 border-2 border-black h-auto">
+          <TabsTrigger
+            value="search"
+            className="data-[state=active]:bg-black data-[state=active]:text-white text-lg px-4 py-2 h-auto"
+          >
+            Search Results
+          </TabsTrigger>
+          <TabsTrigger
+            value="terms"
+            className="data-[state=active]:bg-black data-[state=active]:text-white text-lg px-4 py-2 h-auto"
+          >
+            Key Terms
+          </TabsTrigger>
+          <TabsTrigger
+            value="capture"
+            className="data-[state=active]:bg-black data-[state=active]:text-white text-lg px-4 py-2 h-auto"
+          >
+            LinkedIn
+          </TabsTrigger>
+        </TabsList>
 
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <TargetIcon className="w-6 h-6 text-blue-500" />
-            <h2 className="text-2xl font-semibold">Enhanced Description</h2>
-          </div>
-          <div className="prose max-w-none">
-            <ReactMarkdown components={{
-              p: ({children}) => <p className="text-gray-600">{children}</p>,
-              strong: ({children}) => <span className="font-semibold text-gray-900">{children}</span>
-            }}>
-              {enhancedDescription}
-            </ReactMarkdown>
-          </div>
-        </Card>
+        <TabsContent value="search" className="mt-0">
+          <GoogleSearchWindow searchString={currentSearchQuery} jobId={jobId} />
+        </TabsContent>
 
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUpIcon className="w-6 h-6 text-green-500" />
-            <h2 className="text-2xl font-semibold">Compensation Analysis</h2>
-          </div>
-          <div className="prose max-w-none">
-            <ReactMarkdown components={{
-              p: ({children}) => <p className="text-gray-600">{children}</p>,
-              strong: ({children}) => <span className="font-semibold text-gray-900">{children}</span>
-            }}>
-              {compensationAnalysis}
-            </ReactMarkdown>
-          </div>
-        </Card>
+        <TabsContent value="terms" className="mt-0">
+          {terms ? (
+            <KeyTermsWindow 
+              terms={terms} 
+              onKeyTermClick={handleKeyTermClick} 
+              jobId={jobId}
+            />
+          ) : jobId ? (
+            <KeyTermsWindow 
+              jobId={jobId} 
+              onKeyTermClick={handleKeyTermClick}
+            />
+          ) : null}
+        </TabsContent>
 
-        {terms && (
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <StarIcon className="w-6 h-6 text-amber-500" />
-              <h2 className="text-2xl font-semibold">Key Terms</h2>
-            </div>
-            
-            <div className="grid gap-6">
-              <div>
-                <h3 className="text-lg font-medium mb-3 flex items-center gap-2">
-                  <GraduationCapIcon className="w-5 h-5 text-purple-500" />
-                  Skills & Technologies
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {terms.skills.map((skill, index) => (
-                    <span 
-                      key={index} 
-                      className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-sm font-medium"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
+        <TabsContent value="capture" className="mt-0">
+          <CaptureWindow onTextUpdate={handleTextCapture} />
+        </TabsContent>
+      </Tabs>
 
-              <div>
-                <h3 className="text-lg font-medium mb-3 flex items-center gap-2">
-                  <GiftIcon className="w-5 h-5 text-blue-500" />
-                  Job Titles
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {terms.titles.map((title, index) => (
-                    <span 
-                      key={index} 
-                      className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
-                    >
-                      {title}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium mb-3 flex items-center gap-2">
-                  <TargetIcon className="w-5 h-5 text-green-500" />
-                  Keywords
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {terms.keywords.map((keyword, index) => (
-                    <span 
-                      key={index} 
-                      className="px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <TargetIcon className="w-6 h-6 text-indigo-500" />
-            <h2 className="text-2xl font-semibold">Search String</h2>
-          </div>
-          <div className="p-4 bg-gray-50 rounded-lg font-mono text-sm overflow-x-auto">
-            {searchString}
-          </div>
-        </Card>
-      </div>
+      <ViewReportButton
+        jobSummary={jobSummary}
+        enhancedDescription={enhancedDescription}
+        compensationAnalysis={compensationAnalysis}
+        terms={terms}
+      />
     </div>
   );
 };

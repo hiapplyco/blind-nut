@@ -1,31 +1,23 @@
-import { Bot } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
-interface SearchFormHeaderProps {
-  currentJobId: number | null;
+export interface SearchFormHeaderProps {
   isProcessingComplete: boolean;
-  hasAgentOutput: boolean;
-  onViewReport: () => void;
+  currentJobId?: number | null;
+  hasAgentOutput?: boolean;
+  onViewReport?: () => void;
 }
 
 export const SearchFormHeader = ({ 
-  currentJobId, 
-  isProcessingComplete, 
+  isProcessingComplete,
+  currentJobId,
   hasAgentOutput,
-  onViewReport 
+  onViewReport
 }: SearchFormHeaderProps) => {
-  if (!currentJobId || !isProcessingComplete || !hasAgentOutput) return null;
-
   return (
-    <div className="mb-6">
-      <Button
-        type="button"
-        onClick={onViewReport}
-        className="w-full border-4 border-black bg-[#8B5CF6] text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
-      >
-        <Bot className="w-5 h-5 mr-2" />
-        View Analysis Report
-      </Button>
+    <div className="space-y-2">
+      <h2 className="text-2xl font-bold">Find Qualified Candidates</h2>
+      <p className="text-gray-600">
+        Paste a job description or requirements to generate a boolean search string and find matching candidates.
+      </p>
     </div>
   );
 };

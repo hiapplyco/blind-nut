@@ -25,7 +25,7 @@ export const DesktopSidebar = React.forwardRef<HTMLDivElement, DesktopSidebarPro
       >
         <div
           className={cn(
-            "duration-300 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-in-out",
+            "relative h-svh w-[--sidebar-width] bg-transparent transition-[width] duration-300 ease-in-out",
             state === "collapsed" && "w-0",
             variant === "floating" || variant === "inset"
               ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
@@ -34,7 +34,8 @@ export const DesktopSidebar = React.forwardRef<HTMLDivElement, DesktopSidebarPro
         />
         <div
           className={cn(
-            "duration-300 fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] ease-in-out md:flex",
+            "fixed inset-y-0 z-10 hidden h-svh transition-all duration-300 ease-in-out md:flex",
+            state === "expanded" ? "w-[--sidebar-width]" : "w-[--sidebar-width-icon]",
             side === "left" ? (
               state === "collapsed" ? "left-[-var(--sidebar-width)]" : "left-0"
             ) : (
@@ -48,7 +49,10 @@ export const DesktopSidebar = React.forwardRef<HTMLDivElement, DesktopSidebarPro
         >
           <div
             data-sidebar="sidebar"
-            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+            className={cn(
+              "flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow",
+              state === "collapsed" && "overflow-hidden"
+            )}
           >
             {children}
           </div>

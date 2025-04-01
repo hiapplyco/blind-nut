@@ -37,18 +37,23 @@ export const setupWebSocketEventHandlers = (
       }
 
       if (response.error) {
-        toast.error(response.error);
+        console.error('WebSocket response error:', response.error);
+        // Only show toast for application-level errors, not connection errors
+        if (typeof response.error === 'string' && !response.error.includes('connection')) {
+          toast.error(response.error);
+        }
       }
     } catch (error) {
       console.error('Error processing message:', error);
-      toast.error('Failed to process message');
+      // Don't show toast for parsing errors as they may be related to connection issues
     }
   };
 
   ws.onerror = (error: ErrorEvent) => {
     console.error('WebSocket error:', error);
     if (onError) onError(error);
-    toast.error('Connection error occurred');
+    // Remove toast notification for WebSocket connection errors
+    // They are expected in some environments and don't affect core functionality
   };
 
   ws.onclose = () => {

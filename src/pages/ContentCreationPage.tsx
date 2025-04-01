@@ -1,0 +1,134 @@
+
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { JobPostingForm } from "@/components/jobs/JobPostingForm";
+import LinkedInPostForm from "@/components/linkedin/LinkedInPostForm";
+import LinkedInPostResults from "@/components/linkedin/LinkedInPostResults";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+const ContentCreationPage = () => {
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(() => {
+    // Check if the user was redirected from linkedin-post
+    return location.state?.from === "/linkedin-post" ? "linkedin" : "job";
+  });
+  
+  const [generatedPost, setGeneratedPost] = useState("");
+  const [analysis, setAnalysis] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
+  const [linkedInActiveTab, setLinkedInActiveTab] = useState("post");
+  const [isScrapingUrl, setIsScrapingUrl] = useState(false);
+
+  // If user was redirected from linkedin-post, set tab to linkedin
+  useEffect(() => {
+    if (location.pathname.includes("linkedin-post")) {
+      setActiveTab("linkedin");
+    }
+  }, [location]);
+
+  const handleLinkedInSubmit = async (postContent: string, link: string, websiteContent: string) => {
+    setIsLoading(true);
+    setIsScrapingUrl(true);
+
+    try {
+      const finalContent = websiteContent 
+        ? `${postContent}\n\nWebsite Content:\n${websiteContent}`
+        : postContent;
+
+      const { data, error } = await supabase.functions.invoke('generate-linkedin-post', {
+        body: {
+          content: finalContent,
+          link,
+        },
+      });
+
+      if (error) throw error;
+      
+      setGeneratedPost(data.post);
+      if (data.analysis) {
+        setAnalysis(data.analysis);
+      }
+      toast.success("Post generated successfully!");
+    } catch (error) {
+      console.error("Error generating post:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to generate post. Please try again.");
+    } finally {
+      setIsLoading(false);
+      setIsScrapingUrl(false);
+    }
+  };
+
+  const handleJobPostSuccess = () => {
+    toast.success("Job posting created successfully!");
+    setActiveTab("linkedin");
+  };
+
+  return (
+    <div className="container py-8 space-y-8 mx-auto">
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold text-[#8B5CF6]">Content Creation Hub</h1>
+        <p className="text-gray-600">
+          Create job postings and LinkedIn promotion posts for your recruitment campaigns
+        </p>
+      </div>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-8 bg-[#F1F1F1] p-1 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <TabsTrigger 
+            value="job" 
+            className="rounded-md data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+          >
+            Job Posting
+          </TabsTrigger>
+          <TabsTrigger 
+            value="linkedin" 
+            className="rounded-md data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+          >
+            LinkedIn Post
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="job" className="max-w-3xl mx-auto">
+          <Card className="border-2 border-black bg-white shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-[#8B5CF6]">Create Job Posting</CardTitle>
+              <CardDescription className="text-gray-600">
+                Craft a detailed job posting that will be analyzed and optimized
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <JobPostingForm onSuccess={handleJobPostSuccess} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="linkedin" className="max-w-3xl mx-auto">
+          <LinkedInPostForm 
+            onSubmit={handleLinkedInSubmit}
+            isLoading={isLoading}
+            isScrapingUrl={isScrapingUrl}
+          />
+          
+          {(generatedPost || analysis) && (
+            <div className="mt-8">
+              <LinkedInPostResults 
+                generatedPost={generatedPost}
+                analysis={analysis}
+                activeTab={linkedInActiveTab}
+                onTabChange={setLinkedInActiveTab}
+                isAnalysisOpen={isAnalysisOpen}
+                onAnalysisOpenChange={setIsAnalysisOpen}
+              />
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default ContentCreationPage;

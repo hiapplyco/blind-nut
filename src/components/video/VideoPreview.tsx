@@ -1,19 +1,38 @@
-import { useEffect, useRef } from "react";
+
+import { useEffect, useRef, useState } from "react";
 import DailyIframe, { DailyCall, DailyEventObjectFatalError } from "@daily-co/daily-js";
 import { VideoPreviewProps } from "./types";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) => {
   const callWrapperRef = useRef<HTMLDivElement>(null);
   const callFrameRef = useRef<DailyCall | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!callWrapperRef.current || callFrameRef.current) return;
+    // Clean up any existing callFrame before creating a new one
+    if (callFrameRef.current) {
+      console.log("Cleaning up existing Daily frame");
+      callFrameRef.current.destroy();
+      callFrameRef.current = null;
+    }
+
+    if (!callWrapperRef.current) return;
+    
+    // If we don't have a room URL yet, don't try to initialize the call frame
+    if (!roomUrl) {
+      console.log("No room URL provided, waiting for URL");
+      setIsLoading(true);
+      return;
+    }
 
     console.log("Initializing Daily call frame with URL:", roomUrl);
 
     const initializeCallFrame = async () => {
       try {
+        setIsLoading(true);
+        
         callFrameRef.current = DailyIframe.createFrame(callWrapperRef.current, {
           showLeaveButton: true,
           showFullscreenButton: true,
@@ -66,9 +85,28 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
           toast.success('Successfully joined meeting!');
         });
 
+        callFrameRef.current.on('recording-started', (event: any) => {
+          console.log('Recording started:', event);
+        });
+
+        callFrameRef.current.on('recording-stopped', (event: any) => {
+          console.log('Recording stopped:', event);
+        });
+
+        callFrameRef.current.on('recording-error', (event: any) => {
+          console.error('Recording error:', event);
+          toast.error('Recording error occurred');
+        });
+
+        callFrameRef.current.on('left-meeting', () => {
+          toast.info('You have left the meeting');
+        });
+
+        setIsLoading(false);
         onCallFrameReady(callFrameRef.current);
       } catch (error) {
         console.error("Error initializing call frame:", error);
+        setIsLoading(false);
         toast.error('Failed to initialize video call. Please try refreshing the page.');
       }
     };
@@ -85,6 +123,13 @@ export const VideoPreview = ({ onCallFrameReady, roomUrl }: VideoPreviewProps) =
 
   return (
     <div className="absolute inset-0">
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center h-full w-full bg-gray-50">
+          <Loader2 className="h-10 w-10 text-[#9b87f5] animate-spin mb-4" />
+          <p className="text-gray-600">Initializing video room...</p>
+          <p className="text-sm text-gray-500 mt-2">This may take a few moments</p>
+        </div>
+      )}
       <div 
         ref={callWrapperRef} 
         className="w-full h-full"

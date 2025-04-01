@@ -1,190 +1,59 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useCallback } from "react";
+import { useSearchFormState } from "./useSearchFormState";
+import { useSearchStringFetcher } from "./useSearchStringFetcher";
+import { useFileUploadHandler } from "./useFileUploadHandler";
+import { useSearchFormSubmitter } from "./useSearchFormSubmitter";
 import { SearchType } from "../types";
-import { toast } from "sonner";
-import { processJobRequirements } from "@/utils/jobRequirements";
-import { useDebouncedCallback } from "use-debounce";
 
 export const useSearchForm = (
-  userId: string,
-  onJobCreated: (jobId: number, searchText: string) => void,
-  currentJobId: number | null
+  userId: string | null,
+  onJobCreated: (jobId: number, searchText: string, data?: any) => void,
+  currentJobId: number | null,
+  source: 'default' | 'clarvida' = 'default',
+  onSubmitStart?: () => void
 ) => {
-  const location = useLocation();
-  const [searchText, setSearchText] = useState("");
-  // Removed companyName state
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
-  // Removed searchType state
-  const [searchString, setSearchString] = useState("");
+  // Use the form state hook
+  const {
+    searchText,
+    setSearchText,
+    companyName,
+    setCompanyName,
+    searchType,
+    setSearchType,
+    searchString,
+    setSearchString
+  } = useSearchFormState();
 
-  const debouncedSetSearchText = useDebouncedCallback(
-    (value: string) => setSearchText(value),
-    300
-  );
+  // Use the search string fetcher hook
+  useSearchStringFetcher(currentJobId, setSearchString);
 
-  // Removed debouncedSetCompanyName
+  // Use the form submission hook
+  const {
+    isProcessing,
+    setIsProcessing,
+    handleSubmit: submitForm
+  } = useSearchFormSubmitter(userId, onJobCreated, source, onSubmitStart);
 
-  useEffect(() => {
-    const state = location.state as { content?: string; autoRun?: boolean } | null;
-    if (state?.content) {
-      setSearchText(state.content);
-      if (state?.autoRun) {
-        window.history.replaceState({}, document.title);
-        setTimeout(() => {
-          handleSubmit(new Event('submit') as unknown as React.FormEvent); // Use more specific type cast
-        }, 0);
-      }
-    }
-  }, [location.state]);
+  // Use the file upload hook
+  const handleFileUpload = useFileUploadHandler(userId, setSearchText, setIsProcessing);
 
-  useEffect(() => {
-    const fetchSearchString = async () => {
-      if (currentJobId) {
-        const { data, error } = await supabase
-          .from('jobs')
-          .select('search_string')
-          .eq('id', currentJobId)
-          .single();
-
-        if (error) {
-          console.error('Error fetching search string:', error);
-          return;
-        }
-
-        if (data?.search_string) {
-          setSearchString(data.search_string);
-        }
-      }
-    };
-
-    fetchSearchString();
-  }, [currentJobId]);
-
-  const generateSummary = async (content: string) => {
-    if (!content?.trim()) {
-      throw new Error('Content is required');
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('summarize-title', {
-        body: { content }
-      });
-
-      if (error) throw error;
-
-      return {
-        title: data?.title || 'Untitled Search',
-        summary: data?.summary || ''
-      };
-    } catch (error) {
-      console.error('Error generating summary:', error);
-      throw error;
-    }
-  };
-
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!searchText?.trim()) {
-      toast.error("Please enter some content before submitting");
-      return;
-    }
-
-    // Removed companyName check
-
-    setIsProcessing(true);
-
-    try {
-      const { title, summary } = await generateSummary(searchText);
-
-      const { data: jobData, error: jobError } = await supabase
-        .from('jobs')
-        .insert({
-          content: searchText,
-          user_id: userId,
-          title,
-          summary
-        })
-        .select()
-        .single();
-
-      if (jobError) throw jobError;
-      
-      const jobId = jobData.id;
-      onJobCreated(jobId, searchText);
-
-      // Assuming backend now handles interpretation based on searchText
-      // Simplified call to processJobRequirements (or potentially replace this call later)
-      const result = await processJobRequirements(searchText, userId);
-      
-      if (!result?.searchString) {
-        throw new Error('Failed to generate search string');
-      }
-
-      const { error: updateError } = await supabase
-        .from('jobs')
-        .update({ search_string: result.searchString })
-        .eq('id', jobId);
-
-      if (updateError) throw updateError;
-
-      setSearchString(result.searchString);
-      toast.success("Search string generated successfully!");
-
-    } catch (error) {
-      console.error('Error processing content:', error);
-      toast.error(error instanceof Error ? error.message : "Failed to process content. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [searchText, userId, onJobCreated]); // Removed searchType, companyName from dependencies
-
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.includes('pdf') && !file.type.includes('image')) {
-      toast.error("Invalid file type. Please upload a PDF file or an image");
-      return;
-    }
-
-    setIsProcessing(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('userId', userId);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('parse-document', {
-        body: formData,
-      });
-
-      if (error) throw error;
-
-      if (data?.text) {
-        setSearchText(data.text);
-        toast.success("File processed successfully. The content has been extracted and added to the input field.");
-      }
-    } catch (error) {
-      console.error('Error processing file:', error);
-      toast.error("Failed to process the file. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [userId]);
+  // Create a wrapper for the submit form function
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    return submitForm(e, searchText, searchType, companyName);
+  }, [submitForm, searchText, searchType, companyName]);
 
   return {
     searchText,
-    setSearchText: setSearchText, // Return the raw setter for direct input binding
-    debouncedSetSearchText: debouncedSetSearchText, // Keep debounced version if needed elsewhere
-    // Removed companyName, setCompanyName
+    setSearchText,
+    companyName,
+    setCompanyName,
     isProcessing,
-    isScrapingProfiles,
-    // Removed searchType, setSearchType
+    searchType,
+    setSearchType,
     searchString,
+    setSearchString,
     handleSubmit,
-    handleFileUpload,
+    handleFileUpload
   };
 };

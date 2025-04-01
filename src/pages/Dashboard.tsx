@@ -5,17 +5,24 @@ import {
   UserCheck, 
   PhoneCall, 
   MessageSquare,
-  PlusCircle
+  PlusCircle,
+  Briefcase
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import RollingGallery from "@/components/RollingGallery.jsx"; // Import the gallery with .jsx extension
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
   const toolCards = [
+    {
+      title: "Post a Job",
+      description: "Create and analyze new job postings with AI assistance",
+      icon: Briefcase,
+      path: "/job-post",
+      color: "bg-red-100"
+    },
     {
       title: "Create LinkedIn Post",
       description: "Generate engaging content for your recruitment campaigns",
@@ -60,6 +67,12 @@ const Dashboard = () => {
     }
   ];
 
+  // Function to get random rotation (slight tilt) for post-it note effect
+  const getRandomRotation = () => {
+    // Generate a random number between -2 and 2 for subtle rotation
+    return `rotate-[${(Math.random() * 4 - 2).toFixed(1)}deg]`;
+  };
+
   return (
     <div className="container py-8 space-y-8">
       {/* Hero Section */}
@@ -70,38 +83,40 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Tools Carousel */}
-      <div className="w-full"> {/* Container for the gallery */}
-        <RollingGallery
-          autoplay={true}
-          pauseOnHover={true}
-          images={toolCards.map((tool) => (
-            // We pass the fully rendered Card component as an item
-            <Card
+      {/* Tools Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {toolCards.map((tool, index) => {
+          const rotationClass = getRandomRotation();
+          
+          return (
+            <Card 
               key={tool.path}
-              // Adjusted classes for carousel context - remove aspect-square, maybe adjust hover
-              className={`group transition-all ${tool.color} border-transparent w-[300px] h-[200px] flex flex-col`} // Example fixed size
+              className={`group hover:-translate-y-1 hover:shadow-xl transition-all duration-300 ${tool.color} border-0 aspect-square 
+                        shadow-[5px_5px_10px_rgba(0,0,0,0.3)] ${rotationClass} 
+                        hover:rotate-0`}
+              style={{
+                transformOrigin: 'center center'
+              }}
             >
-              <CardHeader className="flex-grow flex flex-col p-4"> {/* Adjust padding */}
-                <CardTitle className="flex items-center gap-2 text-lg mb-2"> {/* Adjust text size/margin */}
-                  <tool.icon className="h-5 w-5" /> {/* Adjust icon size */}
+              <CardHeader className="h-full flex flex-col">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <tool.icon className="h-6 w-6" />
                   {tool.title}
                 </CardTitle>
-                <CardDescription className="flex-grow text-sm mb-3"> {/* Adjust text size/margin */}
+                <CardDescription className="flex-grow flex items-center text-base text-gray-700">
                   {tool.description}
                 </CardDescription>
-                <Button
-                  variant="secondary" // Changed variant to secondary for more definition
-                  size="sm" // Smaller button
-                  className="w-full mt-auto text-xs" // Removed group-hover effect
+                <Button 
+                  variant="ghost" 
+                  className="w-full mt-auto group-hover:bg-white/50"
                   onClick={() => navigate(tool.path)}
                 >
                   Open Tool
                 </Button>
               </CardHeader>
             </Card>
-          ))}
-        />
+          );
+        })}
       </div>
     </div>
   );

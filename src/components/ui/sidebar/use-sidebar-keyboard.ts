@@ -1,19 +1,25 @@
+
 import { useEffect } from "react"
 import { SIDEBAR_KEYBOARD_SHORTCUT } from "./sidebar-constants"
 
-export const useSidebarKeyboard = (toggleSidebar: () => void) => {
+export const useSidebarKeyboard = (
+  toggleSidebar: () => void,
+  enabled = true
+) => {
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
+    if (!enabled) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (
-        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-        (event.metaKey || event.ctrlKey)
+        e.key.toLowerCase() === SIDEBAR_KEYBOARD_SHORTCUT.toLowerCase() &&
+        (e.metaKey || e.ctrlKey)
       ) {
-        event.preventDefault()
+        e.preventDefault()
         toggleSidebar()
       }
     }
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [toggleSidebar])
+  }, [toggleSidebar, enabled])
 }

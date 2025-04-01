@@ -43,10 +43,10 @@ const LinkedInPostForm = ({ onSubmit, isLoading, isScrapingUrl }: LinkedInPostFo
   };
 
   return (
-    <Card>
+    <Card className="border-2 border-black bg-white shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]">
       <CardHeader>
-        <CardTitle>Create New Post</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-2xl font-bold text-[#8B5CF6]">Create New Post</CardTitle>
+        <CardDescription className="text-gray-600">
           Fill in the details below to generate your LinkedIn post with expert analysis
         </CardDescription>
       </CardHeader>
@@ -64,7 +64,11 @@ const LinkedInPostForm = ({ onSubmit, isLoading, isScrapingUrl }: LinkedInPostFo
               onFileChange={setFile}
             />
 
-            <Button type="submit" disabled={isLoading || isScrapingUrl}>
+            <Button 
+              type="submit" 
+              disabled={isLoading || isScrapingUrl}
+              className="bg-[#8B5CF6] text-white hover:bg-[#7C3AED] border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]"
+            >
               {isScrapingUrl ? "Scraping Website..." : isLoading ? "Analyzing & Generating..." : "Generate Post"}
             </Button>
           </div>

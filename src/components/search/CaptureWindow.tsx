@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,10 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface CaptureWindowProps {
-  onTextUpdate: (text: string) => void;
+  onTextUpdate?: (text: string) => void;
 }
 
-export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
+export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps = {}) => {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -71,7 +72,7 @@ export const CaptureWindow = ({ onTextUpdate }: CaptureWindowProps) => {
 
           if (error) throw error;
 
-          if (data?.text) {
+          if (data?.text && onTextUpdate) {
             onTextUpdate(data.text);
           }
         } catch (error) {

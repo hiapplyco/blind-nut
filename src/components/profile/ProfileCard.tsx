@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, MapPin, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import ContactInfoModal from '../ContactInfoModal';
+import { EnrichedInfoModal } from '../enriched-info-modal/EnrichedInfoModal'; // Updated import
 import { Profile, EnrichedProfileData } from '@/components/search/types';
 
 // Profile Card Component
@@ -141,14 +141,15 @@ export const ProfileCard = ({ profile: originalProfile }) => {
         </div>
       </Card>
       
-      <ContactInfoModal
+      {/* Use the new consolidated modal */}
+      <EnrichedInfoModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        profile={profile}
-        enrichedData={enrichedData}
+        profile={profile} // Pass the profile object
+        profileData={enrichedData} // Renamed prop
         isLoading={loading}
         error={error}
-        handleCardClick={handleEnrichProfile}
+        // Removed handleCardClick as it's not needed by the new modal
       />
     </>
   );

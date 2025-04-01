@@ -3,9 +3,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, User, MapPin } from "lucide-react";
 import { toast } from "sonner";
-import { SearchResultItemProps } from "../types";
+import { SearchResultItemProps, Profile } from "../types"; // Import Profile
 import { useProfileEnrichment } from "../hooks/useProfileEnrichment";
-import { ContactCard } from "./contact-card";
+import { EnrichedInfoModal } from "../../enriched-info-modal/EnrichedInfoModal"; // Updated import path and name
 
 export const SearchResultItem = ({ 
   result, 
@@ -57,26 +57,38 @@ export const SearchResultItem = ({
     }
   };
 
+  // Construct a basic Profile object from the result
+  const profile: Profile = {
+    name: extractNameFromTitle(result.htmlTitle || result.name),
+    title: result.jobTitle || result.title, // Use jobTitle if available
+    location: result.location,
+    profile_name: extractNameFromTitle(result.htmlTitle || result.name),
+    profile_title: result.jobTitle || result.title,
+    profile_location: result.location,
+    profile_url: result.link || result.profileUrl || '',
+    snippet: result.snippet || '',
+  };
+
   return (
     <div className="p-4 border rounded-lg border-black relative hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)] transition-all duration-300 hover:bg-[#F5F0ED]">
       <h3 className="font-medium">
         <a
-          href={result.link || result.profileUrl}
+          href={profile.profile_url} // Use constructed profile URL
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-600 hover:underline"
-          dangerouslySetInnerHTML={{ __html: result.htmlTitle || result.name }}
+          dangerouslySetInnerHTML={{ __html: result.htmlTitle || profile.name }} // Use profile name
         />
       </h3>
-      {result.location && (
+      {profile.location && ( // Use profile location
         <p className="mt-1 text-sm font-semibold text-emerald-600 flex items-center">
           <MapPin className="h-4 w-4 mr-1" />
-          {result.location}
+          {profile.location}
         </p>
       )}
-      <p className="mt-1 text-sm text-gray-600">{result.snippet || result.title}</p>
+      <p className="mt-1 text-sm text-gray-600">{profile.snippet || profile.title}</p>
       
-      {(result.link?.includes('linkedin.com/in/') || result.profileUrl?.includes('linkedin.com/in/')) && (
+      {(profile.profile_url?.includes('linkedin.com/in/')) && ( // Check constructed profile URL
         <div className="mt-2 flex justify-end">
           <Button
             onClick={handleGetContactInfo}
@@ -100,13 +112,14 @@ export const SearchResultItem = ({
         </div>
       )}
 
-      <ContactCard 
+      {/* Use the new consolidated modal */}
+      <EnrichedInfoModal
         isOpen={showContactCard}
         onClose={() => setShowContactCard(false)}
-        profileData={enrichedData}
+        profile={profile} // Pass the constructed profile object
+        profileData={enrichedData} // Pass enrichedData
         isLoading={isLoading}
         error={error}
-        profileName={extractNameFromTitle(result.htmlTitle || result.name)}
       />
     </div>
   );

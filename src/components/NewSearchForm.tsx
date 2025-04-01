@@ -1,11 +1,11 @@
-import { memo, useState, useEffect, useCallback } from "react"; // Added memo, useCallback
+import { memo, useState, useEffect, useCallback } from "react";
 import { SearchForm } from "./search/SearchForm";
-import { useNavigate, useLocation } from "react-router-dom"; // Added useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
-import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs"; // Added useClientAgentOutputs
-import { GoogleSearchWindow } from "./search/GoogleSearchWindow"; // Added GoogleSearchWindow (might be needed if AnalysisReport uses it or if we add it back)
-import { supabase } from "@/integrations/supabase/client"; // Added supabase
-import { toast } from "sonner"; // Added toast
+import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
+import { GoogleSearchWindow } from "./search/GoogleSearchWindow";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { AgentProcessor } from "./search/AgentProcessor";
 import { GenerateAnalysisButton } from "./search/analysis/GenerateAnalysisButton";
 import { AnalysisReport } from "./search/analysis/AnalysisReport";
@@ -13,161 +13,203 @@ import { useSearchForm } from "./search/hooks/useSearchForm";
 
 interface NewSearchFormProps {
   userId: string | null;
-  initialRequirements?: any;
+  initialRequirements?: any; // Consider defining a more specific type if possible
   initialJobId?: number;
   autoRun?: boolean;
 }
 
 const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = false }: NewSearchFormProps) => {
   const navigate = useNavigate();
-  const location = useLocation(); // Keep useLocation
+  const location = useLocation();
   const [currentJobId, setCurrentJobId] = useState<number | null>(initialJobId || null);
   const [isProcessingComplete, setIsProcessingComplete] = useState(false);
-  const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false); // Keep from stashed
+  const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
+  const [showGoogleSearch, setShowGoogleSearch] = useState(false); // Local state for UI control
 
-  // Define handleJobCreated *before* calling the hook that uses it
-  const handleJobCreated = (jobId: number, submittedText: string) => {
-    console.log("Job created:", { jobId, submittedText });
+  // Handler for when SearchForm creates/submits a job
+  const handleJobCreatedOrSubmitted = (jobId: number, submittedText: string) => {
+    console.log("Job created/submitted:", { jobId, submittedText });
+
+    // Reset state if it's a new job ID being submitted
+    if (currentJobId !== jobId) {
+        setIsProcessingComplete(false);
+        setIsGeneratingAnalysis(false);
+        setShowGoogleSearch(false);
+        // Clear previous agent output for the new job in client store
+        setOutput(jobId, null);
+        // Reset searchString via the hook's setter if needed (depends on hook logic)
+        // setSearchString(""); // Uncomment if hook doesn't reset automatically
+    }
+
     setCurrentJobId(jobId);
-    setIsProcessingComplete(false); // Reset completion status on new job
-    setIsGeneratingAnalysis(false); // Reset analysis status
+    // setSearchText(submittedText); // Update searchText via hook if needed
   };
 
   // Get state and handlers from the hook
   const {
     searchText,
-    setSearchText, // RAW setter
-    isProcessing,
-    searchString, // Keep searchString state from hook
-    handleSubmit,
-    handleFileUpload,
-  } = useSearchForm(userId, handleJobCreated, currentJobId);
+    setSearchText, // Setter from hook
+    isProcessing, // Processing state from hook
+    searchString, // Generated search string state from hook
+    setSearchString, // Setter for search string from hook
+    handleSubmit, // Form submission handler from hook
+    handleFileUpload, // File upload handler from hook
+  } = useSearchForm(userId, handleJobCreatedOrSubmitted, currentJobId);
 
-  // Only call useAgentOutputs if we have a currentJobId
-  const { data: agentOutput, isLoading } = useAgentOutputs(currentJobId || 0);
-  const { setOutput } = useClientAgentOutputs(); // Keep from upstream
+  // Fetch agent outputs based on the current job ID
+  const { data: agentOutput, isLoading: isLoadingAgentOutput } = useAgentOutputs(currentJobId || 0);
+  const { setOutput } = useClientAgentOutputs(); // Client-side store setter
 
-  // Handler from stashed changes
+  // Handler for when AgentProcessor completes
   const handleProcessingComplete = () => {
-    console.log("Processing complete");
-    if (agentOutput) {
-      setIsProcessingComplete(true);
-      setIsGeneratingAnalysis(false);
-    }
+    console.log("Agent processing complete");
+    setIsProcessingComplete(true);
+    setIsGeneratingAnalysis(false); // Analysis generation is done
   };
 
-  // useEffect from upstream to handle initial state
+  // Effect to handle initial state from navigation (e.g., content prefill, direct search string)
   useEffect(() => {
     const state = location.state as { content?: string; autoRun?: boolean; searchString?: string } | null;
     if (state?.content) {
       setSearchText(state.content); // Use setSearchText from hook
     }
-    // Note: Handling state.searchString might need adjustment depending on how GoogleSearchWindow is used now
-    // if (state?.searchString) {
-    //   setSearchString(state.searchString); // Need setSearchString from hook if we keep this
-    //   setShowGoogleSearch(true); // Need showGoogleSearch state if we keep this
-    // }
-  }, [location.state, setSearchText]); // Add setSearchText dependency
-
-  // Auto-run analysis (adjusted from upstream)
-  useEffect(() => {
-    // Use searchText from hook
-    if ((autoRun || (location.state as any)?.autoRun) && searchText) {
-      // Trigger analysis generation instead of direct search/form submission
-      if (!isProcessing && !isGeneratingAnalysis && currentJobId) {
-         handleGenerateAnalysis(); // Assuming this function exists or needs to be created
-      }
-      // Clear autoRun state
-      if (location.state) {
-        window.history.replaceState({}, document.title);
-      }
+    // If search string is directly provided in state, use it to show Google Search
+    if (state?.searchString) {
+      setSearchString(state.searchString); // Use setSearchString from hook
+      setShowGoogleSearch(true); // Use local state setter
     }
-  // Add dependencies based on hook usage
-  }, [autoRun, searchText, location.state, isProcessing, isGeneratingAnalysis, currentJobId]);
+     // Clear state after processing to prevent re-triggering on refresh/navigation
+     if (state) {
+        window.history.replaceState({}, document.title);
+     }
+  }, [location.state, setSearchText, setSearchString]); // Add hook setters as dependencies
 
-  // Monitor agent output changes (adjusted from upstream)
+  // Effect to handle auto-running analysis generation
   useEffect(() => {
-    if (agentOutput && !isLoading) {
-      setIsProcessingComplete(true); // Set processing complete when output arrives
-      // Logic to set searchString from agentOutput or job record can remain
+    if ((autoRun || (location.state as any)?.autoRun) && searchText && currentJobId && !isProcessing && !isGeneratingAnalysis) {
+       console.log("Auto-running analysis generation...");
+       handleGenerateAnalysis(); // Trigger analysis
+       // Clear autoRun state from navigation
+       if (location.state) {
+         window.history.replaceState({}, document.title);
+       }
+    }
+  }, [autoRun, searchText, location.state, isProcessing, isGeneratingAnalysis, currentJobId]); // Dependencies
+
+  // Effect to monitor agent output changes and update state
+  useEffect(() => {
+    if (agentOutput && !isLoadingAgentOutput) {
+      console.log("Agent output received:", agentOutput);
+      setIsProcessingComplete(true); // Mark processing as complete
+
+      // If search string exists in output, update state via hook
       if (agentOutput.searchString) {
-        // setSearchString(agentOutput.searchString); // Need setSearchString from hook
+        setSearchString(agentOutput.searchString);
         toast.success("Search string generated successfully!");
       } else if (agentOutput.job_id) {
+        // If no search string in output, try fetching from the job record
         const fetchJobSearchString = async () => {
+          console.log("Fetching search string for job:", agentOutput.job_id);
           try {
             const { data, error } = await supabase
               .from('jobs')
               .select('search_string')
               .eq('id', agentOutput.job_id)
               .single();
+
             if (error) throw error;
+
             if (data?.search_string) {
-              // setSearchString(data.search_string); // Need setSearchString from hook
+              setSearchString(data.search_string); // Update via hook
               toast.success("Search string generated successfully!");
+            } else {
+              console.log("No search string found in job record.");
             }
           } catch (error) {
             console.error("Error fetching job search string:", error);
+            // Optionally notify user: toast.error("Could not retrieve search string.");
           }
         };
         fetchJobSearchString();
       }
     }
-  // Add dependencies based on hook usage
-  }, [agentOutput, isLoading, /* setSearchString */]);
+  }, [agentOutput, isLoadingAgentOutput, setSearchString]); // Add setSearchString dependency
 
-  // Placeholder for analysis generation trigger
+  // Callback to trigger analysis generation
   const handleGenerateAnalysis = useCallback(() => {
       if (!searchText || !currentJobId) {
           toast.error("Cannot generate analysis without requirements and a job ID.");
           return;
       }
-      console.log("Triggering analysis generation...");
+      console.log("Triggering analysis generation for job:", currentJobId);
       setIsGeneratingAnalysis(true);
-      setIsProcessingComplete(false); // Reset completion status
+      setIsProcessingComplete(false); // Reset completion status as analysis is starting
   }, [searchText, currentJobId]);
 
+  // Handler passed to SearchForm to trigger showing the Google Search window
+  const handleShowGoogleSearch = (generatedSearchString: string) => {
+    if (!generatedSearchString || generatedSearchString.trim() === '') {
+      toast.error("Cannot search with empty search string");
+      return;
+    }
+    console.log("Showing Google Search for:", generatedSearchString);
+    // Ensure search string contains LinkedIn site constraint (optional, depends on desired behavior)
+    const finalSearchString = generatedSearchString.includes("site:linkedin.com/in/")
+      ? generatedSearchString
+      : `${generatedSearchString} site:linkedin.com/in/`;
+
+    setSearchString(finalSearchString); // Update state via hook
+    setShowGoogleSearch(true); // Update local UI state
+  };
 
   return (
     <div className="space-y-6">
-      {/* Render SearchForm using props from hook (stashed version) */}
+      {/* Render SearchForm using props from hook */}
       <SearchForm
         userId={userId}
-        onJobCreated={handleJobCreated}
+        onJobCreated={handleJobCreatedOrSubmitted} // Pass the handler
         currentJobId={currentJobId}
+        isProcessingComplete={isProcessingComplete} // Pass completion status
+        onShowGoogleSearch={handleShowGoogleSearch} // Pass handler to trigger Google Search display
+        // Pass other necessary props like searchText, companyName if SearchForm needs them directly
+        // (though useSearchForm hook likely provides them internally)
       />
 
-      {/* Render AnalysisReport section (stashed version) */}
+      {/* Render AnalysisReport section */}
       {currentJobId && (
         <AnalysisReport
           agentOutput={agentOutput}
           isGeneratingAnalysis={isGeneratingAnalysis}
           isProcessingComplete={isProcessingComplete}
         >
+          {/* Conditionally render AgentProcessor if analysis is generating */}
           {isGeneratingAnalysis && !isProcessingComplete && (
             <AgentProcessor
               content={searchText} // Use searchText from the hook
               jobId={currentJobId}
-              onComplete={handleProcessingComplete} // Use handler defined above
+              onComplete={handleProcessingComplete} // Handler for when processor finishes
             />
           )}
-          {!isGeneratingAnalysis && !isProcessingComplete && agentOutput && ( // Only show button if analysis hasn't started but processing is done
+          {/* Show Generate button only if processing is complete but analysis hasn't started */}
+          {!isGeneratingAnalysis && isProcessingComplete && agentOutput && (
              <GenerateAnalysisButton onClick={handleGenerateAnalysis} />
           )}
            {/* Optionally add a loading indicator while agentOutput is loading */}
-           {isLoading && <p>Loading analysis data...</p>}
+           {isLoadingAgentOutput && <p>Loading analysis data...</p>}
         </AnalysisReport>
       )}
-       {/* Decide if GoogleSearchWindow is still needed - maybe triggered from AnalysisReport? */}
-       {/* {showGoogleSearch && searchString && (
-         <div>
+
+       {/* Conditionally render GoogleSearchWindow based on local state */}
+       {showGoogleSearch && searchString && (
+         <div className="mt-6"> {/* Add margin */}
            <GoogleSearchWindow
-             searchTerm={searchText}
-             searchString={searchString}
+             searchTerm={searchText} // Pass original search text if needed
+             initialSearchString={searchString} // Pass the generated/final search string
              jobId={currentJobId}
+             // Pass searchType if available and needed by GoogleSearchWindow
            />
          </div>
-       )} */}
+       )}
     </div>
   );
 };

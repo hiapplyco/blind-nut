@@ -15,7 +15,7 @@ export interface SearchFormProps {
 
 export interface GoogleSearchWindowProps {
   searchTerm?: string;
-  searchString?: string;
+  searchString?: string; // Note: This was renamed to initialSearchString internally in the component
   searchType?: SearchType;
   jobId?: number | null;
 }

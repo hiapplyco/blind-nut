@@ -6,7 +6,7 @@ import { SearchType, SearchFormProps } from "./types";
 import { ContentTextarea } from "./ContentTextarea";
 import { SearchTypeToggle } from "./SearchTypeToggle";
 import { CompanyNameInput } from "./CompanyNameInput";
-import { FileUploadHandler } from "./FileUploadHandler"; // This might not be needed if handleFileUpload from hook is used directly
+// Assuming handleFileUpload from the hook is sufficient, FileUploadHandler component might be removable later
 import { SubmitButton } from "./SubmitButton";
 import { Textarea } from "@/components/ui/textarea";
 import { Copy, Search, Loader2 } from "lucide-react";
@@ -22,7 +22,7 @@ export const SearchForm = ({
   hideSearchTypeToggle = false,
   submitButtonText,
   onSubmitStart,
-  onShowGoogleSearch
+  onShowGoogleSearch // Prop to trigger showing Google Search results
 }: SearchFormProps) => {
   const {
     searchText,
@@ -32,10 +32,10 @@ export const SearchForm = ({
     isProcessing,
     searchType,
     setSearchType,
-    searchString,
-    setSearchString,
+    searchString, // The generated search string from the hook
+    setSearchString, // Function to update the search string state in the hook
     handleSubmit,
-    handleFileUpload // Assuming useSearchForm provides this now
+    handleFileUpload // Use the file upload handler from the hook
   } = useSearchForm(userId, onJobCreated, currentJobId, source, onSubmitStart);
 
   const [isInputActive, setIsInputActive] = useState(false);
@@ -44,16 +44,24 @@ export const SearchForm = ({
 
   // Show search string when it's generated or when processing is complete
   useEffect(() => {
+    // Show the search string section if a search string exists and processing isn't active
     if (searchString && !isProcessing) {
       setShowSearchString(true);
     }
+    // Optionally hide if processing starts again or searchString is cleared
+    // else {
+    //   setShowSearchString(false);
+    // }
   }, [searchString, isProcessing]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
+    // Prevent default form submission if needed, then call hook's handleSubmit
+    e.preventDefault();
     await handleSubmit(e);
   };
 
   const handleCopySearchString = () => {
+    if (!searchString) return; // Guard against copying empty string
     navigator.clipboard.writeText(searchString);
     toast.success("Search string copied to clipboard!");
   };
@@ -71,15 +79,16 @@ export const SearchForm = ({
     try {
       if (onShowGoogleSearch) {
         console.log("Calling onShowGoogleSearch with search string");
+        // Pass the generated search string to the parent component
         onShowGoogleSearch(searchString);
-        toast.success("Finding LinkedIn profiles...");
+        toast.info("Finding LinkedIn profiles..."); // Use info level
       } else {
-        console.error("Cannot show Google search: missing callback function");
-        toast.error("Something went wrong. Please try again.");
+        console.error("Cannot show Google search: onShowGoogleSearch callback is missing");
+        toast.error("Configuration error. Cannot initiate profile search.");
       }
     } catch (error) {
-      console.error("Error finding LinkedIn profiles:", error);
-      toast.error("Failed to find LinkedIn profiles. Please try again.");
+      console.error("Error triggering LinkedIn profile search:", error);
+      toast.error("Failed to start LinkedIn profile search. Please try again.");
     } finally {
       // Add a small delay to make the animation more noticeable
       setTimeout(() => {
@@ -98,8 +107,8 @@ export const SearchForm = ({
 
         {!hideSearchTypeToggle && (
           <SearchTypeToggle
-            value={searchType as SearchType}
-            onValueChange={(value) => setSearchType(value as SearchType)}
+            value={searchType as SearchType} // Cast to SearchType
+            onValueChange={(value) => setSearchType(value as SearchType)} // Cast to SearchType
           />
         )}
 
@@ -120,76 +129,85 @@ export const SearchForm = ({
           isActive={isInputActive}
         />
 
+        {/* Display generated search string and Find Profiles button */}
         {showSearchString && searchString && (
           <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-medium text-sm text-gray-600">Generated Search String:</h3>
               <Button
+                type="button" // Ensure it doesn't submit the form
                 variant="ghost"
                 size="sm"
                 onClick={handleCopySearchString}
                 className="hover:bg-gray-200"
+                aria-label="Copy search string"
               >
                 <Copy className="w-4 h-4" />
               </Button>
             </div>
             <Textarea
               value={searchString}
-              onChange={(e) => setSearchString(e.target.value)}
+              onChange={(e) => setSearchString(e.target.value)} // Allow editing if needed
               className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
               rows={4}
+              readOnly={false} // Or true if it shouldn't be editable
+              aria-label="Generated search string"
             />
 
             {/* Find LinkedIn Profiles button with animation */}
-            {searchString && (
-              <div className="mt-3">
-                <Button
-                  type="button"
-                  onClick={handleFindLinkedInProfiles}
-                  disabled={isFindingProfiles}
-                  className={`w-full border-2 border-black bg-[#8B5CF6] hover:bg-[#7C3AED] text-white transition-all duration-300 ${
-                    isFindingProfiles ? 'animate-pulse' : ''
-                  } transform hover:scale-[1.02] active:scale-[0.98] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.25)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.25)]`}
-                  variant="secondary"
-                >
-                  {isFindingProfiles ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Finding Profiles...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="w-4 h-4 mr-2" />
-                      Find LinkedIn Profiles
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+            <div className="mt-3">
+              <Button
+                type="button" // Ensure it doesn't submit the form
+                onClick={handleFindLinkedInProfiles}
+                disabled={isFindingProfiles || !searchString} // Disable if no string or already finding
+                className={`w-full border-2 border-black bg-[#8B5CF6] hover:bg-[#7C3AED] text-white transition-all duration-300 ${
+                  isFindingProfiles ? 'animate-pulse' : ''
+                } transform hover:scale-[1.02] active:scale-[0.98] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.25)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.25)]`}
+                variant="secondary" // Keep variant if styled appropriately
+              >
+                {isFindingProfiles ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Finding Profiles...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4 mr-2" />
+                    Find LinkedIn Profiles
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+        {/* File Upload and Submit Button Section */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-between items-center pt-2">
+          {/* File Upload Input */}
           <div>
-            <label htmlFor="file-upload" className="cursor-pointer">
+            <label htmlFor="file-upload-searchform" className="cursor-pointer"> {/* Unique ID */}
               <div className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
+                {/* Hidden actual file input */}
                 <input
-                  id="file-upload"
+                  id="file-upload-searchform" // Unique ID
                   type="file"
                   className="hidden"
-                  onChange={fileUploadHandler}
+                  onChange={fileUploadHandler} // Use handler from hook
                   accept=".pdf,.doc,.docx,.txt,image/*"
+                  disabled={isProcessing} // Disable while processing
                 />
+                {/* Visible text/label */}
                 <span className="underline">Upload file</span>
                 <span className="text-xs text-gray-500">(PDF, Doc, Image)</span>
               </div>
-            </label>
+            </label> {/* Correct closing tag */}
           </div>
 
+          {/* Submit Button */}
           <SubmitButton
             isProcessing={isProcessing}
-            isDisabled={isProcessing || !searchText.trim()}
-            buttonText={submitButtonText}
+            isDisabled={isProcessing || !searchText.trim()} // Disable if processing or text is empty
+            buttonText={submitButtonText} // Use prop for custom text
           />
         </div>
       </form>

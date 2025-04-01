@@ -21,15 +21,15 @@ interface SearchFormContentProps {
   searchText: string; // This will now hold the single input value
   isProcessing: boolean;
   isScrapingProfiles: boolean; // Keep for loading state on submit
-  searchString: string; // Keep for Google Search Window
+  searchString: string; // Keep for Google Search Window (used as initialSearchString)
   // Removed searchType, companyName, onSearchTypeChange, onCompanyNameChange
   onSearchTextChange: (value: string) => void;
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   onSubmit: (e: React.FormEvent) => Promise<void>;
-  // Add props from both versions
-  hideSearchTypeToggle?: boolean; // From upstream
+  // Combined props from merge conflict
+  hideSearchTypeToggle?: boolean; // From upstream (though toggle itself is removed below)
   submitButtonText?: string; // From upstream
-  onTextUpdate: (text: string) => void; // From stashed
+  onTextUpdate: (text: string) => void; // From stashed (needed for URL/Audio updates)
 }
 
 // Keep memoized components needed
@@ -40,11 +40,11 @@ export const SearchFormContent = ({
   searchText,
   isProcessing,
   isScrapingProfiles,
-  searchString,
+  searchString, // This prop holds the value to pass as initialSearchString
   onSearchTextChange,
   onFileUpload,
   onSubmit,
-  hideSearchTypeToggle = false, // Default from upstream
+  hideSearchTypeToggle = false, // Default from upstream (kept for prop compatibility, but UI removed)
   submitButtonText, // From upstream
   onTextUpdate, // From stashed
 }: SearchFormContentProps) => {
@@ -132,7 +132,7 @@ export const SearchFormContent = ({
     <>
       {/* Removed Carousel */}
       <form onSubmit={onSubmit} className="space-y-6">
-        {/* Single Input Field (Stashed version) */}
+        {/* Single Input Field (Stashed version / HEAD) */}
         <div className="space-y-2">
            <Label htmlFor="mainSearchInput" className="text-xl font-bold">Sourcing Input</Label>
            <Input
@@ -161,7 +161,7 @@ export const SearchFormContent = ({
 
         {/* Removed CompanyNameInput */}
 
-        {/* Submit Button (Stashed version's disabled logic) */}
+        {/* Submit Button (Stashed version's disabled logic / HEAD) */}
         <div className="space-y-4 pt-4">
           <MemoizedSubmitButton
             isProcessing={isProcessing || isScrapingProfiles}
@@ -178,10 +178,11 @@ export const SearchFormContent = ({
         </div>
       </form>
 
-      {/* Google Search Window - Keep as is */}
-      {searchString && (
+      {/* Google Search Window - Pass initialSearchString */}
+      {searchString && ( // Conditionally render based on searchString prop
         <div className="mt-6">
-          <MemoizedGoogleSearchWindow searchString={searchString} />
+          {/* Pass the searchString prop as initialSearchString */}
+          <MemoizedGoogleSearchWindow initialSearchString={searchString} />
         </div>
       )}
 
@@ -191,7 +192,7 @@ export const SearchFormContent = ({
       {/* Audio Capture Window - Keep as is */}
       {showCaptureWindow && (
         <CaptureWindow onTextUpdate={(text) => {
-          onTextUpdate(text);
+          onTextUpdate(text); // Use the passed prop
           setShowCaptureWindow(false);
         }} />
       )}

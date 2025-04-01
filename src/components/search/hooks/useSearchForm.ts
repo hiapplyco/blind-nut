@@ -3,7 +3,7 @@ import { useSearchFormState } from "./useSearchFormState";
 import { useSearchStringFetcher } from "./useSearchStringFetcher";
 import { useFileUploadHandler } from "./useFileUploadHandler";
 import { useSearchFormSubmitter } from "./useSearchFormSubmitter";
-import { SearchType } from "../types"; // Assuming SearchType is still needed
+import { SearchType } from "../types"; // Keep type import
 
 export const useSearchForm = (
   userId: string | null,
@@ -21,10 +21,10 @@ export const useSearchForm = (
     searchType,
     setSearchType,
     searchString,
-    setSearchString
+    setSearchString // Get the state setter for searchString
   } = useSearchFormState();
 
-  // Use the search string fetcher hook
+  // Use the search string fetcher hook - This looks correct
   useSearchStringFetcher(currentJobId, setSearchString);
 
   // Use the form submission hook

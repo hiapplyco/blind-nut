@@ -12,36 +12,35 @@ import { EmptySearchState } from "./components/EmptySearchState";
 import { LoadMoreButton } from "./components/LoadMoreButton";
 import { useSearchDisplay } from "./hooks/useSearchDisplay";
 import { useSearchInitiation } from "./hooks/useSearchInitiation";
-// Removed imports from stashed changes as they are not used in the upstream structure:
-// import { supabase } from "@/integrations/supabase/client";
-// import { Textarea } from "@/components/ui/textarea";
-// import { cn } from "@/lib/utils";
 
+// Define the props interface correctly
 interface GoogleSearchWindowProps {
   searchTerm?: string;
-  searchString?: string;
+  initialSearchString?: string; // Renamed from searchString to avoid conflict with hook state
   searchType?: 'candidates' | 'candidates-at-company' | 'companies';
   jobId?: number | null;
 }
 
+// Define the functional component correctly and export it
 export const GoogleSearchWindow = ({
   searchTerm,
-  searchString: initialSearchString,
-  searchType = "candidates",
+  initialSearchString,
+  searchType = "candidates", // Apply default value during destructuring
   jobId
 }: GoogleSearchWindowProps) => {
   console.log("🔍 [CRITICAL] GoogleSearchWindow rendered with props:", {
     searchTerm,
-    initialSearchString,
+    initialSearchString, // Use the destructured prop name
     searchType,
     jobId
   });
 
-  // Get search functionality from custom hook (Upstream version)
+  // Get search functionality from custom hook
+  // Destructure the hook's return values
   const {
     results,
     isLoading,
-    searchString,
+    searchString, // This is the state variable from the hook
     setSearchString,
     handleSearch,
     handleLoadMore,
@@ -50,7 +49,8 @@ export const GoogleSearchWindow = ({
     totalResults,
     currentPage,
     error
-  } = useGoogleSearch(initialSearchString || searchTerm || "", searchType, jobId || undefined);
+    // Pass the correctly destructured props to the hook
+  } = useGoogleSearch(initialSearchString || searchTerm || "", searchType, jobId ?? undefined); // Use nullish coalescing for jobId
 
   console.log("🔍 [CRITICAL] GoogleSearchWindow state after useGoogleSearch:", {
     resultsCount: results.length,
@@ -61,38 +61,39 @@ export const GoogleSearchWindow = ({
     hasError: !!error
   });
 
-  // Display mode management (Upstream version)
+  // Display mode management
   const { showResultsAs, toggleDisplayMode, formattedProfiles } = useSearchDisplay(
     results,
-    initialSearchString,
+    initialSearchString, // Use the destructured prop name
     searchTerm,
     setSearchString
   );
 
-  // Auto-search initiation (Upstream version)
+  // Auto-search initiation
   useSearchInitiation(
-    searchString,
-    initialSearchString,
-    searchTerm,
+    searchString, // Use the state variable from the hook
+    initialSearchString, // Use the prop
+    searchTerm, // Use the prop
     results,
     isLoading,
     handleSearch
   );
 
-  // Show error messages (Upstream version)
+  // Show error messages
   useEffect(() => {
     if (error) {
       console.error("❌ [ERROR] Search error occurred:", error);
-      toast.error(`Search failed: ${error.message || "Unknown error"}`);
+      // Check if error is an instance of Error before accessing message
+      toast.error(`Search failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }, [error]);
 
   return (
     <Card className="p-6 mb-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-fade-in">
       <div className="space-y-4">
-        {/* Render SearchHeader (Upstream version) */}
+        {/* Render SearchHeader */}
         <SearchHeader
-          searchString={searchString}
+          searchString={searchString} // Pass the state variable from the hook
           setSearchString={setSearchString}
           handleSearch={() => handleSearch(1)}
           handleExport={handleExport}
@@ -101,18 +102,18 @@ export const GoogleSearchWindow = ({
           resultsExist={results.length > 0}
         />
 
-        {/* Display loading state (Upstream version) */}
+        {/* Display loading state */}
         {isLoading && results.length === 0 && <SearchLoadingState />}
 
-        {/* Display error state (Upstream version) */}
+        {/* Display error state */}
         {error && !isLoading && results.length === 0 && (
           <SearchErrorState error={error} onRetry={() => handleSearch(1)} />
         )}
 
-        {/* Display empty state when no results and not loading (Upstream version) */}
+        {/* Display empty state when no results and not loading */}
         {!isLoading && results.length === 0 && !error && <EmptySearchState />}
 
-        {/* Search results section with toggle (Upstream version) */}
+        {/* Search results section with toggle */}
         {results.length > 0 && !isLoading && (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
@@ -132,11 +133,11 @@ export const GoogleSearchWindow = ({
                 currentResults={results.length}
                 onLoadMore={handleLoadMore}
                 isLoadingMore={isLoading && currentPage > 1}
-                searchType={searchType}
+                searchType={searchType} // Pass the destructured prop
               />
             )}
 
-            {/* Load more button (Upstream version) */}
+            {/* Load more button */}
             {totalResults > results.length && (
               <LoadMoreButton
                 onClick={handleLoadMore}

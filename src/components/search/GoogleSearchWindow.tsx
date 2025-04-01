@@ -5,6 +5,7 @@ import { Loader2, Download, Search, AlertCircle, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils"; // Import cn utility
 
 interface GoogleSearchWindowProps {
   searchString: string;
@@ -25,11 +26,17 @@ export const GoogleSearchWindow = ({
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchString, setSearchString] = useState(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
+  const [animateButton, setAnimateButton] = useState(false); // State for animation trigger
 
-  // Clear results when search string changes
+  // Clear results and trigger animation when search string changes
   useEffect(() => {
     setSearchString(initialSearchString.replace(/\s*site:linkedin\.com\/in\/\s*/g, ''));
     setResults([]);
+    if (initialSearchString) { // Only animate if there's a new string
+      setAnimateButton(true);
+      const timer = setTimeout(() => setAnimateButton(false), 1500); // Pulse for 1.5 seconds
+      return () => clearTimeout(timer); // Cleanup timer
+    }
   }, [initialSearchString]);
 
   const handleSearch = async () => {
@@ -114,20 +121,7 @@ export const GoogleSearchWindow = ({
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">Google Search Results</h2>
           <div className="space-x-2">
-            <Button
-              onClick={handleSearch}
-              disabled={isLoading}
-              className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <>
-                  <Search className="w-4 h-4 mr-2" />
-                  Search
-                </>
-              )}
-            </Button>
+            {/* Search button moved below Textarea */}
             <Button
               onClick={handleExport}
               disabled={results.length === 0}
@@ -140,14 +134,16 @@ export const GoogleSearchWindow = ({
           </div>
         </div>
 
-        <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-medium text-sm text-gray-600">Search String:</h3>
+        {/* Search String Input and Actions */}
+        <div className="p-4 bg-gray-100 rounded-lg border-2 border-black space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium text-sm text-gray-600">Generated Google Search String:</h3>
             <Button
               variant="ghost"
-              size="sm"
+              size="icon" // Make copy button smaller
               onClick={handleCopySearchString}
-              className="hover:bg-gray-200"
+              className="hover:bg-gray-200 rounded-full h-7 w-7" // Adjust size and rounding
+              aria-label="Copy search string"
             >
               <Copy className="w-4 h-4" />
             </Button>
@@ -155,9 +151,30 @@ export const GoogleSearchWindow = ({
           <Textarea
             value={searchString}
             onChange={(e) => setSearchString(e.target.value)}
-            className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
+            className="font-mono text-sm resize-none focus:ring-2 focus:ring-black border-gray-300 rounded" // Added border and rounding
             rows={4}
+            aria-label="Editable Google search string"
           />
+          <Button
+            onClick={handleSearch}
+            disabled={isLoading || !searchString.trim()} // Disable if empty
+            className={cn( // Use cn for conditional classes
+              "w-full border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 flex items-center justify-center py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold",
+              animateButton && "animate-pulse" // Apply pulse animation conditionally
+            )}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Searching...
+              </>
+            ) : (
+              <>
+                <Search className="w-5 h-5 mr-2" />
+                Run Google Search
+              </>
+            )}
+          </Button>
         </div>
 
         <div className="space-y-4">

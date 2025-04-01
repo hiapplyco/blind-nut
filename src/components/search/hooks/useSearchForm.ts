@@ -14,10 +14,10 @@ export const useSearchForm = (
 ) => {
   const location = useLocation();
   const [searchText, setSearchText] = useState("");
-  const [companyName, setCompanyName] = useState("");
+  // Removed companyName state
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScrapingProfiles, setIsScrapingProfiles] = useState(false);
-  const [searchType, setSearchType] = useState<SearchType>("candidates");
+  // Removed searchType state
   const [searchString, setSearchString] = useState("");
 
   const debouncedSetSearchText = useDebouncedCallback(
@@ -25,10 +25,7 @@ export const useSearchForm = (
     300
   );
 
-  const debouncedSetCompanyName = useDebouncedCallback(
-    (value: string) => setCompanyName(value),
-    300
-  );
+  // Removed debouncedSetCompanyName
 
   useEffect(() => {
     const state = location.state as { content?: string; autoRun?: boolean } | null;
@@ -37,7 +34,7 @@ export const useSearchForm = (
       if (state?.autoRun) {
         window.history.replaceState({}, document.title);
         setTimeout(() => {
-          handleSubmit(new Event('submit') as any);
+          handleSubmit(new Event('submit') as unknown as React.FormEvent); // Use more specific type cast
         }, 0);
       }
     }
@@ -96,10 +93,7 @@ export const useSearchForm = (
       return;
     }
 
-    if (searchType === "candidates-at-company" && !companyName?.trim()) {
-      toast.error("Please enter a company name");
-      return;
-    }
+    // Removed companyName check
 
     setIsProcessing(true);
 
@@ -122,7 +116,9 @@ export const useSearchForm = (
       const jobId = jobData.id;
       onJobCreated(jobId, searchText);
 
-      const result = await processJobRequirements(searchText, searchType, companyName, userId);
+      // Assuming backend now handles interpretation based on searchText
+      // Simplified call to processJobRequirements (or potentially replace this call later)
+      const result = await processJobRequirements(searchText, userId);
       
       if (!result?.searchString) {
         throw new Error('Failed to generate search string');
@@ -144,7 +140,7 @@ export const useSearchForm = (
     } finally {
       setIsProcessing(false);
     }
-  }, [searchText, searchType, companyName, userId, onJobCreated]);
+  }, [searchText, userId, onJobCreated]); // Removed searchType, companyName from dependencies
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -181,13 +177,12 @@ export const useSearchForm = (
 
   return {
     searchText,
-    setSearchText: debouncedSetSearchText,
-    companyName,
-    setCompanyName: debouncedSetCompanyName,
+    setSearchText: setSearchText, // Return the raw setter for direct input binding
+    debouncedSetSearchText: debouncedSetSearchText, // Keep debounced version if needed elsewhere
+    // Removed companyName, setCompanyName
     isProcessing,
     isScrapingProfiles,
-    searchType,
-    setSearchType,
+    // Removed searchType, setSearchType
     searchString,
     handleSubmit,
     handleFileUpload,

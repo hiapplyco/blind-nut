@@ -1,43 +1,40 @@
 
 import { memo } from "react";
 import { Card } from "@/components/ui/card";
-import { SearchFormProps } from "./types";
-import { useSearchForm } from "./hooks/useSearchForm";
+import { SearchFormProps } from "./types"; // Props type is updated
+// import { useSearchForm } from "./hooks/useSearchForm"; // Remove hook import
 import { SearchFormContent } from "./SearchFormContent";
 
-export const SearchForm = memo(({ 
-  userId, 
-  onJobCreated, 
-  currentJobId,
+// Update component signature to accept all props from the updated SearchFormProps
+export const SearchForm = memo(({
+  userId, // Keep if needed by SearchFormContent directly, otherwise remove
+  searchText,
+  isProcessing,
+  isScrapingProfiles,
+  searchString,
+  onSearchTextChange,
+  onFileUpload,
+  onSubmit,
+  onTextUpdate, // Added this prop
+  // Removed props no longer passed: onJobCreated, currentJobId, isProcessingComplete
 }: SearchFormProps) => {
-  const {
-    searchText,
-    setSearchText,
-    companyName,
-    setCompanyName,
-    isProcessing,
-    isScrapingProfiles,
-    searchType,
-    setSearchType,
-    searchString,
-    handleSubmit,
-    handleFileUpload,
-  } = useSearchForm(userId, onJobCreated, currentJobId);
+  // Remove the hook call and state derivation here
+  // const { ... } = useSearchForm(...);
 
   return (
     <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+      {/* Pass the received props directly down to SearchFormContent */}
       <SearchFormContent
         searchText={searchText}
-        companyName={companyName}
         isProcessing={isProcessing}
         isScrapingProfiles={isScrapingProfiles}
-        searchType={searchType}
         searchString={searchString}
-        onSearchTypeChange={setSearchType}
-        onSearchTextChange={setSearchText}
-        onCompanyNameChange={setCompanyName}
-        onFileUpload={handleFileUpload}
-        onSubmit={handleSubmit}
+        onSearchTextChange={onSearchTextChange}
+        onFileUpload={onFileUpload}
+        onSubmit={onSubmit}
+        onTextUpdate={onTextUpdate} // Pass down onTextUpdate
+        // Removed props no longer needed by SearchFormContent:
+        // companyName, searchType, onSearchTypeChange, onCompanyNameChange
       />
     </Card>
   );

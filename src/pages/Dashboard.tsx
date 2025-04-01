@@ -10,6 +10,7 @@ import {
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import RollingGallery from "@/components/RollingGallery.jsx"; // Import the gallery with .jsx extension
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -69,31 +70,38 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Tools Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {toolCards.map((tool) => (
-          <Card 
-            key={tool.path}
-            className={`group hover:shadow-lg transition-all ${tool.color} border-transparent aspect-square`}
-          >
-            <CardHeader className="h-full flex flex-col">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <tool.icon className="h-6 w-6" />
-                {tool.title}
-              </CardTitle>
-              <CardDescription className="flex-grow flex items-center text-base">
-                {tool.description}
-              </CardDescription>
-              <Button 
-                variant="ghost" 
-                className="w-full mt-auto group-hover:bg-white/50"
-                onClick={() => navigate(tool.path)}
-              >
-                Open Tool
-              </Button>
-            </CardHeader>
-          </Card>
-        ))}
+      {/* Tools Carousel */}
+      <div className="w-full"> {/* Container for the gallery */}
+        <RollingGallery
+          autoplay={true}
+          pauseOnHover={true}
+          images={toolCards.map((tool) => (
+            // We pass the fully rendered Card component as an item
+            <Card
+              key={tool.path}
+              // Adjusted classes for carousel context - remove aspect-square, maybe adjust hover
+              className={`group transition-all ${tool.color} border-transparent w-[300px] h-[200px] flex flex-col`} // Example fixed size
+            >
+              <CardHeader className="flex-grow flex flex-col p-4"> {/* Adjust padding */}
+                <CardTitle className="flex items-center gap-2 text-lg mb-2"> {/* Adjust text size/margin */}
+                  <tool.icon className="h-5 w-5" /> {/* Adjust icon size */}
+                  {tool.title}
+                </CardTitle>
+                <CardDescription className="flex-grow text-sm mb-3"> {/* Adjust text size/margin */}
+                  {tool.description}
+                </CardDescription>
+                <Button
+                  variant="secondary" // Changed variant to secondary for more definition
+                  size="sm" // Smaller button
+                  className="w-full mt-auto text-xs" // Removed group-hover effect
+                  onClick={() => navigate(tool.path)}
+                >
+                  Open Tool
+                </Button>
+              </CardHeader>
+            </Card>
+          ))}
+        />
       </div>
     </div>
   );

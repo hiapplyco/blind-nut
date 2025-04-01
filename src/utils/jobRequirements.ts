@@ -4,13 +4,14 @@ type SearchType = "candidates" | "companies" | "candidates-at-company";
 
 export const processJobRequirements = async (
   content: string,
-  searchType: SearchType,
-  companyName?: string,
+  // searchType: SearchType, // Removed searchType
+  // companyName?: string, // Removed companyName
   userId?: string
 ) => {
   try {
+    // Removed searchType and companyName from the body
     const { data, error } = await supabase.functions.invoke('process-job-requirements', {
-      body: { content, searchType, companyName, userId }
+      body: { content, userId }
     });
 
     if (error) throw error;

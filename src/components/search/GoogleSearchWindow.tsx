@@ -12,6 +12,10 @@ import { EmptySearchState } from "./components/EmptySearchState";
 import { LoadMoreButton } from "./components/LoadMoreButton";
 import { useSearchDisplay } from "./hooks/useSearchDisplay";
 import { useSearchInitiation } from "./hooks/useSearchInitiation";
+// Removed imports from stashed changes as they are not used in the upstream structure:
+// import { supabase } from "@/integrations/supabase/client";
+// import { Textarea } from "@/components/ui/textarea";
+// import { cn } from "@/lib/utils";
 
 interface GoogleSearchWindowProps {
   searchTerm?: string;
@@ -20,28 +24,28 @@ interface GoogleSearchWindowProps {
   jobId?: number | null;
 }
 
-export const GoogleSearchWindow = ({ 
+export const GoogleSearchWindow = ({
   searchTerm,
   searchString: initialSearchString,
   searchType = "candidates",
   jobId
 }: GoogleSearchWindowProps) => {
-  console.log("🔍 [CRITICAL] GoogleSearchWindow rendered with props:", { 
-    searchTerm, 
-    initialSearchString, 
-    searchType, 
-    jobId 
+  console.log("🔍 [CRITICAL] GoogleSearchWindow rendered with props:", {
+    searchTerm,
+    initialSearchString,
+    searchType,
+    jobId
   });
 
-  // Get search functionality from custom hook
-  const { 
-    results, 
-    isLoading, 
-    searchString, 
-    setSearchString, 
-    handleSearch, 
-    handleLoadMore, 
-    handleCopySearchString, 
+  // Get search functionality from custom hook (Upstream version)
+  const {
+    results,
+    isLoading,
+    searchString,
+    setSearchString,
+    handleSearch,
+    handleLoadMore,
+    handleCopySearchString,
     handleExport,
     totalResults,
     currentPage,
@@ -57,15 +61,15 @@ export const GoogleSearchWindow = ({
     hasError: !!error
   });
 
-  // Display mode management
+  // Display mode management (Upstream version)
   const { showResultsAs, toggleDisplayMode, formattedProfiles } = useSearchDisplay(
-    results, 
-    initialSearchString, 
+    results,
+    initialSearchString,
     searchTerm,
     setSearchString
   );
 
-  // Auto-search initiation
+  // Auto-search initiation (Upstream version)
   useSearchInitiation(
     searchString,
     initialSearchString,
@@ -75,7 +79,7 @@ export const GoogleSearchWindow = ({
     handleSearch
   );
 
-  // Show error messages
+  // Show error messages (Upstream version)
   useEffect(() => {
     if (error) {
       console.error("❌ [ERROR] Search error occurred:", error);
@@ -86,7 +90,8 @@ export const GoogleSearchWindow = ({
   return (
     <Card className="p-6 mb-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-fade-in">
       <div className="space-y-4">
-        <SearchHeader 
+        {/* Render SearchHeader (Upstream version) */}
+        <SearchHeader
           searchString={searchString}
           setSearchString={setSearchString}
           handleSearch={() => handleSearch(1)}
@@ -96,18 +101,18 @@ export const GoogleSearchWindow = ({
           resultsExist={results.length > 0}
         />
 
-        {/* Display loading state */}
+        {/* Display loading state (Upstream version) */}
         {isLoading && results.length === 0 && <SearchLoadingState />}
 
-        {/* Display error state */}
+        {/* Display error state (Upstream version) */}
         {error && !isLoading && results.length === 0 && (
           <SearchErrorState error={error} onRetry={() => handleSearch(1)} />
         )}
 
-        {/* Display empty state when no results and not loading */}
+        {/* Display empty state when no results and not loading (Upstream version) */}
         {!isLoading && results.length === 0 && !error && <EmptySearchState />}
 
-        {/* Search results section with toggle */}
+        {/* Search results section with toggle (Upstream version) */}
         {results.length > 0 && !isLoading && (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
@@ -116,11 +121,11 @@ export const GoogleSearchWindow = ({
               </div>
               <DisplayModeToggle currentMode={showResultsAs} onToggle={toggleDisplayMode} />
             </div>
-            
+
             {showResultsAs === 'cards' ? (
               <ProfilesList profiles={formattedProfiles} />
             ) : (
-              <SearchResultsList 
+              <SearchResultsList
                 results={results}
                 isLoading={isLoading}
                 totalResults={totalResults}
@@ -130,12 +135,12 @@ export const GoogleSearchWindow = ({
                 searchType={searchType}
               />
             )}
-            
-            {/* Load more button */}
+
+            {/* Load more button (Upstream version) */}
             {totalResults > results.length && (
-              <LoadMoreButton 
-                onClick={handleLoadMore} 
-                isLoading={isLoading && currentPage > 1} 
+              <LoadMoreButton
+                onClick={handleLoadMore}
+                isLoading={isLoading && currentPage > 1}
               />
             )}
           </div>

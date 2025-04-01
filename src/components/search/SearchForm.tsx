@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { SearchFormHeader } from "./SearchFormHeader";
@@ -7,23 +6,23 @@ import { SearchType, SearchFormProps } from "./types";
 import { ContentTextarea } from "./ContentTextarea";
 import { SearchTypeToggle } from "./SearchTypeToggle";
 import { CompanyNameInput } from "./CompanyNameInput";
-import { FileUploadHandler } from "./FileUploadHandler";
+import { FileUploadHandler } from "./FileUploadHandler"; // This might not be needed if handleFileUpload from hook is used directly
 import { SubmitButton } from "./SubmitButton";
 import { Textarea } from "@/components/ui/textarea";
 import { Copy, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export const SearchForm = ({ 
-  userId, 
-  onJobCreated, 
+export const SearchForm = ({
+  userId,
+  onJobCreated,
   currentJobId,
   isProcessingComplete = false,
   source = 'default',
   hideSearchTypeToggle = false,
   submitButtonText,
   onSubmitStart,
-  onShowGoogleSearch 
+  onShowGoogleSearch
 }: SearchFormProps) => {
   const {
     searchText,
@@ -36,7 +35,7 @@ export const SearchForm = ({
     searchString,
     setSearchString,
     handleSubmit,
-    handleFileUpload
+    handleFileUpload // Assuming useSearchForm provides this now
   } = useSearchForm(userId, onJobCreated, currentJobId, source, onSubmitStart);
 
   const [isInputActive, setIsInputActive] = useState(false);
@@ -68,7 +67,7 @@ export const SearchForm = ({
 
     console.log("Find LinkedIn Profiles button clicked with search string:", searchString);
     setIsFindingProfiles(true);
-    
+
     try {
       if (onShowGoogleSearch) {
         console.log("Calling onShowGoogleSearch with search string");
@@ -89,37 +88,30 @@ export const SearchForm = ({
     }
   };
 
-  // Generate file upload handler function
-  const fileUploadHandler = FileUploadHandler({
-    userId,
-    onTextUpdate: setSearchText,
-    onProcessingChange: (isProcessing) => {
-      // This function is intentionally left empty for now
-      // We might want to handle processing state changes differently in the future
-    }
-  });
+  // Use the file upload handler directly from the hook
+  const fileUploadHandler = handleFileUpload;
 
   return (
     <Card className="p-6 border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)]">
       <form onSubmit={handleFormSubmit} className="space-y-6">
         <SearchFormHeader isProcessingComplete={isProcessingComplete} />
-        
+
         {!hideSearchTypeToggle && (
-          <SearchTypeToggle 
-            value={searchType as SearchType} 
-            onValueChange={(value) => setSearchType(value as SearchType)} 
+          <SearchTypeToggle
+            value={searchType as SearchType}
+            onValueChange={(value) => setSearchType(value as SearchType)}
           />
         )}
-        
+
         {searchType === "candidates-at-company" && (
-          <CompanyNameInput 
-            companyName={companyName} 
+          <CompanyNameInput
+            companyName={companyName}
             onChange={setCompanyName}
             isProcessing={isProcessing}
           />
         )}
-        
-        <ContentTextarea 
+
+        <ContentTextarea
           content={searchText}
           onChange={setSearchText}
           placeholder="Paste job description or requirements here..."
@@ -127,7 +119,7 @@ export const SearchForm = ({
           onBlur={() => setIsInputActive(false)}
           isActive={isInputActive}
         />
-        
+
         {showSearchString && searchString && (
           <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
             <div className="flex justify-between items-center mb-2">
@@ -147,11 +139,11 @@ export const SearchForm = ({
               className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
               rows={4}
             />
-            
+
             {/* Find LinkedIn Profiles button with animation */}
             {searchString && (
               <div className="mt-3">
-                <Button 
+                <Button
                   type="button"
                   onClick={handleFindLinkedInProfiles}
                   disabled={isFindingProfiles}
@@ -176,15 +168,15 @@ export const SearchForm = ({
             )}
           </div>
         )}
-        
+
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
           <div>
             <label htmlFor="file-upload" className="cursor-pointer">
               <div className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
-                <input 
-                  id="file-upload" 
-                  type="file" 
-                  className="hidden" 
+                <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
                   onChange={fileUploadHandler}
                   accept=".pdf,.doc,.docx,.txt,image/*"
                 />
@@ -193,9 +185,9 @@ export const SearchForm = ({
               </div>
             </label>
           </div>
-          
-          <SubmitButton 
-            isProcessing={isProcessing} 
+
+          <SubmitButton
+            isProcessing={isProcessing}
             isDisabled={isProcessing || !searchText.trim()}
             buttonText={submitButtonText}
           />

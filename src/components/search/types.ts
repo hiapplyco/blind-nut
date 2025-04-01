@@ -1,4 +1,3 @@
-
 export type SearchType = 'candidates' | 'candidates-at-company' | 'companies';
 
 // Props interfaces for components

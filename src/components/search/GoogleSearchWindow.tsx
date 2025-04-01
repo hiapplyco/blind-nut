@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { SearchHeader } from "./components/SearchHeader";
 import { SearchResultsList } from "./components/SearchResultsList";

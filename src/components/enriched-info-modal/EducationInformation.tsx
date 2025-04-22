@@ -1,5 +1,5 @@
 
-import { Education } from "../../types";
+import { Education } from "../search/types";
 
 interface EducationInformationProps {
   education: Education[];

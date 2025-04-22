@@ -21,6 +21,9 @@ describe('SearchFormContent', () => {
   const mockSubmit = vi.fn();
   const mockTextUpdate = vi.fn(); // Added missing mock function
 
+  // Create a constant for searchType to avoid using the type as a value
+  const CANDIDATES_TYPE = 'candidates';
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -29,17 +32,14 @@ describe('SearchFormContent', () => {
     render(
       <SearchFormContent
         searchText=""
-        companyName=""
         isProcessing={false}
         isScrapingProfiles={false}
-        searchType={SearchType.CANDIDATES}
         searchString=""
-        onSearchTypeChange={mockSearchTypeChange}
         onSearchTextChange={mockSearchTextChange}
-        onCompanyNameChange={mockCompanyNameChange}
         onFileUpload={mockFileUpload}
         onSubmit={mockSubmit}
-        onTextUpdate={mockTextUpdate} // Add the missing prop
+        onTextUpdate={mockTextUpdate}
+        hideSearchTypeToggle={false}
       />
     );
   });
@@ -48,17 +48,14 @@ describe('SearchFormContent', () => {
     render(
       <SearchFormContent
         searchText="test"
-        companyName=""
         isProcessing={false}
         isScrapingProfiles={false}
-        searchType={SearchType.CANDIDATES}
         searchString=""
-        onSearchTypeChange={mockSearchTypeChange}
         onSearchTextChange={mockSearchTextChange}
-        onCompanyNameChange={mockCompanyNameChange}
         onFileUpload={mockFileUpload}
         onSubmit={mockSubmit}
-        onTextUpdate={mockTextUpdate} // Add the missing prop
+        onTextUpdate={mockTextUpdate}
+        hideSearchTypeToggle={false}
       />
     );
   });
@@ -68,16 +65,13 @@ describe('SearchFormContent', () => {
       <SearchFormContent
         isProcessing={true}
         searchText=""
-        companyName=""
         isScrapingProfiles={false}
-        searchType={SearchType.CANDIDATES}
         searchString=""
-        onSearchTypeChange={mockSearchTypeChange}
         onSearchTextChange={mockSearchTextChange}
-        onCompanyNameChange={mockCompanyNameChange}
         onFileUpload={mockFileUpload}
         onSubmit={mockSubmit}
-        onTextUpdate={mockTextUpdate} // Add the missing prop
+        onTextUpdate={mockTextUpdate}
+        hideSearchTypeToggle={false}
       />
     );
   });
@@ -87,16 +81,13 @@ describe('SearchFormContent', () => {
       <SearchFormContent
         isScrapingProfiles={true}
         searchText=""
-        companyName=""
         isProcessing={false}
-        searchType={SearchType.CANDIDATES}
         searchString=""
-        onSearchTypeChange={mockSearchTypeChange}
         onSearchTextChange={mockSearchTextChange}
-        onCompanyNameChange={mockCompanyNameChange}
         onFileUpload={mockFileUpload}
         onSubmit={mockSubmit}
-        onTextUpdate={mockTextUpdate} // Add the missing prop
+        onTextUpdate={mockTextUpdate}
+        hideSearchTypeToggle={false}
       />
     );
   });
@@ -105,17 +96,14 @@ describe('SearchFormContent', () => {
     const { rerender } = render(
       <SearchFormContent
         searchText=""
-        companyName=""
         isProcessing={false}
         isScrapingProfiles={false}
-        searchType={SearchType.CANDIDATES}
         searchString=""
-        onSearchTypeChange={mockSearchTypeChange}
         onSearchTextChange={mockSearchTextChange}
-        onCompanyNameChange={mockCompanyNameChange}
         onFileUpload={mockFileUpload}
         onSubmit={mockSubmit}
-        onTextUpdate={mockTextUpdate} // Add the missing prop
+        onTextUpdate={mockTextUpdate}
+        hideSearchTypeToggle={false}
       />
     );
 
@@ -125,16 +113,14 @@ describe('SearchFormContent', () => {
     rerender(
       <SearchFormContent
         searchText=""
-        companyName=""
         isProcessing={false}
         isScrapingProfiles={false}
         searchString="test search string"
-        onSearchTypeChange={mockSearchTypeChange}
         onSearchTextChange={mockSearchTextChange}
-        onCompanyNameChange={mockCompanyNameChange}
         onFileUpload={mockFileUpload}
         onSubmit={mockSubmit}
-        onTextUpdate={mockTextUpdate} // Add the missing prop
+        onTextUpdate={mockTextUpdate}
+        hideSearchTypeToggle={false}
       />
     );
 

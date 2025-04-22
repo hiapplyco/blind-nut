@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Copy, Phone, PhoneOff } from "lucide-react";
 import { toast } from "sonner";
-import { EnrichedProfileData } from "../../types";
+import { EnrichedProfileData } from "../search/types";
 
 interface ContactInformationProps {
   profileData: EnrichedProfileData;

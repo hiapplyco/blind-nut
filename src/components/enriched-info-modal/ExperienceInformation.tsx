@@ -1,5 +1,5 @@
 
-import { Experience } from "../../types";
+import { Experience } from "../search/types";
 
 interface ExperienceInformationProps {
   experience: Experience[];

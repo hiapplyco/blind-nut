@@ -203,10 +203,9 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
        {showGoogleSearch && searchString && (
          <div className="mt-6"> {/* Add margin */}
            <GoogleSearchWindow
-             searchTerm={searchText} // Pass original search text if needed
              initialSearchString={searchString} // Pass the generated/final search string
              jobId={currentJobId}
-             // Pass searchType if available and needed by GoogleSearchWindow
+             // No need to pass searchTerm as we updated the component to use initialSearchString
            />
          </div>
        )}

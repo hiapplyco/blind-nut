@@ -1,5 +1,4 @@
-
-import { Language } from "../../types";
+import { Language } from "../search/types";
 
 interface LanguagesInformationProps {
   languages: Language[];

@@ -1,6 +1,6 @@
 
 import { MapPin, Globe, Building } from "lucide-react";
-import { EnrichedProfileData } from "../../types";
+import { EnrichedProfileData } from "../search/types";
 
 interface LocationInformationProps {
   profileData: EnrichedProfileData;

@@ -135,31 +135,6 @@ export function useJobPostingForm({ jobId, onSuccess, onError }: UseJobPostingFo
     return true;
   };
 
-  const createOrUpdateJob = async (jobData: JobData) => {
-    if (jobId) {
-      console.log("Updating existing job:", jobId);
-      const { error: updateError } = await supabase
-        .from("jobs")
-        .update(jobData)
-        .eq("id", Number(jobId));
-
-      if (updateError) throw updateError;
-      return Number(jobId);
-    } 
-
-    console.log("Creating new job");
-    const { data: insertData, error: insertError } = await supabase
-      .from("jobs")
-      .insert(jobData)
-      .select('id')
-      .single();
-
-    if (insertError) throw insertError;
-    if (!insertData) throw new Error("No data returned from insert");
-    
-    return insertData.id;
-  };
-
   const analyzeJobPosting = async (newJobId: number) => {
     console.log("Analyzing job posting...");
     try {
@@ -175,12 +150,18 @@ export function useJobPostingForm({ jobId, onSuccess, onError }: UseJobPostingFo
 
       console.log("Analysis completed:", analysisData);
       
+      if (!analysisData) {
+        console.warn("No analysis data returned");
+        return null;
+      }
+      
       const { error: updateError } = await supabase
         .from("jobs")
         .update({ analysis: analysisData })
         .eq("id", newJobId);
 
       if (updateError) {
+        console.error("Error updating analysis:", updateError);
         throw updateError;
       }
 
@@ -190,26 +171,6 @@ export function useJobPostingForm({ jobId, onSuccess, onError }: UseJobPostingFo
       // Return null instead of throwing to prevent job save failure
       return null;
     }
-  };
-
-  const handleSuccess = (newJobId: number, isUpdate: boolean, hasAnalysis: boolean) => {
-    const successMessage = isUpdate ? "Job updated successfully" : "Job created successfully";
-    const warningMessage = hasAnalysis ? "" : " (Analysis will be available soon)";
-    
-    toast({
-      title: "Success",
-      description: successMessage + warningMessage,
-    });
-    
-    console.log("Navigating to editor page:", `/job-editor/${newJobId}`);
-    
-    // Call the onSuccess callback if provided
-    if (onSuccess) {
-      onSuccess();
-    }
-    
-    // Navigate immediately to the editor page
-    navigate(`/job-editor/${newJobId}`, { replace: true });
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -228,7 +189,6 @@ export function useJobPostingForm({ jobId, onSuccess, onError }: UseJobPostingFo
         content: formState.content,
         created_at: new Date().toISOString(),
         user_id: session.user.id,
-        ...(jobId && { id: Number(jobId) })
       };
 
       // Create or update the job record
@@ -242,29 +202,29 @@ export function useJobPostingForm({ jobId, onSuccess, onError }: UseJobPostingFo
       const newJobId = jobResult.id;
       console.log("Job created/updated with ID:", newJobId);
 
-      // Analyze the job posting in the background
+      // Analyze the job posting (but don't block on completion)
+      let analysisResult = null;
       try {
-        const { data: analysisData, error: analysisError } = await supabase.functions
-          .invoke('analyze-schema', {
-            body: { schema: formState.content }
-          });
-
-        if (!analysisError && analysisData) {
-          // Update job with analysis
-          await supabase
-            .from("jobs")
-            .update({ analysis: analysisData })
-            .eq("id", newJobId);
-
-          handleSuccess(newJobId, !!jobId, true);
-        } else {
-          console.warn("Analysis failed, but job was saved");
-          handleSuccess(newJobId, !!jobId, false);
-        }
+        analysisResult = await analyzeJobPosting(newJobId);
       } catch (analysisError) {
-        console.error("Analysis failed, but job was saved:", analysisError);
-        handleSuccess(newJobId, !!jobId, false);
+        console.warn("Analysis failed, but job was saved:", analysisError);
       }
+
+      // Show a success message
+      toast({
+        title: "Success",
+        description: jobId ? "Job updated successfully" : "Job created successfully" + 
+                   (!analysisResult ? " (Analysis will be available soon)" : ""),
+      });
+      
+      // Call the onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
+      
+      // Navigate to the editor page
+      console.log("Navigating to editor page:", `/job-editor/${newJobId}`);
+      navigate(`/job-editor/${newJobId}`, { replace: true });
 
     } catch (error) {
       console.error("Error saving job:", error);

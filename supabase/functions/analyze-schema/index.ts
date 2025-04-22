@@ -1,130 +1,84 @@
 
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3";
+import { GoogleGenerativeAI } from "npm:@google/generative-ai";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || "";
-
-interface JobAnalysisRequest {
-  schema: string;
-}
-
-interface ExtractedData {
-  title: string;
-  client: string;
-  location: string;
-  salaryRange: {
-    min: number;
-    max: number;
-  };
-  jobType: string;
-  experienceLevel: string;
-  skills: string[];
-  applicationDeadline: string;
-  remoteAllowed: boolean;
-  description: string;
-}
-
-interface JobAnalysisResponse {
-  extractedData: ExtractedData;
-  analysis: {
-    marketInsights: string;
-    compensationAnalysis: string;
-    skillsEvaluation: string;
-    recommendations: string[];
-  };
-}
-
-async function handleRequest(req: Request): Promise<Response> {
-  if (req.method === "OPTIONS") {
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { schema } = await req.json() as JobAnalysisRequest;
-    
-    if (!schema?.trim()) {
-      throw new Error("Job posting content is required");
+    const { schema } = await req.json();
+    console.log("Analyzing job posting:", schema?.substring(0, 50));
+
+    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
+    // Use gemini-1.5-flash instead of the deprecated model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const prompt = `You're an AI assistant specialized in recruiting. I want you to analyze the job description below and extract key information in a structured JSON format:
+
+    Job Description: ${schema}
+
+    Extract and provide the following information in a structured JSON format:
+    {
+      "job_title": "The main title of the position",
+      "company": "The company or organization offering the position",
+      "location": "Location of the job (including remote options)",
+      "salary_range": "Any salary information mentioned",
+      "experience_level": "Required experience level",
+      "employment_type": "Full-time, part-time, contract, etc.",
+      "skills": ["List of required technical skills"],
+      "qualifications": ["List of required qualifications like degrees or certifications"],
+      "responsibilities": ["Key responsibilities of the role"],
+      "benefits": ["List of benefits offered"]
     }
 
-    console.log("Analyzing job posting:", schema);
-    
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-thinking-exp-01-21" });
-    
-    // Construct a more detailed prompt to help Gemini generate valid JSON
-    const prompt = `
-You are a job posting analyzer. Your task is to extract information from the given job posting and return a valid JSON object.
-
-Given this job posting:
-${schema}
-
-Analyze it and respond with a JSON object only, no other text. The JSON must exactly match this structure:
-{
-  "extractedData": {
-    "title": "infer title if not explicitly stated",
-    "client": "unknown if not stated",
-    "location": "remote if not stated",
-    "salaryRange": {
-      "min": 0,
-      "max": 0
-    },
-    "jobType": "full-time if not stated",
-    "experienceLevel": "not specified if not stated",
-    "skills": ["include any mentioned skills"],
-    "applicationDeadline": "2024-12-31 if not stated",
-    "remoteAllowed": false,
-    "description": "full job description or input text if no clear description"
-  },
-  "analysis": {
-    "marketInsights": "1-2 sentences about market context",
-    "compensationAnalysis": "1-2 sentences about compensation if mentioned",
-    "skillsEvaluation": "1-2 sentences about required skills",
-    "recommendations": [
-      "one recommendation for improvement",
-      "another recommendation if needed"
-    ]
-  }
-}`;
+    If any field is not found in the job description, use null for that field. Make sure all text is properly escaped for JSON.`;
 
     const result = await model.generateContent(prompt);
-    let analysisContent = result.response.text();
-    console.log("Raw Gemini response:", analysisContent);
-
-    // Clean up the response to ensure valid JSON
-    analysisContent = analysisContent.trim();
-    if (analysisContent.startsWith("```json")) {
-      analysisContent = analysisContent.replace(/```json\n?/, "").replace(/```$/, "");
-    }
-    analysisContent = analysisContent.trim();
-
+    const response = result.response.text();
+    
+    // Clean up the response - sometimes the API returns text around the JSON
+    let cleanedResponse = response;
     try {
-      const analysisData = JSON.parse(analysisContent) as JobAnalysisResponse;
-      console.log("Successfully parsed analysis data");
+      // Extract JSON if it's wrapped in text or code blocks
+      const jsonMatch = response.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) || 
+                         response.match(/\{[\s\S]*?\}/);
       
-      return new Response(JSON.stringify(analysisData), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (jsonMatch && jsonMatch[1]) {
+        cleanedResponse = jsonMatch[1];
+      } else if (jsonMatch) {
+        cleanedResponse = jsonMatch[0];
+      }
+      
+      // Parse to validate and then stringify for consistent formatting
+      const parsed = JSON.parse(cleanedResponse);
+      cleanedResponse = JSON.stringify(parsed);
     } catch (parseError) {
-      console.error("Failed to parse Gemini output:", parseError);
-      console.log("Invalid JSON content:", analysisContent);
-      throw new Error("Failed to parse Gemini response as valid JSON");
+      console.error("Error parsing JSON from model response:", parseError);
+      // If parsing fails, return the original response
     }
+
+    console.log("Analysis completed successfully");
+    
+    return new Response(cleanedResponse, {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   } catch (error) {
     console.error("Error in analyze-schema function:", error);
+    
     return new Response(JSON.stringify({ 
-      error: error.message,
-      details: "Failed to analyze job posting" 
+      error: "Failed to analyze job schema", 
+      details: error.message 
     }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
-}
-
-serve(handleRequest);
-
+});

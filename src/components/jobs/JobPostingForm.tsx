@@ -10,6 +10,7 @@ interface JobPostingFormProps {
   jobId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
+  onError?: (errorMessage: string) => void;
 }
 
 const placeholder = `Title: Software Engineer
@@ -25,10 +26,11 @@ Remote Allowed: Yes
 Description:
 We are looking for a talented Software Engineer to join our team...`;
 
-export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormProps) {
+export function JobPostingForm({ jobId, onSuccess, onCancel, onError }: JobPostingFormProps) {
   const { content, setContent, isSubmitting, isLoading, error, onSubmit } = useJobPostingForm({ 
     jobId, 
-    onSuccess 
+    onSuccess,
+    onError 
   });
 
   if (isLoading) {

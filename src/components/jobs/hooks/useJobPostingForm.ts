@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 interface UseJobPostingFormProps {
   jobId?: string;
   onSuccess?: () => void;
+  onError?: (errorMessage: string) => void;
 }
 
 interface FormState {
@@ -24,7 +25,7 @@ interface JobData {
   id?: number;
 }
 
-export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) {
+export function useJobPostingForm({ jobId, onSuccess, onError }: UseJobPostingFormProps) {
   const [formState, setFormState] = useState<FormState>({
     content: "",
     isSubmitting: false,
@@ -37,7 +38,10 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
   // Fetch existing job data if editing
   useEffect(() => {
     const fetchJob = async () => {
-      if (!jobId) return;
+      if (!jobId) {
+        setFormState(prev => ({ ...prev, isLoading: false }));
+        return;
+      }
       
       try {
         console.log("Fetching job with ID:", jobId);
@@ -54,6 +58,7 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
             isLoading: false,
             error: error.message 
           }));
+          if (onError) onError(error.message);
           toast({
             title: "Error",
             description: `Failed to load job: ${error.message}`,
@@ -71,34 +76,34 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
           }));
         } else {
           console.error("No job data found");
+          const errorMessage = "Job not found";
           setFormState(prev => ({ 
             ...prev, 
             isLoading: false,
-            error: "Job not found" 
+            error: errorMessage
           }));
+          if (onError) onError(errorMessage);
           toast({
             title: "Error",
-            description: "Job not found",
+            description: errorMessage,
             variant: "destructive",
           });
         }
       } catch (err) {
         console.error("Unexpected error fetching job:", err);
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
         setFormState(prev => ({ 
           ...prev, 
           isLoading: false,
-          error: err instanceof Error ? err.message : "An unexpected error occurred" 
+          error: errorMessage
         }));
+        if (onError) onError(errorMessage);
       }
     };
 
-    if (jobId) {
-      fetchJob();
-    } else {
-      // Make sure we're not in loading state for new jobs
-      setFormState(prev => ({ ...prev, isLoading: false }));
-    }
-  }, [jobId]);
+    // Call fetchJob to load data (or set loading to false if no jobId)
+    fetchJob();
+  }, [jobId, onError]);
 
   const handleContentChange = (value: string) => {
     setFormState(prev => ({ ...prev, content: value }));
@@ -106,20 +111,24 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
 
   const validateSubmission = () => {
     if (!session?.user) {
+      const errorMessage = "You must be logged in to create a job posting";
       toast({
         title: "Error",
-        description: "You must be logged in to create a job posting",
+        description: errorMessage,
         variant: "destructive",
       });
+      if (onError) onError(errorMessage);
       return false;
     }
     
     if (!formState.content.trim()) {
+      const errorMessage = "Please enter job details";
       toast({
         title: "Error",
-        description: "Please enter job details",
+        description: errorMessage,
         variant: "destructive",
       });
+      if (onError) onError(errorMessage);
       return false;
     }
 
@@ -211,6 +220,10 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
     setFormState(prev => ({ ...prev, isSubmitting: true, error: null }));
 
     try {
+      if (!session?.user?.id) {
+        throw new Error("User ID not found");
+      }
+
       const jobData = {
         content: formState.content,
         created_at: new Date().toISOString(),
@@ -218,44 +231,55 @@ export function useJobPostingForm({ jobId, onSuccess }: UseJobPostingFormProps) 
         ...(jobId && { id: Number(jobId) })
       };
 
-      const newJobId = await createOrUpdateJob(jobData);
+      // Create or update the job record
+      const { data: jobResult, error: jobError } = await (jobId ? 
+        supabase.from("jobs").update(jobData).eq("id", Number(jobId)).select('id').single() : 
+        supabase.from("jobs").insert(jobData).select('id').single());
+
+      if (jobError) throw jobError;
+      if (!jobResult) throw new Error("No data returned from job creation/update");
+      
+      const newJobId = jobResult.id;
       console.log("Job created/updated with ID:", newJobId);
 
-      let hasAnalysis = false;
+      // Analyze the job posting in the background
       try {
-        const analysisResult = await analyzeJobPosting(newJobId);
-        hasAnalysis = !!analysisResult;
-        if (!hasAnalysis) {
-          console.warn("Analysis failed, but job was saved");
-          toast({
-            title: "Warning",
-            description: "Job saved but analysis failed. You can try analyzing again later.",
-            variant: "destructive",
+        const { data: analysisData, error: analysisError } = await supabase.functions
+          .invoke('analyze-schema', {
+            body: { schema: formState.content }
           });
+
+        if (!analysisError && analysisData) {
+          // Update job with analysis
+          await supabase
+            .from("jobs")
+            .update({ analysis: analysisData })
+            .eq("id", newJobId);
+
+          handleSuccess(newJobId, !!jobId, true);
+        } else {
+          console.warn("Analysis failed, but job was saved");
+          handleSuccess(newJobId, !!jobId, false);
         }
       } catch (analysisError) {
         console.error("Analysis failed, but job was saved:", analysisError);
-        toast({
-          title: "Warning",
-          description: "Job saved but analysis failed. You can try analyzing again later.",
-          variant: "destructive",
-        });
+        handleSuccess(newJobId, !!jobId, false);
       }
-
-      handleSuccess(newJobId, !!jobId, hasAnalysis);
 
     } catch (error) {
       console.error("Error saving job:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to save job posting";
       toast({
         title: "Error",
-        description: "Failed to save job posting",
+        description: errorMessage,
         variant: "destructive",
       });
       setFormState(prev => ({ 
         ...prev, 
         isSubmitting: false,
-        error: error instanceof Error ? error.message : "An unexpected error occurred" 
+        error: errorMessage
       }));
+      if (onError) onError(errorMessage);
     } finally {
       setFormState(prev => ({ ...prev, isSubmitting: false }));
     }

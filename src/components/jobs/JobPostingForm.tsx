@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useJobPostingForm } from "./hooks/useJobPostingForm";
 import { Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface JobPostingFormProps {
   jobId?: string;
@@ -25,10 +26,29 @@ Description:
 We are looking for a talented Software Engineer to join our team...`;
 
 export function JobPostingForm({ jobId, onSuccess, onCancel }: JobPostingFormProps) {
-  const { content, setContent, isSubmitting, onSubmit } = useJobPostingForm({ 
+  const { content, setContent, isSubmitting, isLoading, error, onSubmit } = useJobPostingForm({ 
     jobId, 
     onSuccess 
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="h-12 w-12 animate-spin text-[#8B5CF6] mb-4" />
+        <p className="text-gray-600">Loading job details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive" className="my-6">
+        <AlertDescription>
+          {error}
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">

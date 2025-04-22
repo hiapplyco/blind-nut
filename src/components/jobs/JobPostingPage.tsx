@@ -10,8 +10,8 @@ export const JobPostingPage = () => {
   const navigate = useNavigate();
   
   const handleSuccess = () => {
-    // Remove this since navigation is handled in useJobPostingForm
     console.log('Job posted successfully');
+    // Navigation is now handled in useJobPostingForm
   };
   
   const handleCancel = () => {
@@ -43,4 +43,3 @@ export const JobPostingPage = () => {
     </div>
   );
 }
-

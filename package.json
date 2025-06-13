@@ -89,6 +89,7 @@
     "react-router-dom": "^6.26.2",
     "react-to-pdf": "^1.0.1",
     "recharts": "^2.12.7",
+    "rollup": "^4.43.0",
     "sonner": "^1.5.0",
     "supabase": "^2.20.5",
     "tailwind-merge": "^2.5.2",

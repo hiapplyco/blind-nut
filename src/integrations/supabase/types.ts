@@ -441,6 +441,86 @@ export type Database = {
           },
         ]
       }
+      lead_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          created_by: string | null
+          details: string | null
+          id: string
+          lead_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          id?: string
+          lead_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          id?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          company: string
+          created_at: string
+          email: string
+          id: string
+          industry: string
+          message: string
+          name: string
+          phone: string | null
+          preferred_contact: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          company: string
+          created_at?: string
+          email: string
+          id?: string
+          industry: string
+          message: string
+          name: string
+          phone?: string | null
+          preferred_contact: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          company?: string
+          created_at?: string
+          email?: string
+          id?: string
+          industry?: string
+          message?: string
+          name?: string
+          phone?: string | null
+          preferred_contact?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       meeting_analyses: {
         Row: {
           analysis: string
@@ -504,6 +584,38 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          body: string | null
+          id: string
+          report_id: string | null
+          sender: string | null
+          ts: string | null
+        }
+        Insert: {
+          body?: string | null
+          id?: string
+          report_id?: string | null
+          sender?: string | null
+          ts?: string | null
+        }
+        Update: {
+          body?: string | null
+          id?: string
+          report_id?: string | null
+          sender?: string | null
+          ts?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "production_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parsed_documents: {
         Row: {
           created_at: string | null
@@ -528,6 +640,83 @@ export type Database = {
           original_filename?: string | null
           parsed_text?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      production_reports: {
+        Row: {
+          crew_call: string | null
+          crew_count: number | null
+          id: string
+          inserted_at: string | null
+          notes: string | null
+          project_id: string | null
+          project_name: string | null
+          raw_ai: Json | null
+          scenes_int: number | null
+          shoot_date: string | null
+          status: string | null
+          user_id: string | null
+          wrap_time: string | null
+        }
+        Insert: {
+          crew_call?: string | null
+          crew_count?: number | null
+          id?: string
+          inserted_at?: string | null
+          notes?: string | null
+          project_id?: string | null
+          project_name?: string | null
+          raw_ai?: Json | null
+          scenes_int?: number | null
+          shoot_date?: string | null
+          status?: string | null
+          user_id?: string | null
+          wrap_time?: string | null
+        }
+        Update: {
+          crew_call?: string | null
+          crew_count?: number | null
+          id?: string
+          inserted_at?: string | null
+          notes?: string | null
+          project_id?: string | null
+          project_name?: string | null
+          raw_ai?: Json | null
+          scenes_int?: number | null
+          shoot_date?: string | null
+          status?: string | null
+          user_id?: string | null
+          wrap_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          phone_number: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          phone_number?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          phone_number?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -682,6 +871,27 @@ export type Database = {
           user_id?: string | null
           video_name?: string
           video_url?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          id: string
+          name: string | null
+          phone: string
+          role: string | null
+        }
+        Insert: {
+          id?: string
+          name?: string | null
+          phone: string
+          role?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string | null
+          phone?: string
+          role?: string | null
         }
         Relationships: []
       }

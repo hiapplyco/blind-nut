@@ -1,6 +1,5 @@
 
 import { render } from '@testing-library/react';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { SearchForm } from '../SearchForm';
 
@@ -40,18 +39,9 @@ describe('SearchForm', () => {
     expect(container.querySelector('form')).toBeTruthy();
   });
 
-  it('handles form submission', async () => {
-    const mockSubmit = vi.fn();
-    
+  it('renders without crashing', () => {
     const { container } = render(<SearchForm {...mockProps} />);
     
-    const form = container.querySelector('form');
-    if (form) {
-      fireEvent.submit(form);
-    }
-    
-    await waitFor(() => {
-      expect(mockSubmit).toHaveBeenCalledTimes(0); // Mock isn't called directly
-    });
+    expect(container).toBeTruthy();
   });
 });

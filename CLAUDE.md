@@ -2,6 +2,12 @@
 
 ## 📋 Recent Updates
 
+### AI Model Standardization (December 2024)
+- ✅ **All Gemini models updated to `gemini-2.0-flash`**
+- Migrated from various models (gemini-1.5-flash, gemini-1.5-pro, gemini-2.5-flash, gemini-pro) 
+- 22 files updated across Supabase functions, prompts, and React components
+- Consistent AI model usage for better performance and reliability
+
 ### TypeScript Configuration (Strict Mode Enabled)
 - ✅ `noImplicitAny: true` - All variables must have explicit types
 - ✅ `strictNullChecks: true` - Null/undefined checking enforced
@@ -74,10 +80,11 @@ src/
 
 ### AI Integration Standards
 - **Multi-Model Approach**: 
-  - Gemini for general content generation
-  - Claude for complex reasoning tasks
+  - Gemini 2.0 Flash for all content generation (standardized December 2024)
+  - Claude for complex reasoning tasks (when needed)
   - Whisper for transcription
   - ElevenLabs for voice synthesis
+- **Model Configuration**: All Gemini instances use `gemini-2.0-flash` for consistency
 - **Prompt Management**: Centralized prompt templates in `/src/utils/prompts/`
 - **Error Handling**: Graceful fallbacks for AI failures
 - **Cost Optimization**: Cache AI responses when appropriate
@@ -452,5 +459,5 @@ npm run embeddings:generate
 
 ---
 
-*Last Updated: [Auto-update on commit]*
-*Version: 1.1.0*
+*Last Updated: December 2024*
+*Version: 1.2.0*

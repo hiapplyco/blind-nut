@@ -65,7 +65,7 @@ serve(async (req) => {
 
     // Use Gemini to analyze and summarize the content
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY')!);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     console.log('Processing content with Gemini...');
     const result = await model.generateContent({

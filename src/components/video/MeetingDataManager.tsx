@@ -18,7 +18,7 @@ export const MeetingDataManager = () => {
       }
 
       const genAI = new GoogleGenerativeAI(geminiApiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
       const prompt = `Please provide a concise summary of this meeting transcript, highlighting:
       - Key discussion points

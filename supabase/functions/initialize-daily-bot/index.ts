@@ -70,7 +70,7 @@ serve(async (req) => {
         if (data.setup) {
           try {
             session = await genAI.startChat({
-              model: "gemini-pro",
+              model: "gemini-2.0-flash",
               generationConfig: data.setup
             });
             console.log("Gemini API Connected");

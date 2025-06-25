@@ -3,8 +3,8 @@ import { PromptTemplate } from './types.ts';
 
 export const defaultPrompt: PromptTemplate = {
   name: 'default-job-analysis',
-  version: '3.0.0', // Major version bump for Gemini 2.5 Flash optimization
-  description: 'Generates highly effective boolean search strings from job descriptions using Gemini 2.5 Flash for expert talent sourcing, optimized for Google CSE on LinkedIn.',
+  version: '3.1.0', // Updated for Gemini 2.0 Flash
+  description: 'Generates highly effective boolean search strings from job descriptions using Gemini 2.0 Flash for expert talent sourcing, optimized for Google CSE on LinkedIn.',
   template: `You are an expert Boolean Blackbelt for talent sourcing, enhanced with advanced reasoning capabilities. Your ONLY output is a highly effective boolean search string. Nothing else.
 
 Analyze the job description below with deep understanding to identify the core requirements for an ideal candidate. Use advanced reasoning to infer key skills, job titles, experience levels, and locations. Synthesize this information into a detailed and comprehensive boolean search string optimized for searching within LinkedIn profiles.
@@ -27,7 +27,7 @@ Your boolean search string MUST:
 - Consider related companies in the same industry or ecosystem
 {{/if}}
 
-Advanced Requirements for Gemini 2.5 Flash:
+Advanced Requirements for Gemini 2.0 Flash:
 - Use multi-step reasoning to understand job requirements hierarchy
 - Apply semantic understanding to identify implicit skills and qualifications
 - Consider industry-specific terminology and acronyms

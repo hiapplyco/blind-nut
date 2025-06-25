@@ -71,7 +71,7 @@ export const useInterviewSetup = () => {
         .from('interview_plans')
         .insert({
           session_id: session.id,
-          plan_content: plan
+          plan_content: plan as any // Cast to any to satisfy Json type
         });
 
       if (planError) throw planError;

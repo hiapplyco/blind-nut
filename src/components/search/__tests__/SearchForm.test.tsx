@@ -1,6 +1,5 @@
-
 import { render } from '@testing-library/react';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/dom';
 import { describe, it, expect, vi } from 'vitest';
 import { SearchForm } from '../SearchForm';
 

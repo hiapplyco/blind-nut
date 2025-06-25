@@ -1,37 +1,38 @@
 
 import { render } from '@testing-library/react';
-import { screen, fireEvent } from '@testing-library/dom';
+import { screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { SearchFormContent } from '../SearchFormContent';
 
 // Mock the required props
 const mockProps = {
-  formData: {
-    searchText: '',
-    companyName: '',
-    searchType: 'general' as const
-  },
-  setFormData: vi.fn(),
-  handleSubmit: vi.fn(),
-  isLoading: false,
-  error: null
+  searchText: '',
+  isProcessing: false,
+  isScrapingProfiles: false,
+  searchString: '',
+  onSearchTextChange: vi.fn(),
+  onFileUpload: vi.fn(),
+  onSubmit: vi.fn(),
+  hideSearchTypeToggle: false,
+  submitButtonText: 'Submit',
+  onTextUpdate: vi.fn()
 };
 
 describe('SearchFormContent', () => {
   it('renders form content', () => {
     render(<SearchFormContent {...mockProps} />);
     
-    expect(screen.getByDisplayValue('')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('')).toBeDefined();
   });
 
   it('handles input changes', () => {
-    const setFormData = vi.fn();
+    const onSearchTextChange = vi.fn();
     
-    render(<SearchFormContent {...mockProps} setFormData={setFormData} />);
+    render(<SearchFormContent {...mockProps} onSearchTextChange={onSearchTextChange} />);
     
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'test input' } });
     
-    expect(setFormData).toHaveBeenCalled();
+    expect(onSearchTextChange).toHaveBeenCalled();
   });
 });

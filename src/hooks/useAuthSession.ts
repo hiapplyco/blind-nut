@@ -17,6 +17,7 @@ export const useAuthSession = () => {
   });
   
   const prevSession = useRef<Session | null>(null);
+  const initialized = useRef(false);
 
   const handleSessionChange = useCallback((newSession: Session | null) => {
     if (
@@ -26,7 +27,7 @@ export const useAuthSession = () => {
       return;
     }
 
-    console.log('Session update:', !!newSession);
+    console.log('Session update:', !!newSession, 'initialized:', initialized.current);
     prevSession.current = newSession;
     
     setState({
@@ -37,20 +38,45 @@ export const useAuthSession = () => {
   }, []);
 
   useEffect(() => {
+    if (initialized.current) return;
+    
     const initializeAuth = async () => {
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log('Initializing auth session...');
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting initial session:', error);
+          setState(prev => ({ 
+            ...prev, 
+            isLoading: false,
+            session: null,
+            isAuthenticated: false
+          }));
+          return;
+        }
+        
+        console.log('Initial session:', !!initialSession);
+        initialized.current = true;
         handleSessionChange(initialSession);
       } catch (error) {
         console.error('Error initializing auth:', error);
-        setState(prev => ({ ...prev, isLoading: false }));
+        setState(prev => ({ 
+          ...prev, 
+          isLoading: false,
+          session: null,
+          isAuthenticated: false
+        }));
       }
     };
 
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      handleSessionChange(session);
+      console.log('Auth state change event:', _event, !!session);
+      if (initialized.current) {
+        handleSessionChange(session);
+      }
     });
 
     return () => {

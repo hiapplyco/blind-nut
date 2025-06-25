@@ -38,36 +38,58 @@ export default function InterviewPrep() {
     };
   }, []);
 
-  // Show loading screen while auth is loading
+  console.log('InterviewPrep render:', { 
+    currentStep, 
+    authLoading, 
+    isAuthenticated, 
+    isLoading,
+    timestamp: new Date().toISOString()
+  });
+
+  // If auth is still loading, show loading screen
   if (authLoading) {
-    console.log('Auth is loading...');
+    console.log('Auth is loading, showing spinner...');
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <InterviewHeader />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600">Loading authentication...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Check if user is authenticated
+  // If user is not authenticated, show login prompt
   if (!isAuthenticated) {
-    console.log('User not authenticated, redirecting...');
+    console.log('User not authenticated, showing login prompt...');
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <InterviewHeader />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-600">Please log in to access interview preparation.</p>
+          <div className="text-center max-w-md mx-auto p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Authentication Required
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Please log in to access the interview preparation features.
+            </p>
+            <Button 
+              onClick={() => window.location.href = '/'}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Go to Login
+            </Button>
           </div>
         </div>
       </div>
     );
   }
+
+  // User is authenticated, show the main interface
+  console.log('User authenticated, showing main interface...');
 
   const handleSetupSubmit = async (data: InterviewSetupData) => {
     try {
@@ -104,8 +126,6 @@ export default function InterviewPrep() {
     };
     return frameworks[framework as keyof typeof frameworks] || framework;
   };
-
-  console.log('InterviewPrep render:', { currentStep, authLoading, isAuthenticated, isLoading });
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">

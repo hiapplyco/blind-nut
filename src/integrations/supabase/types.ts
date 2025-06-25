@@ -257,6 +257,33 @@ export type Database = {
           },
         ]
       }
+      interview_frameworks: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          question_types: Json | null
+          system_prompt: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id: string
+          name: string
+          question_types?: Json | null
+          system_prompt: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          question_types?: Json | null
+          system_prompt?: string
+        }
+        Relationships: []
+      }
       interview_messages: {
         Row: {
           content: string | null
@@ -289,29 +316,79 @@ export type Database = {
           },
         ]
       }
+      interview_plans: {
+        Row: {
+          generated_at: string | null
+          id: number
+          plan_content: Json
+          session_id: number | null
+          status: string | null
+        }
+        Insert: {
+          generated_at?: string | null
+          id?: number
+          plan_content: Json
+          session_id?: number | null
+          status?: string | null
+        }
+        Update: {
+          generated_at?: string | null
+          id?: number
+          plan_content?: Json
+          session_id?: number | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_plans_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "interview_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_sessions: {
         Row: {
           created_at: string | null
+          custom_framework_prompt: string | null
           ended_at: string | null
           id: number
+          interview_framework: string | null
+          interview_plan: Json | null
+          role_description: string | null
+          role_title: string | null
           started_at: string | null
           status: string | null
+          uploaded_files: Json | null
           user_id: string | null
         }
         Insert: {
           created_at?: string | null
+          custom_framework_prompt?: string | null
           ended_at?: string | null
           id?: number
+          interview_framework?: string | null
+          interview_plan?: Json | null
+          role_description?: string | null
+          role_title?: string | null
           started_at?: string | null
           status?: string | null
+          uploaded_files?: Json | null
           user_id?: string | null
         }
         Update: {
           created_at?: string | null
+          custom_framework_prompt?: string | null
           ended_at?: string | null
           id?: number
+          interview_framework?: string | null
+          interview_plan?: Json | null
+          role_description?: string | null
+          role_title?: string | null
           started_at?: string | null
           status?: string | null
+          uploaded_files?: Json | null
           user_id?: string | null
         }
         Relationships: []

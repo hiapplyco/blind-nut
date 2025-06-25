@@ -1,311 +1,166 @@
-import { useState, useEffect, useRef } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { InterviewHeader } from "@/components/interview/InterviewHeader";
-import { InterviewStatus } from "@/components/interview/InterviewStatus";
-import { InterviewControls } from "@/components/interview/InterviewControls";
-import { InterviewChat } from "@/components/interview/InterviewChat";
-import { VideoDisplay } from "@/components/interview/VideoDisplay";
-import { useMediaStream } from "@/hooks/useMediaStream";
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, Play } from "lucide-react";
+import { toast } from "sonner";
+import { InterviewHeader } from "@/components/interview/InterviewHeader";
+import { InterviewSetupForm, InterviewSetupData } from "@/components/interview/InterviewSetupForm";
+import { InterviewPlanDisplay } from "@/components/interview/InterviewPlanDisplay";
+import { useInterviewSetup } from "@/hooks/useInterviewSetup";
+
+type InterviewStep = 'setup' | 'plan' | 'interview';
+
+interface InterviewPlan {
+  overview: string;
+  estimatedDuration: string;
+  keyAreas: string[];
+  questions: Array<{
+    category: string;
+    question: string;
+    followUp?: string[];
+  }>;
+  evaluationCriteria: string[];
 }
 
 export default function InterviewPrep() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [sessionId, setSessionId] = useState<number | null>(null);
-  const startTimeRef = useRef<Date>(new Date());
-  
-  const {
-    videoRef,
-    isConnected,
-    error,
-    isAudioEnabled,
-    isVideoEnabled,
-    isRecording,
-    startMedia,
-    stopMedia,
-    toggleAudio,
-    toggleVideo,
-    startRecording,
-    stopRecording
-  } = useMediaStream();
+  const [currentStep, setCurrentStep] = useState<InterviewStep>('setup');
+  const [setupData, setSetupData] = useState<InterviewSetupData | null>(null);
+  const { createInterviewSession, isLoading, sessionId, interviewPlan } = useInterviewSetup();
 
   useEffect(() => {
-    // Set document title
     document.title = "Interview Preparation | Pipecat";
     
     return () => {
-      document.title = "Pipecat"; // Reset title on unmount
+      document.title = "Pipecat";
     };
   }, []);
 
-  useEffect(() => {
-    // Create a session when component mounts
-    const createSession = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          const { data, error } = await supabase
-            .from('interview_sessions')
-            .insert({
-              user_id: user.id,
-              status: 'created',
-              created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-            
-          if (error) throw error;
-          
-          // Ensure sessionId is stored as a number
-          setSessionId(data.id);
-        }
-      } catch (error) {
-        console.error('Error creating interview session:', error);
-      }
+  const handleSetupSubmit = async (data: InterviewSetupData) => {
+    try {
+      setSetupData(data);
+      await createInterviewSession(data);
+      setCurrentStep('plan');
+    } catch (error) {
+      console.error('Failed to create interview session:', error);
+    }
+  };
+
+  const handleStartInterview = () => {
+    if (!sessionId) {
+      toast.error('No interview session found');
+      return;
+    }
+    
+    setCurrentStep('interview');
+    toast.success('Starting interview session...');
+  };
+
+  const handleBackToSetup = () => {
+    setCurrentStep('setup');
+    setSetupData(null);
+  };
+
+  const getFrameworkDisplayName = (framework: string) => {
+    const frameworks = {
+      'star': 'STAR Method',
+      'behavioral': 'Behavioral Interview',
+      'competency': 'Competency-Based',
+      'other': 'Custom Framework'
     };
-    
-    createSession();
-  }, []);
-
-  const handleConnect = async () => {
-    setIsLoading(true);
-    
-    try {
-      console.log("Starting media connection");
-      
-      const success = await startMedia();
-      
-      if (success) {
-        toast.success("Successfully connected to media devices");
-        
-        // Update session status
-        if (sessionId) {
-          await supabase
-            .from('interview_sessions')
-            .update({ status: 'active', started_at: new Date().toISOString() })
-            .eq('id', sessionId);
-        }
-        
-        // Attempt to get initial message from AI interviewer
-        try {
-          const { data, error } = await supabase.functions.invoke('handle-interview', {
-            body: {
-              message: "Hello, I'm ready for the interview.",
-              context: []
-            }
-          });
-
-          if (error) throw error;
-
-          if (data?.response) {
-            const assistantMessage: Message = { 
-              role: 'assistant', 
-              content: data.response 
-            };
-            
-            setMessages(prev => [...prev, assistantMessage]);
-            
-            // Save assistant message to database if sessionId exists
-            if (sessionId) {
-              await supabase.from('interview_messages').insert({
-                session_id: sessionId,
-                role: 'assistant',
-                content: data.response
-              });
-            }
-          }
-        } catch (err) {
-          console.error('Error getting initial message:', err);
-          // Continue without initial message
-          toast.warning("Couldn't connect to AI interviewer. You can still continue with your recording session.");
-        }
-      } else {
-        toast.error("Failed to connect to media devices. Please check your permissions.");
-      }
-    } catch (err) {
-      console.error("Error in handleConnect:", err);
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDisconnect = async () => {
-    // If recording, stop it first
-    if (isRecording) {
-      await stopRecording();
-    }
-    
-    stopMedia();
-    toast.info("Interview session ended");
-    
-    // Update session status
-    if (sessionId) {
-      await supabase
-        .from('interview_sessions')
-        .update({ status: 'completed', ended_at: new Date().toISOString() })
-        .eq('id', sessionId);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!inputText.trim()) return;
-
-    const userMessage: Message = { role: 'user', content: inputText };
-    setMessages(prev => [...prev, userMessage]);
-    setInputText('');
-    setIsLoading(true);
-
-    try {
-      // Save message to database if sessionId exists
-      if (sessionId) {
-        await supabase.from('interview_messages').insert({
-          session_id: sessionId,
-          role: 'user',
-          content: inputText
-        });
-      }
-
-      const { data, error } = await supabase.functions.invoke('handle-interview', {
-        body: {
-          message: inputText,
-          context: messages
-        }
-      });
-
-      if (error) throw error;
-
-      if (data?.response) {
-        const assistantMessage: Message = { 
-          role: 'assistant', 
-          content: data.response 
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-        
-        // Save assistant message to database if sessionId exists
-        if (sessionId) {
-          await supabase.from('interview_messages').insert({
-            session_id: sessionId,
-            role: 'assistant',
-            content: data.response
-          });
-        }
-      }
-    } catch (err) {
-      console.error('Error sending message:', err);
-      toast.error("Failed to get interview response");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleToggleChat = () => {
-    setIsChatOpen(!isChatOpen);
-  };
-
-  const handleToggleRecording = async () => {
-    if (isRecording) {
-      const recordedBlob = await stopRecording();
-      if (recordedBlob && sessionId) {
-        // Here you would typically upload the blob to storage
-        // For now we just log it
-        console.log("Recording stopped, blob size:", recordedBlob.size);
-        toast.success("Recording saved");
-      }
-    } else {
-      startRecording();
-    }
+    return frameworks[framework as keyof typeof frameworks] || framework;
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-gray-50">
       <InterviewHeader />
       
-      {isConnected && (
-        <InterviewStatus 
-          startTime={startTimeRef.current}
-          isRecording={isRecording}
-        />
-      )}
-      
-      <div className="flex-1 p-6 relative">
-        {!isConnected ? (
-          <Card className="max-w-2xl mx-auto p-6 space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold">Interview Preparation</h1>
-              <p className="text-muted-foreground mt-2">
-                Practice your interview skills with AI assistance
+      <div className="flex-1 p-6 overflow-auto">
+        {currentStep === 'setup' && (
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Interview Preparation
+              </h1>
+              <p className="text-gray-600">
+                Set up a structured interview for your role. Choose a framework, upload context files, 
+                and generate a comprehensive interview plan.
               </p>
             </div>
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <Button 
-              onClick={handleConnect} 
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                "Start Interview Session"
-              )}
-            </Button>
-          </Card>
-        ) : (
-          <div className="h-full">
-            <VideoDisplay 
-              videoRef={videoRef}
-              isVideoEnabled={isVideoEnabled}
-            />
             
-            <InterviewControls 
-              isAudioEnabled={isAudioEnabled}
-              isVideoEnabled={isVideoEnabled}
-              isRecording={isRecording}
-              onToggleAudio={toggleAudio}
-              onToggleVideo={toggleVideo}
-              onToggleChat={handleToggleChat}
-              onToggleRecording={handleToggleRecording}
-              onEndSession={handleDisconnect}
+            <InterviewSetupForm 
+              onSubmit={handleSetupSubmit}
+              isLoading={isLoading}
             />
           </div>
         )}
+
+        {currentStep === 'plan' && setupData && interviewPlan && (
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <Button
+                  variant="ghost"
+                  onClick={handleBackToSetup}
+                  className="mb-4"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Setup
+                </Button>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Interview Plan Generated
+                </h1>
+                <p className="text-gray-600">
+                  Review your structured interview plan and start the interview when ready.
+                </p>
+              </div>
+              
+              <Button onClick={handleStartInterview} className="bg-green-600 hover:bg-green-700">
+                <Play className="mr-2 h-4 w-4" />
+                Start Interview
+              </Button>
+            </div>
+            
+            <InterviewPlanDisplay
+              plan={interviewPlan}
+              roleTitle={setupData.roleTitle}
+              framework={getFrameworkDisplayName(setupData.interviewFramework)}
+            />
+          </div>
+        )}
+
+        {currentStep === 'interview' && (
+          <div className="max-w-4xl mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle>Live Interview Session</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <h3 className="text-xl font-medium mb-4">Interview Session Ready</h3>
+                  <p className="text-gray-600 mb-6">
+                    Your interview session is now active. Video calling, transcription, 
+                    and scoring features will be implemented in the next phase.
+                  </p>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 rounded-lg">
+                      <h4 className="font-medium text-blue-900">Role: {setupData?.roleTitle}</h4>
+                      <p className="text-blue-700">Framework: {setupData && getFrameworkDisplayName(setupData.interviewFramework)}</p>
+                      <p className="text-blue-700">Session ID: {sessionId}</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setCurrentStep('plan')}
+                    >
+                      Back to Plan
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
-      
-      <InterviewChat 
-        open={isChatOpen && isConnected} 
-        onClose={() => setIsChatOpen(false)}
-        messages={messages}
-        inputValue={inputText}
-        setInputValue={setInputText}
-        isLoading={isLoading}
-        onSubmit={handleSubmit}
-        sessionId={sessionId}
-      />
     </div>
   );
 }

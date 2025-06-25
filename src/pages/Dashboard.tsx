@@ -6,12 +6,12 @@ import {
   PhoneCall, 
   MessageSquare,
   PlusCircle,
-  Briefcase
+  Briefcase,
+  ArrowRight
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import RollingGallery from "@/components/RollingGallery.jsx"; // Import the gallery with .jsx extension
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -22,97 +22,125 @@ const Dashboard = () => {
       description: "Create and analyze new job postings with AI assistance",
       icon: Briefcase,
       path: "/job-post",
-      color: "bg-red-100"
+      gradient: "from-red-500 to-pink-500"
     },
     {
       title: "Create LinkedIn Post",
       description: "Generate engaging content for your recruitment campaigns",
       icon: PlusCircle,
       path: "/linkedin-post",
-      color: "bg-purple-100"
+      gradient: "from-purple-500 to-violet-600"
     },
     {
       title: "Sourcing Assistant",
       description: "AI-powered candidate sourcing and job description analysis",
       icon: FileSearch,
       path: "/sourcing",
-      color: "bg-blue-100"
+      gradient: "from-blue-500 to-cyan-500"
     },
     {
       title: "Screening Room",
       description: "Conduct and analyze candidate screening interviews",
       icon: Video,
       path: "/screening-room",
-      color: "bg-green-100"
+      gradient: "from-green-500 to-emerald-500"
     },
     {
       title: "Interview Prep",
       description: "Prepare structured interviews and evaluation criteria",
       icon: UserCheck,
       path: "/interview-prep",
-      color: "bg-yellow-100"
+      gradient: "from-yellow-500 to-orange-500"
     },
     {
       title: "Kickoff Call",
       description: "Generate meeting summaries and action items",
       icon: PhoneCall,
       path: "/kickoff-call",
-      color: "bg-orange-100"
+      gradient: "from-orange-500 to-red-500"
     },
     {
       title: "Chat Assistant",
       description: "Get real-time help with recruitment tasks",
       icon: MessageSquare,
       path: "/chat",
-      color: "bg-pink-100"
+      gradient: "from-pink-500 to-rose-500"
     }
   ];
 
-  // Function to get random rotation (slight tilt) for post-it note effect - Not needed for gallery
-  // const getRandomRotation = () => { ... };
-
   return (
-    <div className="container py-8 space-y-8">
-      {/* Hero Section */}
-      <div className="space-y-4">
-        <h1 className="text-4xl font-bold">Recruitment Intelligence Hub</h1>
-        <p className="text-muted-foreground text-lg">
-          Streamline your recruitment process with AI-powered tools and analytics
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Hero Section */}
+        <div className="mb-12 text-center">
+          <h1 className="text-5xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] bg-clip-text text-transparent">
+            Recruitment Intelligence Hub
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Streamline your recruitment process with AI-powered tools and analytics
+          </p>
+        </div>
 
-      {/* Tools Carousel (Stashed version) */}
-      <div className="w-full"> {/* Container for the gallery */}
-        <RollingGallery
-          autoplay={true}
-          pauseOnHover={true}
-          images={toolCards.map((tool) => (
-            // We pass the fully rendered Card component as an item
+        {/* Tools Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {toolCards.map((tool) => (
             <Card
               key={tool.path}
-              // Adjusted classes for carousel context - remove aspect-square, maybe adjust hover
-              className={`group transition-all ${tool.color} border-transparent w-[300px] h-[200px] flex flex-col`} // Example fixed size
+              className="group relative overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer bg-white"
+              onClick={() => navigate(tool.path)}
             >
-              <CardHeader className="flex-grow flex flex-col p-4"> {/* Adjust padding */}
-                <CardTitle className="flex items-center gap-2 text-lg mb-2"> {/* Adjust text size/margin */}
-                  <tool.icon className="h-5 w-5" /> {/* Adjust icon size */}
+              {/* Gradient Background */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+              
+              {/* Icon Background Circle */}
+              <div className="absolute top-4 right-4 w-12 h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <tool.icon className="h-6 w-6 text-gray-600 group-hover:text-gray-800 transition-colors duration-300" />
+              </div>
+
+              <CardHeader className="pb-6 pt-6 pr-20">
+                <CardTitle className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#8B5CF6] transition-colors duration-300">
                   {tool.title}
                 </CardTitle>
-                <CardDescription className="flex-grow text-sm mb-3"> {/* Adjust text size/margin */}
+                <CardDescription className="text-gray-600 text-sm leading-relaxed mb-4">
                   {tool.description}
                 </CardDescription>
-                <Button
-                  variant="secondary" // Changed variant to secondary for more definition
-                  size="sm" // Smaller button
-                  className="w-full mt-auto text-xs" // Removed group-hover effect
-                  onClick={() => navigate(tool.path)}
-                >
-                  Open Tool
-                </Button>
+                
+                {/* Action Button */}
+                <div className="flex items-center justify-between mt-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-0 h-auto text-[#8B5CF6] hover:text-[#9b87f5] font-medium group-hover:translate-x-1 transition-all duration-300"
+                  >
+                    Open Tool
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               </CardHeader>
+
+              {/* Hover Border Effect */}
+              <div className={`absolute inset-0 border-2 border-transparent group-hover:border-gradient-to-r group-hover:${tool.gradient} rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-300`} />
             </Card>
           ))}
-        />
+        </div>
+
+        {/* Bottom CTA Section */}
+        <div className="mt-16 text-center">
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Ready to Transform Your Recruitment Process?
+            </h2>
+            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+              Choose any tool above to get started with AI-powered recruitment solutions
+            </p>
+            <Button 
+              onClick={() => navigate("/sourcing")}
+              className="bg-[#8B5CF6] hover:bg-[#9b87f5] text-white px-8 py-3 text-lg"
+            >
+              Start with Sourcing Assistant
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

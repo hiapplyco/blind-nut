@@ -12,8 +12,8 @@ export function getGeminiModel() {
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  // Using gemini-2.0-flash as the model name
-  return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  // Using gemini-2.5-flash as the model name - latest and most capable model
+  return genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 }
 
 /**
@@ -22,10 +22,10 @@ export function getGeminiModel() {
  * @returns The generated content
  */
 export async function generateContent(promptText: string) {
-  console.log("Sending prompt to Gemini API");
+  console.log("Sending prompt to Gemini 2.5 Flash API");
   const model = getGeminiModel();
   const result = await model.generateContent(promptText);
   const responseText = result.response.text();
-  console.log("Received response from Gemini API:", responseText);
+  console.log("Received response from Gemini 2.5 Flash API:", responseText);
   return responseText;
 }

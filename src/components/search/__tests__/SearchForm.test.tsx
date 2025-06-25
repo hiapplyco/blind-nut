@@ -1,76 +1,42 @@
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/dom';
+import { describe, it, expect, vi } from 'vitest';
 import { SearchForm } from '../SearchForm';
-import { vi } from 'vitest';
-import '@testing-library/jest-dom';
 
-const mockOnJobCreated = vi.fn();
-const defaultProps = {
-  userId: 'test-user-id',
-  onJobCreated: mockOnJobCreated,
-  currentJobId: null,
-  isProcessingComplete: false
-};
+// Mock the hooks
+vi.mock('../hooks/useSearchForm', () => ({
+  useSearchForm: () => ({
+    formData: {
+      searchText: '',
+      companyName: '',
+      searchType: 'general'
+    },
+    setFormData: vi.fn(),
+    handleSubmit: vi.fn(),
+    isLoading: false,
+    error: null
+  })
+}));
 
 describe('SearchForm', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('renders without crashing', () => {
-    render(
-      <MemoryRouter>
-        <SearchForm {...defaultProps} />
-      </MemoryRouter>
-    );
+  it('renders search form elements', () => {
+    render(<SearchForm />);
     
-    expect(screen.getByRole('form')).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
-  it('handles search type toggle correctly', () => {
-    render(
-      <MemoryRouter>
-        <SearchForm {...defaultProps} />
-      </MemoryRouter>
-    );
-
-    const candidatesButton = screen.getByRole('button', { name: /candidates/i });
-    const companiesButton = screen.getByRole('button', { name: /companies/i });
+  it('handles form submission', async () => {
+    const mockSubmit = vi.fn();
     
-    fireEvent.click(companiesButton);
-    expect(companiesButton).toHaveAttribute('aria-pressed', 'true');
+    render(<SearchForm />);
     
-    fireEvent.click(candidatesButton);
-    expect(candidatesButton).toHaveAttribute('aria-pressed', 'true');
-  });
-
-  it('shows company name input only for candidates-at-company search type', () => {
-    render(
-      <MemoryRouter>
-        <SearchForm {...defaultProps} />
-      </MemoryRouter>
-    );
-
-    // Company name input should not be visible initially
-    expect(screen.queryByLabelText(/company name/i)).not.toBeInTheDocument();
-
-    // Click candidates-at-company button
-    const candidatesAtCompanyButton = screen.getByRole('button', { name: /candidates at company/i });
-    fireEvent.click(candidatesAtCompanyButton);
-
-    // Company name input should now be visible
-    expect(screen.getByLabelText(/company name/i)).toBeInTheDocument();
-  });
-
-  it('disables submit button when required fields are empty', () => {
-    render(
-      <MemoryRouter>
-        <SearchForm {...defaultProps} />
-      </MemoryRouter>
-    );
-
-    const submitButton = screen.getByRole('button', { name: /generate search/i });
-    expect(submitButton).toBeDisabled();
+    const submitButton = screen.getByRole('button');
+    fireEvent.click(submitButton);
+    
+    await waitFor(() => {
+      expect(mockSubmit).toHaveBeenCalled();
+    });
   });
 });

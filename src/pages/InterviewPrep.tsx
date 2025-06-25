@@ -2,12 +2,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Play } from "lucide-react";
+import { ArrowLeft, Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { InterviewHeader } from "@/components/interview/InterviewHeader";
 import { InterviewSetupForm, InterviewSetupData } from "@/components/interview/InterviewSetupForm";
 import { InterviewPlanDisplay } from "@/components/interview/InterviewPlanDisplay";
 import { useInterviewSetup } from "@/hooks/useInterviewSetup";
+import { useAuth } from "@/context/AuthContext";
 
 type InterviewStep = 'setup' | 'plan' | 'interview';
 
@@ -27,6 +28,7 @@ export default function InterviewPrep() {
   const [currentStep, setCurrentStep] = useState<InterviewStep>('setup');
   const [setupData, setSetupData] = useState<InterviewSetupData | null>(null);
   const { createInterviewSession, isLoading, sessionId, interviewPlan } = useInterviewSetup();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     document.title = "Interview Preparation | Pipecat";
@@ -36,8 +38,40 @@ export default function InterviewPrep() {
     };
   }, []);
 
+  // Show loading screen while auth is loading
+  if (authLoading) {
+    console.log('Auth is loading...');
+    return (
+      <div className="flex flex-col h-screen bg-gray-50">
+        <InterviewHeader />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user is authenticated
+  if (!isAuthenticated) {
+    console.log('User not authenticated, redirecting...');
+    return (
+      <div className="flex flex-col h-screen bg-gray-50">
+        <InterviewHeader />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-600">Please log in to access interview preparation.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handleSetupSubmit = async (data: InterviewSetupData) => {
     try {
+      console.log('Submitting interview setup:', data);
       setSetupData(data);
       await createInterviewSession(data);
       setCurrentStep('plan');
@@ -70,6 +104,8 @@ export default function InterviewPrep() {
     };
     return frameworks[framework as keyof typeof frameworks] || framework;
   };
+
+  console.log('InterviewPrep render:', { currentStep, authLoading, isAuthenticated, isLoading });
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">

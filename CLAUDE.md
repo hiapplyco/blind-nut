@@ -2,6 +2,17 @@
 
 ## 📋 Recent Updates
 
+### Nymeria API Integration (June 2025)
+- ✅ **Contact Enrichment for LinkedIn Profiles**
+- Integrated Nymeria API for retrieving contact information
+- Added "Get Contact Info" button to search results
+- Created sophisticated modal with tabbed interface:
+  - Contact tab: Emails, phone numbers, location
+  - Professional tab: Job title, company, skills, summary
+  - Social tab: LinkedIn, Twitter, GitHub profiles
+- One-click copy functionality for all contact fields
+- Graceful handling of profiles not in Nymeria database
+
 ### Boolean Search Optimization (June 2025)
 - ✅ **Enhanced Boolean Search String Generation**
 - Improved prompt template with comprehensive examples and requirements
@@ -51,6 +62,61 @@
 3. **Skills-Based Matching**: Move beyond keywords to true capability assessment
 4. **Real-Time Collaboration**: Live, interactive features for modern distributed teams
 5. **Responsible AI**: Transparent, fair, and compliant AI implementations
+
+## 🔌 External API Integrations
+
+### Nymeria API (Contact Enrichment)
+- **Purpose**: Enrich LinkedIn profiles with contact information (emails, phone numbers)
+- **Endpoint**: `https://www.nymeria.io/api/v4/`
+- **Edge Function**: `/supabase/functions/enrich-profile`
+- **Features**:
+  - Profile enrichment using LinkedIn URLs
+  - Person search by name, company, location
+  - Returns emails, phone numbers, social profiles, skills
+
+#### Setup Instructions:
+1. **Get Nymeria API Key**:
+   - Sign up at [nymeria.io](https://www.nymeria.io/)
+   - Navigate to API settings
+   - Copy your API key
+
+2. **Configure in Supabase**:
+   ```bash
+   # Go to Supabase Dashboard > Settings > Edge Functions
+   # Add environment variable:
+   NYMERIA_API_KEY=your_api_key_here
+   ```
+
+3. **Usage**:
+   - Search for LinkedIn profiles
+   - Click "Get Contact Info" on any result
+   - View enriched data in modal
+
+#### API Response Format:
+```typescript
+{
+  data: {
+    name: string;
+    work_email?: string;
+    emails?: string[];
+    mobile_phone?: string;
+    phone_numbers?: string[];
+    location?: string;
+    company?: string;
+    job_title?: string;
+    skills?: string[];
+    linkedin_url?: string;
+    twitter_url?: string;
+    github_url?: string;
+  }
+}
+```
+
+### Google Custom Search API
+- **Purpose**: Search LinkedIn profiles via Google
+- **CSE ID**: `b28705633bcb44cf0`
+- **Edge Function**: `/supabase/functions/get-google-cse-key`
+- **Configuration**: Set in environment variables
 
 ## 🏗️ Architecture & Technology Standards
 
@@ -452,6 +518,25 @@ npx supabase functions serve
 - **Environment Variables**: Use `Deno.env.get()` for API keys
 - **Dependencies**: Use npm: prefix for npm packages in Deno
 
+##### 5. **Nymeria API Troubleshooting**
+- **500 Error**: Usually missing NYMERIA_API_KEY in environment variables
+- **401 Error**: Invalid API key - check your Nymeria dashboard
+- **404 Error**: Profile not found in Nymeria's database
+- **429 Error**: Rate limit exceeded - wait before retrying
+- **Empty Results**: Some profiles may not have contact information available
+
+**Common Issues & Solutions**:
+```bash
+# Check if API key is set in Supabase
+# Dashboard > Settings > Edge Functions > Environment Variables
+
+# Test the edge function locally
+npx supabase functions serve enrich-profile
+
+# View function logs
+# Dashboard > Functions > enrich-profile > Logs
+```
+
 ### AI Development
 ```bash
 # Test prompts
@@ -542,4 +627,4 @@ After optimization, the system now generates comprehensive boolean searches like
 ---
 
 *Last Updated: June 2025*
-*Version: 1.3.0*
+*Version: 1.4.0*

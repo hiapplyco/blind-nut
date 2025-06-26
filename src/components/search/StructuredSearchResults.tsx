@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, MapPin, Briefcase, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, MapPin, Briefcase, ExternalLink, ChevronLeft, ChevronRight, Mail } from 'lucide-react';
 import { fetchSearchResults, processSearchResults } from './hooks/google-search/searchApi';
 import { SearchResult } from './types';
 import { toast } from 'sonner';
+import { useProfileEnrichment } from './hooks/useProfileEnrichment';
+import { ContactInfoModal } from './ContactInfoModal';
 
 export interface StructuredSearchResultsProps {
   searchString: string;
@@ -22,6 +24,13 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
   const [currentPage, setCurrentPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
   const resultsPerPage = 10;
+
+  // Contact info modal state
+  const [selectedProfile, setSelectedProfile] = useState<{ url: string; name: string } | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Use the profile enrichment hook
+  const { enrichProfile, enrichedData, isLoading: isEnriching } = useProfileEnrichment();
 
   useEffect(() => {
     if (searchString) {
@@ -70,6 +79,15 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
     if (currentPage < maxPages) {
       loadResults(currentPage + 1);
     }
+  };
+
+  const handleGetContactInfo = async (profileUrl: string, profileName: string) => {
+    // Set the selected profile and open modal
+    setSelectedProfile({ url: profileUrl, name: profileName });
+    setIsModalOpen(true);
+    
+    // Enrich the profile
+    await enrichProfile(profileUrl);
   };
 
   const extractProfileInfo = (result: SearchResult) => {
@@ -172,6 +190,19 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
                           {result.snippet}
                         </p>
                       )}
+                      
+                      {/* Get Contact Info Button */}
+                      <div className="mt-3">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleGetContactInfo(result.link, name)}
+                          className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
+                        >
+                          <Mail className="w-4 h-4 mr-2" />
+                          Get Contact Info
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -211,6 +242,18 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
           </div>
         )}
       </Card>
+
+      {/* Contact Info Modal */}
+      <ContactInfoModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedProfile(null);
+        }}
+        profileData={enrichedData}
+        isLoading={isEnriching}
+        profileName={selectedProfile?.name || ''}
+      />
     </div>
   );
 };

@@ -141,13 +141,16 @@ export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="contact-info-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="w-5 h-5" />
             {profileName ? `Contact Information - ${profileName}` : 'Contact Information'}
           </DialogTitle>
         </DialogHeader>
+        <p id="contact-info-description" className="sr-only">
+          View and copy contact information for {profileName || 'this profile'}
+        </p>
 
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (

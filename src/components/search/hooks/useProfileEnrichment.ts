@@ -67,17 +67,28 @@ export const useProfileEnrichment = () => {
       
       // Handle Supabase error
       if (supabaseError) {
+        console.error('Supabase function error:', supabaseError);
         throw new Error(`Failed to enrich profile: ${supabaseError.message}`);
       }
       
       // Handle successful response
       console.log('Nymeria API Response:', data);
       
+      // Check if the response contains an error
+      if (data?.error) {
+        console.error('API returned error:', data);
+        const errorMsg = data.suggestion 
+          ? `${data.error}. ${data.suggestion}`
+          : data.error;
+        throw new Error(errorMsg);
+      }
+      
       if (data) {
         // The Nymeria API might return data directly, not nested in data.data
         const profileData = data.data || data;
         console.log('Setting enriched data:', profileData);
         setEnrichedData(profileData);
+        toast.success('Contact information retrieved');
         return profileData;
       } else {
         // No data returned

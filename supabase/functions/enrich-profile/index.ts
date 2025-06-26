@@ -14,7 +14,7 @@ serve(async (req) => {
   
   try {
     const requestData = await req.json();
-    console.log("Request data:", requestData);
+    console.log("Request data:", JSON.stringify(requestData).substring(0, 200));
     
     // Check if this is a profile enrichment or a person search request
     if (requestData.profileUrl || requestData.profileId) {
@@ -28,11 +28,24 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error('Error processing request:', error);
+    
+    // Provide more detailed error information
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = {
+      error: errorMessage,
+      type: error.constructor.name,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Special handling for missing API key
+    if (errorMessage.includes('Missing Nymeria API key')) {
+      errorDetails.suggestion = 'Please configure NYMERIA_API_KEY in Supabase Edge Functions environment variables';
+    }
+    
+    console.error('Detailed error:', errorDetails);
+    
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        details: 'An error occurred while processing the request'
-      }),
+      JSON.stringify(errorDetails),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

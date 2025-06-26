@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { useClientAgentOutputs } from "@/stores/useClientAgentOutputs";
 import { GoogleSearchWindow } from "./search/GoogleSearchWindow";
+import { StructuredSearchResults } from "./search/StructuredSearchResults";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AgentProcessor } from "./search/AgentProcessor";
@@ -199,13 +200,13 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
         </AnalysisReport>
       )}
 
-       {/* Conditionally render GoogleSearchWindow based on local state */}
+       {/* Conditionally render StructuredSearchResults based on local state */}
        {showGoogleSearch && searchString && (
          <div className="mt-6"> {/* Add margin */}
-           <GoogleSearchWindow
-             initialSearchString={searchString} // Pass the generated/final search string
-             jobId={currentJobId}
-             // No need to pass searchTerm as we updated the component to use initialSearchString
+           <StructuredSearchResults
+             searchString={searchString} // Pass the generated/final search string
+             jobId={currentJobId || undefined}
+             searchType="candidates"
            />
          </div>
        )}

@@ -12,7 +12,7 @@ import { FirecrawlService } from "@/utils/FirecrawlService";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SubmitButton } from "./SubmitButton"; // Keep SubmitButton
-import { GoogleSearchWindow } from "./GoogleSearchWindow"; // Keep GoogleSearchWindow
+import { StructuredSearchResults } from "./StructuredSearchResults"; // Use structured results instead
 import { useState, memo } from "react"; // Added useState, memo
 
 // Removed imports: RollingGallery, Card, Users, Building2, Briefcase, FormHeader, ContentTextarea, CompanyNameInput
@@ -34,7 +34,7 @@ interface SearchFormContentProps {
 
 // Keep memoized components needed
 const MemoizedSubmitButton = memo(SubmitButton);
-const MemoizedGoogleSearchWindow = memo(GoogleSearchWindow);
+const MemoizedStructuredSearchResults = memo(StructuredSearchResults);
 
 export const SearchFormContent = ({
   searchText,
@@ -178,11 +178,11 @@ export const SearchFormContent = ({
         </div>
       </form>
 
-      {/* Google Search Window - Pass initialSearchString */}
+      {/* Structured Search Results */}
       {searchString && ( // Conditionally render based on searchString prop
         <div className="mt-6">
-          {/* Pass the searchString prop as initialSearchString */}
-          <MemoizedGoogleSearchWindow initialSearchString={searchString} />
+          {/* Pass the searchString prop for structured results */}
+          <MemoizedStructuredSearchResults searchString={searchString} searchType="candidates" />
         </div>
       )}
 

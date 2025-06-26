@@ -134,7 +134,7 @@ export interface SearchResult {
   snippet: string;
   name: string;
   location: string;
-  relevance_score: number;
+  relevance_score?: number;
   jobTitle?: string;
   profileUrl?: string;
   [key: string]: any;
@@ -143,8 +143,8 @@ export interface SearchResult {
 // Google search types
 export interface GoogleSearchResult {
   items: any[];
-  searchInformation: {
-    totalResults: number;
+  searchInformation?: {
+    totalResults: string;
   };
 }
 

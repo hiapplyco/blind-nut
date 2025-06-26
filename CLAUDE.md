@@ -1,6 +1,69 @@
 # CLAUDE.md - Blind Nut Platform Development Guidelines
 
+## Table of Contents
+
+1. [Project Overview](#project-overview)
+2. [Recent Updates](#recent-updates)
+3. [Development Environment](#development-environment)
+4. [Architecture & Core Features](#architecture--core-features)
+5. [Authentication System](#authentication-system)
+6. [AI Agent System & Migration](#ai-agent-system--migration)
+7. [External Integrations](#external-integrations)
+8. [Testing & Quality Assurance](#testing--quality-assurance)
+9. [Deployment & Operations](#deployment--operations)
+10. [SPARC Development Methodology](#sparc-development-methodology)
+
+---
+
+## 📋 Project Overview
+
+Blind Nut is an AI-driven recruitment search tool that helps recruiters and hiring managers find qualified candidates through intelligent search capabilities, advanced boolean query generation, and comprehensive candidate profiling.
+
+### Key Features
+- 🤖 **AI-Powered Search**: Generate complex boolean searches from natural language
+- 🎤 **Audio Input Support**: Voice-to-text search capabilities
+- 📄 **PDF Resume Analysis**: Extract and analyze candidate information
+- 🔍 **Contact Enrichment**: Integrate with APIs for comprehensive candidate data
+- 💼 **Compensation Analysis**: AI-driven salary benchmarking and analysis
+- 🎯 **Multi-Platform Search**: LinkedIn, Indeed, and other job platforms
+
+### Tech Stack
+- **Frontend**: React, TypeScript, Tailwind CSS, Vite
+- **Backend**: Supabase (PostgreSQL, Edge Functions)
+- **AI/ML**: Google Gemini 2.0 Flash, Custom Agents
+- **Testing**: Vitest, Deno (for edge functions)
+- **Deployment**: Vercel (Frontend), Supabase (Backend)
+
+---
+
 ## 📋 Recent Updates
+
+### Boolean Search Enhancement & UX Improvements (June 2025)
+- ✅ **AI-Powered Boolean Explanation System**
+  - New `explain-boolean` edge function using Gemini 2.0 Flash
+  - Breaks down complex boolean searches into understandable components
+  - Shows what will be included/excluded in search results
+  - Provides optimization tips for better results
+
+- ✅ **Sophisticated Search UI/UX**
+  - Beautiful loading animations with 3 stages (generating, explaining, searching)
+  - "Simpler" and "More Complex" buttons to adjust boolean complexity
+  - Collapsible UI after search - requirements and boolean sections minimize
+  - ChatGPT/Claude-style single-line expanding input with scroll
+  - Icon-based file upload with paperclip icon
+  - Enhanced "Generate AI Search String" button with gradient and animations
+
+- ✅ **Profile Card Improvements**
+  - Google-style visual hierarchy with clean borders and spacing
+  - Smart data parsing from LinkedIn snippets
+  - Better location extraction with multiple pattern matching
+  - Profile completeness indicators
+  - Icons for job title, company, and location
+
+- ✅ **Tooltip Fixes**
+  - Fixed transparent tooltip backgrounds
+  - Dark tooltips (gray-900) with white text for excellent contrast
+  - Consistent styling across all tooltips
 
 ### Nymeria API Integration (June 2025)
 - ✅ **Contact Enrichment for LinkedIn Profiles**
@@ -52,579 +115,608 @@
 - Critical path tests for ProtectedRoute and JobPostingForm
 - Coverage reporting with @vitest/coverage-v8
 
-## 🎯 Platform Vision & Philosophy
+---
 
-**Mission**: "Even a blind nut can find a Purple Squirrel" - Democratize AI-powered recruitment for enterprises while maintaining the human touch in hiring.
+## 🚀 Development Environment
 
-**Core Principles**:
-1. **AI-First, Human-Centered**: AI enhances recruiter capabilities, not replaces them
-2. **End-to-End Intelligence**: From sourcing to onboarding, every step is AI-enhanced
-3. **Skills-Based Matching**: Move beyond keywords to true capability assessment
-4. **Real-Time Collaboration**: Live, interactive features for modern distributed teams
-5. **Responsible AI**: Transparent, fair, and compliant AI implementations
+### Prerequisites
+- Node.js v20.15.1+
+- npm 10.7.0+
+- Deno (for edge function testing)
+- Git
 
-## 🔌 External API Integrations
+### Setup Instructions
 
-### Nymeria API (Contact Enrichment)
-- **Purpose**: Enrich LinkedIn profiles with contact information (emails, phone numbers)
-- **Endpoint**: `https://www.nymeria.io/api/v4/`
-- **Edge Function**: `/supabase/functions/enrich-profile`
-- **Features**:
-  - Profile enrichment using LinkedIn URLs
-  - Person search by name, company, location
-  - Returns emails, phone numbers, social profiles, skills
-
-#### Setup Instructions:
-1. **Get Nymeria API Key**:
-   - Sign up at [nymeria.io](https://www.nymeria.io/)
-   - Navigate to API settings
-   - Copy your API key
-
-2. **Configure in Supabase**:
-   ```bash
-   # Go to Supabase Dashboard > Settings > Edge Functions
-   # Add environment variable:
-   NYMERIA_API_KEY=your_api_key_here
-   ```
-
-3. **Usage**:
-   - Search for LinkedIn profiles
-   - Click "Get Contact Info" on any result
-   - View enriched data in modal
-
-#### API Response Format:
-```typescript
-{
-  data: {
-    name: string;
-    work_email?: string;
-    emails?: string[];
-    mobile_phone?: string;
-    phone_numbers?: string[];
-    location?: string;
-    company?: string;
-    job_title?: string;
-    skills?: string[];
-    linkedin_url?: string;
-    twitter_url?: string;
-    github_url?: string;
-  }
-}
+1. **Clone the repository**
+```bash
+git clone [repository-url]
+cd blind-nut
 ```
 
-### Google Custom Search API
-- **Purpose**: Search LinkedIn profiles via Google
-- **CSE ID**: `b28705633bcb44cf0`
-- **Edge Function**: `/supabase/functions/get-google-cse-key`
-- **Configuration**: Set in environment variables
+2. **Install dependencies**
+```bash
+npm install
+```
 
-## 🏗️ Architecture & Technology Standards
+3. **Environment Configuration**
+Create `.env.local` with:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_GOOGLE_API_KEY=your_google_api_key
+VITE_NYMERIA_API_KEY=your_nymeria_api_key
+```
+
+4. **Start development server**
+```bash
+npm run dev
+```
+
+### Available Scripts
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run test` - Run tests
+- `npm run lint` - Run ESLint
+- `npm run typecheck` - Run TypeScript compiler
+- `deno test` - Test edge functions
+
+---
+
+## 🏗️ Architecture & Core Features
 
 ### Project Structure
 ```
-src/
-├── components/         # UI components organized by feature
-├── types/             
-│   └── domains/       # Domain-specific type exports
-│       ├── recruitment.ts
-│       ├── interview.ts
-│       ├── meeting.ts
-│       ├── chat.ts
-│       └── user.ts
-├── test/              # Test utilities and setup
-│   ├── setup.ts       # Test environment setup
-│   ├── utils.tsx      # Custom render with providers
-│   └── mocks/         # Shared mocks
-└── integrations/      
-    └── supabase/
-        └── types.ts   # Auto-generated - DO NOT EDIT
+blind-nut/
+├── src/
+│   ├── components/       # React components
+│   ├── pages/           # Page components
+│   ├── hooks/           # Custom React hooks
+│   ├── types/           # TypeScript types
+│   ├── lib/             # Utilities and helpers
+│   └── test/            # Test utilities and mocks
+├── supabase/
+│   ├── functions/       # Edge functions
+│   └── migrations/      # Database migrations
+├── docs/               # Documentation
+└── public/             # Static assets
 ```
 
-### Frontend Standards
-- **Framework**: React 18+ with TypeScript (strict mode)
-- **State Management**: 
-  - Zustand for global state
-  - TanStack Query for server state
-  - Context API for theme/auth only
-- **Styling**: Tailwind CSS with consistent design tokens
-- **Components**: shadcn/ui components as base, custom components follow same patterns
-- **Animations**: Framer Motion for complex animations, CSS for simple transitions
+### Component Architecture
+- **Atomic Design Pattern**: Atoms → Molecules → Organisms → Templates → Pages
+- **Composition over Inheritance**: Use React composition patterns
+- **Single Responsibility**: Each component has one clear purpose
+- **Props Interface**: All components have typed props interfaces
 
-### Backend Standards
-- **Platform**: Supabase with PostgreSQL
-- **Edge Functions**: Deno runtime with TypeScript
-- **Real-time**: WebSockets for chat, interviews, and collaborative features
-- **Storage**: Supabase Storage with proper access policies
-- **Security**: Row Level Security (RLS) on all tables
+### State Management
+- **Local State**: useState for component-specific state
+- **Context API**: For cross-component state (auth, theme)
+- **Tanstack Query**: For server state and caching
+- **URL State**: Search params for shareable UI state
 
-### AI Integration Standards
-- **Multi-Model Approach**: 
-  - Gemini 2.0 Flash for all content generation (standardized December 2024)
-  - Claude for complex reasoning tasks (when needed)
-  - Whisper for transcription
-  - ElevenLabs for voice synthesis
-- **Model Configuration**: All Gemini instances use `gemini-2.0-flash` for consistency
-- **Prompt Management**: Centralized prompt templates in `/src/utils/prompts/`
-- **Error Handling**: Graceful fallbacks for AI failures
-- **Cost Optimization**: Cache AI responses when appropriate
+---
 
-## 🎨 UX/UI Design Guidelines
+## 🔐 Authentication System
 
-### Design Principles
-1. **Clarity Over Cleverness**: Simple, intuitive interfaces
-2. **Progressive Disclosure**: Show advanced features only when needed
-3. **Mobile-First Responsive**: All features work on mobile devices
-4. **Accessibility**: WCAG 2.1 AA compliance minimum
-5. **Performance**: Sub-3 second page loads, instant interactions
+### Overview
+The authentication system uses Supabase Auth with protected routes and session management.
 
-### Component Patterns
+### Key Components
+
+#### 1. AuthContext (`/src/components/auth/AuthContext.tsx`)
+- Provides authentication state throughout the app
+- Manages user sessions and auth operations
+- Handles loading states and error boundaries
+
+#### 2. ProtectedRoute (`/src/components/auth/ProtectedRoute.tsx`)
+- Wraps routes requiring authentication
+- Redirects unauthenticated users to login
+- Shows loading state during auth checks
+
+#### 3. User Flow
+```mermaid
+graph TD
+    A[User Access] --> B{Authenticated?}
+    B -->|Yes| C[Access Granted]
+    B -->|No| D[Redirect to Login]
+    D --> E[Login/Signup]
+    E --> F[Create Session]
+    F --> C
+```
+
+### Database Schema
+```sql
+-- Users table (managed by Supabase Auth)
+auth.users
+
+-- User profiles
+public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  email TEXT UNIQUE NOT NULL,
+  full_name TEXT,
+  avatar_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+)
+```
+
+### Implementation Guidelines
+1. Always use `useAuth()` hook for auth state
+2. Wrap protected pages with `<ProtectedRoute>`
+3. Handle auth errors gracefully with user feedback
+4. Use Row Level Security (RLS) policies in Supabase
+
+---
+
+## 🤖 AI Agent System & Migration
+
+### Current Architecture (Phase 8 - Completed)
+
+The platform now uses an advanced multi-agent orchestration system with specialized agents for different tasks.
+
+### Agent Types
+
+#### 1. **Base Agent Framework**
+- Abstract `Agent` class with tool execution capabilities
+- Prompt management system with template registration
+- Tool registry for dynamic tool loading
+- Built-in retry and error handling
+
+#### 2. **Specialized Agents**
+
+**TaskAgent**
+- General-purpose task execution
+- Supports multiple tools (HTTP, Calculator, Search, FileSystem)
+- Context-aware processing
+
+**RecruitmentAgent**
+- Candidate search and evaluation
+- Boolean search string generation
+- Skills extraction and matching
+- Resume parsing capabilities
+
+**BooleanSearchAgent**
+- Generates optimized boolean search strings
+- Platform-specific syntax (LinkedIn, Indeed, etc.)
+- Complexity adjustment (simple to advanced)
+
+**CompensationAgent**
+- Salary benchmarking and analysis
+- Market rate calculations
+- Negotiation guidance
+- Location-based adjustments
+
+**ProfileEnrichmentAgent**
+- Contact information retrieval
+- Social profile aggregation
+- Professional background enrichment
+- Data validation and quality scoring
+
+### Orchestration System
+
+#### Enhanced Orchestrator Features
+- **Workflow Execution**: Sequential and parallel agent coordination
+- **Error Recovery**: Automatic retry with exponential backoff
+- **Resource Management**: Concurrency limits and timeout handling
+- **State Management**: Workflow state persistence and recovery
+- **Debugging**: Comprehensive logging and tracing
+
+#### Workflow Definition Structure
 ```typescript
-// All components follow this structure
-interface ComponentProps {
-  className?: string; // For composition
-  children?: React.ReactNode;
-  // Specific props with clear types
-}
-
-export function Component({ className, ...props }: ComponentProps) {
-  return (
-    <div className={cn("base-styles", className)} {...props}>
-      {/* Component content */}
-    </div>
-  );
+interface WorkflowDefinition {
+  id: string;
+  name: string;
+  description: string;
+  steps: WorkflowStep[];
+  onError: 'stop' | 'continue' | 'retry';
+  maxRetries?: number;
+  timeout?: number;
 }
 ```
 
-### Color System
-- **Primary**: Blue (recruitment/professional)
-- **Secondary**: Purple (AI/innovation - "Purple Squirrel")
-- **Success**: Green (positive actions)
-- **Warning**: Amber (caution)
-- **Error**: Red (errors/stops)
-- **Neutral**: Slate grays
+### Migration Timeline (Completed)
 
-### Typography
-- **Headings**: Inter or similar clean sans-serif
-- **Body**: System font stack for performance
-- **Code**: JetBrains Mono or similar monospace
+| Phase | Description | Status | Duration |
+|-------|-------------|--------|----------|
+| 1 | Project Setup & Base Agent | ✅ Complete | Week 1 |
+| 2 | Recruitment Agent & Tools | ✅ Complete | Week 1-2 |
+| 3 | Compensation Analysis | ✅ Complete | Week 2-3 |
+| 4 | Profile Enrichment | ✅ Complete | Week 3-4 |
+| 5 | Workflow Engine | ✅ Complete | Week 4-5 |
+| 6 | Integration & Migration | ✅ Complete | Week 5-6 |
+| 7 | Testing & Optimization | ✅ Complete | Week 6-7 |
+| 8 | Production Deployment | ✅ Complete | Week 7-8 |
 
-## 🚀 Feature Development Guidelines
+### Key Improvements Achieved
+1. **Modularity**: Clean separation of concerns between agents
+2. **Scalability**: Parallel execution and resource management
+3. **Reliability**: Comprehensive error handling and recovery
+4. **Flexibility**: Easy to add new agents and workflows
+5. **Observability**: Built-in logging and monitoring
 
-### AI Feature Checklist
-- [ ] Define clear user value proposition
-- [ ] Design fallback for AI failures
-- [ ] Implement proper loading states
-- [ ] Add cost tracking/monitoring
-- [ ] Create user controls (on/off, preferences)
-- [ ] Test with edge cases
-- [ ] Document prompts and expected outputs
+### Usage Examples
 
-### New Feature Template
 ```typescript
-// 1. Feature flag (if applicable)
-const FEATURE_FLAG_NAME = process.env.NEXT_PUBLIC_FEATURE_NAME === 'true';
+// Single agent execution
+const result = await orchestrator.runSingleAgent('RecruitmentAgent', {
+  task: 'search',
+  requirements: 'Senior React Developer in San Francisco'
+});
 
-// 2. Dedicated hook for feature logic
-export function useFeatureName() {
-  // Feature-specific state and logic
-}
-
-// 3. Main component with error boundaries
-export function FeatureName() {
-  if (!FEATURE_FLAG_NAME) return null;
-  
-  return (
-    <ErrorBoundary fallback={<FeatureFallback />}>
-      {/* Feature implementation */}
-    </ErrorBoundary>
-  );
-}
-```
-
-### Database Design Standards
-- **Naming**: snake_case for tables and columns
-- **IDs**: UUID v4 for all primary keys
-- **Timestamps**: created_at, updated_at on all tables
-- **Soft Deletes**: deleted_at for recoverable data
-- **Relationships**: Explicit foreign keys with CASCADE rules
-- **Indexes**: On all foreign keys and commonly queried fields
-
-### Type Import Guidelines
-```typescript
-// ❌ Don't import from auto-generated file directly
-import { Database } from '@/integrations/supabase/types';
-type Job = Database['public']['Tables']['jobs']['Row'];
-
-// ✅ Use domain-specific imports
-import { Job, JobInsert, Application } from '@/types/recruitment';
-import { InterviewSession, InterviewPlan } from '@/types/interview';
-import { User, Profile } from '@/types/user';
-
-// ✅ Or import everything from a domain
-import * as RecruitmentTypes from '@/types/recruitment';
-
-// ✅ Or from central export
-import { Job, Meeting, ChatMessage } from '@/types';
-```
-
-## 📊 Performance Optimization
-
-### Frontend Performance
-1. **Code Splitting**: Route-based splitting minimum
-2. **Image Optimization**: Next/Image or lazy loading
-3. **Bundle Size**: Monitor and alert on size increases
-4. **Caching**: Aggressive caching with proper invalidation
-5. **Prefetching**: Predictive prefetch for likely next actions
-
-### Backend Performance
-1. **Query Optimization**: EXPLAIN ANALYZE on all new queries
-2. **Connection Pooling**: Proper pool configuration
-3. **Edge Function Size**: Keep under 1MB
-4. **Caching Strategy**: Redis for frequently accessed data
-5. **Rate Limiting**: Implement on all public endpoints
-
-### AI Performance
-1. **Response Streaming**: Stream long AI responses
-2. **Parallel Processing**: Batch AI calls when possible
-3. **Caching**: Cache identical prompts for 24 hours
-4. **Model Selection**: Use appropriate model for task complexity
-5. **Timeout Handling**: 30-second timeout with user notification
-
-## 🔒 Security & Compliance
-
-### Security Checklist
-- [ ] All user inputs sanitized
-- [ ] SQL injection prevention (parameterized queries)
-- [ ] XSS prevention (React default escaping)
-- [ ] CSRF tokens on state-changing operations
-- [ ] Rate limiting on all endpoints
-- [ ] Proper CORS configuration
-- [ ] Secrets in environment variables only
-
-### Data Privacy
-1. **PII Handling**: Encrypt at rest and in transit
-2. **Data Retention**: Clear policies and automated cleanup
-3. **Access Logs**: Audit trail for all data access
-4. **GDPR Compliance**: Right to deletion, data portability
-5. **Resume Data**: Special handling for sensitive information
-
-### AI Ethics
-1. **Bias Prevention**: Regular audits of AI decisions
-2. **Transparency**: Explainable AI decisions
-3. **Human Override**: Always allow human intervention
-4. **Consent**: Clear opt-in for AI processing
-5. **Fair Use**: Prevent discriminatory outcomes
-
-## 🧪 Testing Standards
-
-### Testing Pyramid
-1. **Unit Tests**: 80% coverage minimum
-2. **Integration Tests**: Critical paths covered
-3. **E2E Tests**: Happy paths + critical edge cases
-4. **Performance Tests**: Load testing for scaling
-5. **Security Tests**: Penetration testing quarterly
-
-### Test Structure
-```typescript
-describe('FeatureName', () => {
-  describe('Component', () => {
-    it('should render correctly', () => {});
-    it('should handle user interaction', () => {});
-    it('should handle errors gracefully', () => {});
-  });
-  
-  describe('API', () => {
-    it('should return expected data', () => {});
-    it('should handle invalid input', () => {});
-    it('should respect rate limits', () => {});
-  });
+// Workflow execution
+const workflow = await orchestrator.runWorkflow({
+  id: 'candidate-sourcing',
+  steps: [
+    { agentName: 'BooleanSearchAgent', params: { requirements } },
+    { agentName: 'RecruitmentAgent', params: { task: 'search' } },
+    { agentName: 'ProfileEnrichmentAgent', params: { profiles } }
+  ]
 });
 ```
 
-### Test Utilities & Mocking
-```typescript
-// Use custom render with providers
-import { render, screen, userEvent } from '@/test/utils';
+---
 
-// Mock Supabase in tests
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(),
-    auth: { getUser: vi.fn() },
-    functions: { invoke: vi.fn() }
-  }
-}));
+## 🔌 External Integrations
 
-// Mock navigation
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
-  return { ...actual, useNavigate: vi.fn() };
-});
-```
+### Current Integrations
 
-### Test File Naming
-- Component tests: `ComponentName.test.tsx`
-- Hook tests: `hookName.test.ts`
-- Utility tests: `utilityName.test.ts`
-- Integration tests: `__tests__/feature.integration.test.ts`
+#### 1. **Google Gemini API**
+- Model: `gemini-2.0-flash`
+- Used for all AI operations
+- Structured output generation
+- Context-aware responses
 
-## 📝 Documentation Standards
+#### 2. **Nymeria API**
+- Contact information enrichment
+- Email and phone number retrieval
+- Professional profile data
+- Social media links
 
-### Code Documentation
-```typescript
-/**
- * Brief description of what the function does
- * @param {Type} param - What the parameter represents
- * @returns {Type} What the function returns
- * @example
- * // Example usage
- * const result = functionName(param);
- */
-```
+### Potential Future Integrations
 
-### Feature Documentation
-1. **User Guide**: How to use the feature
-2. **Technical Spec**: Implementation details
-3. **API Reference**: Endpoints and parameters
-4. **Troubleshooting**: Common issues and solutions
-5. **Performance Notes**: Expected load and limits
+#### Recruiting Platforms
+1. **LinkedIn Recruiter API** ($$$)
+   - Full profile access
+   - InMail capabilities
+   - Advanced search filters
 
-## 🔄 Continuous Improvement
+2. **Indeed Resume API** ($$)
+   - Resume database access
+   - Candidate matching
+   - Application tracking
 
-### Monitoring & Analytics
-1. **User Analytics**: Mixpanel/Amplitude for behavior
-2. **Performance Monitoring**: Sentry for errors
-3. **AI Monitoring**: Track accuracy and costs
-4. **Business Metrics**: Conversion rates, time-to-hire
-5. **System Health**: Uptime, response times
+3. **Glassdoor API** ($)
+   - Company reviews
+   - Salary information
+   - Interview insights
 
-### Feedback Loops
-1. **User Feedback**: In-app feedback widgets
-2. **A/B Testing**: Feature variations testing
-3. **AI Feedback**: Thumbs up/down on AI outputs
-4. **Performance Feedback**: User-reported slowness
-5. **Bug Reports**: Integrated bug reporting
+#### Data Enrichment Services
+1. **Hunter.io** ($)
+   - Email finder
+   - Email verifier
+   - Domain search
 
-### Regular Reviews
-- **Weekly**: Team sync on current sprint
-- **Bi-weekly**: Performance and security review
-- **Monthly**: AI accuracy and cost review
-- **Quarterly**: Architecture and tech debt review
-- **Annually**: Full platform audit
+2. **Clearbit** ($$)
+   - Company enrichment
+   - Person enrichment
+   - Risk scoring
 
-## 🚦 Development Workflow
+3. **PredictLeads** ($$$)
+   - Technographic data
+   - Buying signals
+   - Company insights
 
-### Branch Strategy
-- `main`: Production-ready code
-- `develop`: Integration branch
-- `feature/*`: New features
-- `fix/*`: Bug fixes
-- `hotfix/*`: Emergency fixes
+#### Communication Tools
+1. **Twilio** ($)
+   - SMS capabilities
+   - Voice calling
+   - WhatsApp integration
 
-### PR Requirements
-1. **Tests**: All tests passing
-2. **Linting**: No linting errors
-3. **Type Check**: TypeScript compilation successful
-4. **Documentation**: Updated if needed
-5. **Review**: At least one approval
+2. **SendGrid** ($)
+   - Email campaigns
+   - Template management
+   - Analytics
 
-### Deployment Pipeline
-1. **Local**: Development with hot reload
-2. **Preview**: Automatic deploys for PRs
-3. **Staging**: Pre-production testing
-4. **Production**: Blue-green deployment
+### Integration Guidelines
+1. Always use environment variables for API keys
+2. Implement rate limiting and retry logic
+3. Cache responses when appropriate
+4. Handle API errors gracefully
+5. Monitor usage and costs
 
-## 📋 Common Tasks & Commands
+---
 
-### Development
+## 🧪 Testing & Quality Assurance
+
+### Testing Strategy
+
+#### Unit Tests
+- Components: Test with React Testing Library
+- Functions: Pure function testing with Vitest
+- Coverage target: 80%+
+
+#### Integration Tests
+- API endpoints testing
+- Database operations
+- Authentication flows
+
+#### E2E Tests
+- Critical user journeys
+- Cross-browser testing
+- Mobile responsiveness
+
+### Edge Function Testing
+
 ```bash
-# Start development
-npm run dev
+# Install Deno
+curl -fsSL https://deno.land/install.sh | sh
 
 # Run tests
-npm test
-npm run test:ui        # With UI
-npm run test:coverage  # With coverage report
-
-# Type checking
-npm run typecheck
-
-# Linting
-npm run lint
-
-# Build
-npm run build
+deno test supabase/functions/_shared/tests/orchestration.test.ts --allow-env --allow-net
 ```
 
-
-### Database
-```bash
-# Generate types
-npm run db:types
-
-# Run migrations
-npm run db:migrate
-
-# Seed data
-npm run db:seed
+### Test Organization
+```
+src/
+├── components/
+│   └── __tests__/      # Component tests
+├── hooks/
+│   └── __tests__/      # Hook tests
+└── test/
+    ├── mocks/          # Mock data
+    └── utils.tsx       # Test utilities
 ```
 
-### Supabase Edge Functions
+### Quality Checks
+- **ESLint**: Code style and quality
+- **TypeScript**: Type safety
+- **Prettier**: Code formatting
+- **Husky**: Pre-commit hooks
+
+---
+
+## 🚀 Deployment & Operations
+
+### Environment Management
+
+#### Development
+- Local Supabase instance
+- Mock data for testing
+- Debug logging enabled
+
+#### Staging
+- Supabase staging project
+- Production-like data
+- Performance monitoring
+
+#### Production
+- Supabase production project
+- SSL/TLS encryption
+- Error tracking (Sentry)
+- Analytics (Vercel Analytics)
+
+### Deployment Process
+
+1. **Frontend (Vercel)**
 ```bash
-# Link project (required before deploying)
-npx supabase link --project-ref kxghaajojntkqrmvsngn
+# Automatic deployment on push to main
+git push origin main
 
-# Deploy a specific function
-npx supabase functions deploy <function-name>
+# Manual deployment
+vercel --prod
+```
 
+2. **Edge Functions (Supabase)**
+```bash
 # Deploy all functions
-npx supabase functions deploy
+supabase functions deploy
 
-# Serve functions locally
-npx supabase functions serve
-
-# View function logs (via dashboard - CLI doesn't support logs directly)
-# Visit: https://supabase.com/dashboard/project/kxghaajojntkqrmvsngn/functions
+# Deploy specific function
+supabase functions deploy function-name
 ```
 
-#### Edge Function Optimization Tips
-
-##### 1. **Boolean Search Generation Performance**
-- **Issue**: Slow response times when generating boolean search strings
-- **Solutions**:
-  - Added 15-second timeout to prevent hanging requests
-  - Enhanced prompt with specific examples and structure
-  - Consider implementing response streaming for real-time feedback
-  - Add caching for similar job descriptions
-
-##### 2. **Improving Search Quality**
-- **Issue**: Generated boolean searches too basic/generic
-- **Solutions**:
-  - Updated prompt to require 3-7 job title variations
-  - Added requirements for synonyms and abbreviations
-  - Included location and experience level terms
-  - Added industry-specific context
-  - Provided concrete examples in the prompt
-
-##### 3. **Debugging Edge Functions**
-- **Logging**: Add console.log statements - visible in Supabase dashboard
-- **Error Handling**: Always wrap AI calls in try-catch blocks
-- **Timeouts**: Implement request timeouts (15-30 seconds recommended)
-- **Testing**: Use `supabase functions serve` for local testing
-
-##### 4. **Common Edge Function Issues**
-- **JWT Verification**: Set `verify_jwt = false` in config.toml for public endpoints
-- **CORS**: Always handle OPTIONS requests and include CORS headers
-- **Environment Variables**: Use `Deno.env.get()` for API keys
-- **Dependencies**: Use npm: prefix for npm packages in Deno
-
-##### 5. **Nymeria API Troubleshooting**
-- **500 Error**: Usually missing NYMERIA_API_KEY in environment variables
-- **401 Error**: Invalid API key - check your Nymeria dashboard
-- **404 Error**: Profile not found in Nymeria's database
-- **429 Error**: Rate limit exceeded - wait before retrying
-- **Empty Results**: Some profiles may not have contact information available
-
-**Common Issues & Solutions**:
+3. **Database Migrations**
 ```bash
-# Check if API key is set in Supabase
-# Dashboard > Settings > Edge Functions > Environment Variables
+# Create migration
+supabase migration new migration_name
 
-# Test the edge function locally
-npx supabase functions serve enrich-profile
-
-# View function logs
-# Dashboard > Functions > enrich-profile > Logs
+# Apply migrations
+supabase db push
 ```
 
-### AI Development
+### Monitoring & Logging
+
+#### Application Monitoring
+- Vercel Analytics for frontend metrics
+- Supabase Dashboard for API metrics
+- Custom logging for agent operations
+
+#### Error Tracking
+- Sentry integration for error capture
+- Structured logging for debugging
+- Alert notifications for critical errors
+
+#### Performance Monitoring
+- Core Web Vitals tracking
+- API response time monitoring
+- Database query performance
+
+### Rollback Procedures
+
+1. **Frontend Rollback**
+   - Use Vercel's instant rollback feature
+   - Revert git commit and redeploy
+
+2. **Edge Function Rollback**
+   - Keep previous function versions
+   - Quick switch via Supabase CLI
+
+3. **Database Rollback**
+   - Maintain migration rollback scripts
+   - Point-in-time recovery available
+
+---
+
+## 🎯 SPARC Development Methodology
+
+### Overview
+SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) is our systematic approach to Test-Driven Development with AI assistance.
+
+### Core Commands
+
 ```bash
-# Test prompts
-npm run prompt:test
+# List all SPARC modes
+npx claude-flow sparc modes
 
-# Analyze costs
-npm run ai:costs
+# Run specific mode
+npx claude-flow sparc run <mode> "<task>"
 
-# Generate embeddings
-npm run embeddings:generate
+# Full TDD workflow
+npx claude-flow sparc tdd "<feature>"
+
+# Get mode information
+npx claude-flow sparc info <mode>
 ```
 
-## 🎯 Platform Differentiators
+### Development Workflow
 
-### vs Eightfold
-- **Faster Implementation**: Days vs months
-- **Better UX**: Modern, intuitive interface
-- **Cost-Effective**: 10x lower TCO
-- **Flexible Integration**: API-first approach
-- **Real-time Features**: Live collaboration built-in
-
-### vs Paradox
-- **Deeper Intelligence**: Beyond chat to true AI assistance
-- **Enterprise Features**: Advanced security and compliance
-- **Customization**: Fully customizable workflows
-- **Multi-modal AI**: Video, voice, and text combined
-- **Global Ready**: Multi-language from day one
-
-## 🌟 Best Practices Summary
-
-1. **Always consider mobile users** - Every feature must work on mobile
-2. **AI should enhance, not replace** - Keep humans in the loop
-3. **Performance is a feature** - Fast responses are expected
-4. **Security by default** - Never compromise on security
-5. **Data drives decisions** - Measure everything important
-6. **Iterate based on feedback** - User feedback shapes the product
-7. **Document as you go** - Future you will thank present you
-8. **Test early and often** - Bugs caught early are cheaper
-9. **Keep it simple** - Complexity is the enemy of reliability
-10. **Have fun** - We're building the future of recruitment!
-
-## 🔧 Refactoring Guidelines
-
-### When Refactoring
-1. **Enable Strict TypeScript First**: Fix type errors before functionality
-2. **Create Tests Before Changes**: Use TDD approach with SPARC
-3. **Organize by Domain**: Group related functionality together
-4. **Extract Reusable Logic**: Custom hooks for business logic
-5. **Maintain Backwards Compatibility**: Deprecate before removing
-
-### Component Refactoring Checklist
-- [ ] Split components > 300 lines
-- [ ] Extract business logic to hooks
-- [ ] Add proper TypeScript types
-- [ ] Create comprehensive tests
-- [ ] Add loading and error states
-- [ ] Implement proper error boundaries
-- [ ] Document complex logic
-- [ ] Optimize re-renders with memo/useMemo
-
-### Next Refactoring Priorities
-1. **Large Components**: Break down components exceeding 500 lines
-2. **API Service Layer**: Create abstraction for database calls
-3. **Error Handling**: Implement consistent error boundaries
-4. **Loading States**: Add skeleton screens and suspense
-5. **Performance**: Profile and optimize bundle size
-
-## 🔍 Boolean Search Examples
-
-### Enhanced Boolean Search String Format
-After optimization, the system now generates comprehensive boolean searches like:
-
-**Input**: "AWS Architect in Los Angeles with Python and SQL skills"
-
-**Output**:
-```
-("AWS Architect" OR "Cloud Architect" OR "Solutions Architect" OR "Infrastructure Architect" OR "DevOps Architect" OR "Senior Cloud Engineer" OR "Principal Engineer AWS") AND (AWS OR "Amazon Web Services" OR EC2 OR Lambda OR S3 OR CloudFormation) AND (Python OR "Python programming" OR Django OR Flask OR boto3) AND (SQL OR MySQL OR PostgreSQL OR "database design" OR Redshift OR RDS) AND ("Los Angeles" OR LA OR "Greater Los Angeles" OR "Southern California" OR remote) AND (architect OR "architectural design" OR "system design" OR "technical leadership" OR "solution architecture") NOT (junior OR intern OR student OR "entry level")
+#### 1. Specification Phase
+Define requirements and constraints:
+```bash
+npx claude-flow sparc run spec-pseudocode "Define user authentication requirements"
 ```
 
-### Key Components of Effective Boolean Searches:
-1. **Job Title Variations**: Include current, previous, and alternative titles
-2. **Skill Synonyms**: Use official names and common abbreviations
-3. **Location Flexibility**: Include city, region, and remote options
-4. **Experience Indicators**: Senior, lead, principal, years of experience
-5. **Exclusions**: Filter out junior/intern positions when appropriate
-6. **Industry Context**: Add domain-specific terms for better matches
+#### 2. Pseudocode Phase
+Design algorithms and logic:
+```bash
+npx claude-flow sparc run spec-pseudocode "Create authentication flow pseudocode"
+```
+
+#### 3. Architecture Phase
+Design system structure:
+```bash
+npx claude-flow sparc run architect "Design authentication service architecture"
+```
+
+#### 4. Refinement Phase (TDD)
+Implement with test-driven development:
+```bash
+npx claude-flow sparc tdd "implement user authentication system"
+```
+
+#### 5. Completion Phase
+Integration and validation:
+```bash
+npx claude-flow sparc run integration "integrate authentication with user management"
+```
+
+### SPARC Principles
+1. **Modular Design**: Files under 500 lines
+2. **Test-First**: Always write tests before code
+3. **Clean Architecture**: Separation of concerns
+4. **Documentation**: Keep docs current
+5. **Memory Integration**: Use claude-flow memory system
+
+### Memory Management
+
+```bash
+# Store specifications
+npx claude-flow memory store spec_auth "Authentication requirements"
+
+# Store architectural decisions
+npx claude-flow memory store arch_auth "JWT token strategy"
+
+# Query previous work
+npx claude-flow memory query auth
+
+# Export memory
+npx claude-flow memory export backup.json
+```
+
+---
+
+## 📝 Development Guidelines
+
+### Code Style
+- **TypeScript**: Strict mode enabled
+- **React**: Functional components with hooks
+- **Naming**: camelCase for variables, PascalCase for components
+- **Files**: One component per file
+- **Imports**: Absolute imports using @ alias
+
+### Git Workflow
+1. **Branch Strategy**
+   - `main`: Production-ready code
+   - `develop`: Integration branch
+   - `feature/*`: New features
+   - `fix/*`: Bug fixes
+   - `refactor/*`: Code improvements
+
+2. **Commit Messages**
+   - Use conventional commits
+   - Include ticket numbers
+   - Keep messages concise
+
+3. **Pull Requests**
+   - Require code review
+   - Pass all CI checks
+   - Update documentation
+
+### Security Best Practices
+1. **Never commit secrets**: Use environment variables
+2. **Validate inputs**: Both client and server-side
+3. **Sanitize outputs**: Prevent XSS attacks
+4. **Use HTTPS**: Always encrypt data in transit
+5. **Implement CSP**: Content Security Policy headers
+
+### Performance Guidelines
+1. **Lazy Loading**: Split code and load on demand
+2. **Image Optimization**: Use WebP and proper sizing
+3. **Caching**: Implement appropriate cache strategies
+4. **Bundle Size**: Monitor and optimize
+5. **Database Queries**: Use indexes and optimize
+
+---
+
+## 📚 Additional Resources
+
+### Documentation
+- [Supabase Docs](https://supabase.com/docs)
+- [React Docs](https://react.dev)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+
+### Internal Docs
+- [Authentication Flow](./AUTH_FLOW.md)
+- [X-Ray Sourcing Tools](./docs/X-RAY_SOURCING_TOOLS.md)
+- [Migration Guide](./docs/agentic-orchestration/MIGRATION_GUIDE.md)
+
+### Support
+- GitHub Issues for bug reports
+- Discussions for feature requests
+- Wiki for detailed guides
+
+---
+
+## 🎯 Future Roadmap
+
+### Short Term (Q3 2025)
+- [ ] Advanced analytics dashboard
+- [ ] Bulk candidate operations
+- [ ] Email campaign integration
+- [ ] Mobile app development
+
+### Medium Term (Q4 2025)
+- [ ] AI interview scheduling
+- [ ] Candidate scoring ML model
+- [ ] ATS integrations
+- [ ] Team collaboration features
+
+### Long Term (2026)
+- [ ] Predictive hiring analytics
+- [ ] Natural language querying
+- [ ] Global talent marketplace
+- [ ] AI-powered negotiations
 
 ---
 
 *Last Updated: June 2025*
-*Version: 1.4.0*

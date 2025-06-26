@@ -8,6 +8,7 @@ import { SearchResult } from './types';
 import { toast } from 'sonner';
 import { useProfileEnrichment } from './hooks/useProfileEnrichment';
 import { ContactInfoModal } from './ContactInfoModal';
+import { ContactSearchModal } from './ContactSearchModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ProfileCard } from './components/ProfileCard';
 import { SearchSummaryHeader } from './components/SearchSummaryHeader';
@@ -33,6 +34,10 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
   // Contact info modal state
   const [selectedProfile, setSelectedProfile] = useState<{ url: string; name: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Contact search modal state
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [searchModalParams, setSearchModalParams] = useState<{ name?: string; company?: string; location?: string }>({});
   
   // Use the profile enrichment hook
   const { enrichProfile, enrichedData, isLoading: isEnriching } = useProfileEnrichment();
@@ -108,6 +113,12 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
     }
   };
 
+  const handleSearchContacts = (name: string, company: string, location: string) => {
+    console.log('Opening search modal with:', { name, company, location });
+    setSearchModalParams({ name, company, location });
+    setIsSearchModalOpen(true);
+  };
+
   const handleExport = () => {
     // Mock export functionality
     toast.success('Export functionality will be implemented');
@@ -178,6 +189,7 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
             result={result}
             index={index}
             onGetContactInfo={handleGetContactInfo}
+            onSearchContacts={handleSearchContacts}
           />
         ))}
       </div>
@@ -229,6 +241,18 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
           profileData={enrichedData}
           isLoading={isEnriching}
           profileName={selectedProfile?.name || ''}
+        />
+      </ErrorBoundary>
+
+      {/* Contact Search Modal */}
+      <ErrorBoundary>
+        <ContactSearchModal
+          isOpen={isSearchModalOpen}
+          onClose={() => {
+            setIsSearchModalOpen(false);
+            setSearchModalParams({});
+          }}
+          initialSearchParams={searchModalParams}
         />
       </ErrorBoundary>
     </div>

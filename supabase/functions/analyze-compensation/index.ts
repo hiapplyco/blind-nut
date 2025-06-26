@@ -2,8 +2,9 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "npm:@google/generative-ai";
-import { compensationPrompt } from "../_shared/prompts/compensation.prompt.ts";
-import { promptManager } from "../_shared/prompts/promptManager.ts";
+import { CompensationAgent } from "../_shared/agents/CompensationAgent.ts";
+import { ToolRegistry } from "../_shared/tools/ToolRegistry.ts";
+import { GoogleWebSearchTool } from "../_shared/tools/GoogleWebSearchTool.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +13,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       headers: corsHeaders,
@@ -31,35 +31,18 @@ serve(async (req) => {
       throw new Error('Content is required in request body');
     }
 
-    console.log('Analyzing compensation for content:', content?.substring(0, 100) + '...');
-
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!apiKey) {
-      console.error('GEMINI_API_KEY is not configured');
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const toolRegistry = new ToolRegistry();
+    toolRegistry.register(new GoogleWebSearchTool());
 
-    // Use the prompt template
-    const prompt = promptManager.render(compensationPrompt, { content });
-    console.log('Using prompt for compensation analysis:', prompt);
+    const agent = new CompensationAgent(genAI, toolRegistry);
 
-    // Add safety timeout
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timed out')), 25000);
-    });
-
-    const resultPromise = model.generateContent(prompt);
-    const result = await Promise.race([resultPromise, timeoutPromise]);
-    
-    if (result instanceof Error) {
-      throw result;
-    }
-
-    const analysis = result.response.text();
-    console.log('Compensation analysis completed successfully');
+    const analysis = await agent.run({ content });
     
     return new Response(
       JSON.stringify({ analysis }),
@@ -74,7 +57,6 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in analyze-compensation:', error);
     
-    // Determine appropriate status code
     let status = 500;
     if (error.message.includes('not configured')) status = 503;
     if (error.message.includes('required')) status = 400;

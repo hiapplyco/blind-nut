@@ -41,15 +41,50 @@ export const prepareSearchString = (searchString: string, searchType: string): s
 export const extractLocationFromSnippet = (snippet: string): string => {
   if (!snippet) return '';
   
-  // Try to find location after a pipe symbol (common format in LinkedIn snippets)
-  const pipeMatch = snippet.match(/\|\s*([^|]+?)(?:\s*\||$)/);
-  if (pipeMatch && pipeMatch[1]) {
-    return pipeMatch[1].trim();
+  // Common location patterns in LinkedIn snippets
+  const patterns = [
+    // Pattern 1: "Location · Experience" (after last ·)
+    /·\s*([^·]+?)\s*(?:·\s*\d+\+?\s*years?|·\s*\d+\s*connections?|$)/i,
+    // Pattern 2: Common location formats with comma
+    /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s*,\s*[A-Z]{2})\b/,
+    // Pattern 3: "Greater/Metro Area" patterns
+    /\b((?:Greater\s+)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:Area|Metro|Metropolitan\s+Area))\b/i,
+    // Pattern 4: International format "City, Country"
+    /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s*,\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b/,
+    // Pattern 5: Bay Area special case
+    /\b((?:San Francisco\s+)?Bay\s+Area)\b/i,
+  ];
+  
+  // Clean snippet from common non-location elements
+  let cleanSnippet = snippet
+    .replace(/\d+\+?\s*years?\s+of\s+experience/gi, '')
+    .replace(/\d+\s*connections?\s+on\s+LinkedIn/gi, '')
+    .replace(/View\s+\w+['']s?\s+profile/gi, '');
+  
+  // Try each pattern
+  for (const pattern of patterns) {
+    const match = cleanSnippet.match(pattern);
+    if (match && match[1]) {
+      const location = match[1].trim();
+      // Validate it's not just random text
+      if (location.length > 3 && location.length < 50) {
+        return location;
+      }
+    }
   }
   
-  // Try to match common location patterns (City, State/Country format)
-  const locationMatch = snippet.match(/([A-Za-z\s]+,\s*[A-Za-z\s]+)/);
-  return locationMatch ? locationMatch[1].trim() : '';
+  // Fallback: Look for text after the last · that looks like a location
+  const parts = snippet.split('·');
+  if (parts.length > 1) {
+    const lastPart = parts[parts.length - 1].trim();
+    // Check if it looks like a location (not too long, not a number)
+    if (lastPart.length < 50 && !lastPart.match(/^\d+/) && !lastPart.includes('experience')) {
+      // Remove trailing connection count if present
+      return lastPart.replace(/\s*\d+\s*connections?.*$/i, '').trim();
+    }
+  }
+  
+  return '';
 };
 
 /**

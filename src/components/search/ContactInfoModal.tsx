@@ -167,123 +167,172 @@ export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
 
               <TabsContent value="contact" className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  {/* Primary Email */}
-                  {renderContactField(
-                    <Mail className="w-4 h-4" />,
-                    "Work Email",
-                    profileData.work_email,
-                    "Work Email"
-                  )}
-
-                  {/* Additional Emails */}
-                  {profileData.emails?.map((email, index) => (
-                    renderContactField(
-                      <Mail className="w-4 h-4" />,
-                      `Email ${index + 1}`,
-                      email,
-                      `Email ${index + 1}`
-                    )
-                  ))}
-
-                  {/* Phone Numbers */}
-                  {renderContactField(
-                    <Phone className="w-4 h-4" />,
-                    "Mobile Phone",
-                    profileData.mobile_phone,
-                    "Mobile Phone"
-                  )}
-
-                  {profileData.phone_numbers?.map((phone, index) => (
-                    renderContactField(
-                      <Phone className="w-4 h-4" />,
-                      `Phone ${index + 1}`,
-                      phone,
-                      `Phone ${index + 1}`
-                    )
-                  ))}
-
-                  {/* Location */}
-                  {renderContactField(
-                    <MapPin className="w-4 h-4" />,
-                    "Location",
-                    [profileData.city, profileData.state, profileData.country]
-                      .filter(Boolean)
-                      .join(', ') || profileData.location,
-                    "Location"
-                  )}
-
-                  {/* Website */}
-                  {profileData.website && (
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <Globe className="w-4 h-4 text-gray-600" />
-                        <div>
-                          <p className="text-xs text-gray-500">Website</p>
-                          <a
-                            href={profileData.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm font-medium text-blue-600 hover:underline"
-                          >
-                            {profileData.website}
-                          </a>
+                  {/* Check if any contact information exists */}
+                  {(() => {
+                    const hasContactInfo = profileData.work_email || 
+                                         profileData.emails?.length > 0 || 
+                                         profileData.mobile_phone || 
+                                         profileData.phone_numbers?.length > 0 ||
+                                         profileData.location ||
+                                         profileData.city ||
+                                         profileData.website;
+                    
+                    if (!hasContactInfo) {
+                      return (
+                        <div className="text-center py-8">
+                          <Mail className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                          <p className="text-gray-500">No contact information available</p>
+                          <p className="text-sm text-gray-400 mt-1">This profile may have privacy settings enabled</p>
                         </div>
-                      </div>
-                      <ExternalLink className="w-4 h-4 text-gray-400" />
-                    </div>
-                  )}
+                      );
+                    }
+
+                    return (
+                      <>
+                        {/* Primary Email */}
+                        {renderContactField(
+                          <Mail className="w-4 h-4" />,
+                          "Work Email",
+                          profileData.work_email,
+                          "Work Email"
+                        )}
+
+                        {/* Additional Emails */}
+                        {profileData.emails?.map((email, index) => (
+                          renderContactField(
+                            <Mail className="w-4 h-4" />,
+                            `Email ${index + 1}`,
+                            email,
+                            `Email ${index + 1}`
+                          )
+                        ))}
+
+                        {/* Phone Numbers */}
+                        {renderContactField(
+                          <Phone className="w-4 h-4" />,
+                          "Mobile Phone",
+                          profileData.mobile_phone,
+                          "Mobile Phone"
+                        )}
+
+                        {profileData.phone_numbers?.map((phone, index) => (
+                          renderContactField(
+                            <Phone className="w-4 h-4" />,
+                            `Phone ${index + 1}`,
+                            phone,
+                            `Phone ${index + 1}`
+                          )
+                        ))}
+
+                        {/* Location */}
+                        {renderContactField(
+                          <MapPin className="w-4 h-4" />,
+                          "Location",
+                          [profileData.city, profileData.state, profileData.country]
+                            .filter(Boolean)
+                            .join(', ') || profileData.location,
+                          "Location"
+                        )}
+
+                        {/* Website */}
+                        {profileData.website && (
+                          <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <Globe className="w-4 h-4 text-gray-600" />
+                              <div>
+                                <p className="text-xs text-gray-500">Website</p>
+                                <a
+                                  href={profileData.website}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm font-medium text-blue-600 hover:underline"
+                                >
+                                  {profileData.website}
+                                </a>
+                              </div>
+                            </div>
+                            <ExternalLink className="w-4 h-4 text-gray-400" />
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </TabsContent>
 
               <TabsContent value="professional" className="space-y-4 mt-4">
-                {/* Current Position */}
-                {(profileData.job_title || profileData.title) && (
-                  <Card className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Briefcase className="w-5 h-5 text-gray-600 mt-0.5" />
-                      <div className="flex-1">
-                        <h4 className="font-medium">{profileData.job_title || profileData.title}</h4>
-                        {(profileData.company || profileData.job_company_name) && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <Building2 className="w-4 h-4 text-gray-500" />
-                            <span className="text-sm text-gray-600">
-                              {profileData.company || profileData.job_company_name}
-                            </span>
-                          </div>
-                        )}
-                        {profileData.industry && (
-                          <Badge variant="secondary" className="mt-2">
-                            {profileData.industry}
-                          </Badge>
-                        )}
+                {(() => {
+                  const hasProfessionalInfo = profileData.job_title || 
+                                             profileData.title || 
+                                             profileData.company || 
+                                             profileData.job_company_name ||
+                                             profileData.industry ||
+                                             (profileData.skills && profileData.skills.length > 0) ||
+                                             profileData.summary;
+                  
+                  if (!hasProfessionalInfo) {
+                    return (
+                      <div className="text-center py-8">
+                        <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500">No professional information available</p>
+                        <p className="text-sm text-gray-400 mt-1">Job details and skills not provided</p>
                       </div>
-                    </div>
-                  </Card>
-                )}
+                    );
+                  }
 
-                {/* Skills */}
-                {profileData.skills && profileData.skills.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {profileData.skills.map((skill, index) => (
-                        <Badge key={index} variant="outline">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  return (
+                    <>
+                      {/* Current Position */}
+                      {(profileData.job_title || profileData.title) && (
+                        <Card className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Briefcase className="w-5 h-5 text-gray-600 mt-0.5" />
+                            <div className="flex-1">
+                              <h4 className="font-medium">{profileData.job_title || profileData.title}</h4>
+                              {(profileData.company || profileData.job_company_name) && (
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Building2 className="w-4 h-4 text-gray-500" />
+                                  <span className="text-sm text-gray-600">
+                                    {profileData.company || profileData.job_company_name}
+                                  </span>
+                                </div>
+                              )}
+                              {profileData.industry && (
+                                <Badge variant="secondary" className="mt-2">
+                                  {profileData.industry}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      )}
 
-                {/* Summary */}
-                {profileData.summary && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Summary</h4>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                      {profileData.summary}
-                    </p>
-                  </div>
-                )}
+                      {/* Skills */}
+                      {profileData.skills && profileData.skills.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">Skills</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {profileData.skills.map((skill, index) => (
+                              <Badge key={index} variant="outline">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Summary */}
+                      {profileData.summary && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">Summary</h4>
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                            {profileData.summary}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </TabsContent>
 
               <TabsContent value="social" className="space-y-4 mt-4">

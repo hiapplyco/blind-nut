@@ -108,15 +108,40 @@ async function handleProfileEnrichment(requestData) {
     console.error('Failed to parse Nymeria response:', parseError);
     throw new Error('Invalid response from Nymeria API');
   }
-  console.log('Nymeria API returned data:', JSON.stringify(enrichedData).substring(0, 200) + '...');
+  console.log('Nymeria API returned data:', JSON.stringify(enrichedData).substring(0, 500) + '...');
+  console.log('Full Nymeria response structure:', Object.keys(enrichedData));
   
   // Skip logging for now since the table doesn't exist
   // TODO: Create enrichment_logs table or remove this functionality
   console.log('Skipping enrichment logging (table does not exist)');
   
-  // Return the enriched data
+  // Transform Nymeria response to match frontend expectations
+  const transformedData = {
+    data: {
+      name: enrichedData.name || enrichedData.full_name,
+      work_email: enrichedData.work_email || enrichedData.email,
+      emails: enrichedData.personal_emails || enrichedData.emails || [],
+      mobile_phone: enrichedData.mobile_phone || enrichedData.phone,
+      phone_numbers: enrichedData.phone_numbers || [],
+      location: enrichedData.location || enrichedData.city,
+      company: enrichedData.job_company_name || enrichedData.company || enrichedData.current_company,
+      job_title: enrichedData.job_title || enrichedData.title || enrichedData.current_title,
+      skills: enrichedData.skills || [],
+      linkedin_url: enrichedData.linkedin_url || enrichedData.profile_url,
+      twitter_url: enrichedData.twitter_url,
+      github_url: enrichedData.github_url,
+      // Handle profiles array if it exists in Nymeria response
+      ...(enrichedData.profiles && {
+        linkedin_url: enrichedData.profiles.find(p => p.network === 'linkedin')?.url,
+        twitter_url: enrichedData.profiles.find(p => p.network === 'twitter')?.url,
+        github_url: enrichedData.profiles.find(p => p.network === 'github')?.url,
+      })
+    }
+  };
+  
+  // Return the transformed data
   return new Response(
-    JSON.stringify(enrichedData),
+    JSON.stringify(transformedData),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 }

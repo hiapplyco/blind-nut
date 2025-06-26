@@ -12,6 +12,10 @@ Analyze the job description below with deep understanding to identify the core r
 Job Description:
 {{content}}
 
+{{#if instruction}}
+Additional Instruction: {{instruction}}
+{{/if}}
+
 Your boolean search string MUST:
 - Include 3-7 job title variations (current titles, previous titles, alternative titles)
 - Include ALL key technical skills, tools, and technologies mentioned or implied

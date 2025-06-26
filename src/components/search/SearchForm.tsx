@@ -3,15 +3,17 @@ import { Card } from "@/components/ui/card";
 import { SearchFormHeader } from "./SearchFormHeader";
 import { useSearchForm } from "./hooks/useSearchForm";
 import { SearchType, SearchFormProps } from "./types";
-import { ContentTextarea } from "./ContentTextarea";
+import { ChatStyleInput } from "./ChatStyleInput";
 import { SearchTypeToggle } from "./SearchTypeToggle";
 import { CompanyNameInput } from "./CompanyNameInput";
-// Assuming handleFileUpload from the hook is sufficient, FileUploadHandler component might be removable later
 import { SubmitButton } from "./SubmitButton";
+import { BooleanExplanation } from "./BooleanExplanation";
+import { GeneratingAnimation } from "./GeneratingAnimation";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Search, Loader2 } from "lucide-react";
+import { Copy, Search, Loader2, Edit3, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const SearchForm = ({
   userId,
@@ -41,23 +43,85 @@ export const SearchForm = ({
   const [isInputActive, setIsInputActive] = useState(false);
   const [showSearchString, setShowSearchString] = useState(false);
   const [isFindingProfiles, setIsFindingProfiles] = useState(false);
+  const [booleanExplanation, setBooleanExplanation] = useState(null);
+  const [isExplaining, setIsExplaining] = useState(false);
+  const [animationStage, setAnimationStage] = useState<'generating' | 'explaining' | 'searching'>('generating');
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState({
+    requirements: false,
+    boolean: false
+  });
+  const [hasSearched, setHasSearched] = useState(false);
 
   // Show search string when it's generated or when processing is complete
   useEffect(() => {
     // Show the search string section if a search string exists and processing isn't active
     if (searchString && !isProcessing) {
       setShowSearchString(true);
+      // Explain the boolean when it's first generated or updated
+      if (!isExplaining && !booleanExplanation) {
+        explainBoolean(searchString);
+      }
     }
-    // Optionally hide if processing starts again or searchString is cleared
-    // else {
-    //   setShowSearchString(false);
-    // }
   }, [searchString, isProcessing]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
-    // Prevent default form submission if needed, then call hook's handleSubmit
     e.preventDefault();
+    setShowAnimation(true);
+    setAnimationStage('generating');
+    setBooleanExplanation(null); // Clear previous explanation
+    
     await handleSubmit(e);
+    
+    // Wait a bit for the animation
+    setTimeout(() => {
+      setShowAnimation(false);
+    }, 500);
+  };
+  
+  const explainBoolean = async (booleanStr: string) => {
+    setIsExplaining(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('explain-boolean', {
+        body: { booleanString: booleanStr, requirements: searchText }
+      });
+      
+      if (error) throw error;
+      if (data?.explanation) {
+        setBooleanExplanation(data.explanation);
+      }
+    } catch (error) {
+      console.error('Error explaining boolean:', error);
+    } finally {
+      setIsExplaining(false);
+    }
+  };
+  
+  const handleComplexityChange = async (complexity: 'simpler' | 'complex') => {
+    if (!searchText || !searchString) return;
+    
+    setShowAnimation(true);
+    setAnimationStage('generating');
+    
+    const modifiedText = `${searchText}\n\nPREVIOUS BOOLEAN: ${searchString}\n\nINSTRUCTION: Make this search ${complexity === 'simpler' ? 'simpler with fewer terms' : 'more comprehensive with additional terms and variations'}`;
+    
+    // Temporarily update searchText for regeneration
+    const originalText = searchText;
+    setSearchText(modifiedText);
+    
+    // Submit form to regenerate
+    await handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+    
+    // Restore original text
+    setSearchText(originalText);
+    
+    // Explain new boolean
+    if (searchString) {
+      setAnimationStage('explaining');
+      await explainBoolean(searchString);
+    }
+    
+    setShowAnimation(false);
   };
 
   const handleCopySearchString = () => {
@@ -75,6 +139,10 @@ export const SearchForm = ({
 
     console.log("Find LinkedIn Profiles button clicked with search string:", searchString);
     setIsFindingProfiles(true);
+    setShowAnimation(true);
+    setAnimationStage('searching');
+    setHasSearched(true);
+    setCollapsedSections({ requirements: true, boolean: true });
 
     try {
       if (onShowGoogleSearch) {
@@ -93,7 +161,8 @@ export const SearchForm = ({
       // Add a small delay to make the animation more noticeable
       setTimeout(() => {
         setIsFindingProfiles(false);
-      }, 800);
+        setShowAnimation(false);
+      }, 1500);
     }
   };
 
@@ -120,39 +189,159 @@ export const SearchForm = ({
           />
         )}
 
-        <ContentTextarea
-          content={searchText}
-          onChange={setSearchText}
-          placeholder="Paste job description or requirements here..."
-          onFocus={() => setIsInputActive(true)}
-          onBlur={() => setIsInputActive(false)}
-          isActive={isInputActive}
-        />
+        {/* Requirements Input Section */}
+        {!hasSearched ? (
+          <div className="px-3 py-4 bg-white rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.25)]">
+            <ChatStyleInput
+              value={searchText}
+              onChange={setSearchText}
+              onFileSelect={(file) => {
+                // Create a synthetic event to pass to the existing handler
+                const syntheticEvent = {
+                  target: { files: [file] },
+                  preventDefault: () => {},
+                } as unknown as React.ChangeEvent<HTMLInputElement>;
+                fileUploadHandler(syntheticEvent);
+              }}
+              placeholder="Describe the ideal candidate, paste a job description, or use boolean search..."
+              disabled={isProcessing}
+              maxHeight={200}
+            />
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Button
+              type="button"
+              onClick={() => setCollapsedSections(prev => ({ ...prev, requirements: !prev.requirements }))}
+              variant="outline"
+              className="w-full justify-between border-2 border-black hover:bg-gray-50"
+            >
+              <span className="font-semibold">Edit Requirements</span>
+              {collapsedSections.requirements ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </Button>
+            {!collapsedSections.requirements && (
+              <div className="px-3 py-4 bg-white rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.25)] animate-in slide-in-from-top duration-200">
+                <ChatStyleInput
+                  value={searchText}
+                  onChange={setSearchText}
+                  onFileSelect={(file) => {
+                    const syntheticEvent = {
+                      target: { files: [file] },
+                      preventDefault: () => {},
+                    } as unknown as React.ChangeEvent<HTMLInputElement>;
+                    fileUploadHandler(syntheticEvent);
+                  }}
+                  placeholder="Describe the ideal candidate, paste a job description, or use boolean search..."
+                  disabled={isProcessing}
+                  maxHeight={200}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Display generated search string and Find Profiles button */}
         {showSearchString && searchString && (
-          <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-medium text-sm text-gray-600">Generated Search String:</h3>
-              <Button
-                type="button" // Ensure it doesn't submit the form
-                variant="ghost"
-                size="sm"
-                onClick={handleCopySearchString}
-                className="hover:bg-gray-200"
-                aria-label="Copy search string"
-              >
-                <Copy className="w-4 h-4" />
-              </Button>
-            </div>
-            <Textarea
-              value={searchString}
-              onChange={(e) => setSearchString(e.target.value)} // Allow editing if needed
-              className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
-              rows={4}
-              readOnly={false} // Or true if it shouldn't be editable
-              aria-label="Generated search string"
-            />
+          <div className="space-y-4">
+            {/* Instructions - only show if not searched yet */}
+            {!hasSearched && (
+              <div className="p-4 bg-[#FEF7CD] rounded-lg border-2 border-black">
+                <h3 className="text-sm font-bold mb-2">What's Next?</h3>
+                <ul className="space-y-1.5 text-sm">
+                  <li className="flex gap-2">
+                    <span className="font-bold">✏️</span>
+                    <span>You can edit the search string below to refine your search criteria</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold">🔄</span>
+                    <span>Click "Regenerate Search String" to create a new search with updated requirements</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold">🔍</span>
+                    <span>When you click "Find LinkedIn Profiles", we'll search Google for matching LinkedIn profiles</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold">📋</span>
+                    <span>You'll see a list of candidates with their job titles, companies, and locations</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+            
+            {/* Boolean Explanation */}
+            {booleanExplanation && (
+              <BooleanExplanation
+                explanation={booleanExplanation}
+                isLoading={isExplaining}
+                onSimpler={() => handleComplexityChange('simpler')}
+                onMoreComplex={() => handleComplexityChange('complex')}
+                isRegenerating={isProcessing}
+              />
+            )}
+
+            {/* Search string editor - collapsible after search */}
+            {!hasSearched ? (
+              <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-medium text-sm text-gray-600">Generated Search String:</h3>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCopySearchString}
+                    className="hover:bg-gray-200"
+                    aria-label="Copy search string"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Textarea
+                  value={searchString}
+                  onChange={(e) => setSearchString(e.target.value)}
+                  className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
+                  rows={4}
+                  readOnly={false}
+                  aria-label="Generated search string"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  onClick={() => setCollapsedSections(prev => ({ ...prev, boolean: !prev.boolean }))}
+                  variant="outline"
+                  className="w-full justify-between border-2 border-black hover:bg-gray-50"
+                >
+                  <span className="font-semibold">Edit Boolean Search</span>
+                  {collapsedSections.boolean ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                </Button>
+                {!collapsedSections.boolean && (
+                  <div className="p-4 bg-gray-100 rounded-lg border-2 border-black animate-in slide-in-from-top duration-200">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-medium text-sm text-gray-600">Generated Search String:</h3>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCopySearchString}
+                        className="hover:bg-gray-200"
+                        aria-label="Copy search string"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <Textarea
+                      value={searchString}
+                      onChange={(e) => setSearchString(e.target.value)}
+                      className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
+                      rows={4}
+                      readOnly={false}
+                      aria-label="Generated search string"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Find LinkedIn Profiles button with animation */}
             <div className="mt-3">
@@ -181,36 +370,21 @@ export const SearchForm = ({
           </div>
         )}
 
-        {/* File Upload and Submit Button Section */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between items-center pt-2">
-          {/* File Upload Input */}
-          <div>
-            <label htmlFor="file-upload-searchform" className="cursor-pointer"> {/* Unique ID */}
-              <div className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
-                {/* Hidden actual file input */}
-                <input
-                  id="file-upload-searchform" // Unique ID
-                  type="file"
-                  className="hidden"
-                  onChange={fileUploadHandler} // Use handler from hook
-                  accept=".pdf,.doc,.docx,.txt,image/*"
-                  disabled={isProcessing} // Disable while processing
-                />
-                {/* Visible text/label */}
-                <span className="underline">Upload file</span>
-                <span className="text-xs text-gray-500">(PDF, Doc, Image)</span>
-              </div>
-            </label> {/* Correct closing tag */}
-          </div>
-
-          {/* Submit Button */}
+        {/* Submit Button Section */}
+        <div className="flex justify-end">
           <SubmitButton
             isProcessing={isProcessing}
-            isDisabled={isProcessing || !searchText.trim()} // Disable if processing or text is empty
-            buttonText={submitButtonText} // Use prop for custom text
+            isDisabled={isProcessing || !searchText.trim()}
+            buttonText={submitButtonText || (searchString ? 'Regenerate Search String' : undefined)}
           />
         </div>
       </form>
+      
+      {/* Loading Animation */}
+      <GeneratingAnimation
+        isOpen={showAnimation}
+        stage={animationStage}
+      />
     </Card>
   );
 };

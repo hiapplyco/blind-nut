@@ -46,29 +46,6 @@ const SourcingComponent = () => {
           />
         </Suspense>
       </Card>
-      
-      {/* Additional help card */}
-      <Card className="p-6 border-2 border-black bg-[#FEF7CD] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)]">
-        <h3 className="text-lg font-bold mb-2">Sourcing Tips</h3>
-        <ul className="space-y-2 text-sm">
-          <li className="flex gap-2">
-            <span className="font-bold">⚡</span>
-            <span>Use specific keywords related to the skills and experience you're looking for</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="font-bold">⚡</span>
-            <span>Include location if you're searching for candidates in a specific area</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="font-bold">⚡</span>
-            <span>When searching for candidates at a company, try different variations of the company name</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="font-bold">⚡</span>
-            <span>Use the "Get Contact Info" button to access candidate contact details</span>
-          </li>
-        </ul>
-      </Card>
     </div>
   );
 };

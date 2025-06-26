@@ -88,12 +88,21 @@ export const useProfileEnrichment = () => {
       }
       
       if (data) {
-        // The Nymeria API might return data directly, not nested in data.data
-        const profileData = data.data || data;
-        console.log('Setting enriched data:', profileData);
-        setEnrichedData(profileData);
-        toast.success('Contact information retrieved');
-        return profileData;
+        // The Nymeria API returns data directly from the edge function
+        console.log('Setting enriched data:', data);
+        setEnrichedData(data);
+        
+        // Check if we actually got meaningful data
+        const hasContactInfo = data.work_email || data.emails?.length > 0 || 
+                              data.mobile_phone || data.phone_numbers?.length > 0;
+        
+        if (hasContactInfo) {
+          toast.success('Contact information retrieved');
+        } else {
+          toast.info('Profile found but no contact information available');
+        }
+        
+        return data;
       } else {
         // No data returned
         toast.error("No profile data found");

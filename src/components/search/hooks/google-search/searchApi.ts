@@ -95,14 +95,43 @@ export const fetchSearchResults = async (
       if (responseData && responseData.items && responseData.items.length > 0) {
         console.log("✅ [SUCCESS] Search returned results:", responseData.items.length);
         
-        const transformedItems = responseData.items.map((item: any) => ({
-          ...item,
-          name: item.title.replace(/\s\|\s.*$/, ''), // Extract name from title
-          location: extractLocationFromSnippet(item.snippet),
-          jobTitle: item.snippet.split('|')[0].trim(),
-          profileUrl: item.link
-          // No relevance_score here anymore
-        }));
+        const transformedItems = responseData.items.map((item: any) => {
+          // Extract name from title (usually "Name | LinkedIn" or "Name - Title | LinkedIn")
+          const name = item.title.replace(/\s*[\|\-]\s*LinkedIn.*$/i, '').split(/\s*[\|\-]\s*/)[0].trim();
+          
+          // Extract job title from snippet
+          let jobTitle = '';
+          const snippet = item.snippet || '';
+          
+          // Remove name from beginning of snippet if present
+          let cleanSnippet = snippet;
+          if (cleanSnippet.toLowerCase().startsWith(name.toLowerCase())) {
+            cleanSnippet = cleanSnippet.substring(name.length).replace(/^[\s·\-]+/, '');
+          }
+          
+          // Common patterns for job title extraction
+          if (cleanSnippet.match(/^([^·\-]+?)\s+at\s+/)) {
+            // Pattern: "Job Title at Company"
+            jobTitle = cleanSnippet.match(/^([^·\-]+?)\s+at\s+/)?.[1]?.trim() || '';
+          } else if (cleanSnippet.includes(' - ')) {
+            // Pattern: "Job Title - Company"
+            jobTitle = cleanSnippet.split(' - ')[0].trim();
+          } else if (cleanSnippet.includes(' · ')) {
+            // First part before · is usually job/title info
+            jobTitle = cleanSnippet.split(' · ')[0].trim();
+          } else {
+            // Fallback: take first part of snippet
+            jobTitle = cleanSnippet.split(/[·\-]/)[0].trim();
+          }
+          
+          return {
+            ...item,
+            name,
+            location: extractLocationFromSnippet(item.snippet),
+            jobTitle,
+            profileUrl: item.link
+          };
+        });
         
         return { 
           data: {

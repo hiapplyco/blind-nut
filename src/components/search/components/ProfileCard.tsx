@@ -14,7 +14,8 @@ import {
   User,
   Building,
   Calendar,
-  Star
+  Star,
+  Search
 } from 'lucide-react';
 import { SearchResult } from '../types';
 
@@ -22,21 +23,38 @@ interface ProfileCardProps {
   result: SearchResult;
   index: number;
   onGetContactInfo: (profileUrl: string, profileName: string) => void;
+  onSearchContacts: (name: string, company: string, location: string) => void;
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({ 
   result, 
   index, 
-  onGetContactInfo 
+  onGetContactInfo,
+  onSearchContacts 
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Extract profile information with better parsing
   const extractProfileInfo = () => {
-    const name = result.name || result.title?.replace(/\s*\|\s*LinkedIn.*$/i, '').trim() || 'Unknown Professional';
+    // Extract name from title, removing LinkedIn suffix and company info after dash
+    let rawName = result.name || result.title || 'Unknown Professional';
+    
+    // Remove LinkedIn suffix
+    rawName = rawName.replace(/\s*\|\s*LinkedIn.*$/i, '').trim();
+    
+    // Extract name and company if separated by dash
+    let name = rawName;
+    let extractedCompany = '';
+    
+    // Check if there's a dash separating name and company
+    const dashIndex = rawName.indexOf(' - ');
+    if (dashIndex > 0) {
+      name = rawName.substring(0, dashIndex).trim();
+      extractedCompany = rawName.substring(dashIndex + 3).trim();
+    }
     
     let jobTitle = result.jobTitle;
-    let company = '';
+    let company = extractedCompany;
     let location = result.location || '';
     let experience = '';
     
@@ -45,7 +63,10 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       const titleCompanyMatch = result.snippet.match(/^([^·]+?)(?:\s+at\s+([^·]+?))?(?:\s*·\s*(.+))?/);
       if (titleCompanyMatch) {
         jobTitle = titleCompanyMatch[1]?.trim();
-        company = titleCompanyMatch[2]?.trim() || '';
+        // Use the company from snippet if we didn't extract it from the title
+        if (!company && titleCompanyMatch[2]) {
+          company = titleCompanyMatch[2]?.trim() || '';
+        }
         if (!location && titleCompanyMatch[3]) {
           location = titleCompanyMatch[3].trim();
         }
@@ -64,20 +85,18 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
   const { name, jobTitle, company, location, seniorityLevel } = extractProfileInfo();
 
-  // Determine profile quality score (mock calculation based on available data)
-  const calculateProfileScore = () => {
-    let score = 0;
-    if (jobTitle) score += 25;
-    if (company) score += 25;
-    if (location) score += 20;
-    if (result.snippet && result.snippet.length > 50) score += 20;
-    if (name !== 'Unknown Professional') score += 10;
-    return Math.min(score, 100);
+  // Only show match score if we have actual matching data (future feature)
+  // For now, we'll show a profile completeness indicator instead
+  const calculateProfileCompleteness = () => {
+    let completeness = 0;
+    const fields = [jobTitle, company, location, result.snippet];
+    const filledFields = fields.filter(field => field && field.length > 0).length;
+    completeness = Math.round((filledFields / fields.length) * 100);
+    return completeness;
   };
 
-  const profileScore = calculateProfileScore();
-  const scoreColor = profileScore >= 80 ? 'text-green-600' : 
-                    profileScore >= 60 ? 'text-yellow-600' : 'text-gray-500';
+  const profileCompleteness = calculateProfileCompleteness();
+  const showCompleteness = profileCompleteness > 0; // Only show if we have some data
 
   return (
     <Card className="border-2 border-gray-200 hover:border-purple-300 transition-all duration-200 hover:shadow-lg">
@@ -94,9 +113,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                       {name}
                     </h3>
                   </div>
-                  <Badge variant="outline" className={`text-xs ${scoreColor} border-current`}>
-                    {profileScore}% Match
-                  </Badge>
+                  {showCompleteness && (
+                    <Badge variant="outline" className="text-xs text-gray-500 border-gray-300">
+                      {profileCompleteness}% Complete
+                    </Badge>
+                  )}
                 </div>
 
                 {/* Title & Company Row */}
@@ -202,24 +223,21 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                 <div className="space-y-3">
                   <h4 className="font-medium text-gray-900 flex items-center gap-2">
                     <Star className="w-4 h-4" />
-                    Profile Quality
+                    Profile Details
                   </h4>
                   
                   <div className="pl-6 space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">Profile Score:</span>
-                      <span className={`text-sm font-medium ${scoreColor}`}>
-                        {profileScore}%
+                      <span className="text-sm text-gray-500">Profile Completeness:</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        {profileCompleteness}%
                       </span>
                     </div>
                     
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
-                        className={`h-2 rounded-full ${
-                          profileScore >= 80 ? 'bg-green-500' : 
-                          profileScore >= 60 ? 'bg-yellow-500' : 'bg-gray-400'
-                        }`}
-                        style={{ width: `${profileScore}%` }}
+                        className="h-2 rounded-full bg-gray-400"
+                        style={{ width: `${profileCompleteness}%` }}
                       />
                     </div>
                   </div>
@@ -255,14 +273,24 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   </a>
                 </Button>
 
+                <Button
+                  size="sm"
+                  onClick={() => onSearchContacts(name, company, location)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  <Search className="w-4 h-4 mr-2" />
+                  Search Contact Info
+                </Button>
+
                 {result.link?.includes('linkedin.com/in/') && (
                   <Button
                     size="sm"
+                    variant="outline"
                     onClick={() => onGetContactInfo(result.link, name)}
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                    className="border-blue-200 text-blue-700 hover:bg-blue-50"
                   >
-                    <Mail className="w-4 h-4 mr-2" />
-                    Get Contact Info
+                    <User className="w-4 h-4 mr-2" />
+                    Enrich Profile
                   </Button>
                 )}
 

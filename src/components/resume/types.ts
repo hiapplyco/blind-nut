@@ -2,8 +2,8 @@
 export interface ResumeMatch {
   id: number;
   similarity_score: number;
-  matching_keywords: string[] | null;
-  matching_entities: string[] | null;
+  matching_keywords: string[] | undefined; // Changed from null to undefined
+  matching_entities: string[] | undefined; // Changed from null to undefined
   created_at: string;
   parsed_resume: {
     skills?: string[];
@@ -11,13 +11,14 @@ export interface ResumeMatch {
     education?: string[];
   } | null;
   parsed_job: {
-    required_skills?: string[];
-    qualifications?: string[];
-    responsibilities?: string[];
+    title?: string;
+    requirements?: string[];
+    skills?: string[];
   } | null;
 }
 
-export interface ResumeMatcherProps {
-  jobId: number;
-  userId: string;
+export interface ResumeUploadResponse {
+  success: boolean;
+  message: string;
+  matches?: ResumeMatch[];
 }

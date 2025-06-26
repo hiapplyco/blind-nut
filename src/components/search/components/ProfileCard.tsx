@@ -15,7 +15,6 @@ import {
   Building,
   Calendar,
   Star,
-  Search,
   Phone,
   Copy,
   CheckCircle,
@@ -53,6 +52,13 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   const [localContactInfo, setLocalContactInfo] = useState<ContactInfo | null>(contactInfo || null);
   const [isEnriching, setIsEnriching] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // Update local contact info when prop changes
+  React.useEffect(() => {
+    if (contactInfo) {
+      setLocalContactInfo(contactInfo);
+    }
+  }, [contactInfo]);
 
   // Extract profile information with better parsing
   const extractProfileInfo = () => {
@@ -235,8 +241,8 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   </p>
                 )}
 
-                {/* Inline Contact Info - Show only if we have contact data */}
-                {localContactInfo && (
+                {/* Inline Contact Info - Show only if we have actual contact data */}
+                {localContactInfo && (localContactInfo.work_email || localContactInfo.personal_emails?.length || localContactInfo.mobile_phone) && (
                   <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
@@ -247,6 +253,12 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                         <div className="flex items-center gap-1 text-gray-700">
                           <Mail className="w-3 h-3" />
                           <span className="truncate">{localContactInfo.work_email}</span>
+                        </div>
+                      )}
+                      {localContactInfo.personal_emails && localContactInfo.personal_emails.length > 0 && (
+                        <div className="flex items-center gap-1 text-gray-700">
+                          <Mail className="w-3 h-3" />
+                          <span className="truncate">{localContactInfo.personal_emails[0]}</span>
                         </div>
                       )}
                       {localContactInfo.mobile_phone && (
@@ -440,14 +452,6 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   </a>
                 </Button>
 
-                <Button
-                  size="sm"
-                  onClick={() => onSearchContacts(name, company, location)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  <Search className="w-4 h-4 mr-2" />
-                  Search Contact Info
-                </Button>
 
                 {result.link?.includes('linkedin.com/in/') && !localContactInfo && (
                   <Button
@@ -471,7 +475,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   </Button>
                 )}
 
-                {localContactInfo && (
+                {localContactInfo && (localContactInfo.work_email || localContactInfo.personal_emails?.length || localContactInfo.mobile_phone) && (
                   <Button
                     size="sm"
                     variant="outline"

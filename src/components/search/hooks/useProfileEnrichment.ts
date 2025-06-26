@@ -101,10 +101,12 @@ export const useProfileEnrichment = () => {
         
         if (enrichmentResponse.success && enrichmentResponse.data) {
           // Profile found and enriched
-          console.log('Setting enriched data:', enrichmentResponse.data);
-          setEnrichedData(enrichmentResponse.data);
+          // Extract the actual profile data from the nested structure
+          const profileData = enrichmentResponse.data.data || enrichmentResponse.data;
+          console.log('Setting enriched data:', profileData);
+          setEnrichedData(profileData);
           toast.success('Contact information retrieved');
-          return enrichmentResponse.data;
+          return profileData;
         } else if (enrichmentResponse.success && !enrichmentResponse.data) {
           // Profile not found in Nymeria (404 case)
           console.log('Profile not found in contact database');

@@ -44,6 +44,7 @@ Blind Nut is an AI-driven recruitment search tool that helps recruiters and hiri
   - Breaks down complex boolean searches into understandable components
   - Shows what will be included/excluded in search results
   - Provides optimization tips for better results
+  - Boolean explainer remains visible in collapsible section after search
 
 - ✅ **Sophisticated Search UI/UX**
   - Beautiful loading animations with 3 stages (generating, explaining, searching)
@@ -59,22 +60,30 @@ Blind Nut is an AI-driven recruitment search tool that helps recruiters and hiri
   - Better location extraction with multiple pattern matching
   - Profile completeness indicators
   - Icons for job title, company, and location
+  - Inline contact information display when available
+  - One-click copy functionality for emails and phone numbers
 
 - ✅ **Tooltip Fixes**
   - Fixed transparent tooltip backgrounds
   - Dark tooltips (gray-900) with white text for excellent contrast
   - Consistent styling across all tooltips
 
-### Nymeria API Integration (June 2025)
-- ✅ **Contact Enrichment for LinkedIn Profiles**
+### Nymeria API Integration & Inline Contact Enrichment (June 2025)
+- ✅ **Streamlined Contact Enrichment for LinkedIn Profiles**
 - Integrated Nymeria API for retrieving contact information
-- Added "Get Contact Info" button to search results
-- Created sophisticated modal with tabbed interface:
-  - Contact tab: Emails, phone numbers, location
-  - Professional tab: Job title, company, skills, summary
-  - Social tab: LinkedIn, Twitter, GitHub profiles
-- One-click copy functionality for all contact fields
-- Graceful handling of profiles not in Nymeria database
+- Inline contact display directly in candidate cards:
+  - Shows email addresses and phone numbers when available
+  - Green highlight box for profiles with contact info
+  - One-click copy functionality for all contact fields
+- "Get Contact Info" button on each profile card
+- Smart handling of not-found profiles:
+  - Toast notification when profile not in Nymeria database
+  - Option to search manually via contact search modal
+- Contact search modal for manual searches:
+  - Search by name, company, location, job title
+  - Display multiple matching profiles
+  - View detailed contact information
+- Removed redundant "Search Contact Info" button for cleaner UI
 
 ### Boolean Search Optimization (June 2025)
 - ✅ **Enhanced Boolean Search String Generation**

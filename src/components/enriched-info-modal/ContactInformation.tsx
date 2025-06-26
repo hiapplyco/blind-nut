@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Copy, Phone, PhoneOff } from "lucide-react";
+import { Copy, PhoneOff } from "lucide-react";
 import { toast } from "sonner";
 import { EnrichedProfileData } from "../search/types";
 
@@ -31,7 +31,7 @@ export const ContactInformation = ({ profileData }: ContactInformationProps) => 
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => copyToClipboard(profileData.work_email)}
+              onClick={() => copyToClipboard(profileData.work_email || '')}
               className="ml-2"
             >
               <Copy className="h-4 w-4" />
@@ -77,7 +77,7 @@ export const ContactInformation = ({ profileData }: ContactInformationProps) => 
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => copyToClipboard(profileData.mobile_phone)}
+                  onClick={() => copyToClipboard(profileData.mobile_phone || '')}
                   className="ml-2"
                 >
                   <Copy className="h-4 w-4" />

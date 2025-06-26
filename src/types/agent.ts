@@ -8,6 +8,12 @@ export interface AgentOutput {
   created_at: string;
 }
 
+export interface Terms {
+  skills: string[];
+  titles: string[];
+  keywords: string[];
+}
+
 export interface KeyTerms {
   skills: string[];
   titles: string[];

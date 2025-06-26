@@ -24,8 +24,23 @@ export function getGeminiModel() {
 export async function generateContent(promptText: string) {
   console.log("Sending prompt to Gemini 2.0 Flash API");
   const model = getGeminiModel();
-  const result = await model.generateContent(promptText);
-  const responseText = result.response.text();
-  console.log("Received response from Gemini 2.0 Flash API:", responseText);
-  return responseText;
+  
+  // Add timeout to prevent hanging
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+  
+  try {
+    const result = await model.generateContent(promptText);
+    clearTimeout(timeoutId);
+    const responseText = result.response.text();
+    console.log("Received response from Gemini 2.0 Flash API:", responseText);
+    return responseText;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      console.error("Gemini API request timed out after 15 seconds");
+      throw new Error("AI request timed out. Please try again.");
+    }
+    throw error;
+  }
 }

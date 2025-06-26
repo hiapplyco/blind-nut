@@ -2,6 +2,19 @@
 
 ## 📋 Recent Updates
 
+### Boolean Search Optimization (June 2025)
+- ✅ **Enhanced Boolean Search String Generation**
+- Improved prompt template with comprehensive examples and requirements
+- Added 15-second timeout to prevent edge function hanging
+- Updated prompt version from 3.1.0 to 3.2.0 for better results
+- Now generates more comprehensive boolean searches with:
+  - 3-7 job title variations
+  - Industry-standard abbreviations
+  - Location variations
+  - Experience level indicators
+  - Certification keywords
+  - Competitor company names (when applicable)
+
 ### AI Model Standardization (December 2024)
 - ✅ **All Gemini models updated to `gemini-2.0-flash`**
 - Migrated from various models (gemini-1.5-flash, gemini-1.5-pro, gemini-2.5-flash, gemini-pro) 
@@ -390,6 +403,55 @@ npm run db:migrate
 npm run db:seed
 ```
 
+### Supabase Edge Functions
+```bash
+# Link project (required before deploying)
+npx supabase link --project-ref kxghaajojntkqrmvsngn
+
+# Deploy a specific function
+npx supabase functions deploy <function-name>
+
+# Deploy all functions
+npx supabase functions deploy
+
+# Serve functions locally
+npx supabase functions serve
+
+# View function logs (via dashboard - CLI doesn't support logs directly)
+# Visit: https://supabase.com/dashboard/project/kxghaajojntkqrmvsngn/functions
+```
+
+#### Edge Function Optimization Tips
+
+##### 1. **Boolean Search Generation Performance**
+- **Issue**: Slow response times when generating boolean search strings
+- **Solutions**:
+  - Added 15-second timeout to prevent hanging requests
+  - Enhanced prompt with specific examples and structure
+  - Consider implementing response streaming for real-time feedback
+  - Add caching for similar job descriptions
+
+##### 2. **Improving Search Quality**
+- **Issue**: Generated boolean searches too basic/generic
+- **Solutions**:
+  - Updated prompt to require 3-7 job title variations
+  - Added requirements for synonyms and abbreviations
+  - Included location and experience level terms
+  - Added industry-specific context
+  - Provided concrete examples in the prompt
+
+##### 3. **Debugging Edge Functions**
+- **Logging**: Add console.log statements - visible in Supabase dashboard
+- **Error Handling**: Always wrap AI calls in try-catch blocks
+- **Timeouts**: Implement request timeouts (15-30 seconds recommended)
+- **Testing**: Use `supabase functions serve` for local testing
+
+##### 4. **Common Edge Function Issues**
+- **JWT Verification**: Set `verify_jwt = false` in config.toml for public endpoints
+- **CORS**: Always handle OPTIONS requests and include CORS headers
+- **Environment Variables**: Use `Deno.env.get()` for API keys
+- **Dependencies**: Use npm: prefix for npm packages in Deno
+
 ### AI Development
 ```bash
 # Test prompts
@@ -457,7 +519,27 @@ npm run embeddings:generate
 4. **Loading States**: Add skeleton screens and suspense
 5. **Performance**: Profile and optimize bundle size
 
+## 🔍 Boolean Search Examples
+
+### Enhanced Boolean Search String Format
+After optimization, the system now generates comprehensive boolean searches like:
+
+**Input**: "AWS Architect in Los Angeles with Python and SQL skills"
+
+**Output**:
+```
+("AWS Architect" OR "Cloud Architect" OR "Solutions Architect" OR "Infrastructure Architect" OR "DevOps Architect" OR "Senior Cloud Engineer" OR "Principal Engineer AWS") AND (AWS OR "Amazon Web Services" OR EC2 OR Lambda OR S3 OR CloudFormation) AND (Python OR "Python programming" OR Django OR Flask OR boto3) AND (SQL OR MySQL OR PostgreSQL OR "database design" OR Redshift OR RDS) AND ("Los Angeles" OR LA OR "Greater Los Angeles" OR "Southern California" OR remote) AND (architect OR "architectural design" OR "system design" OR "technical leadership" OR "solution architecture") NOT (junior OR intern OR student OR "entry level")
+```
+
+### Key Components of Effective Boolean Searches:
+1. **Job Title Variations**: Include current, previous, and alternative titles
+2. **Skill Synonyms**: Use official names and common abbreviations
+3. **Location Flexibility**: Include city, region, and remote options
+4. **Experience Indicators**: Senior, lead, principal, years of experience
+5. **Exclusions**: Filter out junior/intern positions when appropriate
+6. **Industry Context**: Add domain-specific terms for better matches
+
 ---
 
-*Last Updated: December 2024*
-*Version: 1.2.0*
+*Last Updated: June 2025*
+*Version: 1.3.0*

@@ -71,20 +71,33 @@ async function handleProfileEnrichment(requestData) {
   );
   
   if (!nymeriaResponse.ok) {
-    console.error('Nymeria API error:', await nymeriaResponse.text());
-    throw new Error(`Failed to enrich profile: ${nymeriaResponse.status}`);
+    const errorText = await nymeriaResponse.text();
+    console.error('Nymeria API error:', nymeriaResponse.status, errorText);
+    
+    // Common error cases
+    if (nymeriaResponse.status === 401) {
+      throw new Error('Invalid Nymeria API key. Please check your configuration.');
+    } else if (nymeriaResponse.status === 404) {
+      throw new Error('Profile not found in Nymeria database.');
+    } else if (nymeriaResponse.status === 429) {
+      throw new Error('Rate limit exceeded. Please try again later.');
+    }
+    
+    throw new Error(`Nymeria API error: ${nymeriaResponse.status} - ${errorText}`);
   }
   
-  const enrichedData = await nymeriaResponse.json();
+  let enrichedData;
+  try {
+    enrichedData = await nymeriaResponse.json();
+  } catch (parseError) {
+    console.error('Failed to parse Nymeria response:', parseError);
+    throw new Error('Invalid response from Nymeria API');
+  }
   console.log('Nymeria API returned data:', JSON.stringify(enrichedData).substring(0, 200) + '...');
   
-  // Optional: Log the enrichment for tracking purposes
-  try {
-    await logEnrichmentAction('profile_enrichment', profileUrl, null);
-  } catch (logError) {
-    console.error('Failed to log enrichment action:', logError);
-    // Continue anyway
-  }
+  // Skip logging for now since the table doesn't exist
+  // TODO: Create enrichment_logs table or remove this functionality
+  console.log('Skipping enrichment logging (table does not exist)');
   
   // Return the enriched data
   return new Response(
@@ -138,8 +151,8 @@ async function handlePersonSearch(searchParams) {
   
   const searchData = await nymeriaResponse.json();
   
-  // Log search action
-  await logEnrichmentAction('person_search', null, JSON.stringify(searchParams));
+  // Skip logging for now since the table doesn't exist
+  console.log('Skipping search logging (table does not exist)');
   
   // Return the search results
   return new Response(

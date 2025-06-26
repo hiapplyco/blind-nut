@@ -10,7 +10,9 @@ import { InterviewPlanDisplay } from "@/components/interview/InterviewPlanDispla
 import { useInterviewSetup } from "@/hooks/useInterviewSetup";
 import { useAuth } from "@/context/AuthContext";
 
-type InterviewStep = 'setup' | 'plan' | 'interview';
+import { InterviewPrep as InterviewPrepComponent } from '@/components/interview/InterviewPrep';
+
+type InterviewStep = 'setup' | 'plan' | 'interview' | 'prep';
 
 interface InterviewPlan {
   overview: string;
@@ -148,6 +150,23 @@ export default function InterviewPrep() {
               onSubmit={handleSetupSubmit}
               isLoading={isLoading}
             />
+            <div className="mt-4">
+              <Button onClick={() => setCurrentStep('prep')}>Prepare Interview Questions</Button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 'prep' && (
+          <div className="max-w-4xl mx-auto">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentStep('setup')}
+              className="mb-4"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Setup
+            </Button>
+            <InterviewPrepComponent />
           </div>
         )}
 

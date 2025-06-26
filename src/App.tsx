@@ -7,6 +7,9 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ClarvidaProtectedRoute } from "@/components/clarvida/ClarvidaProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
 
+// Import test utility for debugging
+import "./utils/testNymeria";
+
 // Import components directly to avoid any potential lazy loading issues
 import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";

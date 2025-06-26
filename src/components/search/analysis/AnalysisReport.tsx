@@ -57,7 +57,7 @@ export const AnalysisReport = ({
 
         {/* Show report content when available */}
         {/* Animate the appearance of the report content */}
-        {agentOutput && isProcessingComplete && (
+        {agentOutput && (
           <motion.div
             className="space-y-6 mt-6" // Adjusted spacing
             variants={containerVariants}

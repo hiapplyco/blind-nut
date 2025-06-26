@@ -26,6 +26,7 @@ Blind Nut is an AI-driven recruitment search tool that helps recruiters and hiri
 - 🔍 **Contact Enrichment**: Integrate with APIs for comprehensive candidate data
 - 💼 **Compensation Analysis**: AI-driven salary benchmarking and analysis
 - 🎯 **Multi-Platform Search**: LinkedIn, Indeed, and other job platforms
+- 📊 **Analysis Report**: Comprehensive job requirement analysis with AI-generated insights
 
 ### Tech Stack
 - **Frontend**: React, TypeScript, Tailwind CSS, Vite
@@ -97,6 +98,23 @@ Blind Nut is an AI-driven recruitment search tool that helps recruiters and hiri
   - Experience level indicators
   - Certification keywords
   - Competitor company names (when applicable)
+
+### AI-Powered Analysis Report (June 2025)
+- ✅ **Comprehensive Job Analysis System**
+- Generate detailed analysis reports after boolean search creation
+- Four key analysis sections:
+  - **Job Summary**: Concise overview of the position requirements
+  - **Enhanced Description**: Improved and structured job description
+  - **Compensation Analysis**: Market-based salary insights and benchmarking
+  - **Key Terms**: Extracted skills, job titles, and keywords
+- Uses multiple AI agents via Supabase Edge Functions:
+  - `extract-nlp-terms`: Extracts skills and keywords using NLP
+  - `analyze-compensation`: Generates compensation insights
+  - `enhance-job-description`: Creates enhanced descriptions
+  - `summarize-job`: Produces concise job summaries
+- Beautiful animated UI with Framer Motion
+- "Generate Analysis Report" button appears after boolean search generation
+- Analysis data stored in `agent_outputs` table for persistence
 
 ### AI Model Standardization (December 2024)
 - ✅ **All Gemini models updated to `gemini-2.0-flash`**

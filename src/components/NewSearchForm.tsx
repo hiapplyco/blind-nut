@@ -43,6 +43,8 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
     }
 
     setCurrentJobId(jobId);
+    // Mark processing as complete when a job is created (search string generated)
+    setIsProcessingComplete(true);
     // setSearchText(submittedText); // Update searchText via hook if needed
   };
 
@@ -106,7 +108,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
       // If search string exists in output, update state via hook
       if (agentOutput.searchString) {
         setSearchString(agentOutput.searchString);
-        toast.success("Search string generated successfully!");
+        // Don't show success toast here as it's redundant
       } else if (agentOutput.job_id) {
         // If no search string in output, try fetching from the job record
         const fetchJobSearchString = async () => {
@@ -122,7 +124,7 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
 
             if (data?.search_string) {
               setSearchString(data.search_string); // Update via hook
-              toast.success("Search string generated successfully!");
+              // Don't show success toast here as it's redundant
             } else {
               console.log("No search string found in job record.");
             }
@@ -191,8 +193,8 @@ const NewSearchForm = ({ userId, initialRequirements, initialJobId, autoRun = fa
               onComplete={handleProcessingComplete} // Handler for when processor finishes
             />
           )}
-          {/* Show Generate button only if processing is complete but analysis hasn't started */}
-          {!isGeneratingAnalysis && isProcessingComplete && agentOutput && (
+          {/* Show Generate button if we have a job ID and not currently generating */}
+          {!isGeneratingAnalysis && currentJobId && !agentOutput && (
              <GenerateAnalysisButton onClick={handleGenerateAnalysis} />
           )}
            {/* Optionally add a loading indicator while agentOutput is loading */}

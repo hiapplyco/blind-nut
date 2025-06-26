@@ -11,7 +11,6 @@
 7. [External Integrations](#external-integrations)
 8. [Testing & Quality Assurance](#testing--quality-assurance)
 9. [Deployment & Operations](#deployment--operations)
-10. [SPARC Development Methodology](#sparc-development-methodology)
 
 ---
 
@@ -614,82 +613,6 @@ supabase db push
    - Point-in-time recovery available
 
 ---
-
-## 🎯 SPARC Development Methodology
-
-### Overview
-SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) is our systematic approach to Test-Driven Development with AI assistance.
-
-### Core Commands
-
-```bash
-# List all SPARC modes
-npx claude-flow sparc modes
-
-# Run specific mode
-npx claude-flow sparc run <mode> "<task>"
-
-# Full TDD workflow
-npx claude-flow sparc tdd "<feature>"
-
-# Get mode information
-npx claude-flow sparc info <mode>
-```
-
-### Development Workflow
-
-#### 1. Specification Phase
-Define requirements and constraints:
-```bash
-npx claude-flow sparc run spec-pseudocode "Define user authentication requirements"
-```
-
-#### 2. Pseudocode Phase
-Design algorithms and logic:
-```bash
-npx claude-flow sparc run spec-pseudocode "Create authentication flow pseudocode"
-```
-
-#### 3. Architecture Phase
-Design system structure:
-```bash
-npx claude-flow sparc run architect "Design authentication service architecture"
-```
-
-#### 4. Refinement Phase (TDD)
-Implement with test-driven development:
-```bash
-npx claude-flow sparc tdd "implement user authentication system"
-```
-
-#### 5. Completion Phase
-Integration and validation:
-```bash
-npx claude-flow sparc run integration "integrate authentication with user management"
-```
-
-### SPARC Principles
-1. **Modular Design**: Files under 500 lines
-2. **Test-First**: Always write tests before code
-3. **Clean Architecture**: Separation of concerns
-4. **Documentation**: Keep docs current
-5. **Memory Integration**: Use claude-flow memory system
-
-### Memory Management
-
-```bash
-# Store specifications
-npx claude-flow memory store spec_auth "Authentication requirements"
-
-# Store architectural decisions
-npx claude-flow memory store arch_auth "JWT token strategy"
-
-# Query previous work
-npx claude-flow memory query auth
-
-# Export memory
-npx claude-flow memory export backup.json
-```
 
 ---
 

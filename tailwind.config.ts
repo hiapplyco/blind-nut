@@ -53,6 +53,10 @@ export default {
           DEFAULT: "#ffffff",
           foreground: "#44332A", // Dark brown for card text
         },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
       },
       typography: {
         DEFAULT: {

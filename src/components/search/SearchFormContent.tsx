@@ -111,7 +111,7 @@ export const SearchFormContent = ({
       <div className="flex gap-2">
         <div className="relative">
           {/* Use onFileUpload prop for the hidden input */}
-          <input type="file" accept=".pdf,image/*" onChange={onFileUpload} className="hidden" id="file-upload" disabled={isProcessing} />
+          <input type="file" accept=".pdf,image/*,.txt,text/plain,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.rtf,application/rtf,.odt,application/vnd.oasis.opendocument.text" onChange={onFileUpload} className="hidden" id="file-upload" disabled={isProcessing} />
           <label htmlFor="file-upload" className={`${buttonBaseClasses} ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
             <Upload className="h-4 w-4 mr-2" /> {isProcessing ? 'Processing...' : 'Attach File'}
           </label>
@@ -187,7 +187,7 @@ export const SearchFormContent = ({
       )}
 
       {/* Hidden file input needed by renderInputActions */}
-      <input type="file" id="file-upload" className="hidden" onChange={onFileUpload} accept=".pdf,image/*" />
+      <input type="file" id="file-upload" className="hidden" onChange={onFileUpload} accept=".pdf,image/*,.txt,text/plain,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.rtf,application/rtf,.odt,application/vnd.oasis.opendocument.text" />
 
       {/* Audio Capture Window - Keep as is */}
       {showCaptureWindow && (

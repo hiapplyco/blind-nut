@@ -207,6 +207,8 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
             onSearchContacts={handleSearchContacts}
             contactInfo={enrichedProfiles[result.link]}
             isLoadingContact={loadingProfiles.has(result.link)}
+            jobId={jobId}
+            searchString={searchString}
           />
         ))}
       </div>

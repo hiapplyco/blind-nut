@@ -27,6 +27,7 @@ Blind Nut is an AI-driven recruitment search tool that helps recruiters and hiri
 - 💼 **Compensation Analysis**: AI-driven salary benchmarking and analysis
 - 🎯 **Multi-Platform Search**: LinkedIn, Indeed, and other job platforms
 - 📊 **Analysis Report**: Comprehensive job requirement analysis with AI-generated insights
+- 💾 **Save Candidates**: Store and organize candidates with enriched contact data
 
 ### Tech Stack
 - **Frontend**: React, TypeScript, Tailwind CSS, Vite
@@ -85,6 +86,37 @@ Blind Nut is an AI-driven recruitment search tool that helps recruiters and hiri
   - Display multiple matching profiles
   - View detailed contact information
 - Removed redundant "Search Contact Info" button for cleaner UI
+
+### Candidate Saving & Repository (June 2025)
+- ✅ **Save Candidates with Enriched Data**
+- "Save Candidate" button on each search result card
+- Comprehensive candidate data storage:
+  - Basic info: Name, LinkedIn URL, job title, company, location
+  - Contact info: Work email, personal emails, phone numbers
+  - Profile data: Summary, skills, completeness score
+  - Search context: Boolean query that found them, source platform
+- Dedicated `saved_candidates` table with:
+  - User-specific candidate lists
+  - Unique constraint to prevent duplicates
+  - Status tracking (new, contacted, interviewing, etc.)
+  - Custom tags and notes
+  - Full-text search capability
+- Row-level security ensures privacy
+- Automatic timestamp tracking for created/updated dates
+
+### Profile Parsing Improvements (June 2025)
+- ✅ **Enhanced LinkedIn Data Extraction**
+- Fixed parsing issues with job titles containing skills/technologies
+- Improved company name extraction from complex snippets
+- Better location detection with validation against common patterns
+- Handles multiple LinkedIn snippet formats:
+  - "Job Title at Company · Location"
+  - "Job Title | Skills | Location · Experience"
+  - Name dash Company patterns
+- Cleans up data by removing:
+  - Programming languages from job titles
+  - Duplicate information in company names
+  - Skills misidentified as locations
 
 ### Boolean Search Optimization (June 2025)
 - ✅ **Enhanced Boolean Search String Generation**

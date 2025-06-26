@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { SearchResult } from '../types';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/auth/AuthContext';
 
 interface ContactInfo {
   work_email?: string;
@@ -62,42 +64,101 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
   // Extract profile information with better parsing
   const extractProfileInfo = () => {
-    // Extract name from title, removing LinkedIn suffix and company info after dash
+    // Extract name from title, removing LinkedIn suffix
     let rawName = result.name || result.title || 'Unknown Professional';
-    
-    // Remove LinkedIn suffix
     rawName = rawName.replace(/\s*\|\s*LinkedIn.*$/i, '').trim();
     
-    // Extract name and company if separated by dash
+    // Initialize variables
     let name = rawName;
-    let extractedCompany = '';
+    let jobTitle = '';
+    let company = '';
+    let location = '';
     
-    // Check if there's a dash separating name and company
+    // Check if name contains a dash (name - company pattern)
     const dashIndex = rawName.indexOf(' - ');
     if (dashIndex > 0) {
       name = rawName.substring(0, dashIndex).trim();
-      extractedCompany = rawName.substring(dashIndex + 3).trim();
+      company = rawName.substring(dashIndex + 3).trim();
     }
     
-    let jobTitle = result.jobTitle;
-    let company = extractedCompany;
-    let location = result.location || '';
-    let experience = '';
-    
-    if (!jobTitle && result.snippet) {
-      // Enhanced parsing for job title and company
-      const titleCompanyMatch = result.snippet.match(/^([^·]+?)(?:\s+at\s+([^·]+?))?(?:\s*·\s*(.+))?/);
-      if (titleCompanyMatch) {
-        jobTitle = titleCompanyMatch[1]?.trim();
-        // Use the company from snippet if we didn't extract it from the title
-        if (!company && titleCompanyMatch[2]) {
-          company = titleCompanyMatch[2]?.trim() || '';
-        }
-        if (!location && titleCompanyMatch[3]) {
-          location = titleCompanyMatch[3].trim();
+    // Parse the snippet for detailed information
+    if (result.snippet) {
+      const snippet = result.snippet;
+      
+      // Try different parsing patterns
+      // Pattern 1: "Job Title at Company · Location"
+      const pattern1 = snippet.match(/^([^·]+?)\s+at\s+([^·]+?)(?:\s*·\s*(.+))?/);
+      if (pattern1) {
+        jobTitle = pattern1[1].trim();
+        company = pattern1[2].trim();
+        if (pattern1[3]) {
+          location = pattern1[3].trim();
         }
       }
+      // Pattern 2: "Job Title | Skills | Location · Experience"
+      else {
+        const parts = snippet.split(/[·|]/).map(s => s.trim());
+        if (parts.length > 0) {
+          // First part is usually job title
+          jobTitle = parts[0];
+          
+          // Look for location patterns
+          for (let i = 1; i < parts.length; i++) {
+            const part = parts[i];
+            // Check if this part looks like a location (contains city/state/country patterns)
+            if (part.match(/\b(City|State|USA|US|United States|Canada|UK|United Kingdom|[A-Z][a-z]+,\s*[A-Z]{2})/i) ||
+                part.match(/^[A-Z][a-z]+(?:,\s*[A-Z][a-z]+)*$/)) {
+              location = part;
+              break;
+            }
+          }
+          
+          // If we still don't have a company, check for common patterns
+          if (!company) {
+            // Look for "at Company" pattern anywhere in snippet
+            const atMatch = snippet.match(/\bat\s+([^·|,]+?)(?:\s*[·|,]|$)/);
+            if (atMatch) {
+              company = atMatch[1].trim();
+            }
+          }
+        }
+      }
+      
+      // Clean up extracted data
+      // Remove skills/technologies from job title if they're appended
+      if (jobTitle) {
+        // Remove everything after first slash or pipe that contains programming keywords
+        jobTitle = jobTitle.split(/[/|]/).filter(part => 
+          !part.match(/\b(Kotlin|Java|Python|JavaScript|React|Angular|Vue|AWS|Firebase|Android|iOS|Flutter)\b/i)
+        )[0] || jobTitle;
+        
+        // Also clean up "Job Title, Technology" patterns
+        const titleParts = jobTitle.split(',');
+        if (titleParts.length > 1 && titleParts[1].match(/\b(Kotlin|Java|Python|JavaScript|React|Angular|Vue|AWS|Firebase|Android|iOS|Flutter)\b/i)) {
+          jobTitle = titleParts[0].trim();
+        }
+      }
+      
+      // Clean up company name - remove extra job titles or skills
+      if (company) {
+        // Remove "Job Title - Company" pattern if job title is duplicated
+        const companyParts = company.split(' - ');
+        if (companyParts.length > 1) {
+          // Take the last part as it's more likely to be the company
+          company = companyParts[companyParts.length - 1].trim();
+        }
+      }
+      
+      // Clean up location - remove skills that might be misidentified as location
+      if (location && location.match(/\b(Kotlin|Java|Python|JavaScript|React|Angular|Vue|AWS|Firebase|Android|iOS|Flutter|Engineer|Developer|Software)\b/i)) {
+        location = ''; // Reset if it's clearly not a location
+      }
     }
+    
+    // Use the direct fields if available and we haven't found better data
+    jobTitle = jobTitle || result.jobTitle || '';
+    company = company || result.company || '';
+    location = location || result.location || '';
 
     // Extract seniority level
     const seniorityLevel = jobTitle?.toLowerCase().includes('senior') ? 'Senior' :
@@ -106,7 +167,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                           jobTitle?.toLowerCase().includes('director') ? 'Director' :
                           jobTitle?.toLowerCase().includes('manager') ? 'Manager' : 'Mid-Level';
 
-    return { name, jobTitle, company, location, experience, seniorityLevel };
+    return { name, jobTitle, company, location, experience: '', seniorityLevel };
   };
 
   const { name, jobTitle, company, location, seniorityLevel } = extractProfileInfo();
@@ -133,6 +194,61 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       setTimeout(() => setCopiedField(null), 2000);
     } catch (err) {
       toast.error('Failed to copy');
+    }
+  };
+
+  // Handle saving candidate
+  const handleSaveCandidate = async () => {
+    if (!user) {
+      toast.error('Please sign in to save candidates');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Extract all necessary data
+      const profileData = extractProfileInfo();
+      
+      // Prepare the candidate data
+      const candidateData = {
+        user_id: user.id,
+        job_id: jobId || null,
+        name: profileData.name,
+        linkedin_url: result.link,
+        job_title: profileData.jobTitle,
+        company: profileData.company,
+        location: profileData.location,
+        seniority_level: profileData.seniorityLevel,
+        work_email: localContactInfo?.work_email || null,
+        personal_emails: localContactInfo?.personal_emails || [],
+        mobile_phone: localContactInfo?.mobile_phone || null,
+        profile_summary: result.snippet,
+        profile_completeness: profileCompleteness,
+        search_string: searchString || null,
+        source: 'linkedin'
+      };
+
+      const { error } = await supabase
+        .from('saved_candidates')
+        .upsert(candidateData, {
+          onConflict: 'user_id,linkedin_url'
+        });
+
+      if (error) throw error;
+
+      setIsSaved(true);
+      toast.success('Candidate saved successfully');
+    } catch (error) {
+      console.error('Error saving candidate:', error);
+      if (error?.code === '23505') {
+        // Unique constraint violation
+        setIsSaved(true);
+        toast.info('Candidate already saved');
+      } else {
+        toast.error('Failed to save candidate');
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -175,6 +291,61 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       toast.error('Failed to enrich profile');
     } finally {
       setIsEnriching(false);
+    }
+  };
+
+  // Handle saving candidate
+  const handleSaveCandidate = async () => {
+    if (!user) {
+      toast.error('Please sign in to save candidates');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Extract all necessary data
+      const profileData = extractProfileInfo();
+      
+      // Prepare the candidate data
+      const candidateData = {
+        user_id: user.id,
+        job_id: jobId || null,
+        name: profileData.name,
+        linkedin_url: result.link,
+        job_title: profileData.jobTitle,
+        company: profileData.company,
+        location: profileData.location,
+        seniority_level: profileData.seniorityLevel,
+        work_email: localContactInfo?.work_email || null,
+        personal_emails: localContactInfo?.personal_emails || [],
+        mobile_phone: localContactInfo?.mobile_phone || null,
+        profile_summary: result.snippet,
+        profile_completeness: profileCompleteness,
+        search_string: searchString || null,
+        source: 'linkedin'
+      };
+
+      const { error } = await supabase
+        .from('saved_candidates')
+        .upsert(candidateData, {
+          onConflict: 'user_id,linkedin_url'
+        });
+
+      if (error) throw error;
+
+      setIsSaved(true);
+      toast.success('Candidate saved successfully');
+    } catch (error) {
+      console.error('Error saving candidate:', error);
+      if (error?.code === '23505') {
+        // Unique constraint violation
+        setIsSaved(true);
+        toast.info('Candidate already saved');
+      } else {
+        toast.error('Failed to save candidate');
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 

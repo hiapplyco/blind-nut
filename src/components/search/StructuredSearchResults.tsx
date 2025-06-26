@@ -82,12 +82,21 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
   };
 
   const handleGetContactInfo = async (profileUrl: string, profileName: string) => {
-    // Set the selected profile and open modal
-    setSelectedProfile({ url: profileUrl, name: profileName });
-    setIsModalOpen(true);
-    
-    // Enrich the profile
-    await enrichProfile(profileUrl);
+    try {
+      console.log('Getting contact info for:', profileUrl, profileName);
+      
+      // Set the selected profile and open modal
+      setSelectedProfile({ url: profileUrl, name: profileName });
+      setIsModalOpen(true);
+      
+      // Enrich the profile
+      const result = await enrichProfile(profileUrl);
+      console.log('Enrichment result:', result);
+    } catch (error) {
+      console.error('Error getting contact info:', error);
+      toast.error('Failed to get contact information');
+      setIsModalOpen(false);
+    }
   };
 
   const extractProfileInfo = (result: SearchResult) => {

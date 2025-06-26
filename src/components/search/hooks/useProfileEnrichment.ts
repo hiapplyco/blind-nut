@@ -71,9 +71,14 @@ export const useProfileEnrichment = () => {
       }
       
       // Handle successful response
-      if (data?.data) {
-        setEnrichedData(data.data);
-        return data.data;
+      console.log('Nymeria API Response:', data);
+      
+      if (data) {
+        // The Nymeria API might return data directly, not nested in data.data
+        const profileData = data.data || data;
+        console.log('Setting enriched data:', profileData);
+        setEnrichedData(profileData);
+        return profileData;
       } else {
         // No data returned
         toast.error("No profile data found");

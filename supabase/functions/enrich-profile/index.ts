@@ -50,13 +50,22 @@ async function handleProfileEnrichment(requestData) {
   
   console.log(`Enriching profile: ${profileUrl || profileId}`);
   
+  const apiKey = Deno.env.get('NYMERIA_API_KEY');
+  if (!apiKey) {
+    console.error('NYMERIA_API_KEY is not set');
+    throw new Error('API configuration error: Missing Nymeria API key');
+  }
+  
+  const nymeriaUrl = `https://www.nymeria.io/api/v4/person/enrich?${profileUrl ? `profile=${encodeURIComponent(profileUrl)}` : `lid=${profileId}`}`;
+  console.log('Calling Nymeria API:', nymeriaUrl);
+  
   // Call Nymeria Person Enrich API
   const nymeriaResponse = await fetch(
-    `https://www.nymeria.io/api/v4/person/enrich?${profileUrl ? `profile=${encodeURIComponent(profileUrl)}` : `lid=${profileId}`}`, 
+    nymeriaUrl, 
     {
       method: 'GET',
       headers: {
-        'X-Api-Key': Deno.env.get('NYMERIA_API_KEY') || ''
+        'X-Api-Key': apiKey
       }
     }
   );
@@ -67,9 +76,15 @@ async function handleProfileEnrichment(requestData) {
   }
   
   const enrichedData = await nymeriaResponse.json();
+  console.log('Nymeria API returned data:', JSON.stringify(enrichedData).substring(0, 200) + '...');
   
   // Optional: Log the enrichment for tracking purposes
-  await logEnrichmentAction('profile_enrichment', profileUrl, null);
+  try {
+    await logEnrichmentAction('profile_enrichment', profileUrl, null);
+  } catch (logError) {
+    console.error('Failed to log enrichment action:', logError);
+    // Continue anyway
+  }
   
   // Return the enriched data
   return new Response(

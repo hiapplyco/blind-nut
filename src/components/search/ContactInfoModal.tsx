@@ -46,6 +46,11 @@ export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
 }) => {
   const [copiedField, setCopiedField] = React.useState<string | null>(null);
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('ContactInfoModal state:', { isOpen, profileData, isLoading, profileName });
+  }, [isOpen, profileData, isLoading, profileName]);
+
   const copyToClipboard = async (text: string, field: string) => {
     try {
       await navigator.clipboard.writeText(text);

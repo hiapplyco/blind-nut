@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, MapPin, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import { EnrichedInfoModal } from '../enriched-info-modal/EnrichedInfoModal'; // Updated import
+import { toast } from "sonner";
+import { EnrichedInfoModal } from '../enriched-info-modal/EnrichedInfoModal';
 import { Profile, EnrichedProfileData } from '@/components/search/types';
 
 // Profile Card Component
@@ -13,7 +14,6 @@ export const ProfileCard = ({ profile: originalProfile }: { profile: any }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const { toast } = useToast();
   
   // Convert the original profile to the Profile type
   const profile: Profile = {
@@ -77,9 +77,9 @@ export const ProfileCard = ({ profile: originalProfile }: { profile: any }) => {
           };
           setEnrichedData(enrichedProfileData);
         }
-      } catch (err) {
-        console.error('Error enriching profile:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Error retrieving contact information';
+      } catch (error) {
+        console.error('Error enriching profile:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Error retrieving contact information';
         setError(errorMessage);
         toast.error("Could not retrieve contact information");
       } finally {
@@ -158,7 +158,6 @@ export const ProfileCard = ({ profile: originalProfile }: { profile: any }) => {
         </div>
       </Card>
       
-      {/* Use the new consolidated modal */}
       <EnrichedInfoModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
@@ -172,10 +171,10 @@ export const ProfileCard = ({ profile: originalProfile }: { profile: any }) => {
 };
 
 // Profiles List Component
-export const ProfilesList = ({ profiles }) => {
+export const ProfilesList = ({ profiles }: { profiles: any[] }) => {
   return (
     <div className="space-y-4">
-      {profiles.map((profile, index) => (
+      {profiles.map((profile: any, index: number) => (
         <ProfileCard key={index} profile={profile} />
       ))}
     </div>

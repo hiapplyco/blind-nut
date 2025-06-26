@@ -1,17 +1,21 @@
 
-export interface Terms {
+// Agent types for the application
+export interface AgentOutput {
+  id: number;
+  job_id: number;
+  agent_type: string;
+  output_data: any;
+  created_at: string;
+}
+
+export interface KeyTerms {
   skills: string[];
   titles: string[];
   keywords: string[];
 }
 
-export interface AgentOutput {
-  id: number;
-  job_id: number | null;
-  created_at: string | null;
-  terms: Terms | null;
-  compensation_analysis: string | null;
-  enhanced_description: string | null;
-  job_summary: string | null;
-  searchString?: string; // Added searchString property as optional
+export interface SearchAnalysis {
+  summary: string;
+  keyTerms: KeyTerms;
+  recommendations: string[];
 }

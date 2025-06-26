@@ -89,11 +89,23 @@ async function handleProfileEnrichment(requestData) {
     const errorText = await nymeriaResponse.text();
     console.error('Nymeria API error:', nymeriaResponse.status, errorText);
     
-    // Common error cases
+    // Handle 404 - Profile not found (this is normal, not an error)
+    if (nymeriaResponse.status === 404) {
+      console.log('Profile not found in Nymeria database - returning no data response');
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: null,
+          message: 'Profile not found in contact database',
+          profileUrl: profileUrl || profileId
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Handle other common error cases as actual errors
     if (nymeriaResponse.status === 401) {
       throw new Error('Invalid Nymeria API key. Please check your configuration.');
-    } else if (nymeriaResponse.status === 404) {
-      throw new Error('Profile not found in Nymeria database.');
     } else if (nymeriaResponse.status === 429) {
       throw new Error('Rate limit exceeded. Please try again later.');
     }
@@ -111,12 +123,15 @@ async function handleProfileEnrichment(requestData) {
   console.log('Nymeria API returned data:', JSON.stringify(enrichedData).substring(0, 200) + '...');
   
   // Skip logging for now since the table doesn't exist
-  // TODO: Create enrichment_logs table or remove this functionality
   console.log('Skipping enrichment logging (table does not exist)');
   
-  // Return the enriched data
+  // Return the enriched data with success indicator
   return new Response(
-    JSON.stringify(enrichedData),
+    JSON.stringify({
+      success: true,
+      data: enrichedData,
+      message: 'Profile enriched successfully'
+    }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 }

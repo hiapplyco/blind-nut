@@ -33,6 +33,14 @@ interface SearchResponse {
   total: number;
 }
 
+// Updated response type from edge function
+interface EnrichmentResponse {
+  success: boolean;
+  data: any;
+  message: string;
+  profileUrl?: string;
+}
+
 export const useProfileEnrichment = () => {
   // State management
   const [enrichedData, setEnrichedData] = useState<EnrichedProfileData | null>(null);
@@ -75,11 +83,11 @@ export const useProfileEnrichment = () => {
         throw new Error(`Failed to enrich profile: ${supabaseError.message}`);
       }
       
-      // Handle successful response
+      // Handle successful response from updated edge function
       console.log('Nymeria API Response:', data);
       
-      // Check if the response contains an error
-      if (data?.error) {
+      // Check if the response contains an error (old format compatibility)
+      if (data?.error && !data?.success) {
         console.error('API returned error:', data);
         const errorMsg = data.suggestion 
           ? `${data.error}. ${data.suggestion}`
@@ -87,16 +95,35 @@ export const useProfileEnrichment = () => {
         throw new Error(errorMsg);
       }
       
+      // Handle new structured response format
+      if (data?.success !== undefined) {
+        const enrichmentResponse = data as EnrichmentResponse;
+        
+        if (enrichmentResponse.success && enrichmentResponse.data) {
+          // Profile found and enriched
+          console.log('Setting enriched data:', enrichmentResponse.data);
+          setEnrichedData(enrichmentResponse.data);
+          toast.success('Contact information retrieved');
+          return enrichmentResponse.data;
+        } else if (enrichmentResponse.success && !enrichmentResponse.data) {
+          // Profile not found in Nymeria (404 case)
+          console.log('Profile not found in contact database');
+          toast.info("No contact information available for this profile");
+          setEnrichedData(null);
+          return null;
+        }
+      }
+      
+      // Fallback for old response format
       if (data) {
-        // The Nymeria API might return data directly, not nested in data.data
         const profileData = data.data || data;
-        console.log('Setting enriched data:', profileData);
+        console.log('Setting enriched data (fallback):', profileData);
         setEnrichedData(profileData);
         toast.success('Contact information retrieved');
         return profileData;
       } else {
         // No data returned
-        toast.error("No profile data found");
+        toast.info("No contact information available for this profile");
         return null;
       }
     } catch (err) {

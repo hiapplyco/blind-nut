@@ -268,8 +268,8 @@ export const SearchForm = ({
               </div>
             )}
             
-            {/* Boolean Explanation */}
-            {booleanExplanation && (
+            {/* Boolean Explanation - Always show when available */}
+            {booleanExplanation && !collapsedSections.boolean && (
               <BooleanExplanation
                 explanation={booleanExplanation}
                 isLoading={isExplaining}
@@ -312,32 +312,45 @@ export const SearchForm = ({
                   variant="outline"
                   className="w-full justify-between border-2 border-black hover:bg-gray-50"
                 >
-                  <span className="font-semibold">Edit Boolean Search</span>
+                  <span className="font-semibold">{booleanExplanation ? 'Boolean Search & Explanation' : 'Edit Boolean Search'}</span>
                   {collapsedSections.boolean ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                 </Button>
                 {!collapsedSections.boolean && (
-                  <div className="p-4 bg-gray-100 rounded-lg border-2 border-black animate-in slide-in-from-top duration-200">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium text-sm text-gray-600">Generated Search String:</h3>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleCopySearchString}
-                        className="hover:bg-gray-200"
-                        aria-label="Copy search string"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
+                  <div className="space-y-4 animate-in slide-in-from-top duration-200">
+                    {/* Boolean Explanation - Show here when collapsed */}
+                    {booleanExplanation && (
+                      <BooleanExplanation
+                        explanation={booleanExplanation}
+                        isLoading={isExplaining}
+                        onSimpler={() => handleComplexityChange('simpler')}
+                        onMoreComplex={() => handleComplexityChange('complex')}
+                        isRegenerating={isProcessing}
+                      />
+                    )}
+                    
+                    <div className="p-4 bg-gray-100 rounded-lg border-2 border-black">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-medium text-sm text-gray-600">Generated Search String:</h3>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleCopySearchString}
+                          className="hover:bg-gray-200"
+                          aria-label="Copy search string"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <Textarea
+                        value={searchString}
+                        onChange={(e) => setSearchString(e.target.value)}
+                        className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
+                        rows={4}
+                        readOnly={false}
+                        aria-label="Generated search string"
+                      />
                     </div>
-                    <Textarea
-                      value={searchString}
-                      onChange={(e) => setSearchString(e.target.value)}
-                      className="mt-2 font-mono text-sm resize-none focus:ring-2 focus:ring-black"
-                      rows={4}
-                      readOnly={false}
-                      aria-label="Generated search string"
-                    />
                   </div>
                 )}
               </div>

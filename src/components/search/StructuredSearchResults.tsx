@@ -7,7 +7,6 @@ import { fetchSearchResults, processSearchResults } from './hooks/google-search/
 import { SearchResult } from './types';
 import { toast } from 'sonner';
 import { useProfileEnrichment } from './hooks/useProfileEnrichment';
-import { ContactInfoModal } from './ContactInfoModal';
 import { ContactSearchModal } from './ContactSearchModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ProfileCard } from './components/ProfileCard';
@@ -31,16 +30,16 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
   const [error, setError] = useState<string | null>(null);
   const resultsPerPage = 10;
 
-  // Contact info modal state
-  const [selectedProfile, setSelectedProfile] = useState<{ url: string; name: string } | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Store enriched contact data per profile URL
+  const [enrichedProfiles, setEnrichedProfiles] = useState<Record<string, any>>({});
+  const [loadingProfiles, setLoadingProfiles] = useState<Set<string>>(new Set());
   
   // Contact search modal state
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchModalParams, setSearchModalParams] = useState<{ name?: string; company?: string; location?: string }>({});
   
   // Use the profile enrichment hook
-  const { enrichProfile, enrichedData, isLoading: isEnriching } = useProfileEnrichment();
+  const { enrichProfile } = useProfileEnrichment();
 
   useEffect(() => {
     if (searchString) {
@@ -99,17 +98,33 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
     try {
       console.log('Getting contact info for:', profileUrl, profileName);
       
-      // Set the selected profile and open modal
-      setSelectedProfile({ url: profileUrl, name: profileName });
-      setIsModalOpen(true);
+      // Check if we already have this profile's data
+      if (enrichedProfiles[profileUrl]) {
+        return enrichedProfiles[profileUrl];
+      }
+      
+      // Mark as loading
+      setLoadingProfiles(prev => new Set([...prev, profileUrl]));
       
       // Enrich the profile
       const result = await enrichProfile(profileUrl);
       console.log('Enrichment result:', result);
+      
+      // Store the result (even if null to avoid re-fetching)
+      setEnrichedProfiles(prev => ({ ...prev, [profileUrl]: result }));
+      
+      return result;
     } catch (error) {
       console.error('Error getting contact info:', error);
       toast.error('Failed to get contact information');
-      setIsModalOpen(false);
+      return null;
+    } finally {
+      // Remove from loading set
+      setLoadingProfiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(profileUrl);
+        return newSet;
+      });
     }
   };
 
@@ -190,6 +205,8 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
             index={index}
             onGetContactInfo={handleGetContactInfo}
             onSearchContacts={handleSearchContacts}
+            contactInfo={enrichedProfiles[result.link]}
+            isLoadingContact={loadingProfiles.has(result.link)}
           />
         ))}
       </div>
@@ -229,20 +246,6 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
           </div>
         </Card>
       )}
-
-      {/* Contact Info Modal wrapped in ErrorBoundary */}
-      <ErrorBoundary>
-        <ContactInfoModal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedProfile(null);
-          }}
-          profileData={enrichedData}
-          isLoading={isEnriching}
-          profileName={selectedProfile?.name || ''}
-        />
-      </ErrorBoundary>
 
       {/* Contact Search Modal */}
       <ErrorBoundary>

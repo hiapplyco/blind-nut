@@ -7,6 +7,7 @@ import { SearchResult } from './types';
 import { toast } from 'sonner';
 import { useProfileEnrichment } from './hooks/useProfileEnrichment';
 import { ContactInfoModal } from './ContactInfoModal';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export interface StructuredSearchResultsProps {
   searchString: string;
@@ -252,17 +253,19 @@ export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = (
         )}
       </Card>
 
-      {/* Contact Info Modal */}
-      <ContactInfoModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedProfile(null);
-        }}
-        profileData={enrichedData}
-        isLoading={isEnriching}
-        profileName={selectedProfile?.name || ''}
-      />
+      {/* Contact Info Modal wrapped in ErrorBoundary */}
+      <ErrorBoundary>
+        <ContactInfoModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedProfile(null);
+          }}
+          profileData={enrichedData}
+          isLoading={isEnriching}
+          profileName={selectedProfile?.name || ''}
+        />
+      </ErrorBoundary>
     </div>
   );
 };

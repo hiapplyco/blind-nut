@@ -134,6 +134,11 @@ export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
     </div>
   );
 
+  // Safety check to prevent rendering issues
+  if (!isOpen) {
+    return null;
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">

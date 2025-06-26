@@ -52,8 +52,8 @@ export const useProfileEnrichment = () => {
       setIsLoading(true);
       setError(null);
       
-      // Show loading toast
-      toast.loading("Fetching contact information...");
+      // Show loading toast with ID so we can dismiss it properly
+      const toastId = toast.loading("Fetching contact information...");
       
       // Call Supabase Edge Function
       const { data, error: supabaseError } = await supabase.functions.invoke('enrich-profile', {
@@ -62,8 +62,8 @@ export const useProfileEnrichment = () => {
         }
       });
       
-      // Dismiss loading toast
-      toast.dismiss();
+      // Dismiss the specific loading toast
+      toast.dismiss(toastId);
       
       // Handle Supabase error
       if (supabaseError) {

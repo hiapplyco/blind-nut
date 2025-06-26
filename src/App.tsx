@@ -21,6 +21,7 @@ import Sourcing from "@/pages/Sourcing";
 import ScreeningRoom from "@/pages/ScreeningRoom";
 import InterviewPrep from "@/pages/InterviewPrep";
 import KickoffCall from "@/pages/KickoffCall";
+import { KickoffCallPage } from "@/components/interview/KickoffCallPage";
 import Chat from "@/pages/Chat";
 import Report from "@/pages/Report";
 import Clarvida from "@/pages/Clarvida";
@@ -60,6 +61,7 @@ function App() {
                 <Route path="/screening-room" element={<ScreeningRoom />} />
                 <Route path="/interview-prep" element={<InterviewPrep />} />
                 <Route path="/kickoff-call" element={<KickoffCall />} />
+                <Route path="/interview-room" element={<KickoffCallPage />} />
                 <Route path="/chat" element={<Chat />} />
                 <Route path="/report/:jobId" element={<Report />} />
               </Route>

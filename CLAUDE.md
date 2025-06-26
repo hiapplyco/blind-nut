@@ -1,4 +1,41 @@
-# CLAUDE.md - Blind Nut Platform Development Guidelines
+# Blind Nut - AI Assistant Guide
+
+## Quick Start for Claude
+
+You are assisting with Blind Nut, an AI-driven recruitment search platform that helps recruiters find qualified candidates through intelligent search capabilities. This document provides essential instructions for effective development assistance.
+
+**Primary Directive**: Provide clear, concise development assistance focusing on AI-powered recruitment features, boolean search optimization, and candidate data enrichment while maintaining high code quality and security standards.
+
+## AI Model Selection Guidelines
+
+### When to Use Opus (claude-3-opus)
+- **Complex Architecture**: Multi-agent orchestration system design, workflow engine architecture
+- **Algorithm Development**: Boolean search optimization algorithms, candidate matching logic
+- **Code Generation**: Complete feature implementations (e.g., new agent types, workflow systems)
+- **Performance Optimization**: Database query optimization, search algorithm efficiency
+- **Security Analysis**: Authentication flows, API key management, data privacy implementations
+
+### When to Use Sonnet (claude-3-sonnet)
+- **Bug Fixes**: UI glitches, simple API errors, tooltip styling issues
+- **Code Reviews**: Component prop validation, TypeScript type checking
+- **Documentation**: README updates, inline code comments, API documentation
+- **UI Components**: Simple React components, Tailwind styling adjustments
+- **Testing**: Unit test creation, test coverage improvements
+- **Refactoring**: Variable naming, code organization, import cleanup
+
+### Task Delegation Patterns
+
+```bash
+# For complex features, use subagents
+Task: "Design candidate enrichment architecture" prompt="Create system for Nymeria API integration..."
+Task: "Implement boolean search optimization" prompt="TDD implementation with complexity levels..."
+
+# For parallel tasks, batch operations
+Task: "Update profile parser" | "Fix tooltip styles" | "Add contact copy functionality"
+
+# For research tasks
+Task: "Find all boolean search implementations" prompt="List and analyze search string generation patterns..."
+```
 
 ## Table of Contents
 
@@ -11,6 +48,8 @@
 7. [External Integrations](#external-integrations)
 8. [Testing & Quality Assurance](#testing--quality-assurance)
 9. [Deployment & Operations](#deployment--operations)
+10. [Development Workflows](#development-workflows)
+11. [Strategic Update Points](#strategic-update-points)
 
 ---
 
@@ -34,6 +73,16 @@ Blind Nut is an AI-driven recruitment search tool that helps recruiters and hiri
 - **AI/ML**: Google Gemini 2.0 Flash, Custom Agents
 - **Testing**: Vitest, Deno (for edge functions)
 - **Deployment**: Vercel (Frontend), Supabase (Backend)
+
+### Architecture Overview
+```
+blind-nut/
+├── src/                    # Frontend React application
+├── supabase/              # Backend functions and migrations
+├── docs/                  # Project documentation
+├── public/                # Static assets
+└── CLAUDE.md             # This file - AI instructions
+```
 
 ---
 
@@ -217,6 +266,15 @@ npm run dev
 - `npm run lint` - Run ESLint
 - `npm run typecheck` - Run TypeScript compiler
 - `deno test` - Test edge functions
+
+### Immediate Actions
+```bash
+# Check project health
+git status
+npm run typecheck
+npm run lint
+npm test
+```
 
 ---
 
@@ -618,6 +676,13 @@ supabase db push
 
 ## 📝 Development Guidelines
 
+### Core Design Principles
+1. **Clarity First**: Write self-documenting code with descriptive names
+2. **Type Safety**: Leverage TypeScript's strict mode for reliability
+3. **Component Modularity**: Small, focused, reusable components
+4. **Performance Aware**: Optimize for search speed and UI responsiveness
+5. **Security by Design**: Never expose API keys or sensitive candidate data
+
 ### Code Style
 - **TypeScript**: Strict mode enabled
 - **React**: Functional components with hooks
@@ -701,4 +766,148 @@ supabase db push
 
 ---
 
-*Last Updated: June 2025*
+## 🔄 Development Workflows
+
+### New Feature Implementation
+```bash
+# 1. Understand requirements
+Task: "Analyze feature requirements" prompt="Document acceptance criteria for [feature]"
+
+# 2. Design architecture
+Task: "Design feature architecture" prompt="Create component/agent diagram for [feature]"
+
+# 3. Implement with tests
+npm test -- --watch
+# Write failing tests first
+# Implement minimal code to pass
+# Refactor for quality
+
+# 4. Verify quality
+npm run lint
+npm run typecheck
+npm test
+
+# 5. Update CLAUDE.md if patterns change
+echo "UPDATE_CLAUDE_MD: Document new [feature] patterns"
+```
+
+### Bug Fixing Workflow
+```bash
+# 1. Reproduce issue
+Task: "Debug [issue]" prompt="Find root cause in [component/function]"
+
+# 2. Write failing test
+# 3. Fix the bug
+# 4. Verify fix
+npm test
+npm run lint
+```
+
+### Boolean Search Enhancement
+```bash
+# 1. Test current boolean generation
+Task: "Test boolean search" prompt="Generate searches for various job types"
+
+# 2. Identify improvements
+Task: "Analyze boolean patterns" prompt="Find missing keywords or operators"
+
+# 3. Update prompts
+# Edit supabase/functions/generate-boolean-search/prompts.ts
+
+# 4. Test edge function
+deno test supabase/functions/generate-boolean-search/index.test.ts
+```
+
+### Code Quality Checks
+```bash
+# Always run before completing tasks
+npm run lint          # Code style
+npm run typecheck     # TypeScript checks
+npm test              # Test suite
+npm run build         # Build verification
+```
+
+---
+
+## 📍 Strategic Update Points
+
+When making significant changes, update this document:
+
+1. **New AI Agents**: Add to AI Agent System section
+2. **API Integrations**: Add to External Integrations section
+3. **Architecture Changes**: Update Architecture & Core Features
+4. **Search Improvements**: Document in Recent Updates
+5. **Performance Optimizations**: Add to Development Guidelines
+
+### Update Command
+```bash
+# After significant changes
+UPDATE_CLAUDE_MD: "Document [what changed] in [section]"
+# This reminds you to keep instructions current
+```
+
+---
+
+## 🤖 Subagent Task Examples
+
+### Research Tasks
+```typescript
+Task: "Find all boolean search patterns" 
+  prompt="List all files using boolean generation and document patterns"
+
+Task: "Analyze Nymeria API usage"
+  prompt="Review contact enrichment flows for optimization opportunities"
+
+Task: "Audit candidate data flow"
+  prompt="Trace data from search to saved_candidates table"
+```
+
+### Parallel Development
+```typescript
+Task: "Update UI tooltips" | "Fix profile parsing" | "Add loading states"
+  prompt="Complete these UI improvements in parallel"
+
+Task: "Test all agents" | "Update types" | "Fix linting"
+  prompt="Run quality checks across the codebase"
+```
+
+### Complex Features
+```typescript
+// Break down into specialized agents
+Task: "Design bulk candidate operations"
+Task: "Implement batch enrichment API"  
+Task: "Create bulk action UI"
+Task: "Add progress tracking"
+Task: "Write comprehensive tests"
+```
+
+### Recruitment-Specific Tasks
+```typescript
+// Boolean search optimization
+Task: "Analyze job description" prompt="Extract key requirements and skills"
+Task: "Generate boolean variants" prompt="Create 5 complexity levels"
+Task: "Test on LinkedIn" prompt="Validate search string effectiveness"
+
+// Candidate enrichment
+Task: "Design enrichment pipeline" prompt="Multi-source data aggregation"
+Task: "Implement caching strategy" prompt="Reduce API calls"
+Task: "Add quality scoring" prompt="Rate profile completeness"
+```
+
+---
+
+**Remember**: 
+- Always validate boolean searches before deployment
+- Test contact enrichment with rate limits in mind
+- Keep candidate data secure and private
+- Update this document when patterns evolve
+- Run quality checks before completing any task
+
+**Last Updated**: June 2025
+**Version**: 2.0
+
+**Quick Model Reference**:
+- 🧠 Complex/Creative = Opus
+- ⚡ Simple/Routine = Sonnet
+- 🔍 Research = Task agent
+- 🚀 Parallel work = Multiple agents

@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
+
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, MapPin, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import { EnrichedInfoModal } from '../enriched-info-modal/EnrichedInfoModal'; // Updated import
+import { toast } from "sonner";
+import { EnrichedInfoModal } from '../enriched-info-modal/EnrichedInfoModal';
 import { Profile, EnrichedProfileData } from '@/components/search/types';
 
 // Profile Card Component
-export const ProfileCard = ({ profile: originalProfile }) => {
+export const ProfileCard = ({ profile: originalProfile }: { profile: any }) => {
   const [showModal, setShowModal] = useState(false);
   const [enrichedData, setEnrichedData] = useState<EnrichedProfileData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const { toast } = useToast();
   
   // Convert the original profile to the Profile type
   const profile: Profile = {
@@ -51,19 +51,36 @@ export const ProfileCard = ({ profile: originalProfile }) => {
         
         const data = await response.json();
         
-        // Create an enriched profile data object with the required format
-        const enrichedProfileData: EnrichedProfileData = {
-          name: profile.profile_name,
-          profile: profile,
-          ...(data.data || {}),
-        };
-        
-        setEnrichedData(enrichedProfileData);
-      } catch (err) {
-        console.error('Error enriching profile:', err);
-        setError(typeof err === 'object' && err !== null && 'message' in err 
-          ? (err as Error).message 
-          : 'Error retrieving contact information');
+        // Handle the new structured response format
+        if (data.success !== undefined) {
+          if (data.success && data.data) {
+            // Profile found and enriched
+            const enrichedProfileData: EnrichedProfileData = {
+              name: profile.profile_name,
+              profile: profile,
+              ...data.data,
+            };
+            setEnrichedData(enrichedProfileData);
+            toast.success("Contact information found!");
+          } else if (data.success && !data.data) {
+            // Profile not found in Nymeria (normal case)
+            setEnrichedData(null);
+            setError("No contact information available in our database for this profile");
+            toast.info("No contact information available for this profile");
+          }
+        } else {
+          // Fallback for old response format
+          const enrichedProfileData: EnrichedProfileData = {
+            name: profile.profile_name,
+            profile: profile,
+            ...(data.data || {}),
+          };
+          setEnrichedData(enrichedProfileData);
+        }
+      } catch (error) {
+        console.error('Error enriching profile:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Error retrieving contact information';
+        setError(errorMessage);
         toast.error("Could not retrieve contact information");
       } finally {
         setLoading(false);
@@ -141,25 +158,23 @@ export const ProfileCard = ({ profile: originalProfile }) => {
         </div>
       </Card>
       
-      {/* Use the new consolidated modal */}
       <EnrichedInfoModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        profile={profile} // Pass the profile object
-        profileData={enrichedData} // Renamed prop
+        profile={profile}
+        profileData={enrichedData}
         isLoading={loading}
         error={error}
-        // Removed handleCardClick as it's not needed by the new modal
       />
     </>
   );
 };
 
 // Profiles List Component
-export const ProfilesList = ({ profiles }) => {
+export const ProfilesList = ({ profiles }: { profiles: any[] }) => {
   return (
     <div className="space-y-4">
-      {profiles.map((profile, index) => (
+      {profiles.map((profile: any, index: number) => (
         <ProfileCard key={index} profile={profile} />
       ))}
     </div>

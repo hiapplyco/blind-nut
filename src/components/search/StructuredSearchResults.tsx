@@ -15,14 +15,14 @@ import { SearchSummaryHeader } from './components/SearchSummaryHeader';
 
 export interface StructuredSearchResultsProps {
   searchString: string;
-  jobId?: number;
   searchType?: string;
+  jobId?: number;
 }
 
 export const StructuredSearchResults: React.FC<StructuredSearchResultsProps> = ({
   searchString,
-  jobId,
-  searchType = 'candidates'
+  searchType = 'candidates',
+  jobId
 }) => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);

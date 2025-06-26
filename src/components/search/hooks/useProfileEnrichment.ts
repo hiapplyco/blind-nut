@@ -56,11 +56,15 @@ export const useProfileEnrichment = () => {
       const toastId = toast.loading("Fetching contact information...");
       
       // Call Supabase Edge Function
-      const { data, error: supabaseError } = await supabase.functions.invoke('enrich-profile', {
+      const response = await supabase.functions.invoke('enrich-profile', {
         body: {
           profileUrl
         }
       });
+      
+      console.log('Edge function response:', response);
+      
+      const { data, error: supabaseError } = response;
       
       // Dismiss the specific loading toast
       toast.dismiss(toastId);

@@ -64,6 +64,8 @@ async function handleProfileEnrichment(requestData) {
   console.log(`Enriching profile: ${profileUrl || profileId}`);
   
   const apiKey = Deno.env.get('NYMERIA_API_KEY');
+  console.log('API Key exists:', !!apiKey);
+  
   if (!apiKey) {
     console.error('NYMERIA_API_KEY is not set');
     throw new Error('API configuration error: Missing Nymeria API key');

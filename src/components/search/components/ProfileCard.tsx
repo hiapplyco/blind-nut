@@ -294,61 +294,6 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     }
   };
 
-  // Handle saving candidate
-  const handleSaveCandidate = async () => {
-    if (!user) {
-      toast.error('Please sign in to save candidates');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      // Extract all necessary data
-      const profileData = extractProfileInfo();
-      
-      // Prepare the candidate data
-      const candidateData = {
-        user_id: user.id,
-        job_id: jobId || null,
-        name: profileData.name,
-        linkedin_url: result.link,
-        job_title: profileData.jobTitle,
-        company: profileData.company,
-        location: profileData.location,
-        seniority_level: profileData.seniorityLevel,
-        work_email: localContactInfo?.work_email || null,
-        personal_emails: localContactInfo?.personal_emails || [],
-        mobile_phone: localContactInfo?.mobile_phone || null,
-        profile_summary: result.snippet,
-        profile_completeness: profileCompleteness,
-        search_string: searchString || null,
-        source: 'linkedin'
-      };
-
-      const { error } = await supabase
-        .from('saved_candidates')
-        .upsert(candidateData, {
-          onConflict: 'user_id,linkedin_url'
-        });
-
-      if (error) throw error;
-
-      setIsSaved(true);
-      toast.success('Candidate saved successfully');
-    } catch (error) {
-      console.error('Error saving candidate:', error);
-      if (error?.code === '23505') {
-        // Unique constraint violation
-        setIsSaved(true);
-        toast.info('Candidate already saved');
-      } else {
-        toast.error('Failed to save candidate');
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
     <Card className="border-2 border-gray-200 hover:border-purple-300 transition-all duration-200 hover:shadow-lg">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>

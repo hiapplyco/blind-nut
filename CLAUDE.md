@@ -619,7 +619,42 @@ git push origin main
 
 # Manual deployment
 vercel --prod
+
+# Check deployment status
+vercel list
+
+# Rollback to previous deployment
+vercel rollback [deployment-url]
 ```
+
+**Vercel Configuration (`vercel.json`)**:
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Production URL**: https://www.apply.codes  
+**Preview URLs**: Auto-generated for each deployment
 
 2. **Edge Functions (Supabase)**
 ```bash
@@ -671,6 +706,40 @@ supabase db push
    - Point-in-time recovery available
 
 ---
+
+## 🚀 Vercel Best Practices
+
+### Build Optimization
+1. **Fix Build Errors First**: Always ensure `npm run build` succeeds locally
+2. **Bundle Size**: Monitor chunk sizes, aim for < 500KB per chunk
+3. **Environment Variables**: Set in Vercel dashboard, prefix with `VITE_`
+4. **Cache Strategy**: Use immutable cache headers for hashed assets
+
+### Deployment Workflow
+```bash
+# Pre-deployment checklist
+npm run typecheck     # TypeScript validation
+npm run lint          # Code quality
+npm run build         # Build verification
+
+# Deploy to preview
+vercel
+
+# Deploy to production
+vercel --prod
+```
+
+### Common Issues & Solutions
+1. **404 on Routes**: Ensure `vercel.json` has SPA rewrites
+2. **Build Failures**: Check for duplicate declarations, missing deps
+3. **Environment Variables**: Must be set in Vercel dashboard
+4. **Large Bundles**: Implement code splitting with dynamic imports
+
+### Performance Tips
+- Enable Vercel Analytics for Core Web Vitals
+- Use Vercel Image Optimization for images
+- Implement ISR for static content when applicable
+- Monitor build times and optimize if > 2 minutes
 
 ---
 
@@ -904,7 +973,7 @@ Task: "Add quality scoring" prompt="Rate profile completeness"
 - Run quality checks before completing any task
 
 **Last Updated**: June 2025
-**Version**: 2.0
+**Version**: 2.1
 
 **Quick Model Reference**:
 - 🧠 Complex/Creative = Opus

@@ -120,25 +120,34 @@ export function InterviewPrep({ onInterviewStart }: InterviewPrepProps = {}) {
 
     for (const file of files) {
       try {
-        const reader = new FileReader();
-        const fileContent = await new Promise<string>((resolve, reject) => {
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-
-        const base64Data = fileContent.split(',')[1];
+        // Create FormData to match edge function expectations
+        const formData = new FormData();
+        formData.append('file', file);
         
-        const { data, error } = await supabase.functions.invoke('parse-document', {
-          body: { 
-            file: base64Data,
-            mimeType: file.type,
-            fileName: file.name
-          },
-        });
+        // Get the current user for the userId requirement
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast.error('Please sign in to upload files');
+          continue;
+        }
+        formData.append('userId', user.id);
+        
+        // Call edge function with FormData
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-document`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            },
+            body: formData,
+          }
+        );
 
-        if (error) {
-          toast.error(`Failed to process ${file.name}: ${error.message}`);
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          toast.error(`Failed to process ${file.name}: ${data.error || 'Unknown error'}`);
         } else if (data?.text) {
           combinedText += `\n\n--- Content from ${file.name} ---\n${data.text}`;
           newFiles.push(file);

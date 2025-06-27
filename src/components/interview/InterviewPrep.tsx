@@ -133,20 +133,32 @@ export function InterviewPrep({ onInterviewStart }: InterviewPrepProps = {}) {
         formData.append('userId', user.id);
         
         // Call edge function with FormData
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-document`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-            },
-            body: formData,
-          }
-        );
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-document`;
+        console.log('Uploading file to:', url);
+        console.log('File name:', file.name);
+        console.log('File type:', file.type);
+        console.log('File size:', file.size);
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: formData,
+        });
 
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
         const data = await response.json();
+        console.log('Response data:', data);
 
         if (!response.ok || !data.success) {
+          console.error('Upload failed:', { 
+            status: response.status, 
+            error: data.error,
+            data 
+          });
           toast.error(`Failed to process ${file.name}: ${data.error || 'Unknown error'}`);
         } else if (data?.text) {
           combinedText += `\n\n--- Content from ${file.name} ---\n${data.text}`;

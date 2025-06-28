@@ -1,5 +1,5 @@
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "npm:@google/generative-ai";
 import { Agent } from "./Agent.ts";
 import { compensationPrompt } from "../prompts/compensation.prompt.ts";
 import { PromptParams } from "../prompts/types.ts";

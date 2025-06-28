@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createRecruitmentOrchestrator, WorkflowTemplates } from "../_shared/orchestration/index.ts";
 
@@ -38,7 +39,7 @@ serve(async (req) => {
         result = await orchestrator.runParallelAgents([
           {
             agentName: 'TaskAgent',
-            params: { task: 'List top skills for a DevOps Engineer' }
+            params: { task: 'List top skills for a DevOps engineer' }
           },
           {
             agentName: 'TaskAgent',

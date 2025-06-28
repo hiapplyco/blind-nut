@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "npm:@google/generative-ai";
 import { Agent, ToolRegistry, promptManager, SearchTool, CalculatorTool } from "./Agent.ts";
 
 // Register compensation analysis prompt templates

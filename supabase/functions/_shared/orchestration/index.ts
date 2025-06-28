@@ -1,3 +1,4 @@
+
 // Re-export all orchestration components
 export * from "./WorkflowDefinition.ts";
 export * from "./EnhancedOrchestrator.ts";
@@ -15,7 +16,7 @@ export * from "../tools/SkillsExtractionTool.ts";
 export * from "../tools/ResumeParseTool.ts";
 
 // Create a convenience function to set up a fully configured orchestrator
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "npm:@google/generative-ai";
 import { EnhancedOrchestrator } from "./EnhancedOrchestrator.ts";
 import { ToolRegistry } from "../tools/ToolRegistry.ts";
 import { TaskAgent, ConversationAgent } from "../agents/Agent.ts";

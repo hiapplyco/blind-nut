@@ -1,11 +1,11 @@
+
 import { AgentOutput } from "@/types/agent";
-import ReactMarkdown from 'react-markdown';
-import { useEffect } from 'react';
-import { motion } from 'framer-motion'; // Import motion
-import { Card } from '@/components/ui/card'; // Use Card for section structure
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { FileText, Briefcase, DollarSign, Star, Users, Target } from "lucide-react";
 
 interface AnalysisReportProps {
-  agentOutput: AgentOutput | null;
+  agentOutput?: AgentOutput | null;
   isGeneratingAnalysis: boolean;
   isProcessingComplete: boolean;
   children?: React.ReactNode;
@@ -13,162 +13,169 @@ interface AnalysisReportProps {
 
 export const AnalysisReport = ({ 
   agentOutput, 
-  isGeneratingAnalysis,
-  isProcessingComplete,
+  isGeneratingAnalysis, 
+  isProcessingComplete, 
   children 
 }: AnalysisReportProps) => {
-  useEffect(() => {
-    console.log("AnalysisReport rendered:", { 
-      hasAgentOutput: !!agentOutput,
-      isGeneratingAnalysis,
-      isProcessingComplete
-    });
-  }, [agentOutput, isGeneratingAnalysis, isProcessingComplete]);
+  if (isGeneratingAnalysis && !isProcessingComplete) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Generating analysis...</p>
+        </div>
+        {children}
+      </div>
+    );
+  }
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        when: "beforeChildren", // Ensure container is visible before children animate
-        staggerChildren: 0.15 // Stagger animation of child sections
-      }
-    }
-  };
-
-  const sectionVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
-  };
-  
-  const tagVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.2 } }
-  };
+  if (!agentOutput && !isGeneratingAnalysis) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Analysis Report
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600">No analysis available yet. Generate an analysis to see insights about your job requirements.</p>
+            {children}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-8">
-      <div className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-        <h2 className="text-2xl font-bold mb-6">Analysis Report</h2>
-        
-        {/* Show processing indicators or generate button */}
-        {children}
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Job Summary Card */}
+        {agentOutput?.job_summary && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5" />
+                Job Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-sm max-w-none">
+                <div className="whitespace-pre-line text-gray-800">
+                  {agentOutput.job_summary}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Show report content when available */}
-        {/* Animate the appearance of the report content */}
-        {agentOutput && (
-          <motion.div
-            className="space-y-6 mt-6" // Adjusted spacing
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {/* Section 1: Job Summary */}
-            <motion.div variants={sectionVariants}>
-              <Card className="p-4 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)]">
-                <h3 className="text-lg font-semibold mb-2">Job Summary</h3>
-                <div className="prose prose-sm max-w-none">
-                  <ReactMarkdown>{agentOutput.job_summary || 'Not available.'}</ReactMarkdown>
+        {/* Enhanced Description Card */}
+        {agentOutput?.enhanced_description && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Enhanced Description
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-sm max-w-none">
+                <div className="whitespace-pre-line text-gray-800">
+                  {agentOutput.enhanced_description}
                 </div>
-              </Card>
-            </motion.div>
-            
-            {/* Section 2: Enhanced Description */}
-            <motion.div variants={sectionVariants}>
-               <Card className="p-4 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)]">
-                <h3 className="text-lg font-semibold mb-2">Enhanced Description</h3>
-                <div className="prose prose-sm max-w-none">
-                  <ReactMarkdown>{agentOutput.enhanced_description || 'Not available.'}</ReactMarkdown>
-                </div>
-              </Card>
-            </motion.div>
-            
-            {/* Section 3: Compensation Analysis */}
-            <motion.div variants={sectionVariants}>
-               <Card className="p-4 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)]">
-                <h3 className="text-lg font-semibold mb-2">Compensation Analysis</h3>
-                <div className="prose prose-sm max-w-none">
-                  <ReactMarkdown>{agentOutput.compensation_analysis || 'Not available.'}</ReactMarkdown>
-                </div>
-              </Card>
-            </motion.div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-            {/* Section 4: Key Terms */}
-            {agentOutput.terms && (agentOutput.terms.skills?.length > 0 || agentOutput.terms.titles?.length > 0 || agentOutput.terms.keywords?.length > 0) && (
-              <motion.div variants={sectionVariants}>
-                 <Card className="p-4 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)]">
-                  <h3 className="text-lg font-semibold mb-3">Key Terms</h3>
-                  <div className="space-y-3">
-                    {/* Skills */}
-                    {agentOutput.terms.skills?.length > 0 && (
-                      <div>
-                        <h4 className="font-medium text-sm mb-1.5">Skills & Technologies</h4>
-                        <motion.div
-                          className="flex flex-wrap gap-1.5"
-                          variants={{ visible: { transition: { staggerChildren: 0.05 } } }} // Stagger tags
-                        >
-                          {agentOutput.terms.skills.map((skill, index) => (
-                            <motion.span
-                              key={`skill-${index}`}
-                              className="px-2.5 py-1 bg-purple-100 border border-purple-300 rounded-full text-xs font-medium shadow-sm"
-                              variants={tagVariants}
-                            >
-                              {skill}
-                            </motion.span>
-                          ))}
-                        </motion.div>
-                      </div>
-                    )}
-                    
-                    {/* Titles */}
-                     {agentOutput.terms.titles?.length > 0 && (
-                      <div>
-                        <h4 className="font-medium text-sm mb-1.5">Job Titles</h4>
-                        <motion.div
-                          className="flex flex-wrap gap-1.5"
-                          variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
-                        >
-                          {agentOutput.terms.titles.map((title, index) => (
-                            <motion.span
-                              key={`title-${index}`}
-                              className="px-2.5 py-1 bg-blue-100 border border-blue-300 rounded-full text-xs font-medium shadow-sm"
-                              variants={tagVariants}
-                            >
-                              {title}
-                            </motion.span>
-                          ))}
-                        </motion.div>
-                      </div>
-                     )}
-                    
-                    {/* Keywords */}
-                    {agentOutput.terms.keywords?.length > 0 && (
-                      <div>
-                        <h4 className="font-medium text-sm mb-1.5">Keywords</h4>
-                        <motion.div
-                          className="flex flex-wrap gap-1.5"
-                          variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
-                        >
-                          {agentOutput.terms.keywords.map((keyword, index) => (
-                            <motion.span
-                              key={`keyword-${index}`}
-                              className="px-2.5 py-1 bg-green-100 border border-green-300 rounded-full text-xs font-medium shadow-sm"
-                              variants={tagVariants}
-                            >
-                              {keyword}
-                            </motion.span>
-                          ))}
-                        </motion.div>
-                      </div>
-                    )}
+        {/* Compensation Analysis Card */}
+        {agentOutput?.compensation_analysis && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Compensation Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-sm max-w-none">
+                <div className="whitespace-pre-line text-gray-800">
+                  {agentOutput.compensation_analysis}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Terms Analysis Card */}
+        {agentOutput?.terms && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5" />
+                Key Terms Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Skills */}
+                {agentOutput.terms.skills && agentOutput.terms.skills.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Skills
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {agentOutput.terms.skills.map((skill: string, index: number) => (
+                        <Badge key={index} variant="secondary">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </Card>
-              </motion.div>
-            )}
-          </motion.div>
+                )}
+
+                {/* Titles */}
+                {agentOutput.terms.titles && agentOutput.terms.titles.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      Similar Titles
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {agentOutput.terms.titles.map((title: string, index: number) => (
+                        <Badge key={index} variant="outline">
+                          {title}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Keywords */}
+                {agentOutput.terms.keywords && agentOutput.terms.keywords.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Keywords
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {agentOutput.terms.keywords.map((keyword: string, index: number) => (
+                        <Badge key={index} variant="default">
+                          {keyword}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
+
+      {children}
     </div>
   );
 };

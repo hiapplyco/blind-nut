@@ -1,9 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { User, Mail, Phone, MapPin, Building2, Calendar, ExternalLink, Briefcase, Users, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

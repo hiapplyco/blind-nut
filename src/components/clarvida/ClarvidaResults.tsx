@@ -16,25 +16,21 @@ import { Search, Plus } from "lucide-react";
 interface ClarvidaResultsProps {
   data: any;
   onNewSearch: () => void;
-  originalSearchText?: string;
   onSearchCandidates?: (searchString: string) => void;
 }
 
 export function ClarvidaResults({ 
   data, 
   onNewSearch, 
-  originalSearchText, 
   onSearchCandidates 
 }: ClarvidaResultsProps) {
   
-  // Handle searching candidates with the boolean search string
   const handleSearchCandidates = () => {
     if (data?.boolean_search_string?.boolean_string && onSearchCandidates) {
       onSearchCandidates(data.boolean_search_string.boolean_string);
     }
   };
 
-  // Add safety check for data
   if (!data) {
     return (
       <div className="space-y-8">

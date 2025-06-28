@@ -13,16 +13,13 @@ export const AgentWindow = ({
   icon, 
   children
 }: AgentWindowProps) => {
-  // Generate a random small rotation for the post-it effect
-  const randomRotation = (Math.random() * 2 - 1).toFixed(1);
-
   return (
     <Card 
       className="w-full p-4 sm:p-6 border-4 border-black bg-[#F1F0FB] 
                 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] 
                 hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,0.8)] 
                 transition-all duration-200 transform 
-                rotate-[${randomRotation}deg] hover:rotate-0"
+                hover:rotate-0"
       style={{ transformOrigin: 'center center' }}
     >
       <div className="flex items-center gap-2 mb-6">

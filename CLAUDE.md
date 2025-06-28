@@ -126,7 +126,7 @@ blind-nut/
   - See `/docs/phone-auth-setup.md` for complete setup guide
 
 ### Password Reset Authentication Flow (January 2025)
-- ✅ **Complete Password Reset Flow**
+- ✅ **Complete Password Reset Flow - Fixed Mobile & Redirect Issues**
   - **Email Template**: Custom-branded HTML email with neon green/purple gradient
   - **Logo**: Apply logo at 250px height from Supabase storage
   - **Typography**: Modern Inter font family for AI company aesthetic
@@ -142,7 +142,10 @@ blind-nut/
     - **Email Sender**: Update "blind nut" to "Apply Team" (Authentication > Email Templates)
     - **Logo URL Fix**: Remove double slash in template: `/storage/v1/object/public/logos/APPLYFullwordlogo2025.png`
   - **Email Variables**: Uses `{{ .ConfirmationURL }}` for full reset link with token
-  - **Recent Fix**: Updated PasswordReset component to properly handle Supabase recovery tokens from URL hash params
+  - **January 28 Fix**: 
+    - Updated PasswordReset component to properly handle Supabase recovery tokens from URL hash params
+    - Now correctly uses `supabase.auth.setSession()` for mobile users who haven't logged in
+    - Fixed redirect issues by properly extracting `#access_token` and `#type=recovery` from URL
 
 ### SendGrid Email Integration (January 2025)
 - ✅ **SendGrid Custom Email Function**
@@ -1023,6 +1026,106 @@ Task: "Debug [issue]" prompt="Find root cause in [component/function]"
 npm test
 npm run lint
 ```
+
+### User Feedback Implementation Workflow
+
+**When users send screenshots and text messages with issues:**
+
+#### 1. Immediate Response Protocol
+```bash
+# Always read screenshots first - they contain critical context
+Read: /path/to/screenshot.png
+
+# Create comprehensive todo list from feedback
+TodoWrite: [
+  {"content": "Fix [issue visible in screenshot]", "priority": "high"},
+  {"content": "Test on [device type from screenshot]", "priority": "medium"},
+  {"content": "Update documentation for this issue", "priority": "low"}
+]
+```
+
+#### 2. Screenshot Analysis Pattern
+```bash
+# Extract all relevant information
+Task: "Analyze user feedback" prompt="From screenshots and messages, identify:
+1. What action was the user trying to perform?
+2. What went wrong (error messages, unexpected behavior)?
+3. What device/browser are they using?
+4. Is this a frontend, backend, or configuration issue?
+5. Are there multiple related issues?"
+```
+
+#### 3. Common Feedback Patterns & Solutions
+
+**Authentication Issues**
+- "Can't log in" → Check auth flow, Supabase config, redirect URLs
+- "Password reset broken" → Verify Site URL, email templates, token handling
+- "Logged out randomly" → Check session expiry, auth state management
+
+**Mobile-Specific Issues**
+- Different behavior → Test responsive design, viewport settings
+- Links not working → Check URL handling, hash params extraction
+- Images not loading → Verify URLs, CORS, mobile data restrictions
+
+**Email Problems**
+- Wrong sender name → Update Supabase email settings
+- Broken images → Fix asset URLs (remove double slashes)
+- Links redirect wrong → Check Site URL configuration
+
+#### 4. Implementation Process
+```bash
+# Step 1: Investigate root cause
+Grep: "error message from screenshot"
+Task: "Find related components" prompt="Locate all files handling [feature]"
+
+# Step 2: Implement fix
+# - Minimal code changes
+# - Add explanatory comments
+# - Handle edge cases
+
+# Step 3: Verify fix
+npm run typecheck
+npm run lint
+npm run build
+
+# Step 4: Document the issue
+# Add to troubleshooting section if common
+```
+
+#### 5. Real Example: Password Reset Mobile Issue
+
+**User Feedback**: "Reset password doesn't work on phone, says 'blind nut', no images"
+
+**Automated Implementation**:
+```bash
+# 1. Read screenshots
+Read: /screenshot1.png  # Shows "blind nut" sender
+Read: /screenshot2.png  # Shows redirect to login page
+
+# 2. Create todos
+TodoWrite: [
+  {"content": "Fix email sender name in Supabase", "priority": "high"},
+  {"content": "Fix logo URL double slash", "priority": "high"},
+  {"content": "Fix password reset redirect for mobile", "priority": "high"}
+]
+
+# 3. Investigation revealed:
+- Supabase Site URL not configured
+- Email template has //logos// double slash
+- PasswordReset component not handling hash params
+
+# 4. Implemented fixes:
+- Updated PasswordReset.tsx to handle #access_token
+- Documented Supabase config requirements
+- Added troubleshooting guide
+```
+
+#### Best Practices
+1. **Always read all screenshots** - they show the actual user experience
+2. **Test exact user scenario** - same device, same flow
+3. **Fix root cause** not symptoms
+4. **Document in CLAUDE.md** if it could happen again
+5. **Communicate clearly** what was fixed and what user needs to do
 
 ### Boolean Search Enhancement
 ```bash

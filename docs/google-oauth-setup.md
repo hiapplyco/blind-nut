@@ -104,10 +104,20 @@ Add the Google Client ID to your `.env.local`:
 
 ```env
 # Google OAuth
-VITE_GOOGLE_CLIENT_ID=your-client-id-here.apps.googleusercontent.com
+VITE_GOOGLE_CLIENT_ID=1049016281061-p9fpgnd9tks77nehfdk6qb82fhd3461s.apps.googleusercontent.com
 ```
 
 **Note**: This is a public client ID, safe to expose in frontend code.
+
+**Current Configuration Status**:
+- ✅ Client ID created in Google Cloud Console
+- ✅ Authorized JavaScript origins configured:
+  - `http://localhost:5173`
+  - `https://www.apply.codes`
+  - `https://apply.codes`
+- ✅ Authorized redirect URI: `https://kxghaajojntkqrmvsngn.supabase.co/auth/v1/callback`
+- ✅ Environment variable added to `.env.local`
+- ✅ Environment variable added to Vercel
 
 ### 4. Vercel Deployment Configuration
 

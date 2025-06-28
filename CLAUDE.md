@@ -98,10 +98,11 @@ blind-nut/
     - `GoogleSignIn.tsx` - Core Google authentication component
     - `SocialAuthButtons.tsx` - Container for social providers
     - `AuthForm.tsx` - Unified auth form with social + email/password
-  - **Configuration Required**:
-    - Google Cloud Console: Create OAuth 2.0 Web Client ID
-    - Supabase Dashboard: Enable Google provider with Client ID only (no secret)
-    - Environment: `VITE_GOOGLE_CLIENT_ID` in `.env.local`
+  - **Configuration Status**:
+    - ✅ Google Cloud Console: OAuth 2.0 Web Client created
+    - ✅ Client ID: `1049016281061-p9fpgnd9tks77nehfdk6qb82fhd3461s.apps.googleusercontent.com`
+    - ✅ Environment variables: Added to `.env.local` and Vercel
+    - ⏳ Supabase Dashboard: Google provider needs to be enabled with Client ID (no secret)
   - **Important**: Uses ID token flow, not traditional OAuth flow
   - See `/docs/google-oauth-setup.md` for complete setup guide
 

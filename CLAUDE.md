@@ -88,6 +88,47 @@ blind-nut/
 
 ## 📋 Recent Updates
 
+### Google OAuth Integration (January 2025)
+- ✅ **Google Sign-In with Identity Services**
+  - Modern Google Identity Services implementation (not legacy OAuth)
+  - One-tap sign-in capability with popup flow (no redirects)
+  - Enhanced security with cryptographic nonce
+  - FedCM support for Chrome's third-party cookie phase-out
+  - Components:
+    - `GoogleSignIn.tsx` - Core Google authentication component
+    - `SocialAuthButtons.tsx` - Container for social providers
+    - `AuthForm.tsx` - Unified auth form with social + email/password
+  - **Configuration Required**:
+    - Google Cloud Console: Create OAuth 2.0 Web Client ID
+    - Supabase Dashboard: Enable Google provider with Client ID only (no secret)
+    - Environment: `VITE_GOOGLE_CLIENT_ID` in `.env.local`
+  - **Important**: Uses ID token flow, not traditional OAuth flow
+  - See `/docs/google-oauth-setup.md` for complete setup guide
+
+### Password Reset Authentication Flow (January 2025)
+- ✅ **Complete Password Reset Flow**
+  - **Email Template**: Custom-branded HTML email with neon green/purple gradient
+  - **Logo**: Apply logo at 250px height from Supabase storage
+  - **Typography**: Modern Inter font family for AI company aesthetic
+  - **Routes**: 
+    - `/reset-password-request` - Request password reset form
+    - `/reset-password` - Reset password form (handles token from email)
+  - **Supabase Configuration Required**:
+    - Site URL: `https://www.apply.codes`
+    - Redirect URLs: Must include `https://www.apply.codes/reset-password`
+  - **Email Variables**: Uses `{{ .ConfirmationURL }}` for full reset link with token
+  - **Important**: Email template must be configured in Supabase Dashboard under Authentication > Email Templates
+
+### SendGrid Email Integration (January 2025)
+- ✅ **SendGrid Custom Email Function**
+  - Edge function `send-password-reset` for future custom email workflows
+  - Environment variables required:
+    - `SENDGRID_API_KEY`: Your SendGrid API key
+    - `SENDER_EMAIL`: Verified sender email address
+    - `SENDER_NAME`: Sender display name
+  - **Note**: Currently using Supabase's built-in email system for password resets
+  - See `/docs/sendgrid-setup.md` for SendGrid setup instructions
+
 ### Interview Room File Upload Fix (January 2025)
 - ✅ **Fixed File Upload to Edge Functions**
   - Corrected environment variables in `.env.local` (were encrypted/hashed instead of actual values)
@@ -369,6 +410,22 @@ public.profiles (
 3. Handle auth errors gracefully with user feedback
 4. Use Row Level Security (RLS) policies in Supabase
 
+### Password Reset Flow
+1. **Request Reset**: User visits `/reset-password-request`
+2. **Email Sent**: Supabase sends email with reset link
+3. **Email Template**: Custom HTML template with branding
+4. **Reset Form**: User lands on `/reset-password` with token
+5. **Token Validation**: Component checks for valid session
+6. **Password Update**: New password saved via Supabase Auth
+
+### Email Template Configuration
+- **Location**: Supabase Dashboard > Authentication > Email Templates > Reset Password
+- **Key Variables**:
+  - `{{ .ConfirmationURL }}` - Full reset link with token
+  - `{{ .SiteURL }}` - Your site URL (must be configured correctly)
+- **Branding**: Neon green (#39FF14) to purple (#9D4EDD) gradient
+- **Logo**: Stored in Supabase storage public bucket
+
 ---
 
 ## 🤖 AI Agent System & Migration
@@ -495,6 +552,13 @@ const workflow = await orchestrator.runWorkflow({
 - Professional profile data
 - Social media links
 
+#### 3. **SendGrid API**
+- Custom branded password reset emails
+- Transactional email delivery
+- Email template management
+- Delivery tracking and analytics
+- Configuration: `SENDGRID_API_KEY`, `SENDER_EMAIL`, `SENDER_NAME`
+
 ### Potential Future Integrations
 
 #### Recruiting Platforms
@@ -535,11 +599,6 @@ const workflow = await orchestrator.runWorkflow({
    - Voice calling
    - WhatsApp integration
 
-2. **SendGrid** ($)
-   - Email campaigns
-   - Template management
-   - Analytics
-
 ### Integration Guidelines
 1. Always use environment variables for API keys
 2. Implement rate limiting and retry logic
@@ -568,14 +627,36 @@ const workflow = await orchestrator.runWorkflow({
 - Cross-browser testing
 - Mobile responsiveness
 
-### Edge Function Testing
+### Edge Function Development & Testing
 
+#### Local Development (No Docker Required)
 ```bash
-# Install Deno
+# Work with remote Supabase project
+supabase link --project-ref kxghaajojntkqrmvsngn
+
+# List remote functions
+supabase functions list
+
+# View function logs
+supabase functions logs function-name
+
+# Download remote function code
+supabase functions download function-name
+```
+
+#### Testing Edge Functions
+```bash
+# Install Deno for local testing
 curl -fsSL https://deno.land/install.sh | sh
 
-# Run tests
-deno test supabase/functions/_shared/tests/orchestration.test.ts --allow-env --allow-net
+# Run function tests
+deno test supabase/functions/[function-name]/index.test.ts --allow-env --allow-net
+
+# Test with curl (remote functions)
+curl -X POST https://kxghaajojntkqrmvsngn.supabase.co/functions/v1/function-name \
+  -H "Authorization: Bearer YOUR_ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"key": "value"}'
 ```
 
 ### Test Organization
@@ -649,16 +730,32 @@ vercel rollback [deployment-url]
 - **Project ID**: `prj_Ix96cndRDQHgrZty2RIFbDkO54Zp`
 
 2. **Edge Functions (Supabase)**
-```bash
-# Deploy all functions
-supabase functions deploy
 
-# Deploy specific function
+**Important**: Docker is NOT required when working with remote Supabase projects!
+
+```bash
+# First, link to your remote project (one-time setup)
+supabase link --project-ref kxghaajojntkqrmvsngn
+
+# Deploy functions (requires Docker for bundling)
+# If Docker is not available, use manual deployment via Dashboard
 supabase functions deploy function-name
 
-# Alternative deployment (when CLI times out)
-./deploy-functions.sh
+# Alternative: Manual deployment via Supabase Dashboard
+# 1. Go to https://supabase.com/dashboard/project/kxghaajojntkqrmvsngn/functions
+# 2. Click on the function you want to deploy
+# 3. Use the "Editor" tab to paste your function code
+# 4. Set required environment variables
+# 5. Click "Deploy"
 ```
+
+**Manual Deployment Process (No Docker Required)**:
+1. Navigate to your Supabase Dashboard > Functions
+2. Select the function to update or create a new one
+3. Copy your local function code from `supabase/functions/[function-name]/index.ts`
+4. Paste into the online editor
+5. Configure environment variables (e.g., `SENDGRID_API_KEY`, `GEMINI_API_KEY`)
+6. Deploy directly from the Dashboard
 
 **Supabase Details**:
 - **Project URL**: https://kxghaajojntkqrmvsngn.supabase.co
@@ -675,6 +772,33 @@ supabase migration new migration_name
 
 # Apply migrations
 supabase db push
+```
+
+### Quick Supabase Commands (No Docker Required)
+
+```bash
+# Project Management
+supabase link --project-ref kxghaajojntkqrmvsngn  # Link to remote project
+supabase projects list                             # List all projects
+
+# Functions (No Docker)
+supabase functions list                            # List all deployed functions
+supabase functions logs function-name              # View function logs
+supabase functions download function-name          # Download function code
+
+# Database Operations
+supabase db remote commit                          # Generate migration from remote changes
+supabase db diff                                   # Compare local and remote schemas
+supabase db push                                   # Apply migrations to remote
+
+# Secrets Management
+supabase secrets list                              # List all secrets
+supabase secrets set KEY=value                     # Set secret/env variable
+supabase secrets unset KEY                         # Remove secret
+
+# Useful Commands
+supabase status                                    # Check project status
+supabase migration list                            # List all migrations
 ```
 
 ### Monitoring & Logging
@@ -944,11 +1068,27 @@ UPDATE_CLAUDE_MD: "Document [what changed] in [section]"
 4. Check for missing dependencies in package.json
 5. Review Vercel build logs for specific errors
 
-### Edge Function Timeout
+### Edge Function Deployment Issues
+
+#### Docker Not Running
+**Problem**: `Cannot connect to the Docker daemon` error
+**Solution**:
+1. **Use Supabase Dashboard for deployment** (recommended):
+   - No Docker required
+   - Direct deployment from web interface
+   - Immediate feedback on errors
+2. **Work with remote project**:
+   ```bash
+   supabase link --project-ref kxghaajojntkqrmvsngn
+   supabase functions list  # Works without Docker
+   supabase functions logs  # Works without Docker
+   ```
+
+#### CLI Timeout
 **Problem**: Supabase CLI times out during deployment
 **Solution**:
-1. Use alternative deployment script: `./deploy-functions.sh`
-2. Deploy functions individually: `supabase functions deploy [function-name]`
+1. Use manual deployment via Dashboard (no timeout issues)
+2. Deploy functions individually if using CLI
 3. Check function size - split large functions if needed
 
 ### Authentication Errors
@@ -958,6 +1098,16 @@ UPDATE_CLAUDE_MD: "Document [what changed] in [section]"
 2. Verify RLS policies are correctly configured
 3. Ensure auth context is properly wrapped around app
 4. Check for conflicting auth headers in requests
+
+### Password Reset Redirect Issues
+**Problem**: Reset link redirects to wrong URL (e.g., `supabase.co/apply.codes` instead of `www.apply.codes`)
+**Solution**:
+1. **Update Supabase Dashboard**:
+   - Go to Authentication > URL Configuration
+   - Set Site URL to `https://www.apply.codes`
+   - Add `https://www.apply.codes/reset-password` to Redirect URLs
+2. **Email Template**: Ensure using `{{ .ConfirmationURL }}` variable
+3. **Quick Fix**: Manually copy token from wrong URL and append to correct domain
 
 ### CORS Issues
 **Problem**: CORS errors when calling edge functions

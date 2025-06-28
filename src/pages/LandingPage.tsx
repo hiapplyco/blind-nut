@@ -1,12 +1,10 @@
 
 import { Button } from "@/components/ui/button";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Search, FileScan, Video, Workflow } from "lucide-react";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { AuthForm } from "@/components/auth/AuthForm";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -38,40 +36,7 @@ const LandingPage = () => {
         {/* Auth Section */}
         <div className="w-full max-w-md mb-16">
           <div className="bg-white p-8 rounded-lg border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-            <Auth
-              supabaseClient={supabase}
-              appearance={{
-                theme: ThemeSupa,
-                style: {
-                  button: {
-                    background: '#8B5CF6',
-                    border: '2px solid black',
-                    boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
-                    borderRadius: '4px',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    padding: '10px 20px',
-                  },
-                  input: {
-                    border: '2px solid black',
-                    boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
-                    borderRadius: '4px',
-                    padding: '10px',
-                  },
-                  label: {
-                    color: '#44332A',
-                    fontWeight: 'medium',
-                  },
-                  loader: {
-                    color: '#8B5CF6',
-                  },
-                },
-              }}
-              theme="light"
-              providers={[]}
-              redirectTo={`${window.location.origin}/reset-password`}
-              onlyThirdPartyProviders={false}
-            />
+            <AuthForm redirectTo="/dashboard" />
           </div>
         </div>
 

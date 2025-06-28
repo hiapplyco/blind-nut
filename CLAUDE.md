@@ -106,6 +106,25 @@ blind-nut/
   - **Important**: Uses ID token flow, not traditional OAuth flow
   - See `/docs/google-oauth-setup.md` for complete setup guide
 
+### Phone Authentication (January 2025)
+- ✅ **SMS OTP Authentication with Twilio Verify**
+  - Phone number input with country code selection
+  - Automatic phone number formatting (US format supported)
+  - Two-step verification: Send OTP → Verify code
+  - Tab-based UI for switching between Email/Phone auth
+  - Components:
+    - `PhoneAuth.tsx` - Phone authentication with OTP flow
+    - `AuthForm.tsx` - Updated with Email/Phone tabs
+  - **Twilio Configuration Required**:
+    - Supabase Dashboard: Enable Phone provider
+    - SMS Provider: Twilio Verify
+    - Required: Account SID, Auth Token, Verify Service SID
+  - **Features**:
+    - Multi-country support with flag emojis
+    - Resend OTP functionality
+    - Beautiful brutalist design matching app theme
+  - See `/docs/phone-auth-setup.md` for complete setup guide
+
 ### Password Reset Authentication Flow (January 2025)
 - ✅ **Complete Password Reset Flow**
   - **Email Template**: Custom-branded HTML email with neon green/purple gradient

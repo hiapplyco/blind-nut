@@ -133,11 +133,16 @@ blind-nut/
   - **Routes**: 
     - `/reset-password-request` - Request password reset form
     - `/reset-password` - Reset password form (handles token from email)
-  - **Supabase Configuration Required**:
-    - Site URL: `https://www.apply.codes`
-    - Redirect URLs: Must include `https://www.apply.codes/reset-password`
+  - **Critical Supabase Configuration** ⚠️:
+    - **Site URL**: Must be set to `https://www.apply.codes` (Authentication > URL Configuration)
+    - **Redirect URLs**: Must include:
+      - `https://www.apply.codes/*`
+      - `https://apply.codes/*`
+      - `http://localhost:5173/*`
+    - **Email Sender**: Update "blind nut" to "Apply Team" (Authentication > Email Templates)
+    - **Logo URL Fix**: Remove double slash in template: `/storage/v1/object/public/logos/APPLYFullwordlogo2025.png`
   - **Email Variables**: Uses `{{ .ConfirmationURL }}` for full reset link with token
-  - **Important**: Email template must be configured in Supabase Dashboard under Authentication > Email Templates
+  - **Recent Fix**: Updated PasswordReset component to properly handle Supabase recovery tokens from URL hash params
 
 ### SendGrid Email Integration (January 2025)
 - ✅ **SendGrid Custom Email Function**
@@ -1119,15 +1124,18 @@ UPDATE_CLAUDE_MD: "Document [what changed] in [section]"
 3. Ensure auth context is properly wrapped around app
 4. Check for conflicting auth headers in requests
 
-### Password Reset Redirect Issues
-**Problem**: Reset link redirects to wrong URL (e.g., `supabase.co/apply.codes` instead of `www.apply.codes`)
+### Password Reset Issues
+**Problem**: Reset link redirects to login page, "blind nut" sender, images not loading
 **Solution**:
-1. **Update Supabase Dashboard**:
-   - Go to Authentication > URL Configuration
-   - Set Site URL to `https://www.apply.codes`
-   - Add `https://www.apply.codes/reset-password` to Redirect URLs
-2. **Email Template**: Ensure using `{{ .ConfirmationURL }}` variable
-3. **Quick Fix**: Manually copy token from wrong URL and append to correct domain
+1. **Critical Supabase Dashboard Updates**:
+   - **Authentication > URL Configuration**:
+     - Site URL: `https://www.apply.codes` (NOT the Supabase URL)
+     - Redirect URLs: Add all domains with wildcards
+   - **Authentication > Email Templates**:
+     - Sender name: Change from "blind nut" to "Apply Team"
+     - Fix logo URL: Remove double slash `/logos//` → `/logos/`
+2. **Frontend Fix Applied**: PasswordReset component now properly handles recovery tokens from URL hash
+3. **Testing**: Always test on mobile devices where users haven't logged in before
 
 ### CORS Issues
 **Problem**: CORS errors when calling edge functions

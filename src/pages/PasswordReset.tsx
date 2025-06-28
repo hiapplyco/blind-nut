@@ -18,30 +18,55 @@ const PasswordReset = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if we have a valid session from the email link
-    const checkSession = async () => {
+    // Handle the password reset token from the URL
+    const handlePasswordReset = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // First, check if we have hash params (Supabase sends tokens as hash params)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const access_token = hashParams.get('access_token');
+        const refresh_token = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
         
-        if (error) {
-          console.error("Session check error:", error);
-          setIsValidSession(false);
-        } else if (session) {
-          // Valid session exists from the reset link
-          setIsValidSession(true);
+        if (type === 'recovery' && access_token) {
+          // We have a recovery token, set the session
+          const { data, error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token: refresh_token || '',
+          });
+
+          if (error) {
+            console.error("Error setting session from recovery token:", error);
+            setIsValidSession(false);
+          } else if (data.session) {
+            console.log("Recovery session established");
+            setIsValidSession(true);
+            // Clean up the URL
+            window.history.replaceState(null, '', window.location.pathname);
+          }
         } else {
-          // No session - user needs to request a new reset link
-          setIsValidSession(false);
+          // No recovery token in URL, check for existing session
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error("Session check error:", error);
+            setIsValidSession(false);
+          } else if (session) {
+            // Check if this is a recovery session
+            const isRecoverySession = session.user?.recovery_sent_at ? true : false;
+            setIsValidSession(isRecoverySession);
+          } else {
+            setIsValidSession(false);
+          }
         }
       } catch (error) {
-        console.error("Error checking session:", error);
+        console.error("Error in password reset flow:", error);
         setIsValidSession(false);
       } finally {
         setIsCheckingSession(false);
       }
     };
 
-    checkSession();
+    handlePasswordReset();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,7 +99,7 @@ const PasswordReset = () => {
         toast.success("Password updated successfully!");
         // Sign out to ensure clean state
         await supabase.auth.signOut();
-        navigate("/login");
+        navigate("/");
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -122,7 +147,7 @@ const PasswordReset = () => {
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/")}
             >
               Back to Login
             </Button>

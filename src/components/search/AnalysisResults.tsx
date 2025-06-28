@@ -1,27 +1,30 @@
 
-import { useAgentOutputs } from "@/stores/useAgentOutputs";
+import { KeyTermsWindow } from "./KeyTermsWindow";
 import { PDFReport } from "./PDFReport";
+import { ViewReportButton } from "./ViewReportButton";
 
 interface AnalysisResultsProps {
+  agentOutput: any;
+  searchString: string;
   jobId: number;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
-export const AnalysisResults = ({ jobId, onClose }: AnalysisResultsProps) => {
-  const { data: agentOutput } = useAgentOutputs(jobId);
-
-  if (!agentOutput) {
-    return null;
-  }
-
+export const AnalysisResults = ({ 
+  agentOutput, 
+  searchString, 
+  jobId 
+}: AnalysisResultsProps) => {
   return (
     <div className="space-y-6">
-      <PDFReport
-        jobSummary={agentOutput.job_summary || ''}
-        enhancedDescription={agentOutput.enhanced_description || ''}
-        compensationAnalysis={agentOutput.compensation_analysis || ''}
-        terms={agentOutput.terms}
-        searchString=""
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <KeyTermsWindow jobId={jobId} />
+        <PDFReport jobId={jobId} />
+      </div>
+      
+      <ViewReportButton 
+        agentOutput={agentOutput}
+        searchString={searchString}
         jobId={jobId}
       />
     </div>

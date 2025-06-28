@@ -15,7 +15,6 @@ import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import { JobPostingPage } from "@/components/jobs/JobPostingPage";
 import { JobEditorPage } from "@/components/jobs/JobEditorPage";
-import LinkedInPostGenerator from "@/pages/LinkedInPostGenerator";
 import ContentCreationPage from "@/pages/ContentCreationPage";
 import Sourcing from "@/pages/Sourcing";
 import ScreeningRoom from "@/pages/ScreeningRoom";

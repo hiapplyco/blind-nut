@@ -9,7 +9,7 @@ interface PDFReportProps {
 }
 
 export const PDFReport = ({ jobId }: PDFReportProps) => {
-  const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
+  const { data, isLoading } = useAgentOutputs(jobId);
 
   const handleDownloadPDF = async () => {
     // PDF generation logic would go here

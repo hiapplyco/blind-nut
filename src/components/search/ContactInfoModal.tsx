@@ -1,376 +1,365 @@
-import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Mail,
-  Phone,
-  Globe,
-  Linkedin,
-  Twitter,
-  Github,
-  MapPin,
-  Building2,
-  Briefcase,
-  User,
-  Copy,
-  ExternalLink,
-  Loader2,
-  AlertCircle,
-  CheckCircle2
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { EnrichedProfileData } from './types';
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { User, Mail, Phone, MapPin, Building2, Calendar, ExternalLink, Briefcase, Users, Star } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+
+interface ContactInfo {
+  name: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  company?: string;
+  title?: string;
+  profileUrl?: string;
+  bio?: string;
+  experience?: any[];
+  education?: any[];
+  skills?: string[];
+  emails?: string[];
+  phone_numbers?: string[];
+  social_profiles?: any[];
+}
 
 interface ContactInfoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  profileData: EnrichedProfileData | null;
+  contactInfo: ContactInfo | null;
   isLoading: boolean;
-  profileName: string;
 }
 
-export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
-  isOpen,
-  onClose,
-  profileData,
-  isLoading,
-  profileName
-}) => {
-  const [copiedField, setCopiedField] = React.useState<string | null>(null);
+export const ContactInfoModal = ({ 
+  isOpen, 
+  onClose, 
+  contactInfo, 
+  isLoading 
+}: ContactInfoModalProps) => {
+  const [copied, setCopied] = useState<string | null>(null);
 
-  // Debug logging
-  React.useEffect(() => {
-    console.log('ContactInfoModal state:', { isOpen, profileData, isLoading, profileName });
-  }, [isOpen, profileData, isLoading, profileName]);
-
-  const copyToClipboard = async (text: string, field: string) => {
+  const copyToClipboard = async (text: string, type: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      toast.success(`${field} copied to clipboard`);
-      setTimeout(() => setCopiedField(null), 2000);
+      setCopied(type);
+      toast.success(`${type} copied to clipboard`);
+      setTimeout(() => setCopied(null), 2000);
     } catch (err) {
       toast.error('Failed to copy to clipboard');
     }
   };
 
-  const renderContactField = (icon: React.ReactNode, label: string, value: string | undefined, field: string) => {
-    if (!value) return null;
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch {
+      return dateString;
+    }
+  };
 
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors group">
-        <div className="flex items-center gap-3">
-          <div className="text-gray-600">{icon}</div>
-          <div>
-            <p className="text-xs text-gray-500">{label}</p>
-            <p className="text-sm font-medium">{value}</p>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Loading Contact Information...</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => copyToClipboard(value, field)}
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          {copiedField === field ? (
-            <CheckCircle2 className="w-4 h-4 text-green-600" />
-          ) : (
-            <Copy className="w-4 h-4" />
-          )}
-        </Button>
-      </div>
+        </DialogContent>
+      </Dialog>
     );
-  };
+  }
 
-  const renderSocialProfile = (network: string, url: string) => {
-    const icons: Record<string, React.ReactNode> = {
-      linkedin: <Linkedin className="w-4 h-4" />,
-      twitter: <Twitter className="w-4 h-4" />,
-      github: <Github className="w-4 h-4" />,
-    };
-
+  if (!contactInfo) {
     return (
-      <a
-        key={network}
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-      >
-        {icons[network.toLowerCase()] || <Globe className="w-4 h-4" />}
-        <span className="text-sm capitalize">{network}</span>
-        <ExternalLink className="w-3 h-3 ml-auto" />
-      </a>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Contact Information</DialogTitle>
+            <DialogDescription>
+              No contact information available for this profile.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     );
-  };
-
-  const renderEmptyState = () => (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-        <AlertCircle className="w-8 h-8 text-gray-400" />
-      </div>
-      <h3 className="text-lg font-medium text-gray-900 mb-2">
-        No Contact Information Found
-      </h3>
-      <p className="text-sm text-gray-500 max-w-sm">
-        We couldn't find any contact information for this profile. This might be due to privacy settings or limited data availability.
-      </p>
-    </div>
-  );
-
-  const renderLoadingState = () => (
-    <div className="flex flex-col items-center justify-center py-12">
-      <Loader2 className="w-8 h-8 animate-spin text-purple-600 mb-4" />
-      <p className="text-sm text-gray-600">Enriching profile data...</p>
-      <p className="text-xs text-gray-500 mt-1">This may take a few seconds</p>
-    </div>
-  );
-
-  // Safety check to prevent rendering issues
-  if (!isOpen) {
-    return null;
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="contact-info-description">
+      <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <User className="w-5 h-5" />
-            {profileName ? `Contact Information - ${profileName}` : 'Contact Information'}
+            <User className="h-5 w-5" />
+            {contactInfo.name}
           </DialogTitle>
+          <DialogDescription>
+            Detailed contact and profile information
+          </DialogDescription>
         </DialogHeader>
-        <p id="contact-info-description" className="sr-only">
-          View and copy contact information for {profileName || 'this profile'}
-        </p>
-
-        <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
-            renderLoadingState()
-          ) : !profileData ? (
-            renderEmptyState()
-          ) : (
-            <Tabs defaultValue="contact" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="contact">Contact</TabsTrigger>
-                <TabsTrigger value="professional">Professional</TabsTrigger>
-                <TabsTrigger value="social">Social</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="contact" className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  {/* Check if any contact information exists */}
-                  {(() => {
-                    const hasContactInfo = profileData.work_email || 
-                                         profileData.emails?.length > 0 || 
-                                         profileData.mobile_phone || 
-                                         profileData.phone_numbers?.length > 0 ||
-                                         profileData.location ||
-                                         profileData.city ||
-                                         profileData.website;
-                    
-                    if (!hasContactInfo) {
-                      return (
-                        <div className="text-center py-8">
-                          <Mail className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                          <p className="text-gray-500">No contact information available</p>
-                          <p className="text-sm text-gray-400 mt-1">This profile may have privacy settings enabled</p>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <>
-                        {/* Primary Email */}
-                        {renderContactField(
-                          <Mail className="w-4 h-4" />,
-                          "Work Email",
-                          profileData.work_email,
-                          "Work Email"
-                        )}
-
-                        {/* Additional Emails */}
-                        {profileData.emails?.map((email, index) => (
-                          renderContactField(
-                            <Mail className="w-4 h-4" />,
-                            `Email ${index + 1}`,
-                            email,
-                            `Email ${index + 1}`
-                          )
-                        ))}
-
-                        {/* Phone Numbers */}
-                        {renderContactField(
-                          <Phone className="w-4 h-4" />,
-                          "Mobile Phone",
-                          profileData.mobile_phone,
-                          "Mobile Phone"
-                        )}
-
-                        {profileData.phone_numbers?.map((phone, index) => (
-                          renderContactField(
-                            <Phone className="w-4 h-4" />,
-                            `Phone ${index + 1}`,
-                            phone,
-                            `Phone ${index + 1}`
-                          )
-                        ))}
-
-                        {/* Location */}
-                        {renderContactField(
-                          <MapPin className="w-4 h-4" />,
-                          "Location",
-                          [profileData.city, profileData.state, profileData.country]
-                            .filter(Boolean)
-                            .join(', ') || profileData.location,
-                          "Location"
-                        )}
-
-                        {/* Website */}
-                        {profileData.website && (
-                          <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                            <div className="flex items-center gap-3">
-                              <Globe className="w-4 h-4 text-gray-600" />
-                              <div>
-                                <p className="text-xs text-gray-500">Website</p>
-                                <a
-                                  href={profileData.website}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-sm font-medium text-blue-600 hover:underline"
-                                >
-                                  {profileData.website}
-                                </a>
-                              </div>
-                            </div>
-                            <ExternalLink className="w-4 h-4 text-gray-400" />
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="professional" className="space-y-4 mt-4">
-                {(() => {
-                  const hasProfessionalInfo = profileData.job_title || 
-                                             profileData.title || 
-                                             profileData.company || 
-                                             profileData.job_company_name ||
-                                             profileData.industry ||
-                                             (profileData.skills && profileData.skills.length > 0) ||
-                                             profileData.summary;
-                  
-                  if (!hasProfessionalInfo) {
-                    return (
-                      <div className="text-center py-8">
-                        <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">No professional information available</p>
-                        <p className="text-sm text-gray-400 mt-1">Job details and skills not provided</p>
+        
+        <ScrollArea className="max-h-[70vh] pr-4">
+          <div className="space-y-6">
+            {/* Basic Info */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Contact Details */}
+                  <div className="space-y-3">
+                    {contactInfo.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{contactInfo.email}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyToClipboard(contactInfo.email!, 'Email')}
+                          className="h-6 px-2"
+                        >
+                          {copied === 'Email' ? 'Copied!' : 'Copy'}
+                        </Button>
                       </div>
-                    );
-                  }
-
-                  return (
-                    <>
-                      {/* Current Position */}
-                      {(profileData.job_title || profileData.title) && (
-                        <Card className="p-4">
-                          <div className="flex items-start gap-3">
-                            <Briefcase className="w-5 h-5 text-gray-600 mt-0.5" />
-                            <div className="flex-1">
-                              <h4 className="font-medium">{profileData.job_title || profileData.title}</h4>
-                              {(profileData.company || profileData.job_company_name) && (
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Building2 className="w-4 h-4 text-gray-500" />
-                                  <span className="text-sm text-gray-600">
-                                    {profileData.company || profileData.job_company_name}
-                                  </span>
-                                </div>
-                              )}
-                              {profileData.industry && (
-                                <Badge variant="secondary" className="mt-2">
-                                  {profileData.industry}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </Card>
-                      )}
-
-                      {/* Skills */}
-                      {profileData.skills && profileData.skills.length > 0 && (
-                        <div>
-                          <h4 className="text-sm font-medium mb-2">Skills</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {profileData.skills.map((skill, index) => (
-                              <Badge key={index} variant="outline">
-                                {skill}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Summary */}
-                      {profileData.summary && (
-                        <div>
-                          <h4 className="text-sm font-medium mb-2">Summary</h4>
-                          <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                            {profileData.summary}
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </TabsContent>
-
-              <TabsContent value="social" className="space-y-4 mt-4">
-                <div className="grid gap-2">
-                  {/* LinkedIn */}
-                  {profileData.linkedin_url && 
-                    renderSocialProfile('LinkedIn', profileData.linkedin_url)
-                  }
-
-                  {/* Twitter */}
-                  {profileData.twitter_url && 
-                    renderSocialProfile('Twitter', profileData.twitter_url)
-                  }
-
-                  {/* GitHub */}
-                  {profileData.github_url && 
-                    renderSocialProfile('GitHub', profileData.github_url)
-                  }
-
-                  {/* Other Social Profiles */}
-                  {profileData.social_profiles?.map((profile) => 
-                    renderSocialProfile(profile.network, profile.url)
-                  )}
-
-                  {/* Show empty state if no social profiles */}
-                  {!profileData.linkedin_url && 
-                   !profileData.twitter_url && 
-                   !profileData.github_url && 
-                   (!profileData.social_profiles || profileData.social_profiles.length === 0) && (
-                    <p className="text-sm text-gray-500 text-center py-4">
-                      No social profiles found
-                    </p>
-                  )}
+                    )}
+                    
+                    {contactInfo.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{contactInfo.phone}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyToClipboard(contactInfo.phone!, 'Phone')}
+                          className="h-6 px-2"
+                        >
+                          {copied === 'Phone' ? 'Copied!' : 'Copy'}
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {contactInfo.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{contactInfo.location}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Professional Info */}
+                  <div className="space-y-3">
+                    {contactInfo.company && (
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{contactInfo.company}</span>
+                      </div>
+                    )}
+                    
+                    {contactInfo.title && (
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{contactInfo.title}</span>
+                      </div>
+                    )}
+                    
+                    {contactInfo.profileUrl && (
+                      <div className="flex items-center gap-2">
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                        <a 
+                          href={contactInfo.profileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          View LinkedIn Profile
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </TabsContent>
-            </Tabs>
-          )}
-        </div>
+                
+                {contactInfo.bio && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm text-muted-foreground">{contactInfo.bio}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Additional Contact Methods */}
+            {((contactInfo.emails && contactInfo.emails.length > 0) || 
+              (contactInfo.phone_numbers && contactInfo.phone_numbers.length > 0)) && (
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Additional Contact Methods
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    {contactInfo.emails && contactInfo.emails.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium mb-2">Email Addresses:</p>
+                        <div className="space-y-1">
+                          {contactInfo.emails.map((email, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <span className="text-sm">{email}</span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => copyToClipboard(email, `Email ${index + 1}`)}
+                                className="h-6 px-2"
+                              >
+                                {copied === `Email ${index + 1}` ? 'Copied!' : 'Copy'}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {contactInfo.phone_numbers && contactInfo.phone_numbers.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium mb-2">Phone Numbers:</p>
+                        <div className="space-y-1">
+                          {contactInfo.phone_numbers.map((phone, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <span className="text-sm">{phone}</span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => copyToClipboard(phone, `Phone ${index + 1}`)}
+                                className="h-6 px-2"
+                              >
+                                {copied === `Phone ${index + 1}` ? 'Copied!' : 'Copy'}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Skills */}
+            {contactInfo.skills && contactInfo.skills.length > 0 && (
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Star className="h-4 w-4" />
+                    Skills
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {contactInfo.skills.map((skill, index) => (
+                      <Badge key={index} variant="secondary">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Experience */}
+            {contactInfo.experience && contactInfo.experience.length > 0 && (
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    Experience
+                  </h3>
+                  <div className="space-y-4">
+                    {contactInfo.experience.map((exp, index) => (
+                      <div key={index} className="border-l-2 border-gray-200 pl-4">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className="font-medium">{exp.title}</h4>
+                            <p className="text-sm text-muted-foreground">{exp.company}</p>
+                            {exp.description && (
+                              <p className="text-sm mt-1">{exp.description}</p>
+                            )}
+                          </div>
+                          {(exp.start_date || exp.end_date) && (
+                            <div className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              <span>
+                                {exp.start_date && formatDate(exp.start_date)}
+                                {exp.start_date && exp.end_date && ' - '}
+                                {exp.end_date ? formatDate(exp.end_date) : exp.start_date && 'Present'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Education */}
+            {contactInfo.education && contactInfo.education.length > 0 && (
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Education
+                  </h3>
+                  <div className="space-y-3">
+                    {contactInfo.education.map((edu, index) => (
+                      <div key={index} className="border-l-2 border-gray-200 pl-4">
+                        <h4 className="font-medium">{edu.degree || edu.field_of_study}</h4>
+                        <p className="text-sm text-muted-foreground">{edu.school}</p>
+                        {(edu.start_date || edu.end_date) && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>
+                              {edu.start_date && formatDate(edu.start_date)}
+                              {edu.start_date && edu.end_date && ' - '}
+                              {edu.end_date && formatDate(edu.end_date)}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Social Profiles */}
+            {contactInfo.social_profiles && contactInfo.social_profiles.length > 0 && (
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <ExternalLink className="h-4 w-4" />
+                    Social Profiles
+                  </h3>
+                  <div className="space-y-2">
+                    {contactInfo.social_profiles.map((profile, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Badge variant="outline">{profile.network}</Badge>
+                        <a 
+                          href={profile.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          {profile.username || profile.url}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

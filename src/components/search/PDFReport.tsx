@@ -1,8 +1,8 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, FileText } from "lucide-react";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
-import { AgentOutput } from "@/types/agent";
 
 interface PDFReportProps {
   jobId: number;

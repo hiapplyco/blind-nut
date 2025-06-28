@@ -1,8 +1,7 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { EnrichedInfoModal } from "./enriched-info-modal/EnrichedInfoModal";
 import { Profile } from "./search/types";
 import { EnrichedProfileData } from "./search/types";
-import { EnrichedInfoModal } from "./enriched-info-modal/EnrichedInfoModal";
 
 interface ContactInfoModalProps {
   isOpen: boolean;

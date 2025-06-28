@@ -1,7 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
-import { AgentOutput } from "@/types/agent";
 
 interface KeyTermsWindowProps {
   jobId: number;

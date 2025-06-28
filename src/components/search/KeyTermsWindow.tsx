@@ -1,77 +1,60 @@
 
-import { Tag, List, KeyRound } from "lucide-react";
-import { Terms } from "@/types/agent";
-import { AgentWindow } from "../agents/AgentWindow";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
+import { AgentOutput } from "@/types/agent";
 
 interface KeyTermsWindowProps {
-  terms?: Terms;
-  jobId?: number;
-  onKeyTermClick?: (term: string, termType: string) => void;
+  jobId: number;
 }
 
-interface TermGroup {
-  title: string;
-  terms: string[];
-  icon: React.ReactNode;
-}
+export const KeyTermsWindow = ({ jobId }: KeyTermsWindowProps) => {
+  const { data: agentOutput, isLoading, error } = useAgentOutputs(jobId);
 
-export const KeyTermsWindow = ({ terms: passedTerms, jobId, onKeyTermClick }: KeyTermsWindowProps) => {
-  // If jobId is provided but no terms, fetch terms from agent outputs
-  const { data: agentOutput } = useAgentOutputs(jobId);
-  const terms = passedTerms || (agentOutput?.terms || { skills: [], titles: [], keywords: [] });
+  if (isLoading) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Key Terms Analysis</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="h-4 bg-gray-200 rounded animate-pulse" />
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const termGroups: TermGroup[] = [
-    {
-      title: "Skills & Technologies",
-      terms: terms.skills || [],
-      icon: <Tag className="h-5 w-5" />
-    },
-    {
-      title: "Job Titles",
-      terms: terms.titles || [],
-      icon: <KeyRound className="h-5 w-5" />
-    },
-    {
-      title: "Keywords",
-      terms: terms.keywords || [],
-      icon: <List className="h-5 w-5" />
-    }
-  ];
-
-  const handleTermClick = (term: string, termType: string) => {
-    if (onKeyTermClick) {
-      onKeyTermClick(term, termType);
-    }
-  };
+  if (error) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Key Terms Analysis</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-red-500">Error loading key terms analysis</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <AgentWindow
-      title="Extracted Terms"
-      icon={<Tag className="h-6 w-6" />}
-    >
-      <div className="space-y-6">
-        {termGroups.map((group, index) => (
-          <div key={index} className="space-y-2">
-            <div className="flex items-center gap-2 font-bold text-lg">
-              {group.icon}
-              {group.title}
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Key Terms Analysis</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="prose prose-sm max-w-none">
+          {agentOutput?.key_terms ? (
+            <div className="whitespace-pre-line text-gray-800">
+              {agentOutput.key_terms}
             </div>
-            <div className="flex flex-wrap gap-2">
-              {group.terms.map((term, termIndex) => (
-                <span
-                  key={termIndex}
-                  className="px-2 py-1 bg-white border-2 border-black rounded 
-                    shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-sm font-medium cursor-pointer"
-                  onClick={() => handleTermClick(term, group.title.toLowerCase())}
-                >
-                  {term}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </AgentWindow>
+          ) : (
+            <p className="text-gray-500">No key terms analysis available</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };

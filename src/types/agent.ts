@@ -1,27 +1,19 @@
 
-// Agent types for the application
 export interface AgentOutput {
   id: number;
   job_id: number;
   agent_type: string;
   output_data: any;
   created_at: string;
+  updated_at: string;
+  key_terms?: string;
+  compensation_analysis?: string;
+  enhanced_description?: string;
+  job_summary?: string;
 }
 
-export interface Terms {
-  skills: string[];
-  titles: string[];
-  keywords: string[];
-}
-
-export interface KeyTerms {
-  skills: string[];
-  titles: string[];
-  keywords: string[];
-}
-
-export interface SearchAnalysis {
-  summary: string;
-  keyTerms: KeyTerms;
-  recommendations: string[];
+export interface AgentOutputResponse {
+  success: boolean;
+  data?: AgentOutput;
+  error?: string;
 }

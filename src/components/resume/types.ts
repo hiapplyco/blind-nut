@@ -11,9 +11,9 @@ export interface ResumeMatch {
     education?: string[];
   } | null;
   parsed_job: {
-    title?: string;
-    requirements?: string[];
-    skills?: string[];
+    required_skills?: string[];
+    qualifications?: string[];
+    responsibilities?: string[];
   } | null;
 }
 

@@ -1,105 +1,60 @@
-
-import { useState } from "react";
-import { GoogleSearchWindow } from "./GoogleSearchWindow";
-import { KeyTermsWindow } from "./KeyTermsWindow";
-import { CaptureWindow } from "./CaptureWindow";
-import { ViewReportButton } from "./ViewReportButton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Terms } from "@/types/agent";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Download, FileText } from "lucide-react";
+import { useAgentOutputs } from "@/stores/useAgentOutputs";
+import { AgentOutput } from "@/types/agent";
 
 interface PDFReportProps {
-  jobSummary: string;
-  enhancedDescription: string;
-  compensationAnalysis: string;
-  terms: Terms | null;
-  searchString: string;
-  jobId?: number;
+  jobId: number;
 }
 
-export const PDFReport = ({
-  jobSummary,
-  enhancedDescription,
-  compensationAnalysis,
-  terms,
-  searchString,
-  jobId,
-}: PDFReportProps) => {
-  const [currentSearchQuery, setCurrentSearchQuery] = useState(searchString || "");
+export const PDFReport = ({ jobId }: PDFReportProps) => {
+  const { data: agentOutput, isLoading } = useAgentOutputs(jobId);
 
-  // Update/create search query based on terms
-  const handleKeyTermClick = (term: string, termType: string) => {
-    let newQuery = `site:linkedin.com/in/ ${term}`;
-    
-    // For skills, we add them to the existing query
-    if (termType === "skills" || termType === "core_skills") {
-      // Check if we already have a search query
-      if (currentSearchQuery && !currentSearchQuery.includes(term)) {
-        newQuery = `${currentSearchQuery} ${term}`;
-      }
-    }
-    
-    setCurrentSearchQuery(newQuery);
+  const handleDownloadPDF = async () => {
+    // PDF generation logic would go here
+    console.log("Generating PDF report for job:", jobId);
   };
 
-  const handleTextCapture = (text: string) => {
-    // Append the captured text to the search query
-    setCurrentSearchQuery((prev) => prev ? `${prev} ${text}` : text);
-  };
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            PDF Report
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse">Loading report...</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="search" className="w-full">
-        <TabsList className="w-full mb-6 border-2 border-black h-auto">
-          <TabsTrigger
-            value="search"
-            className="data-[state=active]:bg-black data-[state=active]:text-white text-lg px-4 py-2 h-auto"
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          PDF Report
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Generate a comprehensive PDF report with all analysis results.
+          </p>
+          <Button 
+            onClick={handleDownloadPDF}
+            className="w-full"
+            variant="outline"
           >
-            Search Results
-          </TabsTrigger>
-          <TabsTrigger
-            value="terms"
-            className="data-[state=active]:bg-black data-[state=active]:text-white text-lg px-4 py-2 h-auto"
-          >
-            Key Terms
-          </TabsTrigger>
-          <TabsTrigger
-            value="capture"
-            className="data-[state=active]:bg-black data-[state=active]:text-white text-lg px-4 py-2 h-auto"
-          >
-            LinkedIn
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="search" className="mt-0">
-          <GoogleSearchWindow searchString={currentSearchQuery} jobId={jobId} />
-        </TabsContent>
-
-        <TabsContent value="terms" className="mt-0">
-          {terms ? (
-            <KeyTermsWindow 
-              terms={terms} 
-              onKeyTermClick={handleKeyTermClick} 
-              jobId={jobId}
-            />
-          ) : jobId ? (
-            <KeyTermsWindow 
-              jobId={jobId} 
-              onKeyTermClick={handleKeyTermClick}
-            />
-          ) : null}
-        </TabsContent>
-
-        <TabsContent value="capture" className="mt-0">
-          <CaptureWindow onTextUpdate={handleTextCapture} />
-        </TabsContent>
-      </Tabs>
-
-      <ViewReportButton
-        jobSummary={jobSummary}
-        enhancedDescription={enhancedDescription}
-        compensationAnalysis={compensationAnalysis}
-        terms={terms}
-      />
-    </div>
+            <Download className="h-4 w-4 mr-2" />
+            Download PDF Report
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

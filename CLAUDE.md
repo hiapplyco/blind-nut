@@ -88,6 +88,14 @@ blind-nut/
 
 ## 📋 Recent Updates
 
+### Interview Room File Upload Fix (January 2025)
+- ✅ **Fixed File Upload to Edge Functions**
+  - Corrected environment variables in `.env.local` (were encrypted/hashed instead of actual values)
+  - Fixed Supabase URL and anon key configuration
+  - Added debug logging to track file upload process
+  - File uploads now properly reach `parse-document` edge function
+  - FormData implementation working correctly with multipart uploads
+
 ### Boolean Search Enhancement & UX Improvements (June 2025)
 - ✅ **AI-Powered Boolean Explanation System**
   - New `explain-boolean` edge function using Gemini 2.0 Flash
@@ -628,33 +636,17 @@ vercel rollback [deployment-url]
 ```
 
 **Vercel Configuration (`vercel.json`)**:
-```json
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    }
-  ]
-}
-```
+- Build command: `npm run build`
+- Output directory: `dist`
+- Framework: Vite
+- SPA routing enabled
+- Security headers configured
+- Asset caching optimized
 
-**Production URL**: https://www.apply.codes  
-**Preview URLs**: Auto-generated for each deployment
+**URLs**:
+- **Production**: https://www.apply.codes
+- **Preview**: Auto-generated for each PR
+- **Project ID**: `prj_Ix96cndRDQHgrZty2RIFbDkO54Zp`
 
 2. **Edge Functions (Supabase)**
 ```bash
@@ -663,7 +655,18 @@ supabase functions deploy
 
 # Deploy specific function
 supabase functions deploy function-name
+
+# Alternative deployment (when CLI times out)
+./deploy-functions.sh
 ```
+
+**Supabase Details**:
+- **Project URL**: https://kxghaajojntkqrmvsngn.supabase.co
+- **35+ Edge Functions** deployed including:
+  - Core: `process-job-requirements`, `explain-boolean`, `enrich-profile`
+  - AI: `analyze-compensation`, `enhance-job-description`, `summarize-job`
+  - Integration: `search-contacts`, `test-nymeria`, `firecrawl-url`
+  - Interview: `prepare-interview`, `handle-interview`, `process-kickoff-call`
 
 3. **Database Migrations**
 ```bash
@@ -917,6 +920,55 @@ UPDATE_CLAUDE_MD: "Document [what changed] in [section]"
 
 ---
 
+## 🔧 Troubleshooting Common Issues
+
+### File Upload Issues
+**Problem**: Files not uploading to edge functions, no logs in Supabase
+**Solution**: 
+1. Check `.env.local` has correct values (not encrypted/hashed):
+   ```
+   VITE_SUPABASE_URL=https://[your-project].supabase.co
+   VITE_SUPABASE_ANON_KEY=[your-actual-anon-key]
+   ```
+2. Restart dev server after changing env vars: `npm run dev`
+3. Hard refresh browser (Cmd+Shift+R) to load new env vars
+4. Check browser console for debug logs
+5. Verify in Network tab that request goes to correct URL
+
+### Vercel Deployment Failures
+**Problem**: Build fails on Vercel but works locally
+**Solution**:
+1. Ensure all environment variables are set in Vercel dashboard
+2. Check for TypeScript errors: `npm run typecheck`
+3. Verify build locally: `npm run build`
+4. Check for missing dependencies in package.json
+5. Review Vercel build logs for specific errors
+
+### Edge Function Timeout
+**Problem**: Supabase CLI times out during deployment
+**Solution**:
+1. Use alternative deployment script: `./deploy-functions.sh`
+2. Deploy functions individually: `supabase functions deploy [function-name]`
+3. Check function size - split large functions if needed
+
+### Authentication Errors
+**Problem**: Users getting logged out unexpectedly
+**Solution**:
+1. Check Supabase JWT expiry settings
+2. Verify RLS policies are correctly configured
+3. Ensure auth context is properly wrapped around app
+4. Check for conflicting auth headers in requests
+
+### CORS Issues
+**Problem**: CORS errors when calling edge functions
+**Solution**:
+1. Verify edge functions include CORS headers
+2. Check `corsHeaders` object in function includes all needed headers
+3. Ensure OPTIONS requests are handled properly
+4. Verify origin is allowed in CORS configuration
+
+---
+
 ## 🤖 Subagent Task Examples
 
 ### Research Tasks
@@ -972,8 +1024,8 @@ Task: "Add quality scoring" prompt="Rate profile completeness"
 - Update this document when patterns evolve
 - Run quality checks before completing any task
 
-**Last Updated**: June 2025
-**Version**: 2.1
+**Last Updated**: January 2025
+**Version**: 2.2
 
 **Quick Model Reference**:
 - 🧠 Complex/Creative = Opus

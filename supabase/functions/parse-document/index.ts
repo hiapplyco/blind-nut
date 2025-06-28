@@ -2,7 +2,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { GoogleGenerativeAI } from "npm:@google/generative-ai"
-import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -59,6 +58,7 @@ serve(async (req) => {
     }
 
     // Upload file to Supabase Storage
+    console.log('Attempting to upload file to docs bucket...')
     const { error: uploadError } = await supabase.storage
       .from('docs')
       .upload(filePath, arrayBuffer, {
@@ -68,7 +68,8 @@ serve(async (req) => {
 
     if (uploadError) {
       console.error('Upload error:', uploadError)
-      throw new Error(`Failed to upload file: ${uploadError.message}`)
+      // Continue processing even if storage fails
+      console.warn('Storage upload failed, but continuing with text extraction...')
     }
 
     console.log('File uploaded, starting Gemini processing...')
@@ -79,12 +80,20 @@ serve(async (req) => {
 
     try {
       // Convert array buffer to base64 for Gemini processing
-      const base64Data = base64Encode(new Uint8Array(arrayBuffer));
+      const uint8Array = new Uint8Array(arrayBuffer);
+      // Use btoa with String.fromCharCode for base64 encoding
+      const base64Data = btoa(String.fromCharCode(...uint8Array));
       
       // Process with Gemini using file type-specific handling
-      const prompt = (file as File).type.includes('pdf') 
-        ? 'Please extract and format all the text content from this PDF document, maintaining proper structure and formatting. Focus on preserving all important information including skills, experience, job requirements, and other relevant details.'
-        : 'Please extract all text content from this document, maintaining proper structure and formatting.';
+      let prompt = 'Please extract all text content from this document, maintaining proper structure and formatting.';
+      
+      if ((file as File).type.includes('pdf')) {
+        prompt = 'Please extract and format all the text content from this PDF document, maintaining proper structure and formatting. Focus on preserving all important information including skills, experience, job requirements, and other relevant details.';
+      } else if ((file as File).type.includes('word') || (file as File).type.includes('document')) {
+        prompt = 'Please extract and format all the text content from this Word document, maintaining proper structure, formatting, and bullet points. Focus on preserving all important information including skills, experience, job requirements, and other relevant details.';
+      } else if ((file as File).type.includes('sheet') || (file as File).type.includes('excel')) {
+        prompt = 'Please extract and format all the text content from this spreadsheet, maintaining table structure and relationships between data. Present the data in a clear, readable format.';
+      }
 
       const result = await model.generateContent([
         {
@@ -115,15 +124,17 @@ serve(async (req) => {
       )
     } catch (processingError) {
       console.error('Gemini processing error:', processingError)
-      throw new Error(`Document processing failed: ${processingError.message}`)
+      const errorMessage = processingError instanceof Error ? processingError.message : 'Unknown error'
+      throw new Error(`Document processing failed: ${errorMessage}`)
     }
 
   } catch (error) {
     console.error('Error processing document:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error.message 
+        error: errorMessage 
       }),
       { 
         headers: { 

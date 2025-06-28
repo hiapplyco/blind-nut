@@ -1,27 +1,93 @@
 
 import { createContext, useContext, useMemo } from "react";
-import { Session } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextType {
   session: Session | null;
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  // Auth methods
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signOut: () => Promise<{ error: Error | null }>;
+  resetPasswordForEmail: (email: string, options?: { redirectTo?: string }) => Promise<{ error: Error | null }>;
+  updateUser: (attributes: { password?: string; email?: string; data?: object }) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
+  user: null,
   isAuthenticated: false,
   isLoading: true,
+  signIn: async () => ({ error: new Error("AuthContext not initialized") }),
+  signUp: async () => ({ error: new Error("AuthContext not initialized") }),
+  signOut: async () => ({ error: new Error("AuthContext not initialized") }),
+  resetPasswordForEmail: async () => ({ error: new Error("AuthContext not initialized") }),
+  updateUser: async () => ({ error: new Error("AuthContext not initialized") }),
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const auth = useAuthSession();
 
+  // Auth methods
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({ email, password });
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const resetPasswordForEmail = async (email: string, options?: { redirectTo?: string }) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, options);
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const updateUser = async (attributes: { password?: string; email?: string; data?: object }) => {
+    try {
+      const { error } = await supabase.auth.updateUser(attributes);
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
   const value = useMemo(() => ({
     session: auth.session,
+    user: auth.session?.user ?? null,
     isAuthenticated: auth.isAuthenticated,
-    isLoading: auth.isLoading
+    isLoading: auth.isLoading,
+    signIn,
+    signUp,
+    signOut,
+    resetPasswordForEmail,
+    updateUser,
   }), [auth.session, auth.isAuthenticated, auth.isLoading]);
 
   console.log('AuthProvider render:', { isAuthenticated: value.isAuthenticated, isLoading: value.isLoading });

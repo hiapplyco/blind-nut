@@ -166,8 +166,15 @@ export function InterviewPrep({ onInterviewStart }: InterviewPrepProps = {}) {
           toast.success(`Successfully processed ${file.name}`);
         }
       } catch (err) {
-        toast.error(`Error processing ${file.name}`);
-        console.error(err);
+        console.error('Full error details:', {
+          error: err,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          errorMessage: err instanceof Error ? err.message : 'Unknown error',
+          errorStack: err instanceof Error ? err.stack : undefined
+        });
+        toast.error(`Error processing ${file.name}: ${err instanceof Error ? err.message : 'Unknown error'}`);
       }
     }
 

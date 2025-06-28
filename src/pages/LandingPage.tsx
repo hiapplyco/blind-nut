@@ -69,7 +69,7 @@ const LandingPage = () => {
               }}
               theme="light"
               providers={[]}
-              redirectTo={window.location.origin}
+              redirectTo={`${window.location.origin}/reset-password`}
               onlyThirdPartyProviders={false}
             />
           </div>

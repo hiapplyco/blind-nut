@@ -5,6 +5,7 @@ import { useJobPostingForm } from "./hooks/useJobPostingForm";
 import { Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { URLScrapeButton } from "@/components/url-scraper";
 
 interface JobPostingFormProps {
   jobId?: string;
@@ -55,12 +56,23 @@ export function JobPostingForm({ jobId, onSuccess, onCancel, onError }: JobPosti
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label 
-          htmlFor="content" 
-          className="text-base font-bold text-gray-600"
-        >
-          Job Details
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label 
+            htmlFor="content" 
+            className="text-base font-bold text-gray-600"
+          >
+            Job Details
+          </Label>
+          <URLScrapeButton
+            context="job-posting"
+            buttonText="Import from URL"
+            size="sm"
+            onScrapedContent={(data) => {
+              // Append scraped content to existing content
+              setContent(content ? `${content}\n\n--- Imported Content ---\n${data.text}` : data.text);
+            }}
+          />
+        </div>
         <Textarea
           id="content"
           value={content}

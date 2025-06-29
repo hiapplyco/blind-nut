@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, title, filePaths } = await req.json();
+    const { text, title, filePaths, projectId } = await req.json();
 
     // Input validation
     if (typeof text !== 'string' || typeof title !== 'string') {
@@ -126,7 +126,8 @@ serve(async (req) => {
           summary,
           key_points: keyPoints,
           action_items: actionItems,
-          file_paths: filePaths
+          file_paths: filePaths,
+          project_id: projectId
         })
         .select()
         .single();

@@ -9,7 +9,7 @@ interface MeetingData {
   transcription: string;
 }
 
-export const MeetingDataManager = () => {
+export const MeetingDataManager = (projectId?: string | null) => {
   const generateMeetingSummary = async (transcriptText: string) => {
     try {
       const { data: { secret: geminiApiKey } } = await supabase.functions.invoke('get-gemini-key');
@@ -55,7 +55,8 @@ export const MeetingDataManager = () => {
           participants: participants,
           transcription: transcription,
           summary: summary,
-          meeting_date: new Date().toISOString().split('T')[0]
+          meeting_date: new Date().toISOString().split('T')[0],
+          project_id: projectId
         })
         .select()
         .single();

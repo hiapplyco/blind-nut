@@ -6,7 +6,8 @@ export const processJobRequirements = async (
   searchType: SearchType,
   companyName?: string,
   userId?: string | null,
-  source?: 'default' | 'clarvida'
+  source?: 'default' | 'clarvida',
+  projectId?: string | null
 ) => {
   try {
     console.log(`Processing job requirements with searchType: ${searchType}, companyName: ${companyName}, source: ${source}`);
@@ -61,6 +62,7 @@ export const processJobRequirements = async (
             search_query: content,
             boolean_query: data.searchString,
             platform: 'linkedin',
+            project_id: projectId,
             search_params: {
               searchType,
               companyName,

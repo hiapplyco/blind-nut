@@ -1,0 +1,134 @@
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { Project, CreateProjectInput } from '@/types/project';
+import { toast } from 'sonner';
+
+export const useProjects = () => {
+  const { user } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+  // Fetch all projects for the current user
+  const fetchProjects = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_archived', false)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast.error('Failed to load projects');
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  // Create a new project
+  const createProject = async (input: CreateProjectInput): Promise<Project | null> => {
+    if (!user) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({
+          ...input,
+          user_id: user.id,
+          color: input.color || '#8B5CF6',
+          icon: input.icon || 'folder'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      if (data) {
+        setProjects(prev => [data, ...prev]);
+        toast.success('Project created successfully');
+        return data;
+      }
+      return null;
+    } catch (error: any) {
+      console.error('Error creating project:', error);
+      if (error?.code === '23505') {
+        toast.error('A project with this name already exists');
+      } else {
+        toast.error('Failed to create project');
+      }
+      return null;
+    }
+  };
+
+  // Update a project
+  const updateProject = async (projectId: string, updates: Partial<Project>): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update(updates)
+        .eq('id', projectId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      setProjects(prev => 
+        prev.map(p => p.id === projectId ? { ...p, ...updates } : p)
+      );
+      toast.success('Project updated successfully');
+      return true;
+    } catch (error) {
+      console.error('Error updating project:', error);
+      toast.error('Failed to update project');
+      return false;
+    }
+  };
+
+  // Delete (archive) a project
+  const archiveProject = async (projectId: string): Promise<boolean> => {
+    return updateProject(projectId, { is_archived: true });
+  };
+
+  // Get selected project
+  const selectedProject = projects.find(p => p.id === selectedProjectId);
+
+  // Load projects on mount
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  // Persist selected project in localStorage
+  useEffect(() => {
+    const savedProjectId = localStorage.getItem('selectedProjectId');
+    if (savedProjectId && projects.some(p => p.id === savedProjectId)) {
+      setSelectedProjectId(savedProjectId);
+    }
+  }, [projects]);
+
+  useEffect(() => {
+    if (selectedProjectId) {
+      localStorage.setItem('selectedProjectId', selectedProjectId);
+    } else {
+      localStorage.removeItem('selectedProjectId');
+    }
+  }, [selectedProjectId]);
+
+  return {
+    projects,
+    loading,
+    selectedProjectId,
+    selectedProject,
+    setSelectedProjectId,
+    createProject,
+    updateProject,
+    archiveProject,
+    refetch: fetchProjects
+  };
+};

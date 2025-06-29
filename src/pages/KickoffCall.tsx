@@ -7,6 +7,7 @@ import { FileList } from "@/components/kickoff-call/FileList";
 import { SummaryCard } from "@/components/kickoff-call/SummaryCard";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { ProjectSelector } from "@/components/project/ProjectSelector";
 
 interface Summary {
   id: string;
@@ -61,6 +62,15 @@ const KickOffCall = () => {
 
   return (
     <div className="container max-w-4xl py-8 space-y-8">
+      {/* Project selector */}
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <ProjectSelector 
+          label="Select project for this kickoff call"
+          placeholder="Choose a project (optional)"
+          className="max-w-md"
+        />
+      </div>
+
       <Card className="p-6 border-4 border-black bg-[#FFFBF4] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-[#8B5CF6] via-[#9B87F5] to-[#A18472] bg-clip-text text-transparent">
           Recruiting Kick Off Call

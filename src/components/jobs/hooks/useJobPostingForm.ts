@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useProjectContext } from "@/context/ProjectContext";
 
 interface UseJobPostingFormProps {
   jobId?: string;
@@ -34,6 +35,7 @@ export function useJobPostingForm({ jobId, onSuccess, onError }: UseJobPostingFo
   });
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { selectedProjectId } = useProjectContext();
 
   // Fetch existing job data if editing
   useEffect(() => {
@@ -189,6 +191,7 @@ export function useJobPostingForm({ jobId, onSuccess, onError }: UseJobPostingFo
         content: formState.content,
         created_at: new Date().toISOString(),
         user_id: session.user.id,
+        project_id: selectedProjectId,
       };
 
       // Create or update the job record

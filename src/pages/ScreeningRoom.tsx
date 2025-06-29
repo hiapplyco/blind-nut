@@ -13,6 +13,8 @@ import { ScreeningStatus } from "@/components/screening/ScreeningStatus";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useScreeningSession } from "@/hooks/useScreeningSession";
 import { Loader2 } from "lucide-react";
+import { ProjectSelector } from "@/components/project/ProjectSelector";
+import { useProjectContext } from "@/context/ProjectContext";
 
 interface Participant {
   id: string;
@@ -26,13 +28,14 @@ const ScreeningRoom = () => {
   const startTimeRef = useRef<Date>(new Date());
   const [whisperTranscript, setWhisperTranscript] = useState<string>("");
   const transcriptionProcessor = TranscriptionProcessor();
-  const meetingDataManager = MeetingDataManager();
+  const meetingDataManager = MeetingDataManager(selectedProjectId);
   const [callFrame, setCallFrame] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [hasJoinedMeeting, setHasJoinedMeeting] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { selectedProjectId } = useProjectContext();
   
   const { sessionId } = useScreeningSession();
   useWebSocket(sessionId);
@@ -155,6 +158,15 @@ const ScreeningRoom = () => {
   return (
     <div className="flex flex-col h-screen relative">
       <ScreeningHeader />
+      
+      {/* Project selector */}
+      <div className="px-6 py-4 bg-gray-50 border-b">
+        <ProjectSelector 
+          label="Select project for this screening session"
+          placeholder="Choose a project (optional)"
+          className="max-w-md"
+        />
+      </div>
       
       {hasJoinedMeeting && (
         <ScreeningStatus 

@@ -8,6 +8,7 @@ import LinkedInPostForm from "@/components/linkedin/LinkedInPostForm";
 import LinkedInPostResults from "@/components/linkedin/LinkedInPostResults";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ProjectSelector } from "@/components/project/ProjectSelector";
 
 const ContentCreationPage = () => {
   const location = useLocation();
@@ -74,6 +75,15 @@ const ContentCreationPage = () => {
         <p className="text-gray-600">
           Create job postings and LinkedIn promotion posts for your recruitment campaigns
         </p>
+      </div>
+      
+      {/* Project selector */}
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 max-w-3xl mx-auto">
+        <ProjectSelector 
+          label="Select project for content creation"
+          placeholder="Choose a project (optional)"
+          className="max-w-md"
+        />
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

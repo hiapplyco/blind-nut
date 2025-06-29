@@ -9,6 +9,8 @@ import { InterviewSetupForm, InterviewSetupData } from "@/components/interview/I
 import { InterviewPlanDisplay } from "@/components/interview/InterviewPlanDisplay";
 import { useInterviewSetup } from "@/hooks/useInterviewSetup";
 import { useAuth } from "@/context/AuthContext";
+import { ProjectSelector } from "@/components/project/ProjectSelector";
+import { URLScrapeButton } from "@/components/url-scraper";
 
 import { InterviewPrep as InterviewPrepComponent } from '@/components/interview/InterviewPrep';
 
@@ -27,16 +29,16 @@ interface InterviewPlan {
 }
 
 export default function InterviewPrep() {
-  const [currentStep, setCurrentStep] = useState<InterviewStep>('setup');
+  const [currentStep, setCurrentStep] = useState<InterviewStep>('prep');
   const [setupData, setSetupData] = useState<InterviewSetupData | null>(null);
   const { createInterviewSession, isLoading, sessionId, interviewPlan } = useInterviewSetup();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
-    document.title = "Interview Preparation | Pipecat";
+    document.title = "Interview Preparation Room | Apply";
     
     return () => {
-      document.title = "Pipecat";
+      document.title = "Apply";
     };
   }, []);
 
@@ -134,11 +136,28 @@ export default function InterviewPrep() {
       <InterviewHeader />
       
       <div className="flex-1 p-6 overflow-auto">
+        {/* Project selector at the top of all steps */}
+        <div className="max-w-4xl mx-auto mb-6">
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex items-center justify-between">
+            <ProjectSelector 
+              label="Select project for interview preparation"
+              placeholder="Choose a project (optional)"
+              className="max-w-md"
+            />
+            <URLScrapeButton
+              context="interview"
+              buttonText="Import Job Description"
+              size="sm"
+              className="ml-4"
+            />
+          </div>
+        </div>
+
         {currentStep === 'setup' && (
           <div className="max-w-4xl mx-auto">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Interview Preparation
+                Interview Setup
               </h1>
               <p className="text-gray-600">
                 Set up a structured interview for your role. Choose a framework, upload context files, 
@@ -158,15 +177,30 @@ export default function InterviewPrep() {
 
         {currentStep === 'prep' && (
           <div className="max-w-4xl mx-auto">
-            <Button
-              variant="ghost"
-              onClick={() => setCurrentStep('setup')}
-              className="mb-4"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Setup
-            </Button>
-            <InterviewPrepComponent />
+            <InterviewPrepComponent onInterviewStart={(data) => {
+              setSetupData({
+                roleTitle: data.roleTitle,
+                roleDescription: data.roleDescription,
+                interviewFramework: data.interviewType,
+                customFramework: data.interviewType === 'custom' ? data.interviewType : undefined,
+                contextFiles: []
+              });
+              handleSetupSubmit({
+                roleTitle: data.roleTitle,
+                roleDescription: data.roleDescription,
+                interviewFramework: data.interviewType,
+                customFramework: data.interviewType === 'custom' ? data.interviewType : undefined,
+                contextFiles: []
+              });
+            }} />
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep('setup')}
+              >
+                Use Advanced Interview Setup
+              </Button>
+            </div>
           </div>
         )}
 

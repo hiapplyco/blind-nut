@@ -6,6 +6,7 @@ import { processJobRequirements } from "@/utils/jobRequirements";
 import { SearchType } from "../types";
 import { generateSummary } from "./utils/generateSummary";
 import { createJob } from "./utils/createJob";
+import { useProjectContext } from "@/context/ProjectContext";
 
 /**
  * Hook for handling search form submission
@@ -17,6 +18,7 @@ export const useSearchFormSubmitter = (
   onSubmitStart?: () => void
 ) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const { selectedProjectId } = useProjectContext();
   
   const handleSubmit = useCallback(async (
     e: React.FormEvent,
@@ -57,8 +59,8 @@ export const useSearchFormSubmitter = (
       // Create job in database
       const jobId = await createJob(searchText, userId, title, summary, source);
       
-      console.log(`Calling processJobRequirements with source: ${source}`);
-      const result = await processJobRequirements(searchText, searchType, companyName, userId, source);
+      console.log(`Calling processJobRequirements with source: ${source}, projectId: ${selectedProjectId}`);
+      const result = await processJobRequirements(searchText, searchType, companyName, userId, source, selectedProjectId);
       
       if (source === 'clarvida') {
         // For Clarvida, pass the data directly to the callback
@@ -91,7 +93,7 @@ export const useSearchFormSubmitter = (
     } finally {
       setIsProcessing(false);
     }
-  }, [userId, onJobCreated, source, onSubmitStart]);
+  }, [userId, onJobCreated, source, onSubmitStart, selectedProjectId]);
 
   return {
     isProcessing,

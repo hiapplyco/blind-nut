@@ -27,11 +27,18 @@ const MainLayoutComponent = () => {
   }, [isAuthenticated, navigate]);
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-[#F1F0FB]">
-        <Sidebar collapsible="icon">
-          <SidebarContent>
-            <SidebarGroup>
+        <Sidebar collapsible="icon" className="border-r border-gray-200">
+          <SidebarContent className="bg-white">
+            <div className="p-4 border-b border-gray-200">
+              <img 
+                src="https://kxghaajojntkqrmvsngn.supabase.co/storage/v1/object/public/logos/Apply2025logo.png" 
+                alt="Apply" 
+                className="h-10 w-auto"
+              />
+            </div>
+            <SidebarGroup className="py-4">
               <SidebarGroupContent>
                 <SidebarMenuContent 
                   pathname={currentPath} 
@@ -40,7 +47,7 @@ const MainLayoutComponent = () => {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <div className="p-4 border-t border-black">
+          <div className="p-4 border-t border-gray-200 bg-white">
             <SignOutButton />
           </div>
         </Sidebar>
@@ -48,7 +55,7 @@ const MainLayoutComponent = () => {
           <div className="w-full p-4">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between mb-2">
-                <SidebarTrigger className="md:hidden" />
+                <SidebarTrigger className="h-10 w-10 rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors" />
                 <NavigationProgress 
                   isNavigating={isNavigating} 
                   progress={progress} 

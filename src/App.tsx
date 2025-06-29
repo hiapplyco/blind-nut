@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { ClarvidaAuthProvider } from "@/context/ClarvidaAuthContext";
+import { ProjectProvider } from "@/context/ProjectContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ClarvidaProtectedRoute } from "@/components/clarvida/ClarvidaProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
@@ -35,10 +36,11 @@ function App() {
   // Remove the basename configuration to let React Router handle paths naturally
   return (
     <AuthProvider>
-      <ClarvidaAuthProvider>
-        <Router>
-          <Toaster position="top-center" />
-          <Routes>
+      <ProjectProvider>
+        <ClarvidaAuthProvider>
+          <Router>
+            <Toaster position="top-center" />
+            <Routes>
             {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/reset-password-request" element={<ResetPasswordRequest />} />
@@ -67,7 +69,6 @@ function App() {
                 <Route path="/screening-room" element={<ScreeningRoom />} />
                 <Route path="/interview-prep" element={<InterviewPrep />} />
                 <Route path="/kickoff-call" element={<KickoffCall />} />
-                <Route path="/interview-room" element={<KickoffCallPage />} />
                 <Route path="/chat" element={<Chat />} />
                 <Route path="/report/:jobId" element={<Report />} />
                 <Route path="/search-history" element={<SearchHistory />} />
@@ -81,6 +82,7 @@ function App() {
           </Routes>
         </Router>
       </ClarvidaAuthProvider>
+      </ProjectProvider>
     </AuthProvider>
   );
 }

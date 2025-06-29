@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { InterviewSetupData } from '@/components/interview/InterviewSetupForm';
 import { toast } from 'sonner';
+import { useProjectContext } from '@/context/ProjectContext';
 
 interface InterviewPlan {
   overview: string;
@@ -20,6 +21,7 @@ export const useInterviewSetup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [interviewPlan, setInterviewPlan] = useState<InterviewPlan | null>(null);
+  const { selectedProjectId } = useProjectContext();
 
   const createInterviewSession = async (setupData: InterviewSetupData) => {
     setIsLoading(true);
@@ -53,7 +55,8 @@ export const useInterviewSetup = () => {
           interview_framework: setupData.interviewFramework,
           custom_framework_prompt: setupData.customFrameworkPrompt,
           uploaded_files: uploadedFilesData,
-          status: 'setup'
+          status: 'setup',
+          project_id: selectedProjectId
         })
         .select()
         .single();

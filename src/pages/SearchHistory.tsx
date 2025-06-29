@@ -260,19 +260,76 @@ const SearchHistory = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Search History & Projects</h1>
-        <p className="text-gray-600">Manage your recruitment searches and organize candidates into projects</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-green-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-[#39FF14] to-[#9D4EDD] bg-clip-text text-transparent mb-3">
+            Search History & Projects
+          </h1>
+          <p className="text-gray-600 text-lg">Manage your recruitment searches and organize candidates into projects</p>
+        </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="searches">Search History</TabsTrigger>
-          <TabsTrigger value="projects">Projects</TabsTrigger>
-        </TabsList>
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Searches</p>
+                  <p className="text-2xl font-bold text-gray-900">{searchHistory.length}</p>
+                </div>
+                <Search className="w-8 h-8 text-purple-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Favorites</p>
+                  <p className="text-2xl font-bold text-gray-900">{searchHistory.filter(s => s.is_favorite).length}</p>
+                </div>
+                <Star className="w-8 h-8 text-yellow-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Projects</p>
+                  <p className="text-2xl font-bold text-gray-900">{projects.length}</p>
+                </div>
+                <Folder className="w-8 h-8 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Candidates</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {projects.reduce((acc, p) => acc + (p.candidates_count || 0), 0)}
+                  </p>
+                </div>
+                <Users className="w-8 h-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2 bg-white/80 backdrop-blur-sm">
+            <TabsTrigger value="searches" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+              Search History
+            </TabsTrigger>
+            <TabsTrigger value="projects" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-green-600 data-[state=active]:text-white">
+              Projects
+            </TabsTrigger>
+          </TabsList>
 
         {/* Search History Tab */}
         <TabsContent value="searches" className="space-y-6">
@@ -295,8 +352,8 @@ const SearchHistory = () => {
 
           <div className="grid gap-4">
             {searchHistory.map((item) => (
-              <Card key={item.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
+              <Card key={item.id} className="bg-white/90 backdrop-blur-sm border-gray-200 hover:shadow-xl transition-all hover:scale-[1.01] hover:bg-white">
+                <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -346,7 +403,7 @@ const SearchHistory = () => {
                         <Button
                           size="sm"
                           onClick={() => handleRunSearch(item)}
-                          className="bg-purple-600 hover:bg-purple-700"
+                          className="bg-gradient-to-r from-[#39FF14] to-[#9D4EDD] hover:opacity-90 text-white font-medium shadow-lg hover:shadow-xl transition-all"
                         >
                           Run Search
                           <ChevronRight className="w-4 h-4 ml-1" />
@@ -367,7 +424,10 @@ const SearchHistory = () => {
               <Folder className="w-3 h-3 mr-1" />
               {projects.length} projects
             </Badge>
-            <Button onClick={() => setShowCreateProject(true)}>
+            <Button 
+              onClick={() => setShowCreateProject(true)}
+              className="bg-gradient-to-r from-[#39FF14] to-[#9D4EDD] hover:opacity-90 text-white font-medium shadow-lg hover:shadow-xl transition-all"
+            >
               <Plus className="w-4 h-4 mr-2" />
               New Project
             </Button>
@@ -379,7 +439,7 @@ const SearchHistory = () => {
               return (
                 <Card 
                   key={project.id} 
-                  className="hover:shadow-lg transition-all cursor-pointer"
+                  className="bg-white/90 backdrop-blur-sm border-gray-200 hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02] hover:bg-white group"
                   onClick={() => navigate(`/projects/${project.id}`)}
                 >
                   <CardHeader className="pb-3">
@@ -584,6 +644,7 @@ const SearchHistory = () => {
           </DialogContent>
         </Dialog>
       )}
+      </div>
     </div>
   );
 };

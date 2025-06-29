@@ -14,8 +14,14 @@ interface CrawlStatusResponse {
 
 type CrawlResponse = CrawlStatusResponse | ErrorResponse;
 
+interface CrawlOptions {
+  projectId?: string;
+  context?: 'sourcing' | 'job-posting' | 'search' | 'kickoff' | 'general';
+  saveToProject?: boolean;
+}
+
 export class FirecrawlService {
-  static async crawlWebsite(url: string): Promise<{ success: boolean; error?: string; data?: any }> {
+  static async crawlWebsite(url: string, options?: CrawlOptions): Promise<{ success: boolean; error?: string; data?: any }> {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session) {
@@ -44,7 +50,7 @@ export class FirecrawlService {
         return { success: false, error: response.error };
       }
 
-      // Store the crawl summary
+      // Store the crawl summary in kickoff_summaries (legacy)
       const { error: summaryError } = await supabase
         .from('kickoff_summaries')
         .insert({
@@ -55,6 +61,28 @@ export class FirecrawlService {
 
       if (summaryError) {
         console.error('Error storing summary:', summaryError);
+      }
+
+      // Store in project if options are provided
+      if (options?.projectId && options?.saveToProject !== false) {
+        const { error: projectError } = await supabase
+          .from('project_scraped_data')
+          .insert({
+            project_id: options.projectId,
+            user_id: session.user.id,
+            url,
+            summary: response.text,
+            raw_content: response.rawContent,
+            context: options.context || 'general',
+            metadata: {
+              scraped_at: new Date().toISOString(),
+              source: 'firecrawl'
+            }
+          });
+
+        if (projectError) {
+          console.error('Error storing in project:', projectError);
+        }
       }
 
       return { 
@@ -69,6 +97,30 @@ export class FirecrawlService {
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to connect to Firecrawl API' 
+      };
+    }
+  }
+
+  // Helper method to get scraped data for a project
+  static async getProjectScrapedData(projectId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('project_scraped_data')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching project scraped data:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error in getProjectScrapedData:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to fetch scraped data' 
       };
     }
   }

@@ -41,7 +41,7 @@ export const SidebarMenuItemWithDisabled = memo(({
   
   const buttonContent = (
     <>
-      <item.icon className="h-5 w-5" />
+      <item.icon className="h-6 w-6" />
       {!isCollapsed && (
         <span className="transition-opacity duration-300">
           {item.title}
@@ -55,7 +55,7 @@ export const SidebarMenuItemWithDisabled = memo(({
     </>
   );
   
-  const buttonClasses = `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+  const buttonClasses = `w-full flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 ${
     isActive 
       ? "text-black bg-white" 
       : item.disabled 

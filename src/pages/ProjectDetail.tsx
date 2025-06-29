@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { URLScrapeButton } from "@/components/url-scraper";
 
 interface Project {
   id: string;
@@ -196,18 +197,19 @@ const ProjectDetail = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      {/* Header */}
-      <div className="mb-8">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/search-history")}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Projects
-        </Button>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-green-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/search-history")}
+            className="mb-4 hover:bg-white/50 backdrop-blur-sm"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Projects
+          </Button>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -221,46 +223,62 @@ const ProjectDetail = () => {
               />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#39FF14] to-[#9D4EDD] bg-clip-text text-transparent">
+                {project.name}
+              </h1>
               {project.description && (
-                <p className="text-gray-600 mt-1">{project.description}</p>
+                <p className="text-gray-600 mt-2 text-lg">{project.description}</p>
               )}
-              <div className="flex gap-4 mt-2 text-sm text-gray-500">
-                <span>Created {format(new Date(project.created_at), "MMM d, yyyy")}</span>
+              <div className="flex gap-4 mt-3 text-sm text-gray-500">
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  Created {format(new Date(project.created_at), "MMM d, yyyy")}
+                </span>
                 <span>•</span>
-                <span>{project.candidates_count} candidates</span>
+                <span className="flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  {project.candidates_count} candidates
+                </span>
               </div>
             </div>
           </div>
-          <Button
-            onClick={handleExportCandidates}
-            disabled={filteredCandidates.length === 0}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
-          </Button>
+          <div className="flex gap-3">
+            <URLScrapeButton
+              context="general"
+              buttonText="Add Research"
+              projectId={project.id}
+            />
+            <Button
+              onClick={handleExportCandidates}
+              disabled={filteredCandidates.length === 0}
+              className="bg-gradient-to-r from-[#39FF14] to-[#9D4EDD] hover:opacity-90 text-white font-medium shadow-lg hover:shadow-xl transition-all"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Search and Filter */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <Input
-            type="text"
-            placeholder="Search candidates by name, title, company, or location..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search and Filter */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Search candidates by name, title, company, or location..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-white/80 backdrop-blur-sm border-gray-200 focus:bg-white focus:ring-2 focus:ring-purple-500/20"
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Candidates Grid */}
-      <div className="grid gap-4">
-        {filteredCandidates.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
+        {/* Candidates Grid */}
+        <div className="grid gap-4">
+          {filteredCandidates.length === 0 ? (
+            <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
+              <CardContent className="text-center py-12">
               <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600">
                 {searchTerm ? "No candidates match your search" : "No candidates in this project yet"}
@@ -278,7 +296,7 @@ const ProjectDetail = () => {
           </Card>
         ) : (
           filteredCandidates.map((candidate) => (
-            <Card key={candidate.id} className="hover:shadow-lg transition-shadow">
+            <Card key={candidate.id} className="bg-white/90 backdrop-blur-sm border-gray-200 hover:shadow-xl transition-all hover:scale-[1.01] hover:bg-white group">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -314,7 +332,7 @@ const ProjectDetail = () => {
 
                     {/* Contact Information */}
                     {(candidate.work_email || candidate.personal_emails?.length || candidate.mobile_phone) && (
-                      <div className="bg-green-50 p-3 rounded-lg mb-4 space-y-2">
+                      <div className="bg-gradient-to-r from-green-50 to-purple-50 p-4 rounded-lg mb-4 space-y-2 border border-green-200/50">
                         {candidate.work_email && (
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 text-sm">
@@ -397,6 +415,7 @@ const ProjectDetail = () => {
             </Card>
           ))
         )}
+      </div>
       </div>
     </div>
   );

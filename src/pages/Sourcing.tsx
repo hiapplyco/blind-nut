@@ -5,6 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useAgentOutputs } from "@/stores/useAgentOutputs";
 import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { ProjectSelector } from "@/components/project/ProjectSelector";
+import { URLScrapeButton } from "@/components/url-scraper";
 
 // Lazy load components to improve initial page load
 const NewSearchForm = lazy(() => import("@/components/NewSearchForm"));
@@ -29,10 +31,28 @@ const SourcingComponent = () => {
     <div className="container max-w-4xl py-8 space-y-8">
       {/* Page header */}
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold text-[#8B5CF6]">Candidate Sourcing</h1>
-        <p className="text-gray-600 text-lg">
-          Find qualified candidates, research companies, or discover talent at specific organizations
-        </p>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h1 className="text-4xl font-bold text-[#8B5CF6]">Candidate Sourcing</h1>
+            <p className="text-gray-600 text-lg mt-2">
+              Find qualified candidates, research companies, or discover talent at specific organizations
+            </p>
+          </div>
+          <URLScrapeButton 
+            context="sourcing"
+            buttonText="Import Job Description"
+            className="ml-4"
+          />
+        </div>
+      </div>
+
+      {/* Project selector */}
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <ProjectSelector 
+          label="Select project for this search"
+          placeholder="Choose a project (optional)"
+          className="max-w-md"
+        />
       </div>
       
       {/* Main content card */}

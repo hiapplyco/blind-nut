@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FirecrawlService } from "@/utils/FirecrawlService";
 import { Loader } from "lucide-react";
+import { useProjectContext } from "@/context/ProjectContext";
 
 interface KickoffFormProps {
   isProcessing: boolean;
@@ -22,6 +23,7 @@ export const KickoffForm = ({ isProcessing, filePaths, title, onTitleChange }: K
   const [isCrawling, setIsCrawling] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string>("");
+  const { selectedProjectId } = useProjectContext();
 
   const handleCrawl = async () => {
     if (!url.trim()) {
@@ -69,6 +71,7 @@ export const KickoffForm = ({ isProcessing, filePaths, title, onTitleChange }: K
           text: textInput,
           title,
           filePaths,
+          projectId: selectedProjectId,
         },
       });
 

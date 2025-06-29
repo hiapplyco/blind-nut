@@ -12,7 +12,10 @@ export const useProjects = () => {
 
   // Fetch all projects for the current user
   const fetchProjects = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -25,9 +28,22 @@ export const useProjects = () => {
 
       if (error) throw error;
       setProjects(data || []);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-      toast.error('Failed to load projects');
+    } catch (error: any) {
+      // Don't log or show errors for unauthenticated users
+      if (user) {
+        console.error('Error fetching projects:', error);
+        // Only show toast for unexpected errors, not authentication/permission issues
+        const isAuthError = error?.message?.toLowerCase().includes('jwt') || 
+                           error?.message?.toLowerCase().includes('auth') ||
+                           error?.message?.toLowerCase().includes('permission') ||
+                           error?.message?.toLowerCase().includes('policy') ||
+                           error?.code === 'PGRST301' || // JWT required
+                           error?.code === '42501'; // Insufficient privilege
+        
+        if (!isAuthError) {
+          toast.error('Failed to load projects. Please try refreshing the page.');
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -99,10 +115,17 @@ export const useProjects = () => {
   // Get selected project
   const selectedProject = projects.find(p => p.id === selectedProjectId);
 
-  // Load projects on mount
+  // Load projects when user is authenticated
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
+    if (user) {
+      fetchProjects();
+    } else {
+      // Clear projects when user logs out
+      setProjects([]);
+      setSelectedProjectId(null);
+      setLoading(false);
+    }
+  }, [user, fetchProjects]);
 
   // Persist selected project in localStorage
   useEffect(() => {

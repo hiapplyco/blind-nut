@@ -4,6 +4,10 @@ import { useAuth } from '@/context/AuthContext';
 import { Project, CreateProjectInput } from '@/types/project';
 import { toast } from 'sonner';
 
+// Temporary type assertion until Supabase types are regenerated
+// This tells TypeScript that the 'projects' table exists
+const typedSupabase = supabase as any;
+
 export const useProjects = () => {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -19,7 +23,7 @@ export const useProjects = () => {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await typedSupabase
         .from('projects')
         .select('*')
         .eq('user_id', user.id)
@@ -54,7 +58,7 @@ export const useProjects = () => {
     if (!user) return null;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await typedSupabase
         .from('projects')
         .insert({
           ...input,
@@ -87,7 +91,7 @@ export const useProjects = () => {
   // Update a project
   const updateProject = async (projectId: string, updates: Partial<Project>): Promise<boolean> => {
     try {
-      const { error } = await supabase
+      const { error } = await typedSupabase
         .from('projects')
         .update(updates)
         .eq('id', projectId)

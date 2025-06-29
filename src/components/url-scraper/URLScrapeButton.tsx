@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link2 } from 'lucide-react';
 import { URLScrapeModal } from './URLScrapeModal';
-import { useProject } from '../../context/ProjectContext';
-import { toast } from 'react-hot-toast';
+import { useProjectContext } from '../../context/ProjectContext';
+import { toast } from 'sonner';
 
 interface URLScrapeButtonProps {
   onScrapedContent?: (content: { text: string; rawContent: string; url: string }) => void;
@@ -20,7 +20,7 @@ export function URLScrapeButton({
   context = 'general'
 }: URLScrapeButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { selectedProject } = useProject();
+  const { selectedProject } = useProjectContext();
 
   const handleScrapedContent = (content: { text: string; rawContent: string; url: string }) => {
     // If a callback is provided, use it

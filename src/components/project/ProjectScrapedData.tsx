@@ -3,7 +3,7 @@ import { FirecrawlService } from '@/utils/FirecrawlService';
 import { Card } from '@/components/ui/card';
 import { Link2, FileText, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface ScrapedData {
   id: string;

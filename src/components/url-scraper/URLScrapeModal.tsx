@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { X, Link2, Loader2, FileText, CheckCircle2 } from 'lucide-react';
 import { FirecrawlService } from '../../utils/FirecrawlService';
-import { supabase } from '../../lib/supabase';
-import { toast } from 'react-hot-toast';
-import { useProject } from '../../context/ProjectContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useProjectContext } from '../../context/ProjectContext';
 
 interface URLScrapeModalProps {
   isOpen: boolean;
@@ -23,7 +23,7 @@ export function URLScrapeModal({
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [scrapedData, setScrapedData] = useState<{ text: string; rawContent: string } | null>(null);
-  const { selectedProject } = useProject();
+  const { selectedProject } = useProjectContext();
   
   // Use passed projectId or fall back to selected project
   const activeProjectId = projectId || selectedProject?.id;

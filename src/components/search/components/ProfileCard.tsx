@@ -3,6 +3,14 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   ChevronDown, 
@@ -18,12 +26,14 @@ import {
   Phone,
   Copy,
   CheckCircle,
-  Loader2
+  Loader2,
+  Folder,
+  Plus
 } from 'lucide-react';
 import { SearchResult } from '../types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/auth/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface ContactInfo {
   work_email?: string;
@@ -42,18 +52,29 @@ interface ProfileCardProps {
   onSearchContacts: (name: string, company: string, location: string) => void;
   contactInfo?: ContactInfo | null;
   isLoadingContact?: boolean;
+  jobId?: string | null;
+  searchString?: string | null;
+  projectId?: string | null;
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({ 
   result, 
   onGetContactInfo,
   onSearchContacts,
-  contactInfo
+  contactInfo,
+  jobId = null,
+  searchString = null,
+  projectId = null
 }) => {
+  const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   const [localContactInfo, setLocalContactInfo] = useState<ContactInfo | null>(contactInfo || null);
   const [isEnriching, setIsEnriching] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [projects, setProjects] = useState<Array<{ id: string; name: string; color: string; icon: string }>>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(projectId);
 
   // Update local contact info when prop changes
   React.useEffect(() => {
@@ -61,6 +82,31 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       setLocalContactInfo(contactInfo);
     }
   }, [contactInfo]);
+
+  // Fetch user's projects
+  React.useEffect(() => {
+    if (user) {
+      fetchProjects();
+    }
+  }, [user]);
+
+  const fetchProjects = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name, color, icon')
+        .eq('user_id', user.id)
+        .eq('is_archived', false)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
 
   // Extract profile information with better parsing
   const extractProfileInfo = () => {
@@ -198,7 +244,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   };
 
   // Handle saving candidate
-  const handleSaveCandidate = async () => {
+  const handleSaveCandidate = async (projectIdToUse?: string) => {
     if (!user) {
       toast.error('Please sign in to save candidates');
       return;
@@ -228,16 +274,38 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         source: 'linkedin'
       };
 
-      const { error } = await supabase
+      const { data: savedCandidate, error } = await supabase
         .from('saved_candidates')
         .upsert(candidateData, {
-          onConflict: 'user_id,linkedin_url'
-        });
+          onConflict: 'user_id,linkedin_url',
+          ignoreDuplicates: false
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
+      // If projectId is provided, also add to the project
+      const finalProjectId = projectIdToUse || selectedProjectId;
+      if (finalProjectId && savedCandidate) {
+        const { error: projectError } = await supabase
+          .from('project_candidates')
+          .upsert({
+            project_id: finalProjectId,
+            candidate_id: savedCandidate.id,
+            added_by: user.id
+          }, {
+            onConflict: 'project_id,candidate_id'
+          });
+
+        if (projectError && projectError.code !== '23505') {
+          console.error('Error adding candidate to project:', projectError);
+          toast.warning('Candidate saved but could not add to project');
+        }
+      }
+
       setIsSaved(true);
-      toast.success('Candidate saved successfully');
+      toast.success(finalProjectId ? 'Candidate saved to project' : 'Candidate saved successfully');
     } catch (error) {
       console.error('Error saving candidate:', error);
       if (error?.code === '23505') {
@@ -602,14 +670,68 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   </Button>
                 )}
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-green-200 text-green-700 hover:bg-green-50"
-                >
-                  <Star className="w-4 h-4 mr-2" />
-                  Save Candidate
-                </Button>
+                {projects.length > 0 ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-50"
+                        disabled={isSaving || isSaved}
+                      >
+                        {isSaving ? (
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                        ) : isSaved ? (
+                          <><CheckCircle className="w-4 h-4 mr-2" /> Saved</>
+                        ) : (
+                          <><Star className="w-4 h-4 mr-2" /> Save to Project</>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>Select Project</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {projects.map((project) => (
+                        <DropdownMenuItem
+                          key={project.id}
+                          onClick={() => handleSaveCandidate(project.id)}
+                          className="cursor-pointer"
+                        >
+                          <div
+                            className="w-2 h-2 rounded-full mr-2"
+                            style={{ backgroundColor: project.color }}
+                          />
+                          <Folder className="w-4 h-4 mr-2" />
+                          {project.name}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => handleSaveCandidate()}
+                        className="cursor-pointer"
+                      >
+                        <Star className="w-4 h-4 mr-2" />
+                        Save without project
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-50"
+                    onClick={() => handleSaveCandidate()}
+                    disabled={isSaving || isSaved}
+                  >
+                    {isSaving ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                    ) : isSaved ? (
+                      <><CheckCircle className="w-4 h-4 mr-2" /> Saved</>
+                    ) : (
+                      <><Star className="w-4 h-4 mr-2" /> Save Candidate</>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

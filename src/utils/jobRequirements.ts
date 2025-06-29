@@ -51,6 +51,33 @@ export const processJobRequirements = async (
       data.searchString = data.data.searchString;
     }
     
+    // Save search history when we have a successful boolean search string
+    if (userId && data.searchString && source !== 'clarvida') {
+      try {
+        const { error: historyError } = await supabase
+          .from('search_history')
+          .insert({
+            user_id: userId,
+            search_query: content,
+            boolean_query: data.searchString,
+            platform: 'linkedin',
+            search_params: {
+              searchType,
+              companyName,
+              source
+            }
+          });
+        
+        if (historyError) {
+          console.error('Error saving search history:', historyError);
+        } else {
+          console.log('Search history saved successfully');
+        }
+      } catch (historyError) {
+        console.error('Error saving search history:', historyError);
+      }
+    }
+    
     return data;
   } catch (error) {
     console.error('Error processing job requirements:', error);

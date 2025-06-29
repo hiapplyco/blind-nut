@@ -27,7 +27,7 @@ const MainLayoutComponent = () => {
   }, [isAuthenticated, navigate]);
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-[#F1F0FB]">
         <Sidebar collapsible="icon">
           <SidebarContent>
@@ -44,11 +44,11 @@ const MainLayoutComponent = () => {
             <SignOutButton />
           </div>
         </Sidebar>
-        <div className="flex-1">
-          <div className="container p-4">
+        <div className="flex-1 relative">
+          <div className="w-full p-4">
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <SidebarTrigger />
+              <div className="flex items-center justify-between mb-2">
+                <SidebarTrigger className="md:hidden" />
                 <NavigationProgress 
                   isNavigating={isNavigating} 
                   progress={progress} 

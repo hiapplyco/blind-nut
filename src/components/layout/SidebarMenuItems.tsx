@@ -1,6 +1,6 @@
 
 import { memo } from "react";
-import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle, LayoutDashboard } from "lucide-react";
+import { Home, Video, Theater, PhoneCall, MessageSquare, Search, PlusCircle, LayoutDashboard, Clock, User } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar/context";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -17,10 +17,12 @@ export const menuItems: MenuItem[] = [
   { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { title: 'Create Content', path: '/content-creation', icon: PlusCircle },
   { title: 'Sourcing', path: '/sourcing', icon: Search },
+  { title: 'Search History', path: '/search-history', icon: Clock },
   { title: 'Screening Room', path: '/screening-room', icon: Video },
   { title: 'Interview Prep', path: '/interview-prep', icon: Theater },
   { title: 'Kickoff Call', path: '/kickoff-call', icon: PhoneCall },
-  { title: 'Chat', path: '/chat', icon: MessageSquare, disabled: true },
+  { title: 'Profile', path: '/profile', icon: User },
+  { title: 'Chat', path: '/chat', icon: MessageSquare },
 ];
 
 // Custom SidebarMenuItem component to handle disabled state

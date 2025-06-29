@@ -27,6 +27,9 @@ import Clarvida from "@/pages/Clarvida";
 import ClarvidaLogin from "@/pages/ClarvidaLogin";
 import PasswordReset from "@/pages/PasswordReset";
 import ResetPasswordRequest from "@/pages/ResetPasswordRequest";
+import SearchHistory from "@/pages/SearchHistory";
+import ProjectDetail from "@/pages/ProjectDetail";
+import Profile from "@/pages/Profile";
 
 function App() {
   // Remove the basename configuration to let React Router handle paths naturally
@@ -67,6 +70,9 @@ function App() {
                 <Route path="/interview-room" element={<KickoffCallPage />} />
                 <Route path="/chat" element={<Chat />} />
                 <Route path="/report/:jobId" element={<Report />} />
+                <Route path="/search-history" element={<SearchHistory />} />
+                <Route path="/projects/:projectId" element={<ProjectDetail />} />
+                <Route path="/profile" element={<Profile />} />
               </Route>
             </Route>
 

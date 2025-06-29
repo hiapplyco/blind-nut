@@ -16,7 +16,7 @@ export const SidebarProvider = React.forwardRef<HTMLDivElement, SidebarProviderP
   ({ defaultOpen = true, open: openProp, onOpenChange: setOpenProp, className, style, children, ...props }, ref) => {
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
-    const [_open, _setOpen] = React.useState(defaultOpen)
+    const [_open, _setOpen] = React.useState(isMobile ? false : defaultOpen)
     
     const open = openProp ?? _open
     const setOpen = React.useCallback(

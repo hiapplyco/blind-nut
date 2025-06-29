@@ -55,7 +55,7 @@ Task: "Find all boolean search implementations" prompt="List and analyze search 
 
 ## 📋 Project Overview
 
-Blind Nut is an AI-driven recruitment search tool that helps recruiters and hiring managers find qualified candidates through intelligent search capabilities, advanced boolean query generation, and comprehensive candidate profiling.
+**Apply** (formerly Blind Nut) is an AI-driven recruitment platform that revolutionizes talent sourcing with an agentic approach. Apply helps recruiters and hiring managers find qualified candidates through intelligent search capabilities, advanced boolean query generation, comprehensive candidate profiling, and AI-powered assistance.
 
 ### Key Features
 - 🤖 **AI-Powered Search**: Generate complex boolean searches from natural language
@@ -66,6 +66,10 @@ Blind Nut is an AI-driven recruitment search tool that helps recruiters and hiri
 - 🎯 **Multi-Platform Search**: LinkedIn, Indeed, and other job platforms
 - 📊 **Analysis Report**: Comprehensive job requirement analysis with AI-generated insights
 - 💾 **Save Candidates**: Store and organize candidates with enriched contact data
+- 💬 **AI Chat Assistant**: Context-aware recruitment copilot with access to user data
+- 📁 **Project Management**: Organize candidates into projects with custom metadata
+- 📈 **Search Analytics**: Track and analyze search patterns and success rates
+- 👤 **User Profiles**: Comprehensive profile pages with activity tracking
 
 ### Tech Stack
 - **Frontend**: React, TypeScript, Tailwind CSS, Vite
@@ -87,6 +91,59 @@ blind-nut/
 ---
 
 ## 📋 Recent Updates
+
+### Apply Rebranding & Enhanced Dashboard (January 2025)
+- ✅ **Complete Rebranding to "Apply"**
+  - New brand identity with Apply logo prominently displayed
+  - Updated window title and meta descriptions
+  - Tagline: "The Agentic Approach to Talent Sourcing & Acquisition"
+  - Emphasis on AI agents handling talent attraction and discovery
+
+### Search History & Project Management (January 2025)
+- ✅ **Comprehensive Search Database**
+  - Dedicated `/search-history` page for all searches and projects
+  - Project management system for organizing candidates
+  - Database schema:
+    - `projects` table: Organize candidates into themed collections
+    - `search_history` table: Track all searches with metadata
+    - `project_candidates` junction table: Link candidates to projects
+  - Features:
+    - Create projects with custom colors and icons
+    - Save candidates to specific projects
+    - Export project candidates to CSV
+    - View search analytics and patterns
+    - Favorite searches for quick access
+
+### User Profile & Analytics (January 2025)
+- ✅ **Comprehensive User Profile Page**
+  - `/profile` route with detailed user statistics
+  - Analytics dashboard showing:
+    - Total searches, candidates, and projects
+    - Search activity over time
+    - Platform usage breakdown
+    - Recent activity timeline
+  - Profile management with avatar and name editing
+  - Quick access to all user data
+
+### AI Chat Assistant (January 2025)
+- ✅ **Intelligent Recruitment Copilot**
+  - Fully functional chat interface at `/chat`
+  - Powered by Gemini 2.0 Flash via `chat-assistant` edge function
+  - Context-aware responses based on user's data:
+    - Search history analysis
+    - Project insights
+    - Candidate recommendations
+    - Boolean search creation assistance
+  - Features:
+    - Real-time chat with conversation history
+    - Context panel showing user statistics
+    - Example prompts for quick actions
+    - Mobile-responsive design
+  - Use cases:
+    - "What are my most successful search patterns?"
+    - "Help me create a boolean search for senior engineers"
+    - "Which project has the most qualified candidates?"
+    - "Give me tips to improve my sourcing"
 
 ### Google OAuth Integration (January 2025)
 - ✅ **Google Sign-In with Identity Services**

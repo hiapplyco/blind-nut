@@ -1,0 +1,1 @@
+application/pdf, text/plain, image/png, image/jpeg, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel

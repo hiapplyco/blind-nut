@@ -24,38 +24,21 @@ export function CustomPasswordReset({ onBack }: CustomPasswordResetProps) {
     setLoading(true);
 
     try {
-      // Generate reset URL - this will be the URL users click in the email
-      const resetUrl = `${window.location.origin}/reset-password`;
-      
-      // Call our custom edge function to send branded email
-      const { error: emailError } = await supabase.functions.invoke('send-password-reset', {
-        body: {
-          email,
-          resetUrl,
-          companyName: 'Blind Nut' // Customize this to your app name
-        }
+      // Use Supabase's built-in password reset
+      // This generates the reset token and sends the email
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
       });
 
-      if (emailError) {
-        console.error('Error sending custom email:', emailError);
-        // Fallback to Supabase's built-in reset if custom email fails
-        const { error: fallbackError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: resetUrl
-        });
-        
-        if (fallbackError) {
-          throw fallbackError;
-        }
-        
-        toast.success('Password reset email sent (using fallback method)');
-      } else {
-        // Also trigger Supabase's password reset to generate the actual reset token
-        await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: resetUrl
-        });
-        
-        toast.success('Password reset email sent! Check your inbox.');
-      }
+      if (error) throw error;
+
+      toast.success('Password reset email sent! Check your inbox (and spam folder).');
+
+      // NOTE: To use custom SendGrid emails, you need to:
+      // 1. Disable Supabase's default emails in the dashboard
+      // 2. Set up Supabase Auth Hooks to capture the reset token
+      // 3. Send the custom email with the actual reset token link
+      // See: https://supabase.com/docs/guides/auth/auth-hooks
 
     } catch (error: any) {
       console.error('Password reset error:', error);

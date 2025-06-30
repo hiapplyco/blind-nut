@@ -988,6 +988,89 @@ export type Database = {
           },
         ]
       }
+      saved_candidates: {
+        Row: {
+          company: string | null
+          created_at: string | null
+          id: number
+          job_id: number | null
+          job_title: string | null
+          linkedin_url: string | null
+          location: string | null
+          mobile_phone: string | null
+          name: string
+          notes: string | null
+          personal_emails: string[] | null
+          profile_completeness: number | null
+          profile_summary: string | null
+          search_string: string | null
+          seniority_level: string | null
+          skills: string[] | null
+          source: string | null
+          status: string | null
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string | null
+          work_email: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string | null
+          id?: never
+          job_id?: number | null
+          job_title?: string | null
+          linkedin_url?: string | null
+          location?: string | null
+          mobile_phone?: string | null
+          name: string
+          notes?: string | null
+          personal_emails?: string[] | null
+          profile_completeness?: number | null
+          profile_summary?: string | null
+          search_string?: string | null
+          seniority_level?: string | null
+          skills?: string[] | null
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          work_email?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string | null
+          id?: never
+          job_id?: number | null
+          job_title?: string | null
+          linkedin_url?: string | null
+          location?: string | null
+          mobile_phone?: string | null
+          name?: string
+          notes?: string | null
+          personal_emails?: string[] | null
+          profile_completeness?: number | null
+          profile_summary?: string | null
+          search_string?: string | null
+          seniority_level?: string | null
+          skills?: string[] | null
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          work_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_candidates_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       search_results: {
         Row: {
           created_at: string | null

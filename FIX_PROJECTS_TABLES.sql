@@ -1,3 +1,8 @@
+-- Drop existing tables if they exist (careful with this in production!)
+DROP TABLE IF EXISTS public.project_candidates CASCADE;
+DROP TABLE IF EXISTS public.search_history CASCADE;
+DROP TABLE IF EXISTS public.projects CASCADE;
+
 -- Create projects table for organizing candidates
 CREATE TABLE IF NOT EXISTS public.projects (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -29,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.search_history (
     project_id UUID REFERENCES public.projects(id) ON DELETE SET NULL
 );
 
--- Create project_candidates junction table
+-- Create project_candidates junction table (FIXED: using BIGINT for candidate_id)
 CREATE TABLE IF NOT EXISTS public.project_candidates (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
@@ -148,7 +153,7 @@ AFTER INSERT OR DELETE ON public.project_candidates
 FOR EACH ROW
 EXECUTE FUNCTION update_project_candidates_count();
 
--- Create function to update updated_at timestamp
+-- Create function to update updated_at timestamp (if not exists)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
